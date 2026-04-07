@@ -242,111 +242,170 @@ export default function ProyeccionesFinancieras() {
             </div>
           </div>
         ) : datos.length > 0 ? (
-          <div className="space-y-6">
-            {/* Debug info - quitar después */}
-            <div className="text-xs text-slate-400 mb-2">
-              Datos: {datos.length} semanas | Rango: Q{Math.min(...datos.map(s => s.saldo_acumulado)).toLocaleString()} - Q{Math.max(...datos.map(s => s.saldo_acumulado)).toLocaleString()}
+          <div className="space-y-8">
+            {/* Gráfico de barras - más grande y visible */}
+            <div className="h-96 bg-slate-50 rounded-xl p-4 border border-slate-100">
+              <div className="h-full flex items-end justify-between gap-2">
+                {datos.map((semana, i) => {
+                  const maxSaldo = Math.max(...datos.map(s => s.saldo_acumulado))
+                  const minSaldo = Math.min(...datos.map(s => s.saldo_acumulado))
+                  const rango = maxSaldo - minSaldo || 1
+                  // Normalizar a porcentaje 15-95%
+                  const alturaPct = Math.max(15, Math.min(95, ((semana.saldo_acumulado - minSaldo) / rango) * 80 + 15))
+                  
+                  const esCritica = semana.saldo_acumulado < 1000000
+                  
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-2 group relative min-w-[24px]">
+                      {/* Tooltip */}
+                      <div className="absolute -top-20 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs p-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none shadow-xl">
+                        <p className="font-semibold mb-1">Semana {semana.semana}</p>
+                        <p>Saldo: <span className="font-bold">Q{semana.saldo_acumulado.toLocaleString()}</span></p>
+                        <p>Neto: <span className={semana.neto >= 0 ? 'text-emerald-400' : 'text-rose-400'}>Q{semana.neto.toLocaleString()}</span></p>
+                        {semana.alerta && <p className="text-rose-400 mt-1">⚠️ {semana.alerta}</p>}
+                      </div>
+                      
+                      {/* Valor del saldo en hover */}
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity text-xs font-semibold text-slate-600 mb-1">
+                        Q{(semana.saldo_acumulado / 1000000).toFixed(1)}M
+                      </div>
+                      
+                      <div 
+                        className={`w-full rounded-t-lg transition-all duration-500 shadow-sm ${
+                          esCritica 
+                            ? 'bg-gradient-to-t from-rose-500 to-rose-400 shadow-rose-200' 
+                            : semana.certeza === 'baja' 
+                              ? 'bg-gradient-to-t from-cyan-300 to-cyan-400 shadow-cyan-200' 
+                              : semana.certeza === 'media'
+                                ? 'bg-gradient-to-t from-cyan-400 to-cyan-500 shadow-cyan-200'
+                                : 'bg-gradient-to-t from-cyan-500 to-cyan-600 shadow-cyan-200'
+                        }`}
+                        style={{ height: `${alturaPct}%`, minHeight: '20px' }}
+                      />
+                      
+                      {/* Label de semana */}
+                      {i % Math.ceil(datos.length / 8) === 0 && (
+                        <span className="text-xs font-medium text-slate-500">S{i + 1}</span>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
             </div>
-            
-            {/* Gráfico de barras - versión simplificada */}
-            <div className="h-80 flex items-end justify-between gap-1 border-b border-slate-200 pb-2">
+
+            {/* Header para la lista */}
+            <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900">Detalle Semanal</h3>
+                <p className="text-sm text-slate-500">{datos.length} semanas proyectadas</p>
+              </div>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-emerald-500"></div>
+                  <span className="text-slate-600">Alta</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-amber-500"></div>
+                  <span className="text-slate-600">Media</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full bg-slate-400"></div>
+                  <span className="text-slate-600">Baja</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Lista de semanas - Diseño tipo tarjetas */}
+            <div className="space-y-3">
               {datos.map((semana, i) => {
-                const maxSaldo = Math.max(...datos.map(s => s.saldo_acumulado))
-                const minSaldo = Math.min(...datos.map(s => s.saldo_acumulado))
-                const rango = maxSaldo - minSaldo || 1
-                // Normalizar a porcentaje 10-90%
-                const alturaPct = Math.max(10, Math.min(90, ((semana.saldo_acumulado - minSaldo) / rango) * 80 + 10))
-                
                 const esCritica = semana.saldo_acumulado < 1000000
+                const esNegativa = semana.neto < 0
                 
                 return (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative min-w-[20px]">
-                    {/* Tooltip */}
-                    <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
-                      <p className="font-semibold">Semana {semana.semana}</p>
-                      <p>Saldo: Q{semana.saldo_acumulado.toLocaleString()}</p>
-                      <p>Neto: Q{semana.neto.toLocaleString()}</p>
-                      {semana.alerta && <p className="text-rose-400">⚠️ {semana.alerta}</p>}
+                  <div 
+                    key={i} 
+                    className={`p-4 rounded-xl border transition-all hover:shadow-md ${
+                      esCritica 
+                        ? 'bg-rose-50 border-rose-200' 
+                        : 'bg-white border-slate-200'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      {/* Izquierda: Info de semana */}
+                      <div className="flex items-center gap-4">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg ${
+                          esCritica 
+                            ? 'bg-rose-200 text-rose-700' 
+                            : semana.certeza === 'alta'
+                              ? 'bg-emerald-100 text-emerald-700'
+                              : semana.certeza === 'media'
+                                ? 'bg-amber-100 text-amber-700'
+                                : 'bg-slate-100 text-slate-600'
+                        }`}>
+                          {semana.semana}
+                        </div>
+                        <div>
+                          <p className="text-sm text-slate-500">{semana.fecha_inicio}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            {esCritica && (
+                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-rose-600 bg-rose-100 px-2 py-0.5 rounded-full">
+                                <ExclamationTriangleIcon className="w-3 h-3" />
+                                Crítico
+                              </span>
+                            )}
+                            <span className={`text-xs px-2 py-0.5 rounded-full ${
+                              semana.certeza === 'alta' ? 'bg-emerald-100 text-emerald-700' :
+                              semana.certeza === 'media' ? 'bg-amber-100 text-amber-700' :
+                              'bg-slate-100 text-slate-600'
+                            }`}>
+                              {semana.certeza} certeza
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Centro: Flujo de la semana */}
+                      <div className="flex items-center gap-6">
+                        <div className="text-right">
+                          <p className="text-xs text-slate-400 mb-1">Entradas</p>
+                          <p className="text-sm font-semibold text-emerald-600">
+                            +Q{semana.entradas.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-slate-400 mb-1">Salidas</p>
+                          <p className="text-sm font-semibold text-rose-600">
+                            -Q{semana.salidas.toLocaleString()}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-xs text-slate-400 mb-1">Neto</p>
+                          <p className={`text-sm font-bold ${esNegativa ? 'text-rose-600' : 'text-emerald-600'}`}>
+                            {esNegativa ? '' : '+'}{esNegativa ? '-' : ''}Q{Math.abs(semana.neto).toLocaleString()}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Derecha: Saldo acumulado */}
+                      <div className="text-right min-w-[140px]">
+                        <p className="text-xs text-slate-400 mb-1">Saldo Acumulado</p>
+                        <p className={`text-xl font-bold ${esCritica ? 'text-rose-600' : 'text-slate-900'}`}>
+                          Q{semana.saldo_acumulado.toLocaleString()}
+                        </p>
+                      </div>
                     </div>
                     
-                    <div 
-                      className={`w-full rounded-t-md transition-all duration-500 ${
-                        esCritica 
-                          ? 'bg-gradient-to-t from-rose-500 to-rose-400' 
-                          : semana.certeza === 'baja' 
-                            ? 'bg-gradient-to-t from-cyan-300 to-cyan-400' 
-                            : semana.certeza === 'media'
-                              ? 'bg-gradient-to-t from-cyan-400 to-cyan-500'
-                              : 'bg-gradient-to-t from-cyan-500 to-cyan-600'
-                      }`}
-                      style={{ height: `${alturaPct}%`, minHeight: '4px' }}
-                    />
-                    {i % Math.ceil(datos.length / 10) === 0 && (
-                      <span className="text-xs text-slate-400">S{i + 1}</span>
+                    {semana.alerta && (
+                      <div className="mt-3 pt-3 border-t border-rose-200">
+                        <p className="text-sm text-rose-700 flex items-center gap-2">
+                          <ExclamationTriangleIcon className="w-4 h-4" />
+                          {semana.alerta}
+                        </p>
+                      </div>
                     )}
                   </div>
                 )
               })}
-            </div>
-
-            {/* Tabla de datos */}
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-slate-200">
-                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Semana</th>
-                    <th className="text-left py-3 px-4 font-semibold text-slate-700">Fecha</th>
-                    <th className="text-right py-3 px-4 font-semibold text-slate-700">Entradas</th>
-                    <th className="text-right py-3 px-4 font-semibold text-slate-700">Salidas</th>
-                    <th className="text-right py-3 px-4 font-semibold text-slate-700">Neto</th>
-                    <th className="text-right py-3 px-4 font-semibold text-slate-700">Saldo Acum.</th>
-                    <th className="text-center py-3 px-4 font-semibold text-slate-700">Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {datos.slice(0, 10).map((semana, i) => (
-                    <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
-                      <td className="py-3 px-4">{semana.semana}</td>
-                      <td className="py-3 px-4 text-slate-500">{semana.fecha_inicio}</td>
-                      <td className="py-3 px-4 text-right text-emerald-600">
-                        +Q{semana.entradas.toLocaleString()}
-                      </td>
-                      <td className="py-3 px-4 text-right text-rose-600">
-                        -Q{semana.salidas.toLocaleString()}
-                      </td>
-                      <td className={`py-3 px-4 text-right font-medium ${
-                        semana.neto >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                      }`}>
-                        {semana.neto >= 0 ? '+' : ''}Q{semana.neto.toLocaleString()}
-                      </td>
-                      <td className="py-3 px-4 text-right font-bold">
-                        Q{semana.saldo_acumulado.toLocaleString()}
-                      </td>
-                      <td className="py-3 px-4 text-center">
-                        {semana.alerta ? (
-                          <span className="inline-flex items-center gap-1 text-xs text-rose-600 bg-rose-50 px-2 py-1 rounded-full">
-                            <ExclamationTriangleIcon className="w-3 h-3" />
-                            Crítico
-                          </span>
-                        ) : (
-                          <span className={`text-xs px-2 py-1 rounded-full ${
-                            semana.certeza === 'alta' ? 'bg-emerald-100 text-emerald-700' :
-                            semana.certeza === 'media' ? 'bg-amber-100 text-amber-700' :
-                            'bg-slate-100 text-slate-600'
-                          }`}>
-                            {semana.certeza}
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {datos.length > 10 && (
-                <p className="text-center text-sm text-slate-500 py-4">
-                  ... y {datos.length - 10} semanas más
-                </p>
-              )}
             </div>
           </div>
         ) : (

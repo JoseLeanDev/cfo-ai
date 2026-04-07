@@ -45,15 +45,19 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Serve static files from frontend dist
-app.use(express.static(path.join(__dirname, '../../frontend/dist')));
-
-// SPA fallback - serve index.html for all non-API routes
-app.get('*', (req, res) => {
-  if (!req.path.startsWith('/api')) {
-    res.sendFile(path.join(__dirname, '../../frontend/dist/index.html'));
-  }
-});
+// Static files - only serve if frontend dist exists (development only)
+const frontendDistPath = path.join(__dirname, '../../frontend/dist');
+const fs = require('fs');
+if (fs.existsSync(frontendDistPath)) {
+  app.use(express.static(frontendDistPath));
+  
+  // SPA fallback - serve index.html for all non-API routes
+  app.get('*', (req, res) => {
+    if (!req.path.startsWith('/api')) {
+      res.sendFile(path.join(frontendDistPath, 'index.html'));
+    }
+  });
+}
 
 // Error handling
 app.use((err, req, res, next) => {

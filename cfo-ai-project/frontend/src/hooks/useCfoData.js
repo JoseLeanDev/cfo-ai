@@ -19,6 +19,12 @@ export const useTesoreriaCxP = () => {
   return useQuery('tesoreria-cxp', endpoints.tesoreria.cxp)
 }
 
+export const useTesoreriaProyeccion = (semanas = 13) => {
+  return useQuery(['tesoreria-proyeccion', semanas], () => 
+    endpoints.tesoreria.proyeccion(semanas)
+  )
+}
+
 export const useAlertas = () => {
   return useQuery('alertas', endpoints.alertas, {
     refetchInterval: 60 * 1000, // Refetch cada minuto

@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useTesoreriaPosicion, useTesoreriaCxC, useTesoreriaCxP } from '../hooks/useCfoData'
+import { useTesoreriaPosicion, useTesoreriaCxC, useTesoreriaCxP, useTesoreriaProyeccion } from '../hooks/useCfoData'
 import KpiCard from '../components/common/KpiCard'
 import { 
   BanknotesIcon, 
@@ -9,19 +9,23 @@ import {
   BuildingLibraryIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  TrendingUpIcon
 } from '@heroicons/react/24/outline'
 
 export default function Tesoreria() {
   const { data: posicion, isLoading: loadingPos } = useTesoreriaPosicion()
   const { data: cxc, isLoading: loadingCxC } = useTesoreriaCxC()
   const { data: cxp, isLoading: loadingCxP } = useTesoreriaCxP()
+  const { data: proyeccion, isLoading: loadingProy } = useTesoreriaProyeccion(13)
 
   const posicionData = posicion?.data || {}
   const cxcData = cxc?.data || {}
   const cxpData = cxp?.data || {}
+  const proyeccionData = proyeccion?.data || {}
 
   const distribucion = cxcData.distribucion_aging || {}
+  const datosProyeccion = proyeccionData.proyeccion || []
 
   return (
     <div className="space-y-8 animate-fade-in">
@@ -292,57 +296,107 @@ export default function Tesoreria() {
           </Link>
         </div>
 
-        {/* Cash Flow Projection */}
+        {/* Cash Flow Projection - CON DATOS REALES */}
         <div className="card-elevated p-6">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                <ArrowTrendingUpIcon className="w-5 h-5 text-white" />
+                <TrendingUpIcon className="w-5 h-5 text-white" />
               </div>
-              <h2 className="text-lg font-bold text-slate-900">Proyección Cash Flow</h2>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Proyección Cash Flow</h2>
+                <p className="text-sm text-slate-500">13 semanas</p>
+              </div>
             </div>
-            <select className="input text-sm py-2">
-              <option>13 semanas</option>
-              <option>26 semanas</option>
-            </select>
+            {proyeccionData.resumen?.riesgo_quiebra_tecnica && (
+              <span className="badge-error text-xs">⚠️ Riesgo detectado</span>
+            )}
           </div>
 
-          <div className="relative h-48">
-            <div className="absolute inset-0 flex items-end justify-between gap-1">
-              {[65, 72, 68, 75, 70, 78, 82, 75, 80, 85, 78, 90].map((h, i) => (
-                <div key={i} className="flex-1 flex flex-col items-center gap-2">
-                  <div 
-                    className={`w-full rounded-t-lg transition-all duration-500 ${
-                      i > 9 
-                        ? 'bg-gradient-to-t from-primary-300 to-primary-400 opacity-60' 
-                        : 'bg-gradient-to-t from-primary-500 to-primary-400'
-                    }`}
-                    style={{ height: `${h}%` }}
-                  />
-                  {i % 3 === 0 && (
-                    <span className="text-xs text-slate-400">S{i + 1}</span>
-                  )}
+          {loadingProy ? (
+            <div className="h-48 flex items-center justify-center">
+              <div className="flex items-center gap-2 text-slate-400">
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+              </div>
+            </div>
+          ) : datosProyeccion.length > 0 ? (
+            <>
+              <div className="relative h-48">
+                <div className="absolute inset-0 flex items-end justify-between gap-1">
+                  {datosProyeccion.slice(0, 12).map((semana, i) => {
+                    const maxSaldo = Math.max(...datosProyeccion.map(s => s.saldo_acumulado))
+                    const minSaldo = Math.min(...datosProyeccion.map(s => s.saldo_acumulado))
+                    const rango = maxSaldo - minSaldo || 1
+                    const altura = ((semana.saldo_acumulado - minSaldo) / rango) * 80 + 10
+                    
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                        <div 
+                          className={`w-full rounded-t-lg transition-all duration-500 ${
+                            semana.certeza === 'baja' 
+                              ? 'bg-gradient-to-t from-cyan-300 to-cyan-400 opacity-60' 
+                              : semana.certeza === 'media'
+                                ? 'bg-gradient-to-t from-cyan-400 to-cyan-500 opacity-80'
+                                : 'bg-gradient-to-t from-cyan-500 to-cyan-600'
+                          } ${semana.alerta ? 'ring-2 ring-rose-400' : ''}`}
+                          style={{ height: `${altura}%` }}
+                          title={`Semana ${semana.semana}: Q${semana.saldo_acumulado.toLocaleString()}${semana.alerta ? '\n' + semana.alerta : ''}`}
+                        />
+                        {i % 3 === 0 && (
+                          <span className="text-xs text-slate-400">S{i + 1}</span>
+                        )}
+                      </div>
+                    )
+                  })}
                 </div>
-              ))}
-            </div>
-            
-            {/* Baseline */}
-            <div className="absolute bottom-6 left-0 right-0 h-px bg-slate-200"></div>
-          </div>
+                
+                <div className="absolute bottom-6 left-0 right-0 h-px bg-slate-200" />
+              </div>
 
-          <div className="mt-4 flex items-center justify-between text-sm">
-            <div className="flex items-center gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-primary-500"></div>
-                <span className="text-slate-600">Histórico</span>
+              <div className="mt-4 grid grid-cols-3 gap-4 text-center">
+                <div className="bg-slate-50 p-3 rounded-xl">
+                  <p className="text-xs text-slate-500">Saldo Mínimo</p>
+                  <p className={`text-lg font-bold ${proyeccionData.resumen?.riesgo_quiebra_tecnica ? 'text-rose-600' : 'text-slate-900'}`}>
+                    Q{(proyeccionData.resumen?.saldo_minimo_proyectado || 0).toLocaleString()}
+                  </p>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl">
+                  <p className="text-xs text-slate-500">Saldo Máximo</p>
+                  <p className="text-lg font-bold text-slate-900">
+                    Q{(proyeccionData.resumen?.saldo_maximo_proyectado || 0).toLocaleString()}
+                  </p>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl">
+                  <p className="text-xs text-slate-500">Semana Crítica</p>
+                  <p className={`text-lg font-bold ${proyeccionData.resumen?.semana_critica < 8 ? 'text-rose-600' : 'text-slate-900'}`}>
+                    {proyeccionData.resumen?.semana_critica || '—'}
+                  </p>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-primary-300"></div>
-                <span className="text-slate-600">Proyección</span>
+
+              <div className="mt-4 flex items-center justify-between text-sm">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-cyan-600"></div>
+                    <span className="text-slate-600">Alta certeza</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-cyan-400"></div>
+                    <span className="text-slate-600">Baja certeza</span>
+                  </div>
+                </div>
+                <span className="text-slate-500">
+                  Saldo proyectado: Q{datosProyeccion[datosProyeccion.length - 1]?.saldo_acumulado.toLocaleString()}
+                </span>
               </div>
+            </>
+          ) : (
+            <div className="h-48 flex items-center justify-center text-slate-400">
+              No hay datos de proyección disponibles
             </div>
-            <span className="text-slate-500">Saldo proyectado: Q3,200,000</span>
-          </div>
+          )}
         </div>
       </div>
     </div>

@@ -322,36 +322,47 @@ export default function Tesoreria() {
             </div>
           ) : datosProyeccion.length > 0 ? (
             <>
-              <div className="relative h-48">
-                <div className="absolute inset-0 flex items-end justify-between gap-1">
-                  {datosProyeccion.slice(0, 12).map((semana, i) => {
-                    const maxSaldo = Math.max(...datosProyeccion.map(s => s.saldo_acumulado))
-                    const minSaldo = Math.min(...datosProyeccion.map(s => s.saldo_acumulado))
-                    const rango = maxSaldo - minSaldo || 1
-                    const altura = Math.max(((semana.saldo_acumulado - minSaldo) / rango) * 80 + 10, 5)
-                    
-                    return (
-                      <div key={i} className="flex-1 flex flex-col items-center gap-1">
+              <div className="h-48 flex items-end justify-between gap-1">
+                {datosProyeccion.slice(0, 12).map((semana, i) => {
+                  const valores = datosProyeccion.map(s => s.saldo_acumulado || 0)
+                  const maxSaldo = Math.max(...valores)
+                  const minSaldo = Math.min(...valores)
+                  const rango = maxSaldo - minSaldo || maxSaldo || 1
+                  const saldo = semana.saldo_acumulado || 0
+                  
+                  // Normalizar altura entre 15% y 90%
+                  let altura
+                  if (rango === 0) {
+                    altura = 50 // Altura fija si todos son iguales
+                  } else {
+                    altura = ((saldo - minSaldo) / rango) * 75 + 15
+                  }
+                  
+                  return (
+                    <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
+                      <div className="relative w-full flex items-end justify-center" style={{ height: '140px' }}>
                         <div 
-                          className={`w-full rounded-t-lg transition-all duration-500 ${
+                          className={`w-full rounded-t-md transition-all duration-500 ${
                             semana.certeza === 'baja' 
-                              ? 'bg-gradient-to-t from-cyan-300 to-cyan-400 opacity-60' 
+                              ? 'bg-gradient-to-t from-cyan-300 to-cyan-400' 
                               : semana.certeza === 'media'
-                                ? 'bg-gradient-to-t from-cyan-400 to-cyan-500 opacity-80'
+                                ? 'bg-gradient-to-t from-cyan-400 to-cyan-500'
                                 : 'bg-gradient-to-t from-cyan-500 to-cyan-600'
                           } ${semana.alerta ? 'ring-2 ring-rose-400' : ''}`}
-                          style={{ height: `${altura}%` }}
-                          title={`Semana ${semana.semana}: Q${semana.saldo_acumulado.toLocaleString()}${semana.alerta ? '\n' + semana.alerta : ''}`}
+                          style={{ height: `${altura}%`, minHeight: '8px' }}
                         />
-                        {i % 3 === 0 && (
-                          <span className="text-xs text-slate-400">S{i + 1}</span>
-                        )}
+                        {/* Tooltip */}
+                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs py-1.5 px-2.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                          S{semana.semana}: Q{saldo.toLocaleString()}
+                          {semana.alerta && <span className="block text-rose-400">⚠️ {semana.alerta}</span>}
+                        </div>
                       </div>
-                    )
-                  })}
-                </div>
-                
-                <div className="absolute bottom-6 left-0 right-0 h-px bg-slate-200" />
+                      {i % 3 === 0 && (
+                        <span className="text-xs text-slate-400">S{i + 1}</span>
+                      )}
+                    </div>
+                  )
+                })}
               </div>
 
               <div className="mt-4 grid grid-cols-3 gap-4 text-center">

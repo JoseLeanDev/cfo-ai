@@ -8,8 +8,8 @@ import {
   ExclamationCircleIcon,
   ArrowRightIcon,
   ExclamationTriangleIcon,
-  TrendingUpIcon,
-  TrendingDownIcon,
+  ArrowArrowTrendingUpIcon,
+  ArrowArrowTrendingDownIcon,
   DocumentTextIcon,
   LockClosedIcon,
   PlayCircleIcon
@@ -319,9 +319,9 @@ export default function CierreDashboard() {
                 parseFloat(varVentas) >= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
               }`}>
                 {parseFloat(varVentas) >= 0 ? (
-                  <TrendingUpIcon className="w-3 h-3" />
+                  <ArrowTrendingUpIcon className="w-3 h-3" />
                 ) : (
-                  <TrendingDownIcon className="w-3 h-3" />
+                  <ArrowTrendingDownIcon className="w-3 h-3" />
                 )}
                 {parseFloat(varVentas) > 0 ? '+' : ''}{varVentas}%
               </div>
@@ -344,9 +344,9 @@ export default function CierreDashboard() {
                 parseFloat(varGastos) <= 0 ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'
               }`}>
                 {parseFloat(varGastos) <= 0 ? (
-                  <TrendingDownIcon className="w-3 h-3" />
+                  <ArrowTrendingDownIcon className="w-3 h-3" />
                 ) : (
-                  <TrendingUpIcon className="w-3 h-3" />
+                  <ArrowTrendingUpIcon className="w-3 h-3" />
                 )}
                 {parseFloat(varGastos) > 0 ? '+' : ''}{varGastos}%
               </div>
@@ -369,9 +369,9 @@ export default function CierreDashboard() {
                 parseFloat(varUtilidad) >= 0 ? 'bg-emerald-200 text-emerald-800' : 'bg-rose-200 text-rose-800'
               }`}>
                 {parseFloat(varUtilidad) >= 0 ? (
-                  <TrendingUpIcon className="w-3 h-3" />
+                  <ArrowTrendingUpIcon className="w-3 h-3" />
                 ) : (
-                  <TrendingDownIcon className="w-3 h-3" />
+                  <ArrowTrendingDownIcon className="w-3 h-3" />
                 )}
                 {parseFloat(varUtilidad) > 0 ? '+' : ''}{varUtilidad}%
               </div>

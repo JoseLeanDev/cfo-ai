@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useDashboard, useAlertas } from '../hooks/useCfoData'
 import KpiCard from '../components/common/KpiCard'
 import AlertBanner from '../components/common/AlertBanner'
@@ -210,9 +211,12 @@ export default function Dashboard() {
               <h2 className="text-lg font-bold text-slate-900">Posición Financiera</h2>
               <p className="text-sm text-slate-500">Resumen de activos y pasivos corrientes</p>
             </div>
-            <button className="text-sm text-primary-600 hover:text-primary-700 font-medium">
+            <Link 
+              to="/tesoreria"
+              className="text-sm text-primary-600 hover:text-primary-700 font-medium"
+            >
               Ver detalle →
-            </button>
+            </Link>
           </div>
 
           <div className="space-y-4">

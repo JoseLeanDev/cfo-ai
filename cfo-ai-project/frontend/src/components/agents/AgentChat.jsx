@@ -32,7 +32,9 @@ export default function AgentChat() {
     setIsLoading(true);
 
     try {
+      console.log('[AgentChat] Sending message:', userMessage);
       const response = await chatWithAgents(userMessage);
+      console.log('[AgentChat] Response:', response);
       
       if (response.success) {
         setMessages(prev => [...prev, {
@@ -42,12 +44,13 @@ export default function AgentChat() {
           type: response.response.type
         }]);
       } else {
-        throw new Error(response.error || 'Error desconocido');
+        throw new Error(response.error || 'Error desconocido del servidor');
       }
     } catch (error) {
+      console.error('[AgentChat] Error:', error);
       setMessages(prev => [...prev, {
         role: 'assistant',
-        content: 'Lo siento, hubo un error. Por favor intenta de nuevo.',
+        content: `Error: ${error.message}. Verifica que el backend esté corriendo.`,
         type: 'error'
       }]);
     } finally {

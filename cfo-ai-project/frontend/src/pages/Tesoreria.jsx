@@ -328,7 +328,7 @@ export default function Tesoreria() {
                     const maxSaldo = Math.max(...datosProyeccion.map(s => s.saldo_acumulado))
                     const minSaldo = Math.min(...datosProyeccion.map(s => s.saldo_acumulado))
                     const rango = maxSaldo - minSaldo || 1
-                    const altura = ((semana.saldo_acumulado - minSaldo) / rango) * 80 + 10
+                    const altura = Math.max(((semana.saldo_acumulado - minSaldo) / rango) * 80 + 10, 5)
                     
                     return (
                       <div key={i} className="flex-1 flex flex-col items-center gap-1">

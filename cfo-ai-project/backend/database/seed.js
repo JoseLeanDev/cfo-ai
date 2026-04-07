@@ -82,12 +82,21 @@ const seedData = async () => {
   // 1. EMPRESA
   // ============================================
   console.log('🏢 Creando empresa...');
-  const empresaResult = await db.runAsync(`
-    INSERT INTO empresas (nombre, nit, direccion, telefono, email)
-    VALUES (?, ?, ?, ?, ?)
-  `, [EMPRESA.nombre, EMPRESA.nit, EMPRESA.direccion, EMPRESA.telefono, EMPRESA.email]);
-  const empresaId = empresaResult.id;
-  console.log(`   ✅ ${EMPRESA.nombre} (ID: ${empresaId})`);
+  let empresaId;
+  
+  // Verificar si la empresa ya existe
+  const existingEmpresa = await db.getAsync('SELECT id FROM empresas WHERE nit = ?', [EMPRESA.nit]);
+  if (existingEmpresa) {
+    empresaId = existingEmpresa.id;
+    console.log(`   ℹ️ Empresa ya existe (ID: ${empresaId}), usando existente`);
+  } else {
+    const empresaResult = await db.runAsync(`
+      INSERT INTO empresas (nombre, nit, direccion, telefono, email)
+      VALUES (?, ?, ?, ?, ?)
+    `, [EMPRESA.nombre, EMPRESA.nit, EMPRESA.direccion, EMPRESA.telefono, EMPRESA.email]);
+    empresaId = empresaResult.id;
+    console.log(`   ✅ ${EMPRESA.nombre} (ID: ${empresaId})`);
+  }
 
   // ============================================
   // 2. CUENTAS BANCARIAS

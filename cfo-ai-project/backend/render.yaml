@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: cfo-ai-backend
+    runtime: node
+    repo: https://github.com/tu-usuario/cfo-ai-backend
+    buildCommand: npm install && npm run migrate && npm run seed
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+    disk:
+      name: sqlite-data
+      mountPath: /opt/render/project/src/database
+      sizeGB: 1

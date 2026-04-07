@@ -52,7 +52,7 @@ class PredictorCashFlow extends BaseAgent {
   async calculateRunway(db, empresaId) {
     // Obtener posición actual
     const posicion = await db.getAsync(`
-      SELECT SUM(saldo_actual) as total FROM cuentas_bancarias WHERE empresa_id = ?
+      SELECT SUM(saldo) as total FROM cuentas_bancarias WHERE empresa_id = ?
     `, [empresaId]);
 
     const saldoActual = posicion?.total || 0;
@@ -77,8 +77,8 @@ class PredictorCashFlow extends BaseAgent {
 
     // CxC esperados
     const cxc = await db.getAsync(`
-      SELECT SUM(saldo_pendiente) as total,
-             SUM(CASE WHEN fecha_vencimiento <= date('now', '+30 days') THEN saldo_pendiente ELSE 0 END) as proximo_mes
+      SELECT SUM(monto) as total,
+             SUM(CASE WHEN fecha_vencimiento <= date('now', '+30 days') THEN monto ELSE 0 END) as proximo_mes
       FROM cuentas_cobrar 
       WHERE empresa_id = ? AND estado = 'pendiente'
     `, [empresaId]);

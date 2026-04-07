@@ -10,6 +10,7 @@ import LibroDiario from './pages/LibroDiario'
 import CuentasPorCobrar from './pages/CuentasPorCobrar'
 import CuentasPorPagar from './pages/CuentasPorPagar'
 import CuentasBancarias from './pages/CuentasBancarias'
+import ProyeccionesFinancieras from './pages/ProyeccionesFinancieras'
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
         <Route path="/tesoreria/cuentas-por-cobrar" element={<CuentasPorCobrar />} />
         <Route path="/tesoreria/cuentas-por-pagar" element={<CuentasPorPagar />} />
         <Route path="/tesoreria/cuentas-bancarias" element={<CuentasBancarias />} />
+        <Route path="/tesoreria/proyecciones" element={<ProyeccionesFinancieras />} />
       </Routes>
     </DashboardLayout>
   )

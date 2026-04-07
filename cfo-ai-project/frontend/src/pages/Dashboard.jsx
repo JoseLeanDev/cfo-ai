@@ -212,7 +212,7 @@ export default function Dashboard() {
               <p className="text-sm text-slate-500">Resumen de activos y pasivos corrientes</p>
             </div>
             <Link 
-              to="/tesoreria"
+              to="/tesoreria/proyecciones"
               className="text-sm text-primary-600 hover:text-primary-700 font-medium"
             >
               Ver detalle →

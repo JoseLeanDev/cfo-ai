@@ -54,20 +54,20 @@ class AnalistaFinanciero extends BaseAgent {
     // Calcular ratios financieros clave
     const posicion = await db.getAsync(`
       SELECT 
-        SUM(CASE WHEN moneda = 'GTQ' THEN saldo_actual ELSE 0 END) as saldo_gtq,
-        SUM(CASE WHEN moneda = 'USD' THEN saldo_actual ELSE 0 END) as saldo_usd
+        SUM(CASE WHEN moneda = 'GTQ' THEN saldo ELSE 0 END) as saldo_gtq,
+        SUM(CASE WHEN moneda = 'USD' THEN saldo ELSE 0 END) as saldo_usd
       FROM cuentas_bancarias 
       WHERE empresa_id = ?
     `, [empresaId]);
 
     const cxc = await db.getAsync(`
-      SELECT SUM(saldo_pendiente) as total, COUNT(*) as count
+      SELECT SUM(monto) as total, COUNT(*) as count
       FROM cuentas_cobrar 
       WHERE empresa_id = ? AND estado = 'pendiente'
     `, [empresaId]);
 
     const cxp = await db.getAsync(`
-      SELECT SUM(saldo_pendiente) as total, COUNT(*) as count
+      SELECT SUM(monto) as total, COUNT(*) as count
       FROM cuentas_pagar 
       WHERE empresa_id = ? AND estado = 'pendiente'
     `, [empresaId]);
@@ -159,9 +159,9 @@ class AnalistaFinanciero extends BaseAgent {
     // KPIs del dashboard
     const kpis = await db.getAsync(`
       SELECT 
-        (SELECT SUM(saldo_actual) FROM cuentas_bancarias WHERE empresa_id = ?) as posicion_bancaria,
-        (SELECT SUM(saldo_pendiente) FROM cuentas_cobrar WHERE empresa_id = ? AND estado = 'pendiente') as cxc_total,
-        (SELECT SUM(saldo_pendiente) FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente') as cxp_total,
+        (SELECT SUM(saldo) FROM cuentas_bancarias WHERE empresa_id = ?) as posicion_bancaria,
+        (SELECT SUM(monto) FROM cuentas_cobrar WHERE empresa_id = ? AND estado = 'pendiente') as cxc_total,
+        (SELECT SUM(monto) FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente') as cxp_total,
         (SELECT COUNT(*) FROM obligaciones_sat WHERE empresa_id = ? AND estado != 'cumplida') as obligaciones_pendientes
     `, [empresaId, empresaId, empresaId, empresaId]);
 

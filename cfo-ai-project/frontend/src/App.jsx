@@ -11,6 +11,10 @@ import CuentasPorCobrar from './pages/CuentasPorCobrar'
 import CuentasPorPagar from './pages/CuentasPorPagar'
 import CuentasBancarias from './pages/CuentasBancarias'
 import ProyeccionesFinancieras from './pages/ProyeccionesFinancieras'
+// Cierre Mensual
+import CierreDashboard from './pages/CierreDashboard'
+import CierreWizard from './pages/CierreWizard'
+import ConciliacionBancaria from './pages/ConciliacionBancaria'
 
 function App() {
   return (
@@ -27,6 +31,10 @@ function App() {
         <Route path="/tesoreria/cuentas-por-pagar" element={<CuentasPorPagar />} />
         <Route path="/tesoreria/cuentas-bancarias" element={<CuentasBancarias />} />
         <Route path="/tesoreria/proyecciones" element={<ProyeccionesFinancieras />} />
+        {/* Cierre Mensual */}
+        <Route path="/contabilidad/cierre" element={<CierreDashboard />} />
+        <Route path="/contabilidad/cierre/:anio/:mes" element={<CierreWizard />} />
+        <Route path="/contabilidad/conciliacion/:cuentaId/:anio/:mes" element={<ConciliacionBancaria />} />
       </Routes>
     </DashboardLayout>
   )

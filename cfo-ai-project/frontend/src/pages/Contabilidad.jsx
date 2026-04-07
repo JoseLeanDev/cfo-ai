@@ -101,9 +101,9 @@ export default function Contabilidad() {
             ))}
           </div>
           
-          <button className="btn-primary w-full mt-6">
-            Continuar cierre
-          </button>
+          <Link to="/contabilidad/cierre" className="btn-primary w-full mt-6 block text-center">
+            Ir a Cierre Mensual
+          </Link>
         </div>
 
         {/* Conciliación Bancaria */}

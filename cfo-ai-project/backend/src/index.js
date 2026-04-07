@@ -34,6 +34,7 @@ app.use('/api/analisis', require('./routes/analisis'));
 app.use('/api/sat', require('./routes/sat'));
 app.use('/api/alertas', require('./routes/alertas'));
 app.use('/api/agents', require('./routes/agents')); // Multi-Agent System
+app.use('/api/cierre', require('./routes/cierre')); // Cierre Mensual y Conciliación
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useTesoreriaPosicion, useTesoreriaCxC, useTesoreriaCxP } from '../hooks/useCfoData'
 import KpiCard from '../components/common/KpiCard'
 import { 
@@ -7,7 +8,8 @@ import {
   ClockIcon,
   BuildingLibraryIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  ArrowRightIcon
 } from '@heroicons/react/24/outline'
 
 export default function Tesoreria() {
@@ -80,7 +82,10 @@ export default function Tesoreria() {
               </div>
               <h2 className="text-lg font-bold text-slate-900">Cuentas Bancarias</h2>
             </div>
-            <button className="btn-secondary text-sm">Ver todas</button>
+            <Link to="/tesoreria/cuentas-bancarias" className="btn-secondary text-sm flex items-center gap-1">
+              Ver todas
+              <ArrowRightIcon className="w-4 h-4" />
+            </Link>
           </div>
           
           <div className="space-y-3">
@@ -142,13 +147,15 @@ export default function Tesoreria() {
                 <p className="text-sm text-slate-500">Promedio {cxcData.promedio_dias_cobro} días</p>
               </div>
             </div>
-            <span className="text-2xl font-bold text-slate-900">
-              {new Intl.NumberFormat('es-GT', {
-                style: 'currency',
-                currency: 'GTQ',
-                minimumFractionDigits: 0
-              }).format(cxcData.total_cxc || 0)}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-bold text-slate-900">
+                {new Intl.NumberFormat('es-GT', {
+                  style: 'currency',
+                  currency: 'GTQ',
+                  minimumFractionDigits: 0
+                }).format(cxcData.total_cxc || 0)}
+              </span>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -181,7 +188,13 @@ export default function Tesoreria() {
           </div>
 
           <div className="mt-6 pt-6 border-t border-slate-100">
-            <p className="text-sm font-semibold text-slate-700 mb-3">Top Deudores</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-sm font-semibold text-slate-700">Top Deudores</p>
+              <Link to="/tesoreria/cuentas-por-cobrar" className="text-sm text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1">
+                Ver todas
+                <ArrowRightIcon className="w-4 h-4" />
+              </Link>
+            </div>
             <div className="space-y-2">
               {cxcData.top_deudores?.slice(0, 3).map((deudor, idx) => (
                 <div key={idx} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors">
@@ -223,13 +236,15 @@ export default function Tesoreria() {
                 <p className="text-sm text-slate-500">Promedio {cxpData.promedio_dias_pago} días</p>
               </div>
             </div>
-            <span className="text-2xl font-bold text-slate-900">
-              {new Intl.NumberFormat('es-GT', {
-                style: 'currency',
-                currency: 'GTQ',
-                minimumFractionDigits: 0
-              }).format(cxpData.total_cxp || 0)}
-            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-2xl font-bold text-slate-900">
+                {new Intl.NumberFormat('es-GT', {
+                  style: 'currency',
+                  currency: 'GTQ',
+                  minimumFractionDigits: 0
+                }).format(cxpData.total_cxp || 0)}
+              </span>
+            </div>
           </div>
 
           <div className="space-y-3">
@@ -267,6 +282,14 @@ export default function Tesoreria() {
               </div>
             ))}
           </div>
+          
+          <Link 
+            to="/tesoreria/cuentas-por-pagar" 
+            className="mt-4 w-full py-3 flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-transparent hover:border-rose-200"
+          >
+            Ver todos los pagos
+            <ArrowRightIcon className="w-4 h-4" />
+          </Link>
         </div>
 
         {/* Cash Flow Projection */}

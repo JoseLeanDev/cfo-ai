@@ -1,11 +1,21 @@
+import { Link } from 'react-router-dom'
+import { 
+  BookOpenIcon, 
+  ArrowPathIcon,
+  CheckCircleIcon,
+  CalculatorIcon,
+  DocumentCheckIcon,
+  ArrowRightIcon,
+  BuildingLibraryIcon,
+  ExclamationTriangleIcon
+} from '@heroicons/react/24/outline'
+
 export default function Contabilidad() {
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="flex items-center gap-3">
         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-          </svg>
+          <BookOpenIcon className="w-6 h-6 text-white" />
         </div>
         <div>
           <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Contabilidad</h1>
@@ -14,15 +24,25 @@ export default function Contabilidad() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Libro Diario */}
         <div className="card-elevated p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Libro Diario</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
+                <DocumentCheckIcon className="w-5 h-5 text-white" />
+              </div>
+              <h2 className="text-lg font-bold text-slate-900">Libro Diario</h2>
+            </div>
+            <span className="badge-success text-xs">Balanceado</span>
+          </div>
+          
           <div className="space-y-3">
             {[
               { fecha: '2026-03-31', cuenta: 'Caja General', debe: 50000, haber: 0 },
               { fecha: '2026-03-31', cuenta: 'Ventas', debe: 0, haber: 50000 },
               { fecha: '2026-03-30', cuenta: 'Proveedores', debe: 25000, haber: 0 },
             ].map((asiento, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+              <div key={idx} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors">
                 <div>
                   <p className="font-medium text-slate-900">{asiento.cuenta}</p>
                   <p className="text-sm text-slate-500">{asiento.fecha}</p>
@@ -34,13 +54,28 @@ export default function Contabilidad() {
               </div>
             ))}
           </div>
-          <button className="w-full mt-4 py-3 text-sm font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-50 rounded-xl transition-colors">
-            Ver todo el libro diario →
-          </button>
+          
+          <Link 
+            to="/contabilidad/libro-diario" 
+            className="w-full mt-4 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-violet-600 hover:bg-violet-50 rounded-xl transition-colors border border-transparent hover:border-violet-200"
+          >
+            Ver todo el libro diario
+            <ArrowRightIcon className="w-4 h-4" />
+          </Link>
         </div>
 
+        {/* Cierre Mensual */}
         <div className="card-elevated p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Cierre Mensual</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-amber-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                <ArrowPathIcon className="w-5 h-5 text-white" />
+              </div>
+              <h2 className="text-lg font-bold text-slate-900">Cierre Mensual</h2>
+            </div>
+            <span className="text-sm text-slate-500">Mar 2026</span>
+          </div>
+          
           <div className="space-y-4">
             {[
               { paso: 1, nombre: 'Validación preliminar', estado: 'completado' },
@@ -57,21 +92,32 @@ export default function Contabilidad() {
                 }`}>
                   {paso.paso}
                 </div>
-                <span className={`flex-1 ${paso.estado === 'completado' ? 'text-slate-700 line-through' : 'text-slate-900'}`}>
+                <span className={`flex-1 text-sm ${paso.estado === 'completado' ? 'text-slate-700 line-through' : 'text-slate-900'}`}>
                   {paso.nombre}
                 </span>
-                {paso.estado === 'completado' && <span className="text-emerald-600">✓</span>}
+                {paso.estado === 'completado' && <CheckCircleIcon className="w-5 h-5 text-emerald-600" />}
                 {paso.estado === 'en_progreso' && <span className="text-amber-600">⟳</span>}
               </div>
             ))}
           </div>
+          
           <button className="btn-primary w-full mt-6">
             Continuar cierre
           </button>
         </div>
 
+        {/* Conciliación Bancaria */}
         <div className="card-elevated p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Conciliación Bancaria</h2>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                <BuildingLibraryIcon className="w-5 h-5 text-white" />
+              </div>
+              <h2 className="text-lg font-bold text-slate-900">Conciliación</h2>
+            </div>
+            <span className="text-sm text-slate-500">Última: Hoy</span>
+          </div>
+          
           <div className="space-y-3">
             {[
               { banco: 'Banco Industrial', cuenta: 'Monetaria GTQ', diferencia: 0, estado: 'conciliado' },
@@ -82,21 +128,36 @@ export default function Contabilidad() {
                 item.estado === 'conciliado' ? 'bg-emerald-50/50 border-emerald-200' : 'bg-amber-50/50 border-amber-200'
               }`}>
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-semibold text-slate-900">{item.banco}</p>
-                    <p className="text-sm text-slate-500">{item.cuenta}</p>
+                  <div className="flex items-center gap-3">
+                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                      item.estado === 'conciliado' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+                    }`}>
+                      {item.estado === 'conciliado' ? <CheckCircleIcon className="w-4 h-4" /> : <ExclamationTriangleIcon className="w-4 h-4" />}
+                    </div>
+                    <div>
+                      <p className="font-semibold text-slate-900 text-sm">{item.banco}</p>
+                      <p className="text-xs text-slate-500">{item.cuenta}</p>
+                    </div>
                   </div>
                   <div className="text-right">
                     {item.diferencia > 0 ? (
-                      <span className="text-amber-700 font-medium">Diff: Q{item.diferencia.toLocaleString()}</span>
+                      <span className="text-amber-700 font-medium text-sm">Diff: Q{item.diferencia.toLocaleString()}</span>
                     ) : (
-                      <span className="badge-success">Conciliado</span>
+                      <span className="text-xs text-emerald-700 font-medium">✓ OK</span>
                     )}
                   </div>
                 </div>
               </div>
             ))}
           </div>
+          
+          <Link 
+            to="/tesoreria/cuentas-bancarias" 
+            className="w-full mt-4 py-3 flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-blue-600 hover:bg-blue-50 rounded-xl transition-colors border border-transparent hover:border-blue-200"
+          >
+            Ver todas las cuentas
+            <ArrowRightIcon className="w-4 h-4" />
+          </Link>
         </div>
       </div>
     </div>

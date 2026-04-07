@@ -243,49 +243,50 @@ export default function ProyeccionesFinancieras() {
           </div>
         ) : datos.length > 0 ? (
           <div className="space-y-6">
-            {/* Gráfico de barras */}
-            <div className="relative h-80">
-              <div className="absolute inset-0 flex items-end justify-between gap-1">
-                {datos.map((semana, i) => {
-                  const maxSaldo = Math.max(...datos.map(s => s.saldo_acumulado))
-                  const minSaldo = Math.min(...datos.map(s => s.saldo_acumulado))
-                  const rango = maxSaldo - minSaldo || 1
-                  const altura = Math.max(((semana.saldo_acumulado - minSaldo) / rango) * 70 + 15, 5)
-                  
-                  const esCritica = semana.saldo_acumulado < 1000000
-                  
-                  return (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative">
-                      {/* Tooltip */}
-                      <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
-                        <p className="font-semibold">Semana {semana.semana}</p>
-                        <p>Saldo: Q{semana.saldo_acumulado.toLocaleString()}</p>
-                        <p>Neto: Q{semana.neto.toLocaleString()}</p>
-                        {semana.alerta && <p className="text-rose-400">⚠️ {semana.alerta}</p>}
-                      </div>
-                      
-                      <div 
-                        className={`w-full rounded-t-lg transition-all duration-500 ${
-                          esCritica 
-                            ? 'bg-gradient-to-t from-rose-500 to-rose-400' 
-                            : semana.certeza === 'baja' 
-                              ? 'bg-gradient-to-t from-cyan-300 to-cyan-400 opacity-60' 
-                              : semana.certeza === 'media'
-                                ? 'bg-gradient-to-t from-cyan-400 to-cyan-500 opacity-80'
-                                : 'bg-gradient-to-t from-cyan-500 to-cyan-600'
-                        }`}
-                        style={{ height: `${altura}%` }}
-                      />
-                      {i % Math.ceil(datos.length / 10) === 0 && (
-                        <span className="text-xs text-slate-400">S{i + 1}</span>
-                      )}
+            {/* Debug info - quitar después */}
+            <div className="text-xs text-slate-400 mb-2">
+              Datos: {datos.length} semanas | Rango: Q{Math.min(...datos.map(s => s.saldo_acumulado)).toLocaleString()} - Q{Math.max(...datos.map(s => s.saldo_acumulado)).toLocaleString()}
+            </div>
+            
+            {/* Gráfico de barras - versión simplificada */}
+            <div className="h-80 flex items-end justify-between gap-1 border-b border-slate-200 pb-2">
+              {datos.map((semana, i) => {
+                const maxSaldo = Math.max(...datos.map(s => s.saldo_acumulado))
+                const minSaldo = Math.min(...datos.map(s => s.saldo_acumulado))
+                const rango = maxSaldo - minSaldo || 1
+                // Normalizar a porcentaje 10-90%
+                const alturaPct = Math.max(10, Math.min(90, ((semana.saldo_acumulado - minSaldo) / rango) * 80 + 10))
+                
+                const esCritica = semana.saldo_acumulado < 1000000
+                
+                return (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1 group relative min-w-[20px]">
+                    {/* Tooltip */}
+                    <div className="absolute -top-16 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs p-2 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                      <p className="font-semibold">Semana {semana.semana}</p>
+                      <p>Saldo: Q{semana.saldo_acumulado.toLocaleString()}</p>
+                      <p>Neto: Q{semana.neto.toLocaleString()}</p>
+                      {semana.alerta && <p className="text-rose-400">⚠️ {semana.alerta}</p>}
                     </div>
-                  )
-                })}
-              </div>
-              
-              {/* Línea de referencia */}
-              <div className="absolute bottom-8 left-0 right-0 h-px bg-slate-200" />
+                    
+                    <div 
+                      className={`w-full rounded-t-md transition-all duration-500 ${
+                        esCritica 
+                          ? 'bg-gradient-to-t from-rose-500 to-rose-400' 
+                          : semana.certeza === 'baja' 
+                            ? 'bg-gradient-to-t from-cyan-300 to-cyan-400' 
+                            : semana.certeza === 'media'
+                              ? 'bg-gradient-to-t from-cyan-400 to-cyan-500'
+                              : 'bg-gradient-to-t from-cyan-500 to-cyan-600'
+                      }`}
+                      style={{ height: `${alturaPct}%`, minHeight: '4px' }}
+                    />
+                    {i % Math.ceil(datos.length / 10) === 0 && (
+                      <span className="text-xs text-slate-400">S{i + 1}</span>
+                    )}
+                  </div>
+                )
+              })}
             </div>
 
             {/* Tabla de datos */}

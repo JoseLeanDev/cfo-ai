@@ -444,13 +444,13 @@ const seedData = async () => {
       
       // Insertar lado DEBE
       await db.runAsync(`
-        INSERT INTO asientos (empresa_id, asiento_id, fecha, cuenta_codigo, cuenta_nombre, descripcion, debe, haber)
+        INSERT OR IGNORE INTO asientos (empresa_id, asiento_id, fecha, cuenta_codigo, cuenta_nombre, descripcion, debe, haber)
         VALUES (?, ?, ?, ?, ?, ?, ?, 0)
       `, [empresaId, asientoId, formatDate(fecha), cuentaDebe.codigo, cuentaDebe.nombre, `Asiento contable ${asientoId}`, monto]);
       
       // Insertar lado HABER  
       await db.runAsync(`
-        INSERT INTO asientos (empresa_id, asiento_id, fecha, cuenta_codigo, cuenta_nombre, descripcion, debe, haber)
+        INSERT OR IGNORE INTO asientos (empresa_id, asiento_id, fecha, cuenta_codigo, cuenta_nombre, descripcion, debe, haber)
         VALUES (?, ?, ?, ?, ?, ?, 0, ?)
       `, [empresaId, `${asientoId}-H`, formatDate(fecha), cuentaHaber.codigo, cuentaHaber.nombre, `Contra-asiento ${asientoId}`, monto]);
       

@@ -15,7 +15,7 @@ const agentsOrchestrator = initializeOrchestrator();
 // Middleware
 app.use(helmet());
 app.use(cors({
-  origin: ['https://frontend-blond-rho-55.vercel.app', 'https://*.vercel.app', 'http://localhost:5173', 'http://localhost:3001'],
+  origin: ['https://frontend-blond-rho-55.vercel.app', 'https://*.vercel.app', 'https://*.onrender.com', 'http://localhost:5173', 'http://localhost:3001'],
   credentials: true
 }));
 app.use(morgan('dev'));

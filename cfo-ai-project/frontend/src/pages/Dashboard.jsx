@@ -266,7 +266,7 @@ export default function Dashboard() {
                     ? (((kpis.disponible_gtq?.value || 0) + (kpis.cxc_total?.value || 0)) / (kpis.cxp_total?.value || 1)).toFixed(2) 
                     : '0.00'}
                 </span>
-                <p className="text-xs text-primary-600">Ideal: > 1.5</p>
+                <p className="text-xs text-primary-600">Ideal: {'>'} 1.5</p>
               </div>
             </div>
           </div>

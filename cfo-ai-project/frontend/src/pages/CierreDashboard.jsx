@@ -8,8 +8,8 @@ import {
   ExclamationCircleIcon,
   ArrowRightIcon,
   ExclamationTriangleIcon,
-  ArrowArrowTrendingUpIcon,
-  ArrowArrowTrendingDownIcon,
+  ArrowTrendingUpIcon,
+  ArrowTrendingDownIcon,
   DocumentTextIcon,
   LockClosedIcon,
   PlayCircleIcon

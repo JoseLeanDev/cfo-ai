@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import { useTesoreriaPosicion, useTesoreriaCxC, useTesoreriaCxP, useTesoreriaProyeccion } from '../hooks/useCfoData'
 import KpiCard from '../components/common/KpiCard'
+import PageInsights from '../components/agents/PageInsights'
 import { 
   BanknotesIcon, 
   ArrowTrendingUpIcon, 
@@ -40,6 +41,9 @@ export default function Tesoreria() {
           </div>
         </div>
       </div>
+
+      {/* AI Insights Section */}
+      <PageInsights context="tesoreria" maxInsights={3} />
 
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">

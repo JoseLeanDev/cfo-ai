@@ -1,3 +1,5 @@
+import PageInsights from '../components/agents/PageInsights'
+
 export default function Analisis() {
   return (
     <div className="space-y-8 animate-fade-in">
@@ -12,6 +14,9 @@ export default function Analisis() {
           <p className="text-slate-500">Ratios, rentabilidad y tendencias</p>
         </div>
       </div>
+
+      {/* AI Insights Section */}
+      <PageInsights context="analisis" maxInsights={3} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {[

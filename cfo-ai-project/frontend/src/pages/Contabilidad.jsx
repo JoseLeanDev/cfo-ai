@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import PageInsights from '../components/agents/PageInsights'
 import { 
   BookOpenIcon, 
   ArrowPathIcon,
@@ -22,6 +23,9 @@ export default function Contabilidad() {
           <p className="text-slate-500">Libros, asientos y cierre mensual</p>
         </div>
       </div>
+
+      {/* AI Insights Section */}
+      <PageInsights context="contabilidad" maxInsights={3} />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Libro Diario */}

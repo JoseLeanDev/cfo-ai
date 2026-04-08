@@ -64,6 +64,41 @@ const createInsightsTable = async () => {
   console.log('✅ Tabla insights_historico verificada');
 };
 
+const createAgentesLogsTable = async () => {
+  console.log('🔄 Verificando tabla de logs de agentes...');
+  
+  await db.runAsync(`
+    CREATE TABLE IF NOT EXISTS agentes_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      empresa_id TEXT NOT NULL DEFAULT 'default',
+      agente_nombre TEXT NOT NULL,
+      agente_tipo TEXT NOT NULL,
+      agente_version TEXT DEFAULT '1.0',
+      categoria TEXT NOT NULL,
+      descripcion TEXT NOT NULL,
+      detalles_json TEXT,
+      entidad_tipo TEXT,
+      entidad_id TEXT,
+      impacto_valor REAL,
+      impacto_moneda TEXT DEFAULT 'GTQ',
+      resultado_status TEXT,
+      ip_origen TEXT,
+      usuario_id INTEGER,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      duracion_ms INTEGER
+    )
+  `);
+  
+  // Crear índices
+  await db.runAsync(`CREATE INDEX IF NOT EXISTS idx_logs_empresa ON agentes_logs(empresa_id)`);
+  await db.runAsync(`CREATE INDEX IF NOT EXISTS idx_logs_agente ON agentes_logs(agente_tipo)`);
+  await db.runAsync(`CREATE INDEX IF NOT EXISTS idx_logs_categoria ON agentes_logs(categoria)`);
+  await db.runAsync(`CREATE INDEX IF NOT EXISTS idx_logs_created ON agentes_logs(created_at)`);
+  await db.runAsync(`CREATE INDEX IF NOT EXISTS idx_logs_status ON agentes_logs(resultado_status)`);
+  
+  console.log('✅ Tabla agentes_logs verificada');
+};
+
 const createTables = async () => {
   console.log('🏗️  Creando tablas...');
   
@@ -72,6 +107,9 @@ const createTables = async () => {
   
   // Crear tabla de insights histórico
   await createInsightsTable();
+  
+  // Crear tabla de logs de agentes
+  await createAgentesLogsTable();
 
   // Empresa
   await db.runAsync(`

@@ -69,7 +69,8 @@ export const endpoints = {
     chat: (message) => cfoApi.post('/agents/chat', { message }),
     status: () => cfoApi.get('/agents/status'),
     history: () => cfoApi.get('/agents/history'),
-    clear: () => cfoApi.post('/agents/clear')
+    clear: () => cfoApi.post('/agents/clear'),
+    logs: (params) => cfoApi.get('/agents/logs', { params })
   }
 }
 

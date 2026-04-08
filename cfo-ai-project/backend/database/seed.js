@@ -464,6 +464,52 @@ const seedData = async () => {
   console.log(`      • Total movimientos: ~${numAsientos * 3}`);
 
   // ============================================
+  // LOGS DE AGENTES IA
+  // ============================================
+  console.log('\n🤖 Creando logs de actividades de Agentes IA...');
+  
+  const agentesLogs = [
+    { agente: 'AnalistaFinanciero', tipo: 'AnalistaFinanciero', categoria: 'insight_generado', descripcion: 'Detectado aumento del 23% en gastos de Gasolina vs promedio 3 meses', status: 'exito', impacto: 18500 },
+    { agente: 'PredictorCashFlow', tipo: 'PredictorCashFlow', categoria: 'prediccion_realizada', descripcion: 'Proyección de cash flow completada: 13 semanas analizadas', status: 'exito', duracion: 145 },
+    { agente: 'AuditorAutomatico', tipo: 'AuditorAutomatico', categoria: 'auditoria_completada', descripcion: 'Auditoría de transacciones: 3 anomalías detectadas en CxC', status: 'advertencia', impacto: 45000 },
+    { agente: 'AsistenteSAT', tipo: 'AsistenteSAT', categoria: 'calculo_fiscal', descripcion: 'Cálculo de IVA Marzo 2026 completado: Q45,230 pendiente', status: 'exito', impacto: 45230 },
+    { agente: 'OrchestratorAgent', tipo: 'OrchestratorAgent', categoria: 'sincronizacion_datos', descripcion: 'Sincronización de datos contables completada exitosamente', status: 'exito', duracion: 890 },
+    { agente: 'AnalistaFinanciero', tipo: 'AnalistaFinanciero', categoria: 'analisis_ejecutado', descripcion: 'Análisis de rentabilidad por producto: Producto A lidera con 35%', status: 'exito' },
+    { agente: 'ChatbotCFO', tipo: 'ChatbotCFO', categoria: 'chat_interaccion', descripcion: 'Consulta de usuario procesada: "Cuál es mi runway?"', status: 'exito' },
+    { agente: 'PredictorCashFlow', tipo: 'PredictorCashFlow', categoria: 'alerta_detectada', descripcion: 'Alerta: Posible déficit de liquidez en semana 8', status: 'advertencia', impacto: -125000 },
+    { agente: 'AuditorAutomatico', tipo: 'AuditorAutomatico', categoria: 'conciliacion', descripcion: 'Conciliación bancaria: Cuenta Monetaria USD tiene diferencia de Q1,250', status: 'advertencia', impacto: 1250 },
+    { agente: 'AsistenteSAT', tipo: 'AsistenteSAT', categoria: 'configuracion', descripcion: 'Actualización de calendario fiscal SAT 2026 completada', status: 'exito' },
+    { agente: 'AnalistaFinanciero', tipo: 'AnalistaFinanciero', categoria: 'insight_generado', descripcion: 'Cliente "Industrias del Sur" redujo compras 40% este mes', status: 'warning', impacto: -85000 },
+    { agente: 'OrchestratorAgent', tipo: 'OrchestratorAgent', categoria: 'analisis_ejecutado', descripcion: 'Análisis multi-agente ejecutado: Dashboard actualizado', status: 'exito', duracion: 2340 },
+  ];
+  
+  for (const log of agentesLogs) {
+    const fecha = new Date(hoy);
+    fecha.setHours(fecha.getHours() - Math.floor(Math.random() * 48)); // Últimas 48 horas
+    
+    await db.runAsync(`
+      INSERT INTO agentes_logs 
+      (empresa_id, agente_nombre, agente_tipo, categoria, descripcion, resultado_status, impacto_valor, duracion_ms, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, [
+      empresaId,
+      log.agente,
+      log.tipo,
+      log.categoria,
+      log.descripcion,
+      log.status,
+      log.impacto || 0,
+      log.duracion || Math.floor(Math.random() * 500) + 50,
+      fecha.toISOString()
+    ]);
+  }
+  
+  console.log(`   ✅ ${agentesLogs.length} logs de agentes creados`);
+  console.log(`      • Insights generados: ${agentesLogs.filter(l => l.categoria === 'insight_generado').length}`);
+  console.log(`      • Alertas: ${agentesLogs.filter(l => l.categoria === 'alerta_detectada').length}`);
+  console.log(`      • Análisis ejecutados: ${agentesLogs.filter(l => l.categoria === 'analisis_ejecutado').length}`);
+
+  // ============================================
   // RESUMEN FINAL
   // ============================================
   const tiempoTotal = ((Date.now() - startTime) / 1000).toFixed(2);

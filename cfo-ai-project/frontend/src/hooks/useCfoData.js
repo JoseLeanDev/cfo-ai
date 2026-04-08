@@ -48,3 +48,14 @@ export const useInsightsHistorico = (options = {}) => {
     }
   )
 }
+
+export const useAgentesLogs = (options = {}) => {
+  const { limit = 50, agente, categoria, status, dias = 7 } = options
+  return useQuery(
+    ['agentes-logs', limit, agente, categoria, status, dias],
+    () => endpoints.agentes.logs({ limit, agente, categoria, status, dias }),
+    {
+      refetchInterval: 30 * 1000, // Refrescar cada 30 segundos
+    }
+  )
+}

@@ -9,7 +9,8 @@ import {
   UserCircleIcon,
   Bars3Icon,
   XMarkIcon,
-  SparklesIcon
+  SparklesIcon,
+  CpuChipIcon
 } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import AgentChat from '../agents/AgentChat'
@@ -20,6 +21,7 @@ const navigation = [
   { name: 'Contabilidad', href: '/contabilidad', icon: BookOpenIcon },
   { name: 'Análisis', href: '/analisis', icon: ChartBarIcon },
   { name: 'SAT', href: '/sat', icon: DocumentCheckIcon },
+  { name: 'Log de Actividades', href: '/log-actividades', icon: CpuChipIcon },
 ]
 
 export default function DashboardLayout({ children }) {

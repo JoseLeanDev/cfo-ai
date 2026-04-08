@@ -66,7 +66,7 @@ class PredictorCashFlow extends BaseAgent {
           SUM(monto) as monto
         FROM transacciones 
         WHERE empresa_id = ? 
-          AND tipo = 'egreso'
+          AND tipo = 'salida'
           AND fecha >= date('now', '-3 months')
         GROUP BY strftime('%Y-%m', fecha)
       )
@@ -127,8 +127,8 @@ class PredictorCashFlow extends BaseAgent {
     const historial = await db.allAsync(`
       SELECT 
         strftime('%Y-%m', fecha) as mes,
-        SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as ingresos,
-        SUM(CASE WHEN tipo = 'egreso' THEN monto ELSE 0 END) as egresos
+        SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as ingresos,
+        SUM(CASE WHEN tipo = 'salida' THEN monto ELSE 0 END) as egresos
       FROM transacciones 
       WHERE empresa_id = ? 
         AND fecha >= date('now', '-6 months')
@@ -248,7 +248,7 @@ class PredictorCashFlow extends BaseAgent {
           AVG(monto) as promedio_transaccion
         FROM transacciones 
         WHERE empresa_id = ? 
-          AND tipo = 'egreso'
+          AND tipo = 'salida'
           AND fecha >= ?
         GROUP BY categoria, strftime('%Y-%m', fecha)
         ORDER BY categoria, mes DESC
@@ -335,7 +335,7 @@ class PredictorCashFlow extends BaseAgent {
           COUNT(*) as transacciones
         FROM transacciones 
         WHERE empresa_id = ? 
-          AND tipo = 'ingreso'
+          AND tipo = 'entrada'
           AND fecha >= ?
         GROUP BY strftime('%Y-%m', fecha)
         ORDER BY mes ASC
@@ -453,7 +453,7 @@ class PredictorCashFlow extends BaseAgent {
         FROM (
           SELECT strftime('%Y-%m', fecha) as mes, SUM(monto) as monto_mensual
           FROM transacciones 
-          WHERE empresa_id = ? AND tipo = 'egreso' AND fecha >= ?
+          WHERE empresa_id = ? AND tipo = 'salida' AND fecha >= ?
           GROUP BY strftime('%Y-%m', fecha)
         )
       `, [empresaId, tresMesesAtras]);
@@ -465,7 +465,7 @@ class PredictorCashFlow extends BaseAgent {
       const runwayHistorico = await db.allAsync(`
         SELECT 
           strftime('%Y-%m', fecha) as mes,
-          SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE -monto END) as flujo_neto
+          SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE -monto END) as flujo_neto
         FROM transacciones 
         WHERE empresa_id = ? AND fecha >= ?
         GROUP BY strftime('%Y-%m', fecha)

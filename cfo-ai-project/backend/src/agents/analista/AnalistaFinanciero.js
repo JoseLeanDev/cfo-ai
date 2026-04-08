@@ -111,13 +111,13 @@ class AnalistaFinanciero extends BaseAgent {
     // Análisis de rentabilidad
     const ventas = await db.getAsync(`
       SELECT SUM(monto) as total FROM transacciones 
-      WHERE empresa_id = ? AND tipo = 'ingreso' 
+      WHERE empresa_id = ? AND tipo = 'entrada' 
       AND fecha >= date('now', 'start of month')
     `, [empresaId]);
 
     const gastos = await db.getAsync(`
       SELECT SUM(monto) as total FROM transacciones 
-      WHERE empresa_id = ? AND tipo = 'egreso'
+      WHERE empresa_id = ? AND tipo = 'salida'
       AND fecha >= date('now', 'start of month')
     `, [empresaId]);
 
@@ -201,7 +201,7 @@ class AnalistaFinanciero extends BaseAgent {
           SUM(monto) as total_mes
         FROM transacciones 
         WHERE empresa_id = ? 
-          AND tipo = 'egreso'
+          AND tipo = 'salida'
           AND fecha >= ?
         GROUP BY categoria, strftime('%Y-%m', fecha)
         ORDER BY categoria, mes DESC
@@ -259,7 +259,7 @@ class AnalistaFinanciero extends BaseAgent {
           COUNT(*) as transacciones
         FROM transacciones 
         WHERE empresa_id = ? 
-          AND tipo = 'ingreso'
+          AND tipo = 'entrada'
           AND fecha >= ?
           AND cliente_id IS NOT NULL
         GROUP BY cliente_id, strftime('%Y-%m', fecha)
@@ -369,8 +369,8 @@ class AnalistaFinanciero extends BaseAgent {
       const datos6Meses = await db.allAsync(`
         SELECT 
           strftime('%Y-%m', fecha) as mes,
-          SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as ingresos,
-          SUM(CASE WHEN tipo = 'egreso' THEN monto ELSE 0 END) as egresos
+          SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as ingresos,
+          SUM(CASE WHEN tipo = 'salida' THEN monto ELSE 0 END) as egresos
         FROM transacciones 
         WHERE empresa_id = ? 
           AND fecha >= ?

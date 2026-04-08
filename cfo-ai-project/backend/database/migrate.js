@@ -93,6 +93,8 @@ const createTables = async () => {
       descripcion TEXT,
       monto REAL NOT NULL,
       moneda TEXT DEFAULT 'GTQ',
+      cliente_id INTEGER,
+      nombre_cliente TEXT,
       FOREIGN KEY (empresa_id) REFERENCES empresas(id)
     )
   `);

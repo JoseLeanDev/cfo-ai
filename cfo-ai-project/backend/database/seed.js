@@ -322,11 +322,12 @@ const seedData = async () => {
           
           const monto = Math.floor(Math.random() * (cat.max - cat.min)) + cat.min;
           const descripcion = `${cat.cat} - ${formatDate(fecha)}`;
+          const cliente = CLIENTES[Math.floor(Math.random() * CLIENTES.length)];
           
           await db.runAsync(`
-            INSERT INTO transacciones (empresa_id, fecha, tipo, categoria, descripcion, monto)
-            VALUES (?, ?, ?, ?, ?, ?)
-          `, [empresaId, formatDate(fecha), 'entrada', cat.cat, descripcion, monto]);
+            INSERT INTO transacciones (empresa_id, fecha, tipo, categoria, descripcion, monto, cliente_id, nombre_cliente)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          `, [empresaId, formatDate(fecha), 'entrada', cat.cat, descripcion, monto, CLIENTES.indexOf(cliente) + 1, cliente.nombre]);
           
           totalEntradas += monto;
         } else {

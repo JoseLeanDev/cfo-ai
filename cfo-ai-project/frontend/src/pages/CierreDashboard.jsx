@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { 
   CalendarIcon,
   PlusIcon,
@@ -197,17 +197,26 @@ const formatGTQ = (value) => {
 }
 
 export default function CierreDashboard() {
+  const navigate = useNavigate()
   const [meses, setMeses] = useState(mesesCierre)
   const [alertas, setAlertas] = useState(alertasActivas)
 
   const handleAction = (mesData) => {
-    console.log('Acción para:', mesData)
-    // Aquí iría la navegación o apertura de modal
+    if (mesData.estado === 'cerrado') {
+      // Ver reporte del cierre
+      navigate(`/contabilidad/cierre/${mesData.año}/${String(meses.indexOf(mesData) + 1).padStart(2, '0')}`)
+    } else {
+      // Iniciar o continuar cierre
+      navigate(`/contabilidad/cierre/${mesData.año}/${String(meses.indexOf(mesData) + 1).padStart(2, '0')}`)
+    }
   }
 
   const handleNuevoCierre = () => {
-    console.log('Iniciar nuevo cierre')
-    // Aquí iría la lógica para iniciar nuevo cierre
+    // Buscar el primer mes abierto o crear nuevo
+    const mesAbierto = meses.find(m => m.estado === 'abierto')
+    if (mesAbierto) {
+      navigate(`/contabilidad/cierre/${mesAbierto.año}/${String(mesAbierto.id).padStart(2, '0')}`)
+    }
   }
 
   // Calcular variaciones

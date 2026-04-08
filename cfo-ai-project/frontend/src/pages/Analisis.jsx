@@ -15,18 +15,18 @@ export default function Analisis() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {[
-          { titulo: 'ROI', valor: '18.5%', benchmark: '15.2%', status: 'positive' },
-          { titulo: 'Margen Bruto', valor: '42.3%', benchmark: '38.0%', status: 'positive' },
-          { titulo: 'Margen Neto', valor: '12.1%', benchmark: '10.5%', status: 'positive' },
-          { titulo: 'EBITDA', valor: 'Q2.4M', benchmark: 'Q2.1M', status: 'positive' },
+          { titulo: 'ROI', valor: '18.5%', anterior: '16.2%', meta: '20%', tendencia: 'up' },
+          { titulo: 'Margen Bruto', valor: '42.3%', anterior: '40.1%', meta: '45%', tendencia: 'up' },
+          { titulo: 'Margen Neto', valor: '12.1%', anterior: '10.8%', meta: '15%', tendencia: 'up' },
+          { titulo: 'EBITDA', valor: 'Q2.4M', anterior: 'Q2.1M', meta: 'Q2.8M', tendencia: 'up' },
         ].map((kpi, idx) => (
           <div key={idx} className="card-elevated p-6">
             <p className="text-sm font-medium text-slate-500">{kpi.titulo}</p>
             <div className="mt-2 flex items-baseline gap-2">
               <span className="text-3xl font-bold text-slate-900">{kpi.valor}</span>
-              <span className="text-xs text-emerald-600 font-medium">▲ vs sector</span>
+              <span className="text-xs text-emerald-600 font-medium">↑ vs mes ant.</span>
             </div>
-            <p className="mt-1 text-sm text-slate-400">Benchmark: {kpi.benchmark}</p>
+            <p className="mt-1 text-sm text-slate-400">Meta: {kpi.meta} · Ant: {kpi.anterior}</p>
           </div>
         ))}
       </div>
@@ -59,34 +59,43 @@ export default function Analisis() {
         </div>
 
         <div className="card-elevated p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-6">Ratios Financieros vs Sector</h2>
+          <h2 className="text-lg font-bold text-slate-900 mb-6">Análisis vs Mes Anterior</h2>
           <div className="space-y-4">
             {[
-              { nombre: 'Liquidez Corriente', valor: 1.85, sector: 1.5, status: 'above_average' },
-              { nombre: 'Prueba Ácida', valor: 1.32, sector: 1.1, status: 'above_average' },
-              { nombre: 'Endeudamiento', valor: 0.45, sector: 0.55, status: 'best_in_class' },
-              { nombre: 'ROE', valor: 22.5, sector: 18.0, status: 'best_in_class' },
-              { nombre: 'Rotación de Activos', valor: 1.65, sector: 1.4, status: 'above_average' },
-            ].map((ratio, idx) => (
-              <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                <div>
-                  <p className="font-medium text-slate-900">{ratio.nombre}</p>
-                  <p className="text-sm text-slate-500">Sector promedio: {ratio.sector}</p>
+              { nombre: 'Liquidez Corriente', actual: 1.85, anterior: 1.62, umbral: 1.5, unidad: '' },
+              { nombre: 'Prueba Ácida', actual: 1.32, anterior: 1.15, umbral: 1.0, unidad: '' },
+              { nombre: 'Endeudamiento', actual: 0.45, anterior: 0.52, umbral: 0.6, unidad: '' },
+              { nombre: 'ROE', actual: 22.5, anterior: 19.8, umbral: 15.0, unidad: '%' },
+              { nombre: 'Rotación de Inventario', actual: 8.5, anterior: 7.2, umbral: 6.0, unidad: 'x' },
+            ].map((ratio, idx) => {
+              const variacion = ((ratio.actual - ratio.anterior) / ratio.anterior * 100).toFixed(1)
+              const esPositivo = ratio.actual > ratio.anterior
+              const saludable = ratio.nombre === 'Endeudamiento' ? ratio.actual < ratio.umbral : ratio.actual > ratio.umbral
+              
+              return (
+                <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
+                  <div>
+                    <p className="font-medium text-slate-900">{ratio.nombre}</p>
+                    <p className="text-sm text-slate-500">Mes anterior: {ratio.anterior}{ratio.unidad}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className={`text-xl font-bold ${saludable ? 'text-emerald-600' : 'text-amber-600'}`}>
+                      {ratio.actual}{ratio.unidad}
+                    </span>
+                    <span className={`block text-xs ${esPositivo ? 'text-emerald-600' : 'text-rose-500'}`}>
+                      {esPositivo ? '↑' : '↓'} {Math.abs(variacion)}% vs mes ant.
+                    </span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className={`text-xl font-bold ${
-                    ratio.status === 'best_in_class' ? 'text-emerald-600' : 'text-primary-600'
-                  }`}>
-                    {ratio.valor}
-                  </span>
-                  <span className={`block text-xs ${
-                    ratio.status === 'best_in_class' ? 'text-emerald-600' : 'text-slate-500'
-                  }`}>
-                    {ratio.status === 'best_in_class' ? '★ Mejor del sector' : '▲ Sobre promedio'}
-                  </span>
-                </div>
-              </div>
-            ))}
+              )
+            })}
+          </div>
+          
+          <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
+            <p className="text-sm text-blue-800">
+              <strong>💡 Insight:</strong> Todos los ratios muestran mejora vs el mes anterior. 
+              La reducción de endeudamiento del 13.5% es la variación más significativa.
+            </p>
           </div>
         </div>
       </div>

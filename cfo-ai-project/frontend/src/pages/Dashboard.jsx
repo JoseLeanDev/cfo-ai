@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDashboard, useInsights } from '../hooks/useCfoData'
 import { 
-  ArrowTrendingUpIcon, 
-  ArrowTrendingDownIcon,
   CalendarIcon, 
   BoltIcon,
   BanknotesIcon,
@@ -15,10 +13,10 @@ import {
   SparklesIcon,
   ChevronRightIcon,
   EyeIcon,
-  ArrowTrendingUpIcon,
-  ArrowTrendingDownIcon,
   MinusIcon,
-  InformationCircleIcon
+  InformationCircleIcon,
+  ArrowUpIcon,
+  ArrowDownIcon
 } from '@heroicons/react/24/outline'
 
 // Componente para mostrar variación con color
@@ -27,7 +25,7 @@ const Variacion = ({ value, inverse = false }) => {
   
   const isPositive = inverse ? value < 0 : value > 0
   const colorClass = isPositive ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50'
-  const Icon = isPositive ? ArrowTrendingUpIcon : ArrowTrendingDownIcon
+  const Icon = isPositive ? ArrowUpIcon : ArrowDownIcon
   
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>
@@ -41,9 +39,9 @@ const Variacion = ({ value, inverse = false }) => {
 const InsightIcon = ({ tipo, className = "w-5 h-5" }) => {
   switch (tipo) {
     case 'oportunidad':
-      return <ArrowTrendingUpIcon className={`${className} text-emerald-600`} />
+      return <ArrowUpIcon className={`${className} text-emerald-600`} />
     case 'riesgo':
-      return <ArrowTrendingDownIcon className={`${className} text-rose-600`} />
+      return <ArrowDownIcon className={`${className} text-rose-600`} />
     case 'critico':
       return <ExclamationTriangleIcon className={`${className} text-rose-600`} />
     case 'info':

@@ -24,11 +24,54 @@ const addMissingColumns = async () => {
   }
 };
 
+const createInsightsTable = async () => {
+  console.log('🔄 Verificando tabla de insights histórico...');
+  
+  await db.runAsync(`
+    CREATE TABLE IF NOT EXISTS insights_historico (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      empresa_id TEXT NOT NULL DEFAULT 'default',
+      insight_id TEXT NOT NULL UNIQUE,
+      type TEXT NOT NULL CHECK(type IN ('gasto', 'ingreso', 'alerta', 'oportunidad')),
+      severity TEXT NOT NULL CHECK(severity IN ('critical', 'warning', 'info')),
+      title TEXT NOT NULL,
+      description TEXT NOT NULL,
+      impact REAL DEFAULT 0,
+      currency TEXT DEFAULT 'GTQ',
+      category TEXT,
+      action TEXT,
+      action_label TEXT,
+      change_percent REAL,
+      status TEXT DEFAULT 'active' CHECK(status IN ('active', 'dismissed', 'resolved')),
+      dismissed_at DATETIME,
+      dismissed_by INTEGER,
+      periodo_desde DATE,
+      periodo_hasta DATE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      agent_source TEXT,
+      agent_version TEXT
+    )
+  `);
+  
+  // Crear índices
+  await db.runAsync(`CREATE INDEX IF NOT EXISTS idx_insights_empresa ON insights_historico(empresa_id)`);
+  await db.runAsync(`CREATE INDEX IF NOT EXISTS idx_insights_type ON insights_historico(type)`);
+  await db.runAsync(`CREATE INDEX IF NOT EXISTS idx_insights_severity ON insights_historico(severity)`);
+  await db.runAsync(`CREATE INDEX IF NOT EXISTS idx_insights_status ON insights_historico(status)`);
+  await db.runAsync(`CREATE INDEX IF NOT EXISTS idx_insights_created ON insights_historico(created_at)`);
+  
+  console.log('✅ Tabla insights_historico verificada');
+};
+
 const createTables = async () => {
   console.log('🏗️  Creando tablas...');
   
   // Primero agregar columnas faltantes a tablas existentes
   await addMissingColumns();
+  
+  // Crear tabla de insights histórico
+  await createInsightsTable();
 
   // Empresa
   await db.runAsync(`

@@ -1,16 +1,16 @@
-import { useInsights } from '../../hooks/useCfoData'
+import { useInsights, useInsightsHistorico } from '../../hooks/useCfoData'
 import { 
   SparklesIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   ExclamationTriangleIcon,
-  LightBulbIcon,
-  XMarkIcon
+  LightBulbIcon
 } from '@heroicons/react/24/outline'
 
 /**
  * PageInsights - Componente compacto de insights para páginas específicas
  * Muestra insights relevantes al contexto de la página con diseño distintivo
+ * Usa histórico como fallback si el endpoint principal no retorna datos
  * 
  * Props:
  * - context: string - contexto de la página ('tesoreria', 'contabilidad', 'analisis', etc.)
@@ -22,12 +22,16 @@ export default function PageInsights({
   maxInsights = 3,
   title: customTitle
 }) {
-  const { data: insightsData, isLoading, error } = useInsights()
+  const { data: insightsData, isLoading: isLoadingReal, error: errorReal } = useInsights()
+  const { data: historicoData, isLoading: isLoadingHist } = useInsightsHistorico({ limit: maxInsights, days: 30 })
   
-  const insights = insightsData?.insights || []
+  // Usar insights en tiempo real si existen, si no, usar histórico
+  const hasRealInsights = insightsData?.insights?.length > 0
+  const insights = hasRealInsights 
+    ? insightsData.insights.slice(0, maxInsights)
+    : (historicoData?.data?.insights || [])
   
-  // Filtrar insights por contexto si es necesario
-  const filteredInsights = insights.slice(0, maxInsights)
+  const isLoading = isLoadingReal && isLoadingHist
   
   // Títulos por contexto
   const titles = {
@@ -38,6 +42,9 @@ export default function PageInsights({
   }
   
   const title = customTitle || titles[context] || titles.general
+  
+  // Indicador de fuente de datos
+  const sourceLabel = hasRealInsights ? 'En tiempo real' : 'Histórico'
   
   // Colores de gradiente por contexto
   const gradients = {
@@ -102,9 +109,7 @@ export default function PageInsights({
     )
   }
   
-  if (error || filteredInsights.length === 0) {
-    return null // No mostrar nada si hay error o no hay insights
-  }
+  // Siempre mostrar el panel, aunque esté vacío
 
   return (
     <div className="bg-gradient-to-br from-slate-50 to-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -120,24 +125,35 @@ export default function PageInsights({
               <p className="text-xs text-slate-500">Análisis automatizado por IA</p>
             </div>
           </div>
-          <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
-            {filteredInsights.length} insight{filteredInsights.length !== 1 ? 's' : ''}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-medium text-slate-400 bg-slate-100 px-2 py-1 rounded-full">
+              {insights.length} insight{insights.length !== 1 ? 's' : ''}
+            </span>
+            <span className="text-xs text-slate-400">
+              {sourceLabel}
+            </span>
+          </div>
         </div>
       </div>
       
       {/* Lista de insights */}
       <div className="divide-y divide-slate-100">
-        {filteredInsights.map((insight, index) => {
-          const config = typeConfig[insight.type] || typeConfig.oportunidad
-          const severity = severityConfig[insight.severity] || severityConfig.info
-          const IconComponent = config.icon
-          
-          return (
-            <div 
-              key={insight.id || index} 
-              className="p-4 hover:bg-white transition-colors group"
-            >
+        {insights.length === 0 ? (
+          <div className="p-6 text-center text-slate-400">
+            <p>No hay insights disponibles</p>
+            <p className="text-xs mt-1">Los insights se generan automáticamente al analizar tus datos</p>
+          </div>
+        ) : (
+          insights.map((insight, index) => {
+            const config = typeConfig[insight.type] || typeConfig.oportunidad
+            const severity = severityConfig[insight.severity] || severityConfig.info
+            const IconComponent = config.icon
+            
+            return (
+              <div 
+                key={insight.id || index} 
+                className="p-4 hover:bg-white transition-colors group"
+              >
               <div className="flex items-start gap-3">
                 {/* Icono */}
                 <div className={`flex-shrink-0 w-10 h-10 rounded-xl ${config.bg} ${config.border} border flex items-center justify-center`}>
@@ -175,8 +191,9 @@ export default function PageInsights({
                 </div>
               </div>
             </div>
-          )
-        })}
+            )
+          })
+        )}
       </div>
     </div>
   )

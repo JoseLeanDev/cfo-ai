@@ -52,7 +52,9 @@ export const endpoints = {
     presupuesto: (periodo) => cfoApi.get('/analisis/presupuesto', { params: { periodo } }),
     ratios: () => cfoApi.get('/analisis/ratios'),
     tendencias: (metrica) => cfoApi.get('/analisis/tendencias', { params: { metrica } }),
-    insights: () => cfoApi.get('/analisis/insights')
+    insights: () => cfoApi.get('/analisis/insights'),
+    insightsHistorico: (params) => cfoApi.get('/analisis/insights/historico', { params }),
+    dismissInsight: (id) => cfoApi.patch(`/analisis/insights/${id}/dismiss`, {})
   },
   sat: {
     calendario: () => cfoApi.get('/sat/calendario'),

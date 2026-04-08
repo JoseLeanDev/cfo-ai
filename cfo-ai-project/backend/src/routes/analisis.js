@@ -47,46 +47,65 @@ router.get('/insights', async (req, res) => {
 
     // Combinar insights financieros con anomalías de cash flow
     const combinedInsights = [
-      ...insightsResult.insights,
-      ...anomaliesResult.anomalias.map(a => ({
-        tipo: `anomalia_${a.tipo}`,
-        severidad: a.severidad === 'critica' ? 'alta' : a.severidad,
-        titulo: a.titulo,
-        descripcion: a.descripcion,
-        monto_impacto: a.datos?.monto_actual || a.datos?.monto_total || 0,
-        accion_sugerida: a.accion_recomendada,
-        categoria: a.categoria,
-        datos_detallados: a.datos
+      ...insightsResult.insights.map(i => ({
+        id: `insight_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        type: i.type || 'oportunidad',
+        severity: i.severity || 'info',
+        title: i.title || i.titulo || 'Insight',
+        description: i.description || i.descripcion || '',
+        impact: i.impact || i.monto_impacto || 0,
+        currency: i.currency || 'GTQ',
+        category: i.category || i.categoria || 'general',
+        action: i.action || i.accion_sugerida,
+        actionLabel: i.actionLabel || 'Ver detalle',
+        change: i.change || i.cambio || 0,
+        isNew: true
       })),
-      ...anomaliesResult.alertas.map(a => ({
-        tipo: `alerta_${a.tipo}`,
-        severidad: a.severidad === 'critica' ? 'alta' : a.severidad,
-        titulo: a.titulo,
-        descripcion: a.descripcion,
-        monto_impacto: a.datos?.monto_actual || a.datos?.monto_total || a.datos?.flujo_actual || 0,
-        accion_sugerida: a.accion_recomendada,
-        categoria: a.categoria,
-        datos_detallados: a.datos
+      ...anomaliesResult.anomalias.map((a, idx) => ({
+        id: `anomalia_${Date.now()}_${idx}`,
+        type: 'alerta',
+        severity: a.severidad === 'critica' ? 'critical' : a.severidad === 'alta' ? 'warning' : 'info',
+        title: a.titulo,
+        description: a.descripcion,
+        impact: a.datos?.monto_actual || a.datos?.monto_total || 0,
+        currency: 'GTQ',
+        category: a.categoria,
+        action: a.accion_recomendada,
+        actionLabel: 'Revisar',
+        isNew: true
+      })),
+      ...anomaliesResult.alertas.map((a, idx) => ({
+        id: `alerta_${Date.now()}_${idx}`,
+        type: 'alerta',
+        severity: a.severidad === 'critica' ? 'critical' : a.severidad === 'alta' ? 'warning' : 'info',
+        title: a.titulo,
+        description: a.descripcion,
+        impact: a.datos?.monto_actual || a.datos?.monto_total || a.datos?.flujo_actual || 0,
+        currency: 'GTQ',
+        category: a.categoria,
+        action: a.accion_recomendada,
+        actionLabel: 'Revisar',
+        isNew: true
       }))
     ];
 
     // Ordenar por severidad
-    const severidadOrder = { alta: 0, media: 1, baja: 2 };
-    combinedInsights.sort((a, b) => severidadOrder[a.severidad] - severidadOrder[b.severidad]);
+    const severidadOrder = { critical: 0, warning: 1, info: 2 };
+    combinedInsights.sort((a, b) => severidadOrder[a.severity] - severidadOrder[b.severity]);
 
     // Calcular métricas resumen
     const metricas = {
       total_insights: combinedInsights.length,
       por_severidad: {
-        alta: combinedInsights.filter(i => i.severidad === 'alta').length,
-        media: combinedInsights.filter(i => i.severidad === 'media').length,
-        baja: combinedInsights.filter(i => i.severidad === 'baja').length
+        critical: combinedInsights.filter(i => i.severity === 'critical').length,
+        warning: combinedInsights.filter(i => i.severity === 'warning').length,
+        info: combinedInsights.filter(i => i.severity === 'info').length
       },
       por_tipo: combinedInsights.reduce((acc, i) => {
-        acc[i.tipo] = (acc[i.tipo] || 0) + 1;
+        acc[i.type] = (acc[i.type] || 0) + 1;
         return acc;
       }, {}),
-      impacto_total_estimado: combinedInsights.reduce((sum, i) => sum + (i.monto_impacto || 0), 0)
+      impacto_total_estimado: combinedInsights.reduce((sum, i) => sum + (i.impact || 0), 0)
     };
 
     const responseData = {
@@ -101,9 +120,9 @@ router.get('/insights', async (req, res) => {
       metricas_resumen: metricas,
       insights: combinedInsights,
       acciones_prioritarias: combinedInsights
-        .filter(i => i.severidad === 'alta')
+        .filter(i => i.severity === 'critical' || i.severity === 'warning')
         .slice(0, 5)
-        .map(i => i.accion_sugerida),
+        .map(i => i.action),
       _meta: {
         agentes_utilizados: ['AnalistaFinanciero', 'PredictorCashFlow'],
         cache_ttl_minutos: 60,
@@ -116,6 +135,42 @@ router.get('/insights', async (req, res) => {
       timestamp: Date.now(),
       data: responseData
     });
+
+    // Guardar insights en histórico (async, no bloquea response)
+    const saveToHistory = async () => {
+      try {
+        const db = req.app.get('db');
+        for (const insight of combinedInsights) {
+          await db.runAsync(`
+            INSERT OR REPLACE INTO insights_historico 
+            (insight_id, empresa_id, type, severity, title, description, impact, currency, 
+             category, action, action_label, change_percent, periodo_desde, periodo_hasta,
+             agent_source, agent_version)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `, [
+            insight.id,
+            empresaId,
+            insight.type,
+            insight.severity,
+            insight.title,
+            insight.description,
+            insight.impact || 0,
+            insight.currency || 'GTQ',
+            insight.category,
+            insight.action,
+            insight.actionLabel,
+            insight.change || 0,
+            responseData.periodo_analisis.desde,
+            responseData.periodo_analisis.hasta,
+            'AnalistaFinanciero/PredictorCashFlow',
+            '1.0'
+          ]);
+        }
+      } catch (err) {
+        console.error('[Insights] Error guardando en histórico:', err.message);
+      }
+    };
+    saveToHistory();
 
     // Limpiar cache antiguo periódicamente (simple cleanup)
     if (insightsCache.size > 100) {
@@ -163,6 +218,131 @@ router.delete('/insights/cache', async (req, res) => {
     }
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
+// GET /api/analisis/insights/historico - Obtener histórico de insights
+router.get('/insights/historico', async (req, res) => {
+  try {
+    const db = req.app.get('db');
+    const empresaId = req.query.empresa_id || 'default';
+    const limit = parseInt(req.query.limit) || 50;
+    const offset = parseInt(req.query.offset) || 0;
+    const status = req.query.status || 'active';
+    const type = req.query.type;
+    const severity = req.query.severity;
+    const days = parseInt(req.query.days) || 30;
+    
+    let query = `
+      SELECT 
+        id,
+        insight_id as id,
+        type,
+        severity,
+        title,
+        description,
+        impact,
+        currency,
+        category,
+        action,
+        action_label as actionLabel,
+        change_percent as change,
+        status,
+        created_at as createdAt,
+        periodo_desde as periodoDesde,
+        periodo_hasta as periodoHasta,
+        agent_source as agentSource
+      FROM insights_historico
+      WHERE empresa_id = ? 
+        AND status = ?
+        AND created_at >= date('now', '-${days} days')
+    `;
+    
+    const params = [empresaId, status];
+    
+    if (type) {
+      query += ` AND type = ?`;
+      params.push(type);
+    }
+    
+    if (severity) {
+      query += ` AND severity = ?`;
+      params.push(severity);
+    }
+    
+    query += ` ORDER BY created_at DESC LIMIT ? OFFSET ?`;
+    params.push(limit, offset);
+    
+    const insights = await db.allAsync(query, params);
+    
+    // Obtener conteos
+    const counts = await db.getAsync(`
+      SELECT 
+        COUNT(*) as total,
+        SUM(CASE WHEN severity = 'critical' THEN 1 ELSE 0 END) as critical,
+        SUM(CASE WHEN severity = 'warning' THEN 1 ELSE 0 END) as warning,
+        SUM(CASE WHEN severity = 'info' THEN 1 ELSE 0 END) as info
+      FROM insights_historico
+      WHERE empresa_id = ? AND status = 'active'
+        AND created_at >= date('now', '-${days} days')
+    `, [empresaId]);
+    
+    res.json({
+      status: 'success',
+      timestamp: new Date().toISOString(),
+      data: {
+        insights: insights.map(i => ({ ...i, isNew: false })),
+        pagination: {
+          total: counts?.total || 0,
+          limit,
+          offset,
+          hasMore: (offset + insights.length) < (counts?.total || 0)
+        },
+        summary: {
+          total: counts?.total || 0,
+          critical: counts?.critical || 0,
+          warning: counts?.warning || 0,
+          info: counts?.info || 0
+        }
+      }
+    });
+  } catch (error) {
+    console.error('[GET /insights/historico] Error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Error al obtener histórico de insights',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// PATCH /api/analisis/insights/:id/dismiss - Marcar insight como visto
+router.patch('/insights/:id/dismiss', async (req, res) => {
+  try {
+    const db = req.app.get('db');
+    const { id } = req.params;
+    const userId = req.body.user_id || 1;
+    
+    await db.runAsync(`
+      UPDATE insights_historico 
+      SET status = 'dismissed', 
+          dismissed_at = CURRENT_TIMESTAMP,
+          dismissed_by = ?
+      WHERE insight_id = ?
+    `, [userId, id]);
+    
+    res.json({
+      status: 'success',
+      message: 'Insight marcado como visto',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    console.error('[PATCH /insights/dismiss] Error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Error al actualizar insight',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 

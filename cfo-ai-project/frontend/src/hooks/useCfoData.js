@@ -33,7 +33,18 @@ export const useAlertas = () => {
 
 export const useInsights = () => {
   return useQuery('insights', endpoints.analisis.insights, {
-    refetchInterval: 5 * 60 * 1000, // Refetch cada 5 minutos
-    staleTime: 2 * 60 * 1000, // Consider stale after 2 minutos
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
   })
+}
+
+export const useInsightsHistorico = (options = {}) => {
+  const { limit = 50, type, severity, days = 30 } = options
+  return useQuery(
+    ['insights-historico', limit, type, severity, days],
+    () => endpoints.analisis.insightsHistorico({ limit, type, severity, days }),
+    {
+      refetchInterval: 10 * 60 * 1000,
+    }
+  )
 }

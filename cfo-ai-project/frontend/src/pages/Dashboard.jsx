@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDashboard, useInsights } from '../hooks/useCfoData'
 import { 
-  ArrowArrowTrendingUpIcon, 
-  ArrowArrowTrendingDownIcon,
+  ArrowTrendingUpIcon, 
+  ArrowTrendingDownIcon,
   CalendarIcon, 
   BoltIcon,
   BanknotesIcon,
@@ -27,7 +27,7 @@ const Variacion = ({ value, inverse = false }) => {
   
   const isPositive = inverse ? value < 0 : value > 0
   const colorClass = isPositive ? 'text-emerald-600 bg-emerald-50' : 'text-rose-600 bg-rose-50'
-  const Icon = isPositive ? ArrowArrowTrendingUpIcon : ArrowArrowTrendingDownIcon
+  const Icon = isPositive ? ArrowTrendingUpIcon : ArrowTrendingDownIcon
   
   return (
     <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${colorClass}`}>

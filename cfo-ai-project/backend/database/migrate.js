@@ -1,7 +1,34 @@
 const db = require('./connection');
 
+const addMissingColumns = async () => {
+  console.log('🔄 Verificando columnas faltantes...');
+  
+  try {
+    // Verificar si la columna cliente_id existe en transacciones
+    const tableInfo = await db.allAsync(`PRAGMA table_info(transacciones)`);
+    const columns = tableInfo.map(col => col.name);
+    
+    if (!columns.includes('cliente_id')) {
+      console.log('  ➕ Agregando columna cliente_id a transacciones...');
+      await db.runAsync(`ALTER TABLE transacciones ADD COLUMN cliente_id INTEGER`);
+    }
+    
+    if (!columns.includes('nombre_cliente')) {
+      console.log('  ➕ Agregando columna nombre_cliente a transacciones...');
+      await db.runAsync(`ALTER TABLE transacciones ADD COLUMN nombre_cliente TEXT`);
+    }
+    
+    console.log('✅ Columnas verificadas');
+  } catch (err) {
+    console.log('  ⚠️  Tabla transacciones no existe aún, se creará con todas las columnas');
+  }
+};
+
 const createTables = async () => {
   console.log('🏗️  Creando tablas...');
+  
+  // Primero agregar columnas faltantes a tablas existentes
+  await addMissingColumns();
 
   // Empresa
   await db.runAsync(`

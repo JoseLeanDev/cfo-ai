@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useDashboard, useAlertas } from '../hooks/useCfoData'
-import KpiCard from '../components/common/KpiCard'
-import AlertBanner from '../components/common/AlertBanner'
+import { useDashboard, useInsights } from '../hooks/useCfoData'
 import { 
   ArrowTrendingUpIcon, 
   ArrowTrendingDownIcon,
@@ -12,7 +10,15 @@ import {
   ExclamationTriangleIcon,
   ChartBarIcon,
   UsersIcon,
-  BuildingOfficeIcon
+  BuildingOfficeIcon,
+  LightBulbIcon,
+  SparklesIcon,
+  ChevronRightIcon,
+  EyeIcon,
+  TrendingUpIcon,
+  TrendingDownIcon,
+  MinusIcon,
+  InformationCircleIcon
 } from '@heroicons/react/24/outline'
 
 // Componente para mostrar variación con color
@@ -31,6 +37,22 @@ const Variacion = ({ value, inverse = false }) => {
   )
 }
 
+// Componente para icono de insight según tipo
+const InsightIcon = ({ tipo, className = "w-5 h-5" }) => {
+  switch (tipo) {
+    case 'oportunidad':
+      return <TrendingUpIcon className={`${className} text-emerald-600`} />
+    case 'riesgo':
+      return <TrendingDownIcon className={`${className} text-rose-600`} />
+    case 'critico':
+      return <ExclamationTriangleIcon className={`${className} text-rose-600`} />
+    case 'info':
+      return <InformationCircleIcon className={`${className} text-blue-600`} />
+    default:
+      return <LightBulbIcon className={`${className} text-violet-600`} />
+  }
+}
+
 // Formatear moneda GTQ
 const formatGTQ = (value) => {
   if (!value && value !== 0) return 'Q0'
@@ -39,12 +61,14 @@ const formatGTQ = (value) => {
 
 export default function Dashboard() {
   const { data: dashboardData, isLoading } = useDashboard()
-  const { data: alertasData } = useAlertas()
+  const { data: insightsData, isLoading: isLoadingInsights } = useInsights()
   const [animatedValues, setAnimatedValues] = useState({})
+  const [showAllInsights, setShowAllInsights] = useState(false)
 
   const kpis = dashboardData?.data?.kpis || {}
-  const uiComponents = dashboardData?.data?.ui_components
-  const alerts = alertasData?.data?.alertas || []
+  const insights = insightsData?.data?.insights || []
+  const criticalInsights = insights.filter(i => i.tipo === 'critico' || i.prioridad === 'alta')
+  const unseenCriticalCount = criticalInsights.filter(i => !i.visto).length
 
   // Animación de números
   useEffect(() => {
@@ -71,9 +95,47 @@ export default function Dashboard() {
   const workingCapital = (kpis.cxc_total?.value || 0) - (kpis.cxp_total?.value || 0)
   const runway = Math.floor((kpis.disponible_gtq?.value || 0) / 450000) // Gasto mensual estimado
 
+  // Obtener color de borde según tipo de insight
+  const getInsightBorderColor = (tipo) => {
+    switch (tipo) {
+      case 'oportunidad': return 'border-emerald-200 hover:border-emerald-300'
+      case 'riesgo': return 'border-amber-200 hover:border-amber-300'
+      case 'critico': return 'border-rose-200 hover:border-rose-300'
+      case 'info': return 'border-blue-200 hover:border-blue-300'
+      default: return 'border-violet-200 hover:border-violet-300'
+    }
+  }
+
+  // Obtener color de fondo según tipo de insight
+  const getInsightBgColor = (tipo) => {
+    switch (tipo) {
+      case 'oportunidad': return 'bg-emerald-50'
+      case 'riesgo': return 'bg-amber-50'
+      case 'critico': return 'bg-rose-50'
+      case 'info': return 'bg-blue-50'
+      default: return 'bg-violet-50'
+    }
+  }
+
+  // Obtener color de badge según prioridad
+  const getPriorityBadge = (prioridad) => {
+    switch (prioridad) {
+      case 'alta':
+        return 'bg-rose-100 text-rose-700'
+      case 'media':
+        return 'bg-amber-100 text-amber-700'
+      case 'baja':
+        return 'bg-slate-100 text-slate-600'
+      default:
+        return 'bg-violet-100 text-violet-700'
+    }
+  }
+
+  const displayedInsights = showAllInsights ? insights : insights.slice(0, 4)
+
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header Profesional */}
+      {/* Header Profesional con Badge de Insights Críticos */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
@@ -88,6 +150,22 @@ export default function Dashboard() {
         </div>
         
         <div className="flex items-center gap-4">
+          {/* Badge flotante de insights críticos sin ver */}
+          {unseenCriticalCount > 0 && (
+            <div className="relative group cursor-pointer">
+              <div className="flex items-center gap-2 px-4 py-2 bg-rose-50 rounded-lg border border-rose-200 hover:bg-rose-100 transition-colors">
+                <ExclamationTriangleIcon className="w-5 h-5 text-rose-600" />
+                <span className="text-sm font-medium text-rose-700">
+                  {unseenCriticalCount} insight{unseenCriticalCount > 1 ? 's' : ''} crítico{unseenCriticalCount > 1 ? 's' : ''}
+                </span>
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-rose-500 rounded-full animate-pulse" />
+              </div>
+              <div className="absolute right-0 top-full mt-2 w-64 p-3 bg-white rounded-xl shadow-lg border border-rose-200 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none group-hover:pointer-events-auto z-50">
+                <p className="text-xs text-slate-600">Haz clic en "Ver todos los insights" para revisar los insights críticos del Analista Financiero</p>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-lg border border-emerald-200">
             <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
             <span className="text-sm font-medium text-emerald-700">Sistema en línea</span>
@@ -105,37 +183,100 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Alertas Críticas */}
-      {alerts.length > 0 && (
-        <div className="space-y-2">
-          {alerts.slice(0, 2).map((alert, idx) => (
-            <div 
-              key={idx}
-              className={`flex items-center gap-3 px-4 py-3 rounded-lg border ${
-                alert.level === 'critical' 
-                  ? 'bg-rose-50 border-rose-200' 
-                  : 'bg-amber-50 border-amber-200'
-              }`}
-            >
-              <ExclamationTriangleIcon className={`w-5 h-5 ${
-                alert.level === 'critical' ? 'text-rose-600' : 'text-amber-600'
-              }`} />
-              <span className={`text-sm font-medium ${
-                alert.level === 'critical' ? 'text-rose-800' : 'text-amber-800'
-              }`}>
-                {alert.message}
-              </span>
-              <span className={`ml-auto text-xs px-2 py-1 rounded ${
-                alert.level === 'critical' 
-                  ? 'bg-rose-200 text-rose-800' 
-                  : 'bg-amber-200 text-amber-800'
-              }`}>
-                {alert.level === 'critical' ? 'CRÍTICO' : 'ADVERTENCIA'}
-              </span>
+      {/* Insights de IA Section */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6">
+        <div className="flex items-center justify-between mb-5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-violet-500 to-purple-600 rounded-xl flex items-center justify-center">
+              <SparklesIcon className="w-5 h-5 text-white" />
             </div>
-          ))}
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Insights de IA</h2>
+              <p className="text-sm text-slate-500">Análisis inteligente del Analista Financiero</p>
+            </div>
+          </div>
+          
+          {insights.length > 4 && (
+            <button
+              onClick={() => setShowAllInsights(!showAllInsights)}
+              className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-violet-600 hover:text-violet-700 hover:bg-violet-50 rounded-lg transition-colors"
+            >
+              {showAllInsights ? 'Ver menos' : 'Ver todos los insights'}
+              <ChevronRightIcon className={`w-4 h-4 transition-transform ${showAllInsights ? 'rotate-180' : ''}`} />
+            </button>
+          )}
         </div>
-      )}
+
+        {/* Loading State */}
+        {isLoadingInsights && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="p-4 rounded-xl border border-slate-200 bg-slate-50 animate-pulse">
+                <div className="h-10 w-10 bg-slate-200 rounded-lg mb-3" />
+                <div className="h-4 bg-slate-200 rounded w-3/4 mb-2" />
+                <div className="h-3 bg-slate-200 rounded w-full mb-2" />
+                <div className="h-3 bg-slate-200 rounded w-1/2" />
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Empty State */}
+        {!isLoadingInsights && insights.length === 0 && (
+          <div className="text-center py-10">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <LightBulbIcon className="w-8 h-8 text-slate-400" />
+            </div>
+            <h3 className="text-slate-900 font-medium mb-1">No hay insights disponibles</h3>
+            <p className="text-sm text-slate-500">El Analista Financiero está analizando tus datos. Vuelve en unos minutos.</p>
+          </div>
+        )}
+
+        {/* Insights Grid */}
+        {!isLoadingInsights && insights.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            {displayedInsights.map((insight, idx) => (
+              <div
+                key={idx}
+                className={`relative p-4 rounded-xl border ${getInsightBorderColor(insight.tipo)} ${getInsightBgColor(insight.tipo)} transition-all hover:shadow-md group cursor-pointer`}
+              >
+                {/* Badge de no visto */}
+                {!insight.visto && (
+                  <span className="absolute -top-1 -right-1 w-3 h-3 bg-violet-500 rounded-full border-2 border-white" />
+                )}
+                
+                <div className="flex items-start gap-3">
+                  <div className="w-10 h-10 bg-white rounded-lg shadow-sm flex items-center justify-center flex-shrink-0">
+                    <InsightIcon tipo={insight.tipo} className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded ${getPriorityBadge(insight.prioridad)}`}>
+                        {insight.prioridad}
+                      </span>
+                      {insight.categoria && (
+                        <span className="text-[10px] text-slate-500 uppercase">{insight.categoria}</span>
+                      )}
+                    </div>
+                    <h3 className="text-sm font-semibold text-slate-900 line-clamp-2 mb-1">
+                      {insight.titulo}
+                    </h3>
+                    <p className="text-xs text-slate-600 line-clamp-2">
+                      {insight.descripcion}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Indicador de acción */}
+                <div className="mt-3 flex items-center gap-1 text-xs font-medium text-slate-500 group-hover:text-violet-600 transition-colors">
+                  <EyeIcon className="w-3 h-3" />
+                  <span>Ver detalle</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* KPIs Principales */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

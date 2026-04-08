@@ -1,6 +1,171 @@
 const express = require('express');
 const router = express.Router();
 
+// Importar agentes
+const AnalistaFinanciero = require('../agents/analista/AnalistaFinanciero');
+const PredictorCashFlow = require('../agents/predictor/PredictorCashFlow');
+
+// Cache simple en memoria para insights (TTL: 1 hora)
+const insightsCache = new Map();
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hora
+
+/**
+ * GET /api/analisis/insights
+ * Genera insights automáticos de análisis financiero usando el Analista Financiero
+ * Cachea resultados por 1 hora
+ */
+router.get('/insights', async (req, res) => {
+  try {
+    const db = req.app.get('db');
+    const empresaId = req.query.empresa_id || 'default';
+    const skipCache = req.query.skip_cache === 'true';
+    const umbral = parseFloat(req.query.umbral) || 20;
+
+    // Verificar cache
+    const cacheKey = `insights_${empresaId}`;
+    const cached = insightsCache.get(cacheKey);
+    
+    if (!skipCache && cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
+      return res.json({
+        status: 'success',
+        source: 'cache',
+        cached_at: new Date(cached.timestamp).toISOString(),
+        expires_at: new Date(cached.timestamp + CACHE_TTL_MS).toISOString(),
+        data: cached.data
+      });
+    }
+
+    // Instanciar agentes
+    const analista = new AnalistaFinanciero();
+    const predictor = new PredictorCashFlow();
+
+    // Ejecutar análisis en paralelo
+    const [insightsResult, anomaliesResult] = await Promise.all([
+      analista.generateInsights(db, empresaId),
+      predictor.detectAnomalies(db, empresaId, umbral)
+    ]);
+
+    // Combinar insights financieros con anomalías de cash flow
+    const combinedInsights = [
+      ...insightsResult.insights,
+      ...anomaliesResult.anomalias.map(a => ({
+        tipo: `anomalia_${a.tipo}`,
+        severidad: a.severidad === 'critica' ? 'alta' : a.severidad,
+        titulo: a.titulo,
+        descripcion: a.descripcion,
+        monto_impacto: a.datos?.monto_actual || a.datos?.monto_total || 0,
+        accion_sugerida: a.accion_recomendada,
+        categoria: a.categoria,
+        datos_detallados: a.datos
+      })),
+      ...anomaliesResult.alertas.map(a => ({
+        tipo: `alerta_${a.tipo}`,
+        severidad: a.severidad === 'critica' ? 'alta' : a.severidad,
+        titulo: a.titulo,
+        descripcion: a.descripcion,
+        monto_impacto: a.datos?.monto_actual || a.datos?.monto_total || a.datos?.flujo_actual || 0,
+        accion_sugerida: a.accion_recomendada,
+        categoria: a.categoria,
+        datos_detallados: a.datos
+      }))
+    ];
+
+    // Ordenar por severidad
+    const severidadOrder = { alta: 0, media: 1, baja: 2 };
+    combinedInsights.sort((a, b) => severidadOrder[a.severidad] - severidadOrder[b.severidad]);
+
+    // Calcular métricas resumen
+    const metricas = {
+      total_insights: combinedInsights.length,
+      por_severidad: {
+        alta: combinedInsights.filter(i => i.severidad === 'alta').length,
+        media: combinedInsights.filter(i => i.severidad === 'media').length,
+        baja: combinedInsights.filter(i => i.severidad === 'baja').length
+      },
+      por_tipo: combinedInsights.reduce((acc, i) => {
+        acc[i.tipo] = (acc[i.tipo] || 0) + 1;
+        return acc;
+      }, {}),
+      impacto_total_estimado: combinedInsights.reduce((sum, i) => sum + (i.monto_impacto || 0), 0)
+    };
+
+    const responseData = {
+      status: 'success',
+      timestamp: new Date().toISOString(),
+      source: 'real-time',
+      empresa_id: empresaId,
+      periodo_analisis: {
+        desde: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        hasta: new Date().toISOString().split('T')[0]
+      },
+      metricas_resumen: metricas,
+      insights: combinedInsights,
+      acciones_prioritarias: combinedInsights
+        .filter(i => i.severidad === 'alta')
+        .slice(0, 5)
+        .map(i => i.accion_sugerida),
+      _meta: {
+        agentes_utilizados: ['AnalistaFinanciero', 'PredictorCashFlow'],
+        cache_ttl_minutos: 60,
+        parametros: { umbral }
+      }
+    };
+
+    // Guardar en cache
+    insightsCache.set(cacheKey, {
+      timestamp: Date.now(),
+      data: responseData
+    });
+
+    // Limpiar cache antiguo periódicamente (simple cleanup)
+    if (insightsCache.size > 100) {
+      const now = Date.now();
+      for (const [key, value] of insightsCache.entries()) {
+        if (now - value.timestamp > CACHE_TTL_MS) {
+          insightsCache.delete(key);
+        }
+      }
+    }
+
+    res.json(responseData);
+
+  } catch (error) {
+    console.error('[GET /api/analisis/insights] Error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Error al generar insights financieros',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
+// DELETE /api/analisis/insights/cache - Limpiar cache (para admin)
+router.delete('/insights/cache', async (req, res) => {
+  try {
+    const empresaId = req.query.empresa_id;
+    
+    if (empresaId) {
+      insightsCache.delete(`insights_${empresaId}`);
+      res.json({
+        status: 'success',
+        message: `Cache limpiado para empresa ${empresaId}`,
+        timestamp: new Date().toISOString()
+      });
+    } else {
+      insightsCache.clear();
+      res.json({
+        status: 'success',
+        message: 'Cache de insights completamente limpiado',
+        entries_cleared: insightsCache.size,
+        timestamp: new Date().toISOString()
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ status: 'error', message: error.message });
+  }
+});
+
 // GET /api/analisis/rentabilidad
 router.get('/rentabilidad', async (req, res) => {
   try {

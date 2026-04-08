@@ -30,3 +30,10 @@ export const useAlertas = () => {
     refetchInterval: 60 * 1000, // Refetch cada minuto
   })
 }
+
+export const useInsights = () => {
+  return useQuery('insights', endpoints.analisis.insights, {
+    refetchInterval: 5 * 60 * 1000, // Refetch cada 5 minutos
+    staleTime: 2 * 60 * 1000, // Consider stale after 2 minutos
+  })
+}

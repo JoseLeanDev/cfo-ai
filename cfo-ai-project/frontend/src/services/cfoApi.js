@@ -51,7 +51,8 @@ export const endpoints = {
     rentabilidad: (dimension) => cfoApi.get('/analisis/rentabilidad', { params: { dimension } }),
     presupuesto: (periodo) => cfoApi.get('/analisis/presupuesto', { params: { periodo } }),
     ratios: () => cfoApi.get('/analisis/ratios'),
-    tendencias: (metrica) => cfoApi.get('/analisis/tendencias', { params: { metrica } })
+    tendencias: (metrica) => cfoApi.get('/analisis/tendencias', { params: { metrica } }),
+    insights: () => cfoApi.get('/analisis/insights')
   },
   sat: {
     calendario: () => cfoApi.get('/sat/calendario'),

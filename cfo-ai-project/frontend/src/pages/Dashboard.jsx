@@ -428,7 +428,7 @@ export default function Dashboard() {
                   <span className="text-2xl font-bold font-mono text-[var(--accent-cyan)]">
                     {liquidezRatio.toFixed(2)}
                   </span>
-                  <p className="text-[10px] text-[var(--text-muted)]">Ideal: > 1.5</p>
+                  <p className="text-[10px] text-[var(--text-muted)]">Ideal: &gt; 1.5</p>
                 </div>
               </div>
             </div>

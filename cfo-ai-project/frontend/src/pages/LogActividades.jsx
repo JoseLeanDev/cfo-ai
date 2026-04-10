@@ -14,7 +14,7 @@ import {
   TerminalIcon,
   ActivityIcon,
   ZapIcon,
-  ShieldIcon,
+  ShieldCheckIcon,
   PlayIcon,
   PauseIcon
 } from '@heroicons/react/24/outline'
@@ -26,7 +26,7 @@ const agenteConfig = {
     color: 'text-rose-400',
     bg: 'bg-rose-500/10',
     border: 'border-rose-500/30',
-    icon: ShieldIcon,
+    icon: ShieldCheckIcon,
     desc: 'Detección de anomalías'
   },
   'analista_ia': { 

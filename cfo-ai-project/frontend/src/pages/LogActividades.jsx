@@ -7,13 +7,13 @@ import {
   ExclamationTriangleIcon,
   XCircleIcon,
   FunnelIcon,
-  RefreshCwIcon,
+  ArrowPathIcon,
   ChevronDownIcon,
   ChevronUpIcon,
   SparklesIcon,
-  TerminalIcon,
-  ActivityIcon,
-  ZapIcon,
+  CommandLineIcon,
+  ChartBarIcon,
+  BoltIcon,
   ShieldCheckIcon,
   PlayIcon,
   PauseIcon
@@ -42,7 +42,7 @@ const agenteConfig = {
     color: 'text-violet-400',
     bg: 'bg-violet-500/10',
     border: 'border-violet-500/30',
-    icon: ActivityIcon,
+    icon: ChartBarIcon,
     desc: 'Conciliaciones bancarias'
   },
   'maintenance_ia': { 
@@ -50,7 +50,7 @@ const agenteConfig = {
     color: 'text-emerald-400',
     bg: 'bg-emerald-500/10',
     border: 'border-emerald-500/30',
-    icon: TerminalIcon,
+    icon: CommandLineIcon,
     desc: 'Health checks'
   },
   'orchestrator': { 
@@ -76,7 +76,7 @@ const categoriaConfig = {
     color: 'text-cyan-400',
     bg: 'bg-cyan-500/10',
     border: 'border-cyan-500/30',
-    icon: ActivityIcon 
+    icon: ChartBarIcon 
   },
   reporte_generado: { 
     label: 'Reporte', 
@@ -90,7 +90,7 @@ const categoriaConfig = {
     color: 'text-emerald-400',
     bg: 'bg-emerald-500/10',
     border: 'border-emerald-500/30',
-    icon: RefreshCwIcon 
+    icon: ArrowPathIcon 
   },
   error_sistema: { 
     label: 'Error', 
@@ -104,7 +104,7 @@ const categoriaConfig = {
     color: 'text-amber-400',
     bg: 'bg-amber-500/10',
     border: 'border-amber-500/30',
-    icon: ZapIcon 
+    icon: BoltIcon 
   }
 }
 
@@ -183,7 +183,7 @@ export default function LogActividades() {
             onClick={() => refetch()}
             className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-default)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent-cyan)]/50 transition-colors text-sm"
           >
-            <RefreshCwIcon className="w-4 h-4" />
+            <ArrowPathIcon className="w-4 h-4" />
             Actualizar
           </button>
           
@@ -199,7 +199,7 @@ export default function LogActividades() {
         <div className="card p-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">Total Actividades</span>
-            <ActivityIcon className="w-4 h-4 text-[var(--accent-cyan)]" />
+            <ChartBarIcon className="w-4 h-4 text-[var(--accent-cyan)]" />
           </div>
           <div className="text-2xl font-bold text-[var(--text-primary)]">{stats?.total || logs.length}</div>
           <div className="text-xs text-[var(--text-muted)] mt-1">Últimos 7 días</div>
@@ -238,7 +238,7 @@ export default function LogActividades() {
       {/* Agentes Status */}
       <div className="card p-5">
         <h2 className="text-sm font-semibold text-[var(--text-primary)] mb-4 flex items-center gap-2">
-          <TerminalIcon className="w-4 h-4 text-[var(--accent-cyan)]" />
+          <CommandLineIcon className="w-4 h-4 text-[var(--accent-cyan)]" />
           Estado de Agentes
         </h2>
         
@@ -334,7 +334,7 @@ export default function LogActividades() {
           </div>
         ) : logs.length === 0 ? (
           <div className="p-8 text-center">
-            <TerminalIcon className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
+            <CommandLineIcon className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
             <p className="text-sm text-[var(--text-muted)]">No hay logs para los filtros seleccionados</p>
           </div>
         ) : (

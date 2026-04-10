@@ -3,48 +3,64 @@
  */
 const express = require('express');
 const router = express.Router();
-const { getOrchestrator } = require('../agents');
 
-// POST /api/agents/chat - Enviar mensaje al sistema de agentes
-router.post('/chat', async (req, res) => {
+// GET /api/agents/status - Estado del sistema de agentes programados
+router.get('/status', async (req, res) => {
   try {
-    const { message, userId = 'anonymous', empresaId = 1 } = req.body;
+    const orchestrator = req.app.get('agentsOrchestrator');
     
-    if (!message) {
-      return res.status(400).json({ error: 'Message is required' });
+    if (!orchestrator) {
+      return res.json({
+        success: true,
+        isRunning: false,
+        message: 'Agentes no inicializados aún'
+      });
+    }
+    
+    const status = await orchestrator.getStatus();
+    
+    res.json({
+      success: true,
+      ...status,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('[Agents API] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+// POST /api/agents/execute - Ejecutar tarea manualmente
+router.post('/execute', async (req, res) => {
+  try {
+    const { agente, tarea } = req.body;
+    
+    if (!agente || !tarea) {
+      return res.status(400).json({ 
+        error: 'Se requiere agente y tarea' 
+      });
     }
 
-    const orchestrator = getOrchestrator();
-    const db = req.app.get('db');
+    const orchestrator = req.app.get('agentsOrchestrator');
+    
+    if (!orchestrator) {
+      return res.status(503).json({
+        error: 'Sistema de agentes no inicializado'
+      });
+    }
 
-    const response = await orchestrator.process(
-      { query: message, userId, empresaId },
-      { db, req }
-    );
-
-    res.json({
-      success: true,
-      response
-    });
-
-  } catch (error) {
-    console.error('[Agents API] Error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-// GET /api/agents/status - Estado del sistema de agentes
-router.get('/status', (req, res) => {
-  try {
-    const orchestrator = getOrchestrator();
-    const status = orchestrator.getSystemStatus();
+    const result = await orchestrator.ejecutarTarea(agente, tarea);
     
     res.json({
       success: true,
-      ...status
+      agente,
+      tarea,
+      result,
+      timestamp: new Date().toISOString()
     });
 
   } catch (error) {
@@ -55,47 +71,6 @@ router.get('/status', (req, res) => {
     });
   }
 });
-
-// POST /api/agents/clear - Limpiar memoria de todos los agentes
-router.post('/clear', (req, res) => {
-  try {
-    const orchestrator = getOrchestrator();
-    orchestrator.clearAllMemory();
-    
-    res.json({
-      success: true,
-      message: 'Memoria de agentes limpiada'
-    });
-
-  } catch (error) {
-    console.error('[Agents API] Error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-// GET /api/agents/history - Historial de conversación
-router.get('/history', (req, res) => {
-  try {
-    const orchestrator = getOrchestrator();
-    
-    res.json({
-      success: true,
-      history: orchestrator.memory
-    });
-
-  } catch (error) {
-    console.error('[Agents API] Error:', error);
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
-
-module.exports = router;
 
 /**
  * GET /api/agents/logs
@@ -291,3 +266,215 @@ router.post('/logs', async (req, res) => {
     });
   }
 });
+
+// ============================================
+// ENDPOINTS PARA TAREAS PROGRAMADAS (SCHEDULER)
+// ============================================
+
+// POST /api/agents/auditor
+router.post('/auditor', async (req, res) => {
+  try {
+    const { empresa_id, task, params = {} } = req.body;
+    
+    if (!empresa_id || !task) {
+      return res.status(400).json({ error: 'Se requiere empresa_id y task' });
+    }
+
+    const db = req.app.get('db');
+    const result = await auditorAgent.process(
+      { task, empresa_id, params },
+      { db }
+    );
+
+    res.json(result);
+  } catch (error) {
+    console.error('[POST /api/agents/auditor] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// POST /api/agents/analista
+router.post('/analista', async (req, res) => {
+  try {
+    const { empresa_id, task, params = {} } = req.body;
+    
+    if (!empresa_id || !task) {
+      return res.status(400).json({ error: 'Se requiere empresa_id y task' });
+    }
+
+    const db = req.app.get('db');
+    const result = await analistaAgent.process(
+      { task, empresa_id, params },
+      { db }
+    );
+
+    res.json(result);
+  } catch (error) {
+    console.error('[POST /api/agents/analista] Error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/agents/ia/status
+ * Obtiene el estado actual de los agentes de IA
+ */
+router.get('/ia/status', async (req, res) => {
+  try {
+    const orchestrator = req.app.get('agentsOrchestratorIA');
+    
+    if (!orchestrator) {
+      return res.json({
+        success: true,
+        estado: 'no_inicializado',
+        mensaje: 'Agentes de IA no iniciados',
+        agentes: [],
+        timestamp: new Date().toISOString()
+      });
+    }
+    
+    const estado = orchestrator.getEstado();
+    
+    res.json({
+      success: true,
+      ...estado,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('[Agents IA API] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * POST /api/agents/ia/execute
+ * Ejecutar tarea manual de agente de IA
+ */
+router.post('/ia/execute', async (req, res) => {
+  try {
+    const { agente, tarea } = req.body;
+    
+    if (!agente || !tarea) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Se requiere agente y tarea' 
+      });
+    }
+
+    const orchestrator = req.app.get('agentsOrchestratorIA');
+    
+    if (!orchestrator) {
+      return res.status(503).json({
+        success: false,
+        error: 'Sistema de agentes de IA no inicializado'
+      });
+    }
+
+    const resultado = await orchestrator.ejecutarTarea(agente, tarea);
+    
+    res.json({
+      success: true,
+      ...resultado,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('[Agents IA API] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/agents/ia/alertas
+ * Obtiene alertas financieras detectadas por IA
+ */
+router.get('/ia/alertas', async (req, res) => {
+  try {
+    const db = req.app.get('db');
+    const limit = parseInt(req.query.limit) || 50;
+    const estado = req.query.estado || 'activa';
+    const nivel = req.query.nivel;
+    
+    let query = `SELECT * FROM alertas_financieras WHERE estado = ?`;
+    const params = [estado];
+    
+    if (nivel) {
+      query += ` AND nivel = ?`;
+      params.push(nivel);
+    }
+    
+    query += ` ORDER BY created_at DESC LIMIT ?`;
+    params.push(limit);
+    
+    const alertas = await db.allAsync(query, params);
+    
+    // Parsear metadata
+    const alertasParsed = alertas.map(a => ({
+      ...a,
+      metadata: a.metadata ? JSON.parse(a.metadata) : null
+    }));
+    
+    res.json({
+      success: true,
+      data: alertasParsed,
+      count: alertasParsed.length,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('[Agents IA API] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
+ * GET /api/agents/ia/briefing
+ * Obtiene el briefing diario generado por IA
+ */
+router.get('/ia/briefing', async (req, res) => {
+  try {
+    const db = req.app.get('db');
+    const fecha = req.query.fecha || new Date().toISOString().split('T')[0];
+    
+    const briefing = await db.getAsync(
+      `SELECT * FROM briefings_diarios WHERE fecha = ?`,
+      [fecha]
+    );
+    
+    if (!briefing) {
+      return res.json({
+        success: true,
+        data: null,
+        mensaje: 'No hay briefing para la fecha solicitada'
+      });
+    }
+    
+    res.json({
+      success: true,
+      data: {
+        ...briefing,
+        insights: briefing.insights_json ? JSON.parse(briefing.insights_json) : []
+      },
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    console.error('[Agents IA API] Error:', error);
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+module.exports = router;

@@ -34,14 +34,21 @@ const categoriaConfig = {
   configuracion: { icon: CogIcon, color: 'text-slate-500', bg: 'bg-slate-50', label: 'Configuración' }
 }
 
-// Configuración de agentes
+// Configuración de agentes (actualizado con Agentes de IA v2.0)
 const agenteConfig = {
-  AnalistaFinanciero: { color: 'text-cyan-600', bg: 'bg-cyan-100' },
-  PredictorCashFlow: { color: 'text-emerald-600', bg: 'bg-emerald-100' },
-  AsistenteSAT: { color: 'text-orange-600', bg: 'bg-orange-100' },
-  AuditorAutomatico: { color: 'text-rose-600', bg: 'bg-rose-100' },
-  ChatbotCFO: { color: 'text-violet-600', bg: 'bg-violet-100' },
-  OrchestratorAgent: { color: 'text-blue-600', bg: 'bg-blue-100' }
+  // Agentes de IA v2.0
+  'auditor_ia': { nombre: 'Auditor IA', color: 'text-rose-600', bg: 'bg-rose-100' },
+  'analista_ia': { nombre: 'Analista Financiero IA', color: 'text-cyan-600', bg: 'bg-cyan-100' },
+  'conciliador_ia': { nombre: 'Conciliador Bancario IA', color: 'text-indigo-600', bg: 'bg-indigo-100' },
+  'maintenance_ia': { nombre: 'Maintenance IA', color: 'text-emerald-600', bg: 'bg-emerald-100' },
+  'orchestrator': { nombre: 'Orchestrator IA', color: 'text-blue-600', bg: 'bg-blue-100' },
+  // Legacy (para compatibilidad)
+  'AnalistaFinanciero': { nombre: 'Analista Financiero', color: 'text-cyan-600', bg: 'bg-cyan-100' },
+  'PredictorCashFlow': { nombre: 'Predictor Cash Flow', color: 'text-emerald-600', bg: 'bg-emerald-100' },
+  'AsistenteSAT': { nombre: 'Asistente SAT', color: 'text-orange-600', bg: 'bg-orange-100' },
+  'AuditorAutomatico': { nombre: 'Auditor Automático', color: 'text-rose-600', bg: 'bg-rose-100' },
+  'ChatbotCFO': { nombre: 'Chatbot CFO', color: 'text-violet-600', bg: 'bg-violet-100' },
+  'OrchestratorAgent': { nombre: 'Orchestrator', color: 'text-blue-600', bg: 'bg-blue-100' }
 }
 
 // Status icons
@@ -137,12 +144,11 @@ export default function LogActividades() {
               className="input w-full"
             >
               <option value="">Todos los agentes</option>
-              <option value="AnalistaFinanciero">Analista Financiero</option>
-              <option value="PredictorCashFlow">Predictor Cash Flow</option>
-              <option value="AsistenteSAT">Asistente SAT</option>
-              <option value="AuditorAutomatico">Auditor Automático</option>
-              <option value="ChatbotCFO">Chatbot CFO</option>
-              <option value="OrchestratorAgent">Orchestrator</option>
+              <option value="auditor_ia">Auditor IA</option>
+              <option value="analista_ia">Analista Financiero IA</option>
+              <option value="conciliador_ia">Conciliador Bancario IA</option>
+              <option value="maintenance_ia">Maintenance IA</option>
+              <option value="orchestrator">Orchestrator</option>
             </select>
           </div>
           <div>
@@ -221,7 +227,7 @@ export default function LogActividades() {
                 {logs.map((log) => {
                   const catConfig = categoriaConfig[log.categoria] || categoriaConfig.insight_generado
                   const CatIcon = catConfig.icon
-                  const ageConfig = agenteConfig[log.agenteTipo] || { color: 'text-slate-600', bg: 'bg-slate-100' }
+                  const ageConfig = agenteConfig[log.agenteTipo] || agenteConfig.orchestrator
                   const StatusIcon = (statusConfig[log.resultadoStatus] || statusConfig.exito).icon
                   const statusCfg = statusConfig[log.resultadoStatus] || statusConfig.exito
 
@@ -230,7 +236,7 @@ export default function LogActividades() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center gap-2">
                           <span className={`w-2 h-2 rounded-full ${ageConfig.bg.replace('bg-', 'bg-').replace('100', '500')}`} />
-                          <span className="text-sm font-medium text-slate-900">{log.agenteNombre}</span>
+                          <span className="text-sm font-medium text-slate-900">{ageConfig.nombre}</span>
                         </div>
                         <span className="text-xs text-slate-500 ml-4">{log.agenteTipo}</span>
                       </td>
@@ -288,14 +294,14 @@ export default function LogActividades() {
             <h3 className="font-semibold text-slate-900 mb-4">Actividad por Agente</h3>
             <div className="space-y-3">
               {stats.porAgente.map((item) => {
-                const ageConfig = agenteConfig[item.agente] || { color: 'text-slate-600', bg: 'bg-slate-100' }
+                const ageConfig = agenteConfig[item.agente] || agenteConfig.orchestrator
                 const maxCount = Math.max(...stats.porAgente.map(a => a.count))
                 const percentage = (item.count / maxCount) * 100
                 
                 return (
                   <div key={item.agente} className="flex items-center gap-3">
-                    <span className={`text-xs font-medium px-2 py-1 rounded ${ageConfig.bg} ${ageConfig.color} w-32 truncate`}>
-                      {item.nombre}
+                    <span className={`text-xs font-medium px-2 py-1 rounded ${ageConfig.bg} ${ageConfig.color} w-40 truncate`}>
+                      {ageConfig.nombre}
                     </span>
                     <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
                       <div 

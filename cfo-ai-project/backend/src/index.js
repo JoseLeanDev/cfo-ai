@@ -4,13 +4,43 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
+const AgentOrchestrator = require('../agents');
+const agentsOrchestratorIA = require('../agents/index');
+const db = require('../database/connection');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialize Multi-Agent System
-const { initializeOrchestrator } = require('./agents');
-const agentsOrchestrator = initializeOrchestrator();
+// Initialize Multi-Agent Systems
+let agentsOrchestrator = null;
+
+async function initializeAgents() {
+  try {
+    // 1. Inicializar agentes tradicionales (legacy)
+    agentsOrchestrator = new AgentOrchestrator(db);
+    await agentsOrchestrator.initialize();
+    agentsOrchestrator.start();
+    app.set('agentsOrchestrator', agentsOrchestrator);
+    console.log('🤖 Agentes tradicionales iniciados exitosamente');
+  } catch (error) {
+    console.error('❌ Error inicializando agentes tradicionales:', error.message);
+  }
+
+  try {
+    // 2. Inicializar Agentes de IA (nuevo sistema)
+    // Solo si hay API key configurada
+    if (process.env.OPENROUTER_API_KEY || process.env.KIMI_API_KEY) {
+      await agentsOrchestratorIA.iniciar();
+      app.set('agentsOrchestratorIA', agentsOrchestratorIA);
+      console.log('🧠 Agentes de IA iniciados exitosamente');
+    } else {
+      console.log('⚠️  Agentes de IA no iniciados: falta API key (OPENROUTER_API_KEY o KIMI_API_KEY)');
+      console.log('   Para activar: configura la variable de entorno y reinicia');
+    }
+  } catch (error) {
+    console.error('❌ Error inicializando agentes de IA:', error.message);
+  }
+}
 
 // Middleware
 app.use(helmet());
@@ -23,8 +53,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Database setup
-const db = require('../database/connection');
 app.set('db', db); // Make db available to routes
+app.set('agentsOrchestrator', agentsOrchestrator);
 
 // Routes
 app.use('/api/dashboard', require('./routes/dashboard'));
@@ -34,7 +64,9 @@ app.use('/api/analisis', require('./routes/analisis'));
 app.use('/api/sat', require('./routes/sat'));
 app.use('/api/alertas', require('./routes/alertas'));
 app.use('/api/agents', require('./routes/agents')); // Multi-Agent System
+app.use('/api/agents/conciliador', require('./routes/conciliador')); // Agente Conciliador Bancario
 app.use('/api/cierre', require('./routes/cierre')); // Cierre Mensual y Conciliación
+app.use('/api/scheduler', require('./routes/scheduler')); // Scheduler System
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -79,7 +111,7 @@ app.use((req, res) => {
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════╗
 ║              CFO AI - Backend API                        ║
@@ -87,17 +119,26 @@ app.listen(PORT, () => {
 ║  🚀 Servidor corriendo en puerto ${PORT}                   ║
 ║  📊 Base de datos: SQLite                                ║
 ║  🤖 Multi-Agent System: ACTIVO                           ║
+║  ⏰ Scheduler System: ACTIVO                             ║
 ║  🌍 Environment: ${process.env.NODE_ENV || 'development'}                           ║
 ╠══════════════════════════════════════════════════════════╣
-║  Agentes registrados:                                    ║
-║    • Orchestrator    • Analista Financiero              ║
-║    • Asistente SAT   • Predictor Cash Flow              ║
-║    • Auditor Auto    • Chatbot CFO                      ║
+║  Agentes de IA Programados:                              ║
+║    • Auditor Automático     • Analista Financiero       ║
+║    • Conciliador Bancario   • Maintenance Agent         ║
+╠══════════════════════════════════════════════════════════╣
+║  Tareas Programadas Activas:                             ║
+║    Auditor:    45min • 06:00 • Lun 08:00 • Día 1/5      ║
+║    Analista:   07:00/18:00 • Vie 17:00 • Día 1 • Trim   ║
+║    Conciliador: 08:00 • Día 1 06:00 • Día 3 09:00       ║
+║    Maintenance: 02:00 • Dom 03:00 • Día 15 04:00        ║
 ╚══════════════════════════════════════════════════════════╝
   `);
   console.log(`API disponible en: http://localhost:${PORT}/api`);
   console.log(`Agentes API: http://localhost:${PORT}/api/agents`);
   console.log(`Health check: http://localhost:${PORT}/api/health`);
+  
+  // Inicializar agentes después de que el servidor esté listo
+  await initializeAgents();
 });
 
 module.exports = app;

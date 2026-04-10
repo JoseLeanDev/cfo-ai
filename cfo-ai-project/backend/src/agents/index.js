@@ -8,6 +8,7 @@ const AsistenteSAT = require('./asistente-sat/AsistenteSAT');
 const PredictorCashFlow = require('./predictor/PredictorCashFlow');
 const AuditorAutomatico = require('./auditor/AuditorAutomatico');
 const ChatbotCFO = require('./chatbot/ChatbotCFO');
+const ConciliadorBancario = require('./conciliador/ConciliadorBancario');
 
 // Crear instancia singleton del orchestrator
 let orchestratorInstance = null;
@@ -23,6 +24,7 @@ function initializeOrchestrator() {
   orchestratorInstance.registerAgent(new PredictorCashFlow());
   orchestratorInstance.registerAgent(new AuditorAutomatico());
   orchestratorInstance.registerAgent(new ChatbotCFO());
+  orchestratorInstance.registerAgent(new ConciliadorBancario());
 
   console.log('[Agents] Sistema multi-agente inicializado');
   console.log(`[Agents] Agentes registrados: ${orchestratorInstance.agents.size}`);
@@ -45,6 +47,7 @@ module.exports = {
   PredictorCashFlow,
   AuditorAutomatico,
   ChatbotCFO,
+  ConciliadorBancario,
   initializeOrchestrator,
   getOrchestrator
 };

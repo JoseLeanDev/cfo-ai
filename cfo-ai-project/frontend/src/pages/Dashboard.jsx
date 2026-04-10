@@ -450,8 +450,7 @@ export default function Dashboard() {
             <div className="space-y-3">
               <div className="p-3 rounded-lg bg-[var(--danger-dim)] border border-[var(--danger)]/30">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[var(--danger)] flex items-center justify-center text-white font-bold text-xs"
-003e
+                  <div className="w-10 h-10 rounded-lg bg-[var(--danger)] flex items-center justify-center text-white font-bold text-xs">
                     HOY
                   </div>
                   

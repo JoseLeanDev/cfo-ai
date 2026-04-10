@@ -3,529 +3,423 @@
 @tailwind utilities;
 
 /* ============================================
-   CFO AI - FinTech Premium Design System
-   Estética: Bloomberg Terminal × Linear App
-   Características: Dark mode default, alta densidad, 
-   precisión financiera, acentos cian/púrpura
+   CFO AI - Monocle × Bloomberg Design System
+   Estética: International Finance, Sophisticated Grid
+   Light Mode | Serif Headings | Monospace Data
    ============================================ */
 
 @layer base {
   :root {
-    /* Core Palette - Rich Dark (no puro negro) */
-    --bg-primary: #0B0F19;
-    --bg-secondary: #111827;
-    --bg-tertiary: #1A1F2E;
-    --bg-elevated: #1E293B;
-    --bg-card: rgba(30, 41, 59, 0.6);
+    /* Core - Warm Editorial Background */
+    --bg-primary: #F8F7F4;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #F0EEEA;
+    --bg-elevated: #FFFFFF;
     
-    /* Text Colors - High Contrast */
-    --text-primary: #F8FAFC;
-    --text-secondary: #94A3B8;
-    --text-tertiary: #64748B;
-    --text-muted: #475569;
+    /* Text - High Contrast Editorial */
+    --text-primary: #1A1A1A;
+    --text-secondary: #4A4A4A;
+    --text-tertiary: #6B6B6B;
+    --text-muted: #9A9A9A;
     
-    /* Accent Colors - Financial Precision */
-    --accent-cyan: #06B6D4;
-    --accent-cyan-glow: rgba(6, 182, 212, 0.3);
-    --accent-purple: #8B5CF6;
-    --accent-purple-glow: rgba(139, 92, 246, 0.3);
-    --accent-blue: #3B82F6;
-    --accent-blue-glow: rgba(59, 130, 246, 0.3);
+    /* Brand - Navy Gold Financial */
+    --brand-navy: #1E3A5F;
+    --brand-navy-light: #2A4A73;
+    --brand-gold: #B8860B;
+    --brand-gold-light: #D4A84B;
     
-    /* Semantic Colors - Financial Data */
-    --success: #10B981;
-    --success-dim: rgba(16, 185, 129, 0.1);
-    --warning: #F59E0B;
-    --warning-dim: rgba(245, 158, 11, 0.1);
-    --danger: #EF4444;
-    --danger-dim: rgba(239, 68, 68, 0.1);
-    --info: #06B6D4;
-    --info-dim: rgba(6, 182, 212, 0.1);
+    /* Accent - Functional Colors */
+    --accent-blue: #2563EB;
+    --accent-cyan: #0891B2;
+    --accent-teal: #0D9488;
     
-    /* Borders - Subtle Definition */
-    --border-subtle: rgba(148, 163, 184, 0.1);
-    --border-default: rgba(148, 163, 184, 0.15);
-    --border-strong: rgba(148, 163, 184, 0.25);
+    /* Semantic - Financial Data */
+    --success: #059669;
+    --success-bg: #ECFDF5;
+    --warning: #D97706;
+    --warning-bg: #FFFBEB;
+    --danger: #DC2626;
+    --danger-bg: #FEF2F2;
+    --info: #2563EB;
+    --info-bg: #EFF6FF;
     
-    /* Shadows - Depth Without Noise */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
-    --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.3);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.3);
-    --shadow-glow-cyan: 0 0 20px -5px var(--accent-cyan-glow);
-    --shadow-glow-purple: 0 0 20px -5px var(--accent-purple-glow);
+    /* Borders - Refined */
+    --border-subtle: rgba(0, 0, 0, 0.06);
+    --border-default: rgba(0, 0, 0, 0.1);
+    --border-strong: rgba(0, 0, 0, 0.15);
     
     /* Typography */
-    --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', Consolas, monospace;
-    --font-sans: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
     
-    /* Spacing Scale */
-    --radius-sm: 6px;
-    --radius: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    --radius-xl: 24px;
+    /* Spacing - Monocle Grid System */
+    --section-gap: 2.5rem;
+    --card-padding: 1.5rem;
     
-    /* Transitions */
-    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-base: 200ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    /* Radius - Subtle */
+    --radius-sm: 4px;
+    --radius: 6px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
   }
+}
 
+/* ============================================
+   BASE STYLES
+   ============================================ */
+
+@layer base {
   * {
     @apply border-[var(--border-default)];
   }
   
   html {
-    scroll-behavior: smooth;
+    font-family: var(--font-sans);
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   
   body {
-    font-family: var(--font-sans);
-    background: var(--bg-primary);
-    color: var(--text-primary);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.01em;
+    @apply min-h-screen;
+    background-color: var(--bg-primary);
   }
-
-  /* Selection - Cyan accent */
-  ::selection {
-    background: var(--accent-cyan-glow);
+  
+  /* Editorial Typography */
+  h1, h2, h3 {
+    font-family: var(--font-serif);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+  
+  h1 {
+    @apply text-3xl leading-tight;
+    color: var(--brand-navy);
+  }
+  
+  h2 {
+    @apply text-xl leading-snug;
     color: var(--text-primary);
+  }
+  
+  h3 {
+    @apply text-lg leading-snug;
+  }
+  
+  /* Financial Numbers */
+  .tabular-nums {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+  
+  /* Selection */
+  ::selection {
+    background-color: var(--brand-gold);
+    color: white;
   }
 }
 
+/* ============================================
+   COMPONENTS - Monocle Financial
+   ============================================ */
+
 @layer components {
-  /* ============================================
-     CARDS - Glassmorphism FinTech
-     ============================================ */
-  .card {
-    background: var(--bg-card);
-    backdrop-filter: blur(20px);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-lg);
-    box-shadow: 
-      0 1px 3px 0 rgb(0 0 0 / 0.3),
-      inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-  }
   
-  .card-elevated {
-    background: var(--bg-elevated);
-    border: 1px solid var(--border-strong);
-    border-radius: var(--radius-lg);
-    box-shadow: var(--shadow-lg);
+  /* Cards - Clean Editorial */
+  .card {
+    @apply bg-white border rounded-lg;
+    border-color: var(--border-default);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
   }
   
   .card-hover {
-    @apply transition-all duration-300;
+    @apply transition-all duration-200;
   }
   
   .card-hover:hover {
-    transform: translateY(-2px);
-    border-color: var(--border-strong);
-    box-shadow: 
-      0 20px 25px -5px rgb(0 0 0 / 0.5),
-      0 8px 10px -6px rgb(0 0 0 / 0.3),
-      0 0 0 1px var(--accent-cyan-glow);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
   }
   
-  /* Card Variants */
-  .card-success {
-    border-left: 3px solid var(--success);
+  /* Section Headers - Monocle Style */
+  .section-header {
+    @apply flex items-center gap-3 pb-3 mb-4;
+    border-bottom: 2px solid var(--brand-navy);
   }
   
-  .card-warning {
-    border-left: 3px solid var(--warning);
+  .section-number {
+    @apply w-7 h-7 flex items-center justify-center text-xs font-bold rounded;
+    background-color: var(--brand-navy);
+    color: white;
+    font-family: var(--font-mono);
   }
   
-  .card-danger {
-    border-left: 3px solid var(--danger);
+  /* KPI Cards - Bloomberg Style */
+  .kpi-card {
+    @apply p-5 bg-white border rounded-lg;
+    border-color: var(--border-default);
   }
   
-  .card-info {
-    border-left: 3px solid var(--accent-cyan);
+  .kpi-card::before {
+    content: '';
+    @apply block h-0.5 w-12 mb-3 rounded-full;
+    background-color: var(--brand-gold);
   }
-
-  /* ============================================
-     BUTTONS - Content-width, Premium Feel
-     ============================================ */
+  
+  .kpi-value {
+    @apply text-2xl font-bold tabular-nums;
+    font-family: var(--font-mono);
+    color: var(--brand-navy);
+  }
+  
+  .kpi-label {
+    @apply text-xs uppercase tracking-wider mt-1;
+    color: var(--text-muted);
+  }
+  
+  .kpi-change {
+    @apply text-xs font-medium tabular-nums mt-1;
+    font-family: var(--font-mono);
+  }
+  
+  .kpi-change.positive {
+    color: var(--success);
+  }
+  
+  .kpi-change.negative {
+    color: var(--danger);
+  }
+  
+  /* Navigation - Refined */
+  .nav-link {
+    @apply flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors;
+    color: var(--text-secondary);
+  }
+  
+  .nav-link:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+  
+  .nav-link-active {
+    @apply flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium;
+    background-color: var(--brand-navy);
+    color: white;
+  }
+  
+  /* Buttons */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 text-sm font-medium rounded-lg transition-all duration-200;
-    @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[var(--bg-primary)];
-    letter-spacing: -0.01em;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors;
   }
   
   .btn-primary {
-    background: linear-gradient(135deg, var(--accent-cyan) 0%, #0891B2 100%);
-    color: var(--bg-primary);
-    box-shadow: 0 1px 3px 0 rgba(6, 182, 212, 0.4), var(--shadow-glow-cyan);
+    @apply btn;
+    background-color: var(--brand-navy);
+    color: white;
   }
   
   .btn-primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px -2px rgba(6, 182, 212, 0.5), var(--shadow-glow-cyan);
-  }
-  
-  .btn-primary:active {
-    transform: translateY(0);
+    background-color: var(--brand-navy-light);
   }
   
   .btn-secondary {
-    background: var(--bg-tertiary);
+    @apply btn;
+    background-color: var(--bg-tertiary);
     color: var(--text-primary);
     border: 1px solid var(--border-default);
   }
   
   .btn-secondary:hover {
-    background: var(--bg-elevated);
-    border-color: var(--border-strong);
+    background-color: var(--border-subtle);
   }
   
-  .btn-ghost {
-    color: var(--text-secondary);
-    background: transparent;
-  }
-  
-  .btn-ghost:hover {
-    color: var(--text-primary);
-    background: var(--bg-tertiary);
-  }
-  
-  .btn-danger {
-    background: var(--danger-dim);
-    color: var(--danger);
-    border: 1px solid rgba(239, 68, 68, 0.3);
-  }
-  
-  .btn-danger:hover {
-    background: rgba(239, 68, 68, 0.2);
-  }
-
-  /* ============================================
-     INPUTS - Clean, Focused
-     ============================================ */
-  .input {
-    @apply block w-full px-4 py-3 rounded-lg;
-    background: var(--bg-secondary);
-    border: 1px solid var(--border-default);
-    color: var(--text-primary);
-    @apply placeholder-[var(--text-muted)];
-    @apply transition-all duration-200;
-    @apply focus:border-[var(--accent-cyan)] focus:ring-2 focus:ring-[var(--accent-cyan-glow)] focus:outline-none;
-  }
-  
-  .input:hover {
-    border-color: var(--border-strong);
-  }
-
-  /* ============================================
-     BADGES - Soft, Modern
-     ============================================ */
+  /* Badges */
   .badge {
-    @apply inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium;
-    font-family: var(--font-mono);
-    letter-spacing: 0.02em;
+    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded;
   }
   
   .badge-success {
-    background: var(--success-dim);
+    @apply badge;
+    background-color: var(--success-bg);
     color: var(--success);
   }
   
   .badge-warning {
-    background: var(--warning-dim);
+    @apply badge;
+    background-color: var(--warning-bg);
     color: var(--warning);
   }
   
   .badge-danger {
-    background: var(--danger-dim);
+    @apply badge;
+    background-color: var(--danger-bg);
     color: var(--danger);
   }
   
   .badge-info {
-    background: var(--info-dim);
-    color: var(--accent-cyan);
+    @apply badge;
+    background-color: var(--info-bg);
+    color: var(--info);
   }
   
-  .badge-purple {
-    background: var(--accent-purple-glow);
-    color: var(--accent-purple);
-  }
-
-  /* ============================================
-     NAVIGATION - Sidebar Modern
-     ============================================ */
-  .nav-link {
-    @apply flex items-center gap-3 px-4 py-3 text-sm font-medium rounded-lg transition-all duration-200;
-    color: var(--text-secondary);
+  .badge-gold {
+    @apply badge;
+    background-color: rgba(184, 134, 11, 0.1);
+    color: var(--brand-gold);
   }
   
-  .nav-link:hover {
-    color: var(--text-primary);
-    background: var(--bg-tertiary);
-  }
-  
-  .nav-link-active {
-    color: var(--accent-cyan);
-    background: linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(6, 182, 212, 0.05) 100%);
-    border: 1px solid rgba(6, 182, 212, 0.3);
-    box-shadow: var(--shadow-glow-cyan);
-  }
-
-  /* ============================================
-     KPI CARDS - Financial Data Display
-     ============================================ */
-  .kpi-card {
-    @apply card p-6 relative overflow-hidden;
-  }
-  
-  .kpi-card::before {
-    content: '';
-    @apply absolute top-0 left-0 right-0 h-0.5;
-    background: linear-gradient(90deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
-  }
-  
-  .kpi-card.positive::before {
-    background: linear-gradient(90deg, var(--success) 0%, #34D399 100%);
-  }
-  
-  .kpi-card.negative::before {
-    background: linear-gradient(90deg, var(--danger) 0%, #F87171 100%);
-  }
-  
-  .kpi-card.warning::before {
-    background: linear-gradient(90deg, var(--warning) 0%, #FBBF24 100%);
-  }
-  
-  .kpi-value {
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
-  }
-
-  /* ============================================
-     TABLES - Data Grid Financial
-     ============================================ */
+  /* Tables - Bloomberg Style */
   .table-container {
-    @apply overflow-hidden rounded-xl border bg-[var(--bg-secondary)];
+    @apply overflow-x-auto border rounded-lg;
     border-color: var(--border-default);
   }
   
   .table {
-    @apply w-full text-sm text-left;
-  }
-  
-  .table thead {
-    background: var(--bg-tertiary);
-    color: var(--text-secondary);
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    @apply w-full text-sm;
   }
   
   .table th {
-    @apply px-4 py-3 font-mono;
-    border-bottom: 1px solid var(--border-default);
+    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider;
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
+    font-family: var(--font-sans);
   }
   
   .table td {
     @apply px-4 py-3;
     border-bottom: 1px solid var(--border-subtle);
+  }
+  
+  .table tr:hover td {
+    background-color: var(--bg-tertiary);
+  }
+  
+  /* Inputs */
+  .input {
+    @apply w-full px-3 py-2 text-sm bg-white border rounded-md transition-colors;
+    border-color: var(--border-default);
     color: var(--text-primary);
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums;
   }
   
-  .table tbody tr {
-    @apply transition-colors;
+  .input:focus {
+    @apply outline-none ring-2 ring-offset-1;
+    border-color: var(--brand-navy);
+    ring-color: var(--brand-navy);
   }
   
-  .table tbody tr:hover {
-    background: var(--bg-tertiary);
-  }
-  
-  .table tbody tr:last-child td {
-    border-bottom: none;
-  }
-
-  /* ============================================
-     PROGRESS BARS - Modern Minimal
-     ============================================ */
-  .progress-bar {
-    @apply h-1.5 rounded-full overflow-hidden;
-    background: var(--bg-tertiary);
-  }
-  
-  .progress-bar-fill {
-    @apply h-full rounded-full transition-all duration-500;
-    background: linear-gradient(90deg, var(--accent-cyan) 0%, var(--accent-purple) 100%);
-  }
-
-  /* ============================================
-     CHARTS - Container
-     ============================================ */
-  .chart-container {
-    @apply card p-6;
-  }
-
-  /* ============================================
-     ANIMATIONS - Subtle, Professional
-     ============================================ */
-  .animate-fade-in {
-    animation: fadeIn 0.4s ease-out;
-  }
-  
-  .animate-slide-up {
-    animation: slideUp 0.4s ease-out;
-  }
-  
-  .animate-pulse-soft {
-    animation: pulseSoft 2s ease-in-out infinite;
-  }
-  
-  .animate-shimmer {
-    background: linear-gradient(
-      90deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.05) 50%,
-      transparent 100%
-    );
-    background-size: 200% 100%;
-    animation: shimmer 2s infinite;
-  }
-
-  /* ============================================
-     STATUS INDICATORS
-     ============================================ */
+  /* Status Indicators */
   .status-dot {
     @apply w-2 h-2 rounded-full;
   }
   
-  .status-dot.active {
-    background: var(--success);
-    box-shadow: 0 0 8px var(--success);
+  .status-dot.online {
+    background-color: var(--success);
+    box-shadow: 0 0 0 2px var(--success-bg);
   }
   
   .status-dot.warning {
-    background: var(--warning);
-    box-shadow: 0 0 8px var(--warning);
+    background-color: var(--warning);
   }
   
   .status-dot.error {
-    background: var(--danger);
-    box-shadow: 0 0 8px var(--danger);
+    background-color: var(--danger);
   }
   
-  .status-dot.idle {
-    background: var(--text-muted);
-  }
-
-  /* ============================================
-     SECTION HEADERS
-     ============================================ */
-  .section-header {
-    @apply flex items-center justify-between mb-6;
-  }
-  
-  .section-title {
-    @apply text-lg font-semibold tracking-tight;
-    color: var(--text-primary);
-  }
-  
-  .section-subtitle {
-    @apply text-sm mt-1;
-    color: var(--text-secondary);
-  }
-
-  /* ============================================
-     AGENT CARDS - For Log Page
-     ============================================ */
+  /* Agent Cards */
   .agent-card {
-    @apply card p-4 flex items-center gap-4;
-    border-left: 3px solid transparent;
+    @apply p-4 border rounded-lg transition-all;
+    border-color: var(--border-default);
   }
   
-  .agent-card.auditor { border-left-color: var(--danger); }
-  .agent-card.analista { border-left-color: var(--accent-cyan); }
-  .agent-card.conciliador { border-left-color: var(--accent-purple); }
-  .agent-card.maintenance { border-left-color: var(--success); }
+  .agent-card:hover {
+    border-color: var(--brand-gold);
+    box-shadow: 0 2px 8px rgba(184, 134, 11, 0.1);
+  }
+  
+  .agent-card .icon-wrapper {
+    @apply w-10 h-10 rounded-lg flex items-center justify-center;
+    background-color: var(--bg-tertiary);
+  }
 }
+
+/* ============================================
+   UTILITIES
+   ============================================ */
 
 @layer utilities {
-  /* ============================================
-     UTILITY CLASSES
-     ============================================ */
-  .text-gradient-cyan {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-blue) 100%);
+  .text-brand {
+    color: var(--brand-navy);
   }
   
-  .text-gradient-purple {
-    @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, var(--accent-purple) 0%, #A78BFA 100%);
+  .text-gold {
+    color: var(--brand-gold);
   }
   
-  .bg-gradient-dark {
-    background: linear-gradient(180deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  .bg-brand {
+    background-color: var(--brand-navy);
   }
   
-  .bg-gradient-elevated {
-    background: linear-gradient(135deg, var(--bg-elevated) 0%, var(--bg-tertiary) 100%);
+  .border-brand {
+    border-color: var(--brand-navy);
   }
   
-  .font-mono-nums {
+  .border-gold {
+    border-color: var(--brand-gold);
+  }
+  
+  .font-serif {
+    font-family: var(--font-serif);
+  }
+  
+  .font-mono {
     font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums;
   }
   
-  .glow-cyan {
-    box-shadow: var(--shadow-glow-cyan);
+  /* Financial Number Display */
+  .amount {
+    @apply tabular-nums font-semibold;
+    font-family: var(--font-mono);
+    color: var(--brand-navy);
   }
   
-  .glow-purple {
-    box-shadow: var(--shadow-glow-purple);
+  .amount-positive {
+    color: var(--success);
   }
   
-  .border-glow {
-    box-shadow: 0 0 0 1px var(--accent-cyan-glow);
+  .amount-negative {
+    color: var(--danger);
   }
 }
 
 /* ============================================
-   KEYFRAME ANIMATIONS
+   ANIMATIONS
    ============================================ */
+
 @keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes slideUp {
-  from { 
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to { 
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@keyframes pulseSoft {
+@keyframes pulse-soft {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  50% { opacity: 0.7; }
 }
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 2s ease-in-out infinite;
 }
 
 /* ============================================
-   SCROLLBAR - Minimal Dark
+   SCROLLBAR - Minimal
    ============================================ */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -542,38 +436,4 @@
 
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
-}
-
-/* ============================================
-   RECHARTS OVERRIDES - Dark Theme
-   ============================================ */
-.recharts-cartesian-grid-horizontal line,
-.recharts-cartesian-grid-vertical line {
-  stroke: var(--border-subtle);
-}
-
-.recharts-text {
-  fill: var(--text-secondary) !important;
-  font-family: var(--font-mono) !important;
-  font-size: 11px !important;
-}
-
-.recharts-tooltip-wrapper {
-  outline: none !important;
-}
-
-.recharts-default-tooltip {
-  background: var(--bg-elevated) !important;
-  border: 1px solid var(--border-default) !important;
-  border-radius: var(--radius) !important;
-  box-shadow: var(--shadow-lg) !important;
-}
-
-.recharts-tooltip-label {
-  color: var(--text-primary) !important;
-  font-weight: 600 !important;
-}
-
-.recharts-tooltip-item {
-  color: var(--text-secondary) !important;
 }

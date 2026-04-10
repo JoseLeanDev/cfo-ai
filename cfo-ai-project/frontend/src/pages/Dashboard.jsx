@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { useDashboard, useInsights } from '../hooks/useCfoData'
 import { 
   CalendarIcon, 
-  BoltIcon,
   BanknotesIcon,
   ExclamationTriangleIcon,
   ChartBarIcon,
@@ -12,131 +11,43 @@ import {
   LightBulbIcon,
   SparklesIcon,
   ChevronRightIcon,
-  EyeIcon,
-  ArrowUpIcon,
-  ArrowDownIcon,
-  CpuChipIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   ClockIcon,
-  ShieldCheckIcon
+  ArrowPathIcon,
+  CpuChipIcon
 } from '@heroicons/react/24/outline'
 
-// Componente para mostrar variación con color - Premium Financial
-const Variacion = ({ value, inverse = false }) => {
-  if (value === undefined || value === null) return null
-  
-  const isPositive = inverse ? value < 0 : value > 0
-  const Icon = isPositive ? ArrowTrendingUpIcon : ArrowTrendingDownIcon
-  
-  return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-mono ${
-      isPositive 
-        ? 'text-[var(--success)] bg-[var(--success-dim)]' 
-        : 'text-[var(--danger)] bg-[var(--danger-dim)]'
-    }`}>
-      <Icon className="w-3 h-3" />
-      {value > 0 ? '+' : ''}{value}%
-    </span>
-  )
-}
-
-// Componente para icono de insight según tipo
-const InsightIcon = ({ tipo, className = "w-5 h-5" }) => {
-  switch (tipo) {
-    case 'oportunidad':
-      return <ArrowTrendingUpIcon className={`${className} text-[var(--success)]`} />
-    case 'riesgo':
-      return <ArrowTrendingDownIcon className={`${className} text-[var(--warning)]`} />
-    case 'critico':
-      return <ExclamationTriangleIcon className={`${className} text-[var(--danger)]`} />
-    case 'info':
-      return <InformationCircleIcon className={`${className} text-[var(--accent-cyan)]`} />
-    default:
-      return <LightBulbIcon className={`${className} text-[var(--accent-purple)]`} />
-  }
-}
-
-// Formatear moneda GTQ - Premium Financial Display
+// Format currency GTQ
 const formatGTQ = (value) => {
-  if (!value && value !== 0) return 'Q0'
+  if (!value && value !== 0) return 'Q 0'
   return 'Q ' + value.toLocaleString('es-GT')
 }
 
-// KPI Card Component - Premium Design
-const KPICard = ({ title, value, icon: Icon, trend, trendLabel, variant = 'default', footer, loading }) => {
-  const variants = {
-    default: 'card',
-    positive: 'kpi-card positive',
-    negative: 'kpi-card negative',
-    warning: 'kpi-card warning'
-  }
-  
+// Variation component
+const Variacion = ({ value }) => {
+  if (value === undefined || value === null) return null
+  const isPositive = value > 0
   return (
-    <div className={`${variants[variant] || variants.default} p-5`}>
-      <div className="flex items-start justify-between">
-        <div className="flex-1">
-          <p className="text-xs font-medium text-[var(--text-muted)] uppercase tracking-wider mb-1">{title}</p>
-          <div className="kpi-value text-2xl font-bold text-[var(--text-primary)]">
-            {loading ? (
-              <span className="animate-pulse">---</span>
-            ) : (
-              value
-            )}
-          </div>
-          
-          
-          {trend !== undefined && (
-            <div className="mt-2 flex items-center gap-2">
-              <Variacion value={trend} />
-              <span className="text-xs text-[var(--text-muted)]">{trendLabel}</span>
-            </div>
-          )}
-          
-          
-          {footer && (
-            <p className="mt-2 text-xs text-[var(--text-muted)]">{footer}</p>
-          )}
-        </div>
-        
-        
-        <div className="w-10 h-10 rounded-lg bg-[var(--bg-tertiary)] flex items-center justify-center">
-          <Icon className="w-5 h-5 text-[var(--accent-cyan)]" />
-        </div>
-      </div>
-    </div>
+    <span className={`kpi-change ${isPositive ? 'positive' : 'negative'}`}>
+      {isPositive ? '+' : ''}{value}%
+    </span>
   )
 }
-
-// InformationCircleIcon
-const InformationCircleIcon = ({ className }) => (
-  <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-  </svg>
-)
 
 export default function Dashboard() {
   const { data: dashboardData, isLoading } = useDashboard()
   const { data: insightsData, isLoading: isLoadingInsights } = useInsights()
   const [animatedValues, setAnimatedValues] = useState({})
-  const [showAllInsights, setShowAllInsights] = useState(false)
-  const [currentTime, setCurrentTime] = useState(new Date())
 
   const kpis = dashboardData?.data?.kpis || {}
   const insights = insightsData?.data?.insights || []
-  const criticalInsights = insights.filter(i => i.tipo === 'critico' || i.prioridad === 'alta')
-  
-  // Update time every second
-  useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
-    return () => clearInterval(timer)
-  }, [])
 
-  // Animación de números
+  // Animate numbers
   useEffect(() => {
     if (kpis.ventas_mes?.value) {
-      const duration = 1500
-      const steps = 30
+      const duration = 1000
+      const steps = 20
       const increment = kpis.ventas_mes.value / steps
       let current = 0
       
@@ -153,7 +64,7 @@ export default function Dashboard() {
     }
   }, [kpis.ventas_mes?.value])
 
-  // Datos calculados
+  // Calculated data
   const workingCapital = (kpis.cxc_total?.value || 0) - (kpis.cxp_total?.value || 0)
   const runway = Math.floor((kpis.disponible_gtq?.value || 0) / 450000)
   const liquidezRatio = ((kpis.disponible_gtq?.value || 0) + (kpis.cxc_total?.value || 0)) / (kpis.cxp_total?.value || 1)
@@ -161,375 +72,270 @@ export default function Dashboard() {
   // Insight colors
   const getInsightStyles = (tipo) => {
     switch (tipo) {
-      case 'oportunidad':
-        return { border: 'border-l-[var(--success)]', bg: 'bg-[var(--success-dim)]', iconBg: 'bg-[var(--success)]/20' }
-      case 'riesgo':
-        return { border: 'border-l-[var(--warning)]', bg: 'bg-[var(--warning-dim)]', iconBg: 'bg-[var(--warning)]/20' }
-      case 'critico':
-        return { border: 'border-l-[var(--danger)]', bg: 'bg-[var(--danger-dim)]', iconBg: 'bg-[var(--danger)]/20' }
-      case 'info':
-        return { border: 'border-l-[var(--accent-cyan)]', bg: 'bg-[var(--info-dim)]', iconBg: 'bg-[var(--accent-cyan)]/20' }
-      default:
-        return { border: 'border-l-[var(--accent-purple)]', bg: 'bg-[var(--accent-purple-glow)]', iconBg: 'bg-[var(--accent-purple)]/20' }
+      case 'oportunidad': return 'border-l-[var(--success)] bg-[var(--success-bg)]'
+      case 'riesgo': return 'border-l-[var(--warning)] bg-[var(--warning-bg)]'
+      case 'critico': return 'border-l-[var(--danger)] bg-[var(--danger-bg)]'
+      default: return 'border-l-[var(--brand-gold)] bg-[var(--bg-tertiary)]'
     }
   }
-
-  const getPriorityBadge = (prioridad) => {
-    switch (prioridad) {
-      case 'alta':
-        return 'badge-danger'
-      case 'media':
-        return 'badge-warning'
-      case 'baja':
-        return 'badge-info'
-      default:
-        return 'badge-purple'
-    }
-  }
-
-  const displayedInsights = showAllInsights ? insights : insights.slice(0, 4)
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-[1600px]">
-      {/* Header Profesional - Premium Financial */}
+    <div className="space-y-6 animate-fade-in max-w-6xl">
+      {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[var(--accent-cyan)] to-[var(--accent-purple)] flex items-center justify-center shadow-lg shadow-[var(--accent-cyan-glow)]">
-              <BuildingOfficeIcon className="w-5 h-5 text-[var(--bg-primary)]" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-[var(--text-primary)] tracking-tight">Dashboard Ejecutivo</h1>
-              <p className="text-xs text-[var(--text-muted)] font-mono">
-                DICSA • NIT 1234567-8 • {currentTime.toLocaleDateString('es-GT', { 
-                  weekday: 'short', 
-                  year: 'numeric', 
-                  month: 'short', 
-                  day: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                })}
-              </p>
-            </div>
-          </div>
+          <h1 className="text-2xl">Dashboard Ejecutivo</h1>
+          <p className="text-sm text-[var(--text-muted)] mt-1">
+            Distribuidora Industrial Centroamericana, S.A. • NIT 1234567-8
+          </p>
         </div>
         
         <div className="flex items-center gap-3">
-          {criticalInsights.length > 0 && (
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--danger-dim)] border border-[var(--danger)]/30">
+          {insights.filter(i => i.tipo === 'critico').length > 0 && (
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-[var(--danger-bg)] border border-[var(--danger)]/20">
               <ExclamationTriangleIcon className="w-4 h-4 text-[var(--danger)]" />
-              <span className="text-xs font-medium text-[var(--danger)]">{criticalInsights.length} crítico(s)</span>
+              <span className="text-xs font-medium text-[var(--danger)]">{insights.filter(i => i.tipo === 'critico').length} crítico(s)</span>
             </div>
           )}
           
-          <Link 
-            to="/log-actividades"
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-default)] hover:border-[var(--accent-cyan)]/50 transition-colors"
-          >
-            <CpuChipIcon className="w-4 h-4 text-[var(--accent-cyan)]" />
-            <span className="text-xs font-medium text-[var(--text-secondary)]">Agentes IA</span>
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)] animate-pulse" />
+          <Link to="/log-actividades" className="btn-secondary text-xs">
+            <CpuChipIcon className="w-4 h-4" />
+            Agentes IA
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]"></span>
           </Link>
         </div>
       </div>
 
-      {/* KPIs Principales - Premium Grid */}
+      {/* KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KPICard
-          title="Ventas del Mes"
-          value={isLoading ? undefined : formatGTQ(animatedValues.ventas || kpis.ventas_mes?.value)}
-          icon={ChartBarIcon}
-          trend={kpis.ventas_mes?.var}
-          trendLabel="vs mes ant."
-          variant="default"
-          loading={isLoading}
-        />
-        
-        <KPICard
-          title="Efectivo Disponible"
-          value={isLoading ? undefined : formatGTQ(kpis.disponible_gtq?.value)}
-          icon={BanknotesIcon}
-          trend={kpis.disponible_gtq?.var}
-          trendLabel="vs semana ant."
-          variant={kpis.disponible_gtq?.var < 0 ? 'negative' : 'default'}
-          footer="6 cuentas bancarias"
-          loading={isLoading}
-        />
-        
-        <KPICard
-          title="Runway"
-          value={isLoading ? undefined : `${runway} meses`}
-          icon={CalendarIcon}
-          variant={runway < 3 ? 'negative' : runway < 6 ? 'warning' : 'default'}
-          footer={runway < 3 ? '⚠️ Crítico' : runway < 6 ? '⚡ Atención' : '✅ Saludable'}
-          loading={isLoading}
-        />
-        
-        <KPICard
-          title="Working Capital"
-          value={isLoading ? undefined : formatGTQ(workingCapital)}
-          icon={BoltIcon}
-          variant={workingCapital < 0 ? 'negative' : 'default'}
-          footer={`CxC: ${formatGTQ(kpis.cxc_total?.value)}`}
-          loading={isLoading}
-        />
+        <div className="kpi-card">
+          <div className="flex items-center justify-between mb-2">
+            <span className="kpi-label">Ventas del Mes</span>
+            <ChartBarIcon className="w-4 h-4 text-[var(--text-muted)]" />
+          </div>
+          <div className="kpi-value">
+            {isLoading ? '---' : formatGTQ(animatedValues.ventas || kpis.ventas_mes?.value)}
+          </div>
+          <Variacion value={kpis.ventas_mes?.var} />
+        </div>
+
+        <div className="kpi-card">
+          <div className="flex items-center justify-between mb-2">
+            <span className="kpi-label">Efectivo Disponible</span>
+            <BanknotesIcon className="w-4 h-4 text-[var(--text-muted)]" />
+          </div>
+          <div className="kpi-value">{isLoading ? '---' : formatGTQ(kpis.disponible_gtq?.value)}</div>
+          <Variacion value={kpis.disponible_gtq?.var} />
+        </div>
+
+        <div className="kpi-card">
+          <div className="flex items-center justify-between mb-2">
+            <span className="kpi-label">Runway</span>
+            <CalendarIcon className="w-4 h-4 text-[var(--text-muted)]" />
+          </div>
+          <div className="kpi-value">{isLoading ? '---' : `${runway} meses`}</div>
+          <span className={`text-xs ${runway < 3 ? 'text-[var(--danger)]' : runway < 6 ? 'text-[var(--warning)]' : 'text-[var(--success)]'}`}>
+            {runway < 3 ? 'Crítico' : runway < 6 ? 'Atención' : 'Saludable'}
+          </span>
+        </div>
+
+        <div className="kpi-card">
+          <div className="flex items-center justify-between mb-2">
+            <span className="kpi-label">Working Capital</span>
+            <ArrowPathIcon className="w-4 h-4 text-[var(--text-muted)]" />
+          </div>
+          <div className={`kpi-value ${workingCapital < 0 ? 'text-[var(--danger)]' : ''}`}>
+            {isLoading ? '---' : formatGTQ(workingCapital)}
+          </div>
+          <span className="text-xs text-[var(--text-muted)]">CxC - CxP</span>
+        </div>
       </div>
 
-      {/* Grid Principal */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
-          {/* Insights de IA - Premium Card */}
+          {/* Insights */}
           <div className="card p-5">
-            <div className="flex items-center justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[var(--accent-purple)] to-[var(--accent-blue)] flex items-center justify-center">
-                  <SparklesIcon className="w-5 h-5 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-sm font-semibold text-[var(--text-primary)]">Insights de IA</h2>
-                  <p className="text-xs text-[var(--text-muted)]">Análisis inteligente en tiempo real</p>
-                </div>
+            <div className="section-header">
+              <span className="section-number">01</span>
+              <div className="flex-1">
+                <h2 className="font-serif text-lg">Insights de IA</h2>                
               </div>
-              
-              
-              {insights.length > 4 && (
-                <button
-                  onClick={() => setShowAllInsights(!showAllInsights)}
-                  className="flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-[var(--accent-cyan)] hover:bg-[var(--accent-cyan-glow)] rounded-lg transition-colors"
-                >
-                  {showAllInsights ? 'Ver menos' : 'Ver todos'}
-                  <ChevronRightIcon className={`w-4 h-4 transition-transform ${showAllInsights ? 'rotate-180' : ''}`} />
-                </button>
-              )}
+              <SparklesIcon className="w-5 h-5 text-[var(--brand-gold)]" />
             </div>
 
-            {/* Loading State */}
-            {isLoadingInsights && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="p-4 rounded-lg bg-[var(--bg-tertiary)] animate-pulse h-24" />
+            {isLoadingInsights ? (
+              <div className="space-y-3">
+                {[1, 2, 3].map(i => (
+                  <div key={i} className="h-20 bg-[var(--bg-tertiary)] rounded animate-pulse" />
                 ))}
               </div>
-            )}
-
-            {/* Insights Grid - Premium Cards */}
-            {!isLoadingInsights && insights.length > 0 && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {displayedInsights.map((insight, idx) => {
-                  const styles = getInsightStyles(insight.tipo)
-                  return (
-                    <div
-                      key={idx}
-                      className={`relative p-4 rounded-lg border-l-2 ${styles.border} ${styles.bg} hover:opacity-90 transition-opacity cursor-pointer group`}
-                    >
-                      {!insight.visto && (
-                        <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-[var(--accent-cyan)] rounded-full border-2 border-[var(--bg-secondary)]" />
-                      )}
-                      
-                      <div className="flex items-start gap-3">
-                        <div className={`w-8 h-8 rounded-lg ${styles.iconBg} flex items-center justify-center flex-shrink-0`}>
-                          <InsightIcon tipo={insight.tipo} className="w-4 h-4" />
+            ) : insights.length === 0 ? (
+              <div className="text-center py-8">
+                <LightBulbIcon className="w-10 h-10 text-[var(--text-muted)] mx-auto mb-2" />
+                <p className="text-sm text-[var(--text-muted)]">No hay insights disponibles</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {insights.slice(0, 4).map((insight, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-4 rounded border-l-2 ${getInsightStyles(insight.tipo)}`}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className={`badge-${insight.prioridad === 'alta' ? 'danger' : insight.prioridad === 'media' ? 'warning' : 'info'}`}>
+                            {insight.prioridad}
+                          </span>
+                          <span className="text-xs text-[var(--text-muted)] uppercase">{insight.categoria}</span>
                         </div>
-                        
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className={`badge ${getPriorityBadge(insight.prioridad)}`}>
-                              {insight.prioridad}
-                            </span>
-                          </div>
-                          
-                          <h3 className="text-sm font-medium text-[var(--text-primary)] line-clamp-1 mb-0.5">
-                            {insight.titulo}
-                          </h3>
-                          
-                          <p className="text-xs text-[var(--text-secondary)] line-clamp-2">
-                            {insight.descripcion}
-                          </p>
-                        </div>
+                        <h3 className="font-medium text-[var(--text-primary)] text-sm">{insight.titulo}</h3>
+                        <p className="text-xs text-[var(--text-secondary)] mt-1">{insight.descripcion}</p>
                       </div>
                     </div>
-                  )
-                })}
+                  </div>
+                ))}
               </div>
             )}
           </div>
 
           {/* Posición Financiera */}
           <div className="card p-5">
-            <div className="flex items-center justify-between mb-5">
-              <div>
-                <h2 className="text-sm font-semibold text-[var(--text-primary)]">Posición Financiera</h2>
-                <p className="text-xs text-[var(--text-muted)]">Resumen de activos y pasivos corrientes</p>
-              </div>
-              
-              <Link 
-                to="/tesoreria"
-                className="text-xs font-medium text-[var(--accent-cyan)] hover:underline"
-              >
-                Ver detalle →
-              </Link>
+            <div className="section-header">
+              <span className="section-number">02</span>
+              <h2 className="font-serif text-lg">Posición Financiera</h2>
+              <Link to="/tesoreria" className="ml-auto text-xs text-[var(--brand-navy)] hover:underline">Ver detalle →</Link>
             </div>
 
-            <div className="space-y-3">
-              {/* CxC */}
-              <div className="p-4 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-default)]">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-[var(--accent-blue)]/20 flex items-center justify-center">
-                      <UsersIcon className="w-4 h-4 text-[var(--accent-blue)]" />
-                    </div>
-                    <span className="text-sm font-medium text-[var(--text-primary)]">Cuentas por Cobrar</span>
-                  </div>
-                  
-                  <span className="text-lg font-bold font-mono text-[var(--text-primary)]">
-                    {formatGTQ(kpis.cxc_total?.value)}
-                  </span>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 p-4 bg-[var(--bg-tertiary)] rounded-lg">
+                <div className="w-10 h-10 rounded bg-blue-100 flex items-center justify-center">
+                  <UsersIcon className="w-5 h-5 text-blue-600" />
                 </div>
-                
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
-                    <div className="h-full bg-[var(--accent-blue)] rounded-full" style={{ width: '82%' }} />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Cuentas por Cobrar</span>
+                    <span className="amount">{formatGTQ(kpis.cxc_total?.value)}</span>
                   </div>
-                  <span className="text-xs font-mono text-[var(--warning)]">82% vencido</span>
+                  <div className="mt-2 h-1.5 bg-white rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500 rounded-full" style={{ width: '82%' }} />
+                  </div>
+                  <span className="text-xs text-[var(--danger)] mt-1">82% vencido</span>
                 </div>
               </div>
 
-              {/* CxP */}
-              <div className="p-4 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-default)]">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-lg bg-[var(--warning)]/20 flex items-center justify-center">
-                      <BuildingOfficeIcon className="w-4 h-4 text-[var(--warning)]" />
-                    </div>
-                    <span className="text-sm font-medium text-[var(--text-primary)]">Cuentas por Pagar</span>
-                  </div>
-                  
-                  <span className="text-lg font-bold font-mono text-[var(--text-primary)]">
-                    {formatGTQ(kpis.cxp_total?.value)}
-                  </span>
+              <div className="flex items-center gap-4 p-4 bg-[var(--bg-tertiary)] rounded-lg">
+                <div className="w-10 h-10 rounded bg-amber-100 flex items-center justify-center">
+                  <BuildingOfficeIcon className="w-5 h-5 text-amber-600" />
                 </div>
-                
-                <div className="flex items-center gap-2">
-                  <div className="flex-1 h-1.5 bg-[var(--bg-secondary)] rounded-full overflow-hidden">
-                    <div className="h-full bg-[var(--warning)] rounded-full" style={{ width: '35%' }} />
+                <div className="flex-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium">Cuentas por Pagar</span>
+                    <span className="amount">{formatGTQ(kpis.cxp_total?.value)}</span>
                   </div>
-                  <span className="text-xs font-mono text-[var(--text-secondary)]">Q1.4M en 15 días</span>
+                  <div className="mt-2 h-1.5 bg-white rounded-full overflow-hidden">
+                    <div className="h-full bg-amber-500 rounded-full" style={{ width: '35%' }} />
+                  </div>
+                  <span className="text-xs text-[var(--text-secondary)] mt-1">Q1.4M en 15 días</span>
                 </div>
               </div>
 
-              {/* Ratio */}
-              <div className="flex items-center justify-between p-4 rounded-lg bg-gradient-to-r from-[var(--accent-cyan)]/10 to-[var(--accent-purple)]/10 border border-[var(--accent-cyan)]/20">
+              <div className="flex items-center justify-between p-4 bg-[var(--brand-navy)] text-white rounded-lg">
                 <div>
-                  <span className="text-xs font-medium text-[var(--text-secondary)]">Ratio de Liquidez</span>
-                  <p className="text-[10px] text-[var(--text-muted)]">Activo corriente / Pasivo corriente</p>
+                  <span className="text-sm opacity-90">Ratio de Liquidez</span>
+                  <p className="text-xs opacity-70">Activo corriente / Pasivo corriente</p>
                 </div>
-                
                 <div className="text-right">
-                  <span className="text-2xl font-bold font-mono text-[var(--accent-cyan)]">
-                    {liquidezRatio.toFixed(2)}
-                  </span>
-                  <p className="text-[10px] text-[var(--text-muted)]">Ideal: &gt; 1.5</p>
+                  <span className="text-2xl font-bold tabular-nums font-mono">{liquidezRatio.toFixed(2)}</span>
+                  <p className="text-xs opacity-70">Ideal: &gt; 1.5</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Panel Derecho */}
-        <div className="space-y-5">
-          {/* Próximos Vencimientos SAT */}
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* SAT Vencimientos */}
           <div className="card p-5">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-2">
-                <ShieldCheckIcon className="w-4 h-4 text-[var(--accent-cyan)]" />
-                <h2 className="text-sm font-semibold text-[var(--text-primary)]">SAT - Vencimientos</h2>
-              </div>
-              <span className="badge badge-warning">2 urgentes</span>
+            <div className="flex items-center gap-2 mb-4">
+              <BuildingOfficeIcon className="w-4 h-4 text-[var(--brand-navy)]" />
+              <h2 className="font-serif">SAT - Vencimientos</h2>
+              <span className="badge-warning ml-auto">2 urgentes</span>
             </div>
             
             <div className="space-y-3">
-              <div className="p-3 rounded-lg bg-[var(--danger-dim)] border border-[var(--danger)]/30">
+              <div className="p-3 bg-[var(--danger-bg)] border border-[var(--danger)]/20 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[var(--danger)] flex items-center justify-center text-white font-bold text-xs">
+                  <div className="w-9 h-9 rounded bg-[var(--danger)] text-white flex items-center justify-center text-xs font-bold">
                     HOY
                   </div>
-                  
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-[var(--text-primary)]">1ra. Cuota ISR</p>
-                    <p className="text-xs text-[var(--text-muted)]">Formulario SAT-2221</p>
+                    <p className="text-sm font-medium">1ra. Cuota ISR</p>
+                    <p className="text-xs text-[var(--text-muted)]">SAT-2221</p>
                   </div>
-                  
-                  <span className="text-sm font-bold font-mono text-[var(--danger)]">Q175K</span>
+                  <span className="amount text-[var(--danger)]">Q175K</span>
                 </div>
               </div>
               
-              <div className="p-3 rounded-lg bg-[var(--warning-dim)] border border-[var(--warning)]/30">
+              <div className="p-3 bg-[var(--warning-bg)] border border-[var(--warning)]/20 rounded-lg">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-lg bg-[var(--warning)] flex items-center justify-center text-white font-bold text-xs">
+                  <div className="w-9 h-9 rounded bg-[var(--warning)] text-white flex items-center justify-center text-xs font-bold">
                     15d
                   </div>
-                  
                   <div className="flex-1">
-                    <p className="text-sm font-medium text-[var(--text-primary)]">IVA Marzo</p>
-                    <p className="text-xs text-[var(--text-muted)]">Formulario SAT-2231</p>
+                    <p className="text-sm font-medium">IVA Marzo</p>
+                    <p className="text-xs text-[var(--text-muted)]">SAT-2231</p>
                   </div>
-                  
-                  <span className="text-sm font-bold font-mono text-[var(--warning)]">Q185K</span>
+                  <span className="amount text-[var(--warning)]">Q185K</span>
                 </div>
               </div>
             </div>
             
-            <Link 
-              to="/sat"
-              className="flex items-center justify-center gap-1 w-full mt-4 py-2 text-xs font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] rounded-lg transition-colors border border-dashed border-[var(--border-default)]"
-            >
+            <Link to="/sat" className="flex items-center justify-center gap-1 w-full mt-4 py-2 text-xs text-[var(--text-muted)] hover:text-[var(--text-primary)] border border-dashed border-[var(--border-default)] rounded">
               Ver calendario completo
               <ChevronRightIcon className="w-3 h-3" />
             </Link>
           </div>
 
-          {/* Asistente CFO AI */}
-          <div className="card p-5 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-[var(--accent-cyan)]/20 to-[var(--accent-purple)]/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-            
-            <div className="relative">
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-[var(--accent-cyan)] to-[var(--accent-purple)] flex items-center justify-center">
-                  <SparklesIcon className="w-5 h-5 text-white" />
-                </div>
-                
-                <div>
-                  <h2 className="text-sm font-semibold text-[var(--text-primary)]">Asistente CFO AI</h2>
-                  <p className="text-xs text-[var(--text-muted)]">4 agentes activos</p>
-                </div>
+          {/* CFO AI Assistant */}
+          <div className="card p-5 bg-[var(--brand-navy)] text-white">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-10 h-10 rounded bg-white/10 flex items-center justify-center">
+                <SparklesIcon className="w-5 h-5" />
               </div>
-              
-              <p className="text-xs text-[var(--text-secondary)] mb-4">
-                Habla con nuestros agentes de IA para resolver dudas financieras, fiscales o de tesorería.
-              </p>
-              
-              <button className="w-full btn-primary py-2.5 text-sm">
-                <BoltIcon className="w-4 h-4" />
-                Abrir Chat
-              </button>
+              <div>
+                <h2 className="font-serif text-lg">CFO AI</h2>
+                <p className="text-xs opacity-70">4 agentes activos</p>
+              </div>
             </div>
+            
+            <p className="text-sm opacity-80 mb-4">
+              Agentes inteligentes para análisis financiero, conciliación y cumplimiento fiscal.
+            </p>
+            
+            <Link to="/log-actividades" className="flex items-center justify-center gap-2 w-full py-2.5 bg-white text-[var(--brand-navy)] font-medium rounded hover:bg-opacity-90 transition-colors">
+              Ver Agentes
+              <ChevronRightIcon className="w-4 h-4" />
+            </Link>
           </div>
 
           {/* Quick Stats */}
           <div className="grid grid-cols-2 gap-3">
-            <div className="p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-default)]">
-              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Agentes</p>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-[var(--text-primary)]">4</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" />
+            <div className="p-3 bg-[var(--bg-tertiary)] rounded-lg">
+              <p className="text-[10px] text-[var(--text-muted)] uppercase">Agentes</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-lg font-bold tabular-nums">4</span>
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]"></span>
               </div>
             </div>
             
-            <div className="p-3 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border-default)]">
-              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-1">Insights</p>
-              <div className="flex items-center gap-2">
-                <span className="text-lg font-bold text-[var(--text-primary)]">{insights.length}</span>
-                <span className="text-[10px] text-[var(--accent-cyan)]">+nuevo</span>
+            <div className="p-3 bg-[var(--bg-tertiary)] rounded-lg">
+              <p className="text-[10px] text-[var(--text-muted)] uppercase">Insights</p>
+              <div className="flex items-center gap-2 mt-1">
+                <span className="text-lg font-bold tabular-nums">{insights.length}</span>
+                <span className="text-[10px] text-[var(--brand-gold)]">+nuevo</span>
               </div>
             </div>
           </div>

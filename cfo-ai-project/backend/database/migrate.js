@@ -70,21 +70,25 @@ const createAgentesLogsTable = async () => {
   await db.runAsync(`
     CREATE TABLE IF NOT EXISTS agentes_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      empresa_id TEXT NOT NULL DEFAULT 'default',
       agente_nombre TEXT NOT NULL,
       agente_tipo TEXT NOT NULL,
       agente_version TEXT DEFAULT '1.0.0',
       categoria TEXT NOT NULL,
       descripcion TEXT NOT NULL,
       detalles_json TEXT,
+      entidad_tipo TEXT,
+      entidad_id TEXT,
       impacto_valor REAL,
       impacto_moneda TEXT DEFAULT 'GTQ',
-      resultado_status TEXT DEFAULT 'exitoso' CHECK(resultado_status IN ('exitoso', 'error', 'advertencia')),
+      resultado_status TEXT DEFAULT 'exitoso',
       duracion_ms INTEGER,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
   
   // Crear índices
+  await db.runAsync(`CREATE INDEX IF NOT EXISTS idx_logs_empresa ON agentes_logs(empresa_id)`);
   await db.runAsync(`CREATE INDEX IF NOT EXISTS idx_logs_agente ON agentes_logs(agente_tipo)`);
   await db.runAsync(`CREATE INDEX IF NOT EXISTS idx_logs_categoria ON agentes_logs(categoria)`);
   await db.runAsync(`CREATE INDEX IF NOT EXISTS idx_logs_created ON agentes_logs(created_at)`);

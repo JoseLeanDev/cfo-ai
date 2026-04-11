@@ -28,25 +28,31 @@ async function logAgentActivity(params) {
     categoria,
     descripcion,
     detalles_json = null,
+    entidad_tipo = null,
+    entidad_id = null,
     impacto_valor = null,
     impacto_moneda = 'GTQ',
     resultado_status = 'exitoso',
-    duracion_ms = null
+    duracion_ms = null,
+    empresa_id = 'default'
   } = params;
 
   try {
     const result = await db.runAsync(`
       INSERT INTO agentes_logs 
-      (agente_nombre, agente_tipo, agente_version, categoria, descripcion, 
-       detalles_json, impacto_valor, impacto_moneda, resultado_status, duracion_ms, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      (empresa_id, agente_nombre, agente_tipo, agente_version, categoria, descripcion, 
+       detalles_json, entidad_tipo, entidad_id, impacto_valor, impacto_moneda, resultado_status, duracion_ms, created_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
     `, [
+      empresa_id,
       agente_nombre,
       agente_tipo,
       agente_version,
       categoria,
       descripcion,
       detalles_json,
+      entidad_tipo,
+      entidad_id,
       impacto_valor,
       impacto_moneda,
       resultado_status,
@@ -54,7 +60,7 @@ async function logAgentActivity(params) {
     ]);
 
     console.log(`[AgentLogger] Log registrado: ${agente_nombre} - ${categoria}`);
-    return { success: true, logId: result.lastID };
+    return { success: true, logId: result.id };
   } catch (error) {
     console.error('[AgentLogger] Error registrando log:', error);
     // No lanzar error para no interrumpir el flujo del agente

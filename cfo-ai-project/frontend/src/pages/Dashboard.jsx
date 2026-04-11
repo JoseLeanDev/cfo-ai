@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDashboard, useInsights } from '../hooks/useCfoData'
+import RunwayCalculator from '../components/dashboard/RunwayCalculator'
 import { 
   CalendarIcon, 
   BanknotesIcon,
@@ -148,6 +149,14 @@ export default function Dashboard() {
           <span className="text-xs text-[var(--text-muted)]">CxC - CxP</span>
         </div>
       </div>
+
+      {/* Runway Calculator - Insight Crítico */}
+      <RunwayCalculator 
+        saldoActual={kpis.disponible_gtq?.value || 0}
+        promedioIngresosMensual={kpis.ventas_mes?.value ? kpis.ventas_mes.value * 0.85 : 2500000}
+        promedioGastosMensual={2200000}
+        proyeccionMeses={12}
+      />
 
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

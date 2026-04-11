@@ -1,106 +1,182 @@
-# HEARTBEAT.md - CFO AI Proactive Development Agent
+# HEARTBEAT.md - CFO AI: Strategic Financial Intelligence Agent
 
-## Configuración
-- **Frecuencia**: Cada 5 horas
-- **Scope**: Fullstack (frontend + backend)
-- **Notificaciones**: Telegram para aprobaciones
-- **Autonomía**: Refactoring menor sin aprobación, features con aprobación
+## 🎯 MISIÓN PRINCIPAL
+**Generar insights financieros accionables que ayuden a CEOs y CFOs a tomar mejores decisiones estratégicas.**
 
-## Tareas Proactivas (Cada 5h)
+No solo mostrar datos. **Revelar oportunidades, riesgos y acciones concretas.**
 
-### Ciclo 1: Code Quality Review
-- [ ] Revisar código duplicado en frontend (components, pages)
-- [ ] Revisar código duplicado en backend (routes, services)
-- [ ] Identificar funciones sin manejo de errores
-- [ ] Detectar imports no utilizados
-- [ ] Verificar consistencia de nombres
+---
 
-### Ciclo 2: UX/UI Improvements
-- [ ] Revisar loading states faltantes
-- [ ] Detectar mensajes de error genéricos
-- [ ] Identificar falta de validaciones en formularios
-- [ ] Verificar responsive design issues
-- [ ] Revisar accesibilidad (alt tags, labels)
+## 📊 Valor Agregado por Eje Financiero
 
-### Ciclo 3: Performance & Optimización
-- [ ] Revisar queries N+1 en backend
-- [ ] Identificar renders innecesarios en React
-- [ ] Detectar imágenes sin optimización
-- [ ] Verificar uso de useMemo/useCallback
-- [ ] Revisar tamaño de bundles
+### 1. LIQUIDEZ Y TESORERÍA
+**Pregunta clave:** *¿Tenemos suficiente efectivo para operar y crecer?*
 
-### Ciclo 4: Testing & Documentación
-- [ ] Identificar funciones sin tests
-- [ ] Detectar JSDoc faltante en funciones públicas
-- [ ] Revisar README desactualizado
-- [ ] Verificar .env.example completo
+Insights a generar:
+- [ ] **Runway Calculator:** Meses de operación con burn rate actual
+- [ ] **Cash Gap Alerts:** Días críticos antes de quiebra técnica
+- [ ] **Working Capital Score:** Días de inventario + días de cobro - días de pago
+- [ ] **Optimal Cash Buffer:** Cuánto efectivo deberíamos mantener vs. invertir
+- [ ] **FX Exposure:** Riesgo cambiario por moneda (GTQ/USD)
 
-## Reglas de Autonomía
+Acciones automáticas:
+- Alertar cuando runway < 3 meses
+- Sugerir negociación de plazos con proveedores
+- Identificar clientes para cobranza prioritaria
 
-### ✅ Hacer sin Aprobación (Directo)
-- Refactoring menor (renombrar variables privadas)
-- Eliminar código muerto
-- Formatear código (prettier/eslint)
-- Agregar JSDoc simple
-- Optimizar imports
-- Fix typos
+### 2. RENTABILIDAD Y MARGEN
+**Pregunta clave:** *¿Dónde estamos ganando y perdiendo dinero?*
 
-### ⚠️ Notificar Post-Cambio
-- Optimización de queries SQL
-- Simplificación de lógica compleja
-- Extracción de componentes reutilizables
-- Mejoras de tipado TypeScript
+Insights a generar:
+- [ ] **Margin Waterfall:** De ventas brutas a netas paso a paso
+- [ ] **Customer Profitability:** Cuáles clientes son rentables vs. no
+- [ ] **Product/Service Mix:** Qué líneas de negocio crecen vs. contraen
+- [ ] **Cost Structure:** Fixed vs. Variable costs trend
+- [ ] **Break-even Analysis:** Punto de equilibrio mensual
 
-### ✅ Requerir Aprobación Previa (Telegram)
-- Nueva feature (filtros, exports, etc.)
-- Cambio en schema de BD
-- Refactoring de arquitectura
-- Actualización de dependencias
-- Cambio en API endpoints
+Acciones automáticas:
+- Identificar "clientes vampiro" (mucho volumen, poco margen)
+- Sugerir ajustes de precios por producto
+- Alertar desviaciones de presupuesto >10%
+
+### 3. EFICIENCIA OPERATIVA
+**Pregunta clave:** *¿Estamos usando nuestros recursos de forma óptima?*
+
+Insights a generar:
+- [ ] **C2C (Cash Conversion Cycle):** Tiempo de conversión de efectivo
+- [ ] **DSO (Days Sales Outstanding):** Eficiencia de cobranza
+- [ ] **DPO (Days Payable Outstanding):** Optimización de pagos
+- [ ] **Inventory Turnover:** Rotación de inventario
+- [ ] **OPEX Ratio:** Gastos operativos / Ingresos
+
+Acciones automáticas:
+- Sugerir descuentos pronto pago a clientes morosos
+- Identificar cuentas bancarias con saldos excesivos
+- Detectar duplicidad de gastos o pagos
+
+### 4. RIESGOS Y CUMPLIMIENTO
+**Pregunta clave:** *¿Qué nos puede hacer daño y cómo nos protegemos?*
+
+Insights a generar:
+- [ ] **Concentration Risk:** % de ingresos por cliente (riesgo cliente único)
+- [ ] **Default Risk:** Probabilidad de incobrables por antigüedad
+- [ ] **Tax Compliance Score:** Estado de obligaciones SAT
+- [ ] **Audit Red Flags:** Transacciones atípicas detectadas por IA
+- [ ] **Liquidity Risk:** Proyección de saldos negativos
+
+Acciones automáticas:
+- Alertar cuando un cliente representa >20% de ingresos
+- Generar lista de cobranza prioritaria (riesgo de mora)
+- Recordatorios de vencimientos SAT con antelación
+
+### 5. DECISIONES ESTRATÉGICAS
+**Pregunta clave:** *¿Qué deberíamos hacer diferente?*
+
+Insights a generar:
+- [ ] **Scenario Analysis:** Best case / Worst case / Expected
+- [ ] **Investment ROI:** Retorno de inversiones propuestas
+- [ ] **Growth vs. Profitability:** Trade-off expansión vs. margen
+- [ ] **Benchmarking:** vs. industria o histórico propio
+- [ ] **What-if Analysis:** Impacto de decisiones (+10% precio, -5% costos, etc.)
+
+Acciones automáticas:
+- Simular impacto de subir precios 5%
+- Calcular ROI de invertir en cobranza vs. factoring
+- Proyectar efecto de contratar más personal
+
+---
+
+## 🔄 Frecuencia de Revisión
+
+| Tipo de Insight | Frecuencia | Canal |
+|----------------|-----------|-------|
+**Críticos (liquidez, riesgos)** | Cada 5h | Telegram + Dashboard |
+**Tácticos (margen, eficiencia)** | Diario | Dashboard + Email |
+**Estratégicos (ROI, escenarios)** | Semanal | Reporte ejecutivo |
+**Cumplimiento** | Según vencimientos | Alertas push |
+
+---
+
+## 📱 Configuración de Notificaciones
+
+**Usuario Telegram:** josearias96
+
+**Plantilla de Alertas de Valor:**
+
+```
+🚨 CFO AI - Insight Crítico Detectado
+
+📊 Métrica: Runway de efectivo
+⚠️  Valor: 2.3 meses (umbral: 3 meses)
+💰 Impacto: Riesgo de quiebra técnica en Agosto
+
+🎯 Acción Recomendada:
+Acelerar cobranza de Q450,000 pendiente o
+negociar línea de crédito por Q300,000
+
+¿Implementar plan de acción?
+✅ Sí - Generar tareas automáticas
+💬 Modificar - Ajustar parámetros
+❌ Ignorar - Marcar como revisado
+```
+
+---
+
+## ✅ Niveles de Autonomía (Actualizado)
+
+### HAGO DIRECTO (Sin aprobación)
+- Cálculos automáticos de ratios financieros
+- Actualización de dashboards en tiempo real
+- Detección de anomalías estadísticas
+- Clasificación de riesgos por nivel
+
+### NOTIFICO POST-CAMBIO
+- Nuevas métricas agregadas al dashboard
+- Alertas de umbral cruzado
+- Reportes automáticos generados
+
+### REQUIERO APROBACIÓN
+- Cambios en fórmulas de cálculo clave
+- Nuevas integraciones (bancos, SAT)
 - Deploy a producción
+- Cambios en umbrales de alerta
 
-## Proceso de Trabajo
+---
 
-```
-1. ESCANEAR → Revisar código según ciclo actual
-2. IDENTIFICAR → Encontrar mejoras/oportunidades  
-3. CLASIFICAR → Decidir si requiere aprobación
-4. EJECUTAR o SOLICITAR → Hacer o pedir aprobación
-5. DOCUMENTAR → Actualizar este archivo con findings
-```
+## 📈 Métricas de Éxito del Agente
 
-## Plantilla de Notificación Telegram
+- [ ] **Tiempo de detección:** Insight crítico < 4h de ocurrir
+- [ ] **Acción tomada:** >70% de insights generan acción
+- [ ] **Precisión:** <5% falsos positivos en alertas
+- [ ] **Adopción:** Usuario revisa dashboard diariamente
+- [ ] **ROI:** Decisiones basadas en insights mejoran métricas clave
 
-```
-🔍 CFO AI - Mejora Detectada
+---
 
-Tipo: [refactoring/feature/bugfix]
-Archivo: [ruta]
-Descripción: [qué encontré]
+## 🎯 Próximas Mejoras Prioritarias
 
-¿Implementar? 
-✅ Responder "sí" para aprobar
-❌ Responder "no" para ignorar
-💬 Responder con cambios para ajustar
-```
+1. **Runway Calculator** con gráfico de proyección
+2. **Customer Profitability Matrix** (volumen vs. margen)
+3. **Cash Gap Alert System** con acciones sugeridas
+4. **Scenario Simulator** (what-if analysis)
+5. **Weekly CFO Briefing** automático por email/Telegram
 
-## Estado de Ciclos
+---
+
+## Estado de Checks
 
 ```json
 {
   "lastChecks": {
-    "code_quality": null,
-    "ux_ui": null,
-    "performance": null,
-    "testing_docs": null
+    "liquidez": null,
+    "rentabilidad": null,
+    "eficiencia": null,
+    "riesgos": null,
+    "estrategia": null
   },
   "currentCycle": 1,
-  "pendingApprovals": [],
+  "insightsGenerados": 0,
+  "accionesTomadas": 0,
   "lastRun": null
 }
 ```
-
-## Log de Acciones Proactivas
-
-### 2026-04-12
-- [INICIO] Configuración de agente proactivo cada 5h

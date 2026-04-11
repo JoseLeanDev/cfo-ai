@@ -55,10 +55,10 @@ export default function CuentasPorPagar() {
   })
 
   const getUrgenciaConfig = (dias) => {
-    if (dias <= 5) return { color: 'bg-rose-500', label: 'Crítico', textColor: 'text-rose-600', bgColor: 'bg-rose-50' }
-    if (dias <= 10) return { color: 'bg-amber-500', label: 'Urgente', textColor: 'text-amber-600', bgColor: 'bg-amber-50' }
-    if (dias <= 20) return { color: 'bg-blue-500', label: 'Próximo', textColor: 'text-blue-600', bgColor: 'bg-blue-50' }
-    return { color: 'bg-emerald-500', label: 'Normal', textColor: 'text-emerald-600', bgColor: 'bg-emerald-50' }
+    if (dias <= 5) return { color: 'bg-rose-500', label: 'Crítico', badgeClass: 'badge-danger' }
+    if (dias <= 10) return { color: 'bg-amber-500', label: 'Urgente', badgeClass: 'badge-warning' }
+    if (dias <= 20) return { color: 'bg-blue-500', label: 'Próximo', badgeClass: 'badge-info' }
+    return { color: 'bg-emerald-500', label: 'Normal', badgeClass: 'badge-success' }
   }
 
   const totalFiltrado = cxpFiltradas.reduce((sum, c) => sum + c.monto, 0)
@@ -70,23 +70,23 @@ export default function CuentasPorPagar() {
   const pagosConDescuento = todasLasCxP.filter(c => c.descuento_pronto_pago).length
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in max-w-6xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link 
             to="/tesoreria" 
-            className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] flex items-center justify-center transition-colors"
           >
-            <ArrowLeftIcon className="w-5 h-5 text-slate-600" />
+            <ArrowLeftIcon className="w-5 h-5 text-[var(--text-muted)]" />
           </Link>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/30">
-              <ArrowTrendingDownIcon className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+              <ArrowTrendingDownIcon className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Cuentas por Pagar</h1>
-              <p className="text-slate-500">{todasLasCxP.length} facturas pendientes • Promedio {data.promedio_dias_pago} días</p>
+              <h1 className="text-2xl font-semibold">Cuentas por Pagar</h1>
+              <p className="text-sm text-[var(--text-muted)]">{todasLasCxP.length} facturas pendientes • Promedio {data.promedio_dias_pago} días</p>
             </div>
           </div>
         </div>
@@ -99,8 +99,8 @@ export default function CuentasPorPagar() {
 
       {/* Alert Banner */}
       {pagosCriticos > 0 && (
-        <div className="bg-rose-50 border border-rose-200 rounded-xl p-4 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-rose-100 flex items-center justify-center">
+        <div className="bg-rose-50 border border-rose-200 rounded-lg p-4 flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-rose-100 flex items-center justify-center">
             <ClockIcon className="w-5 h-5 text-rose-600" />
           </div>
           <div className="flex-1">
@@ -112,90 +112,47 @@ export default function CuentasPorPagar() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-rose-500 to-rose-600 p-5 rounded-2xl text-white shadow-lg shadow-rose-500/30">
-          <p className="text-rose-100 text-sm mb-1">Total por Pagar</p>
-          <p className="text-3xl font-bold">Q{(data.total_cxp || 0).toLocaleString()}</p>
-          <p className="text-rose-100 text-xs mt-2">{todasLasCxP.length} facturas</p>
+        <div className="kpi-card card-hover">
+          <span className="kpi-label">Total por Pagar</span>
+          <p className="kpi-value">Q{(data.total_cxp || 0).toLocaleString()}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">{todasLasCxP.length} facturas</p>
         </div>
         
-        <div className="bg-white p-5 rounded-2xl border border-rose-200">
-          <p className="text-slate-500 text-sm mb-1">Pagos Críticos (&lt;5 días)</p>
-          <p className="text-2xl font-bold text-rose-600">{pagosCriticos}</p>
-          <p className="text-rose-600 text-xs mt-2 font-medium">Atención inmediata</p>
+        <div className="kpi-card card-hover">
+          <span className="kpi-label">Pagos Críticos (&lt;5 días)</span>
+          <p className="kpi-value text-[var(--danger)]">{pagosCriticos}</p>
+          <p className="text-xs text-[var(--danger)] mt-1">Atención inmediata</p>
         </div>
         
-        <div className="bg-white p-5 rounded-2xl border border-emerald-200">
-          <p className="text-slate-500 text-sm mb-1">Descuentos Disponibles</p>
-          <p className="text-2xl font-bold text-emerald-600">{pagosConDescuento}</p>
-          <p className="text-emerald-600 text-xs mt-2 font-medium">Ahorro potencial: Q{Math.round(totalDescuentos).toLocaleString()}</p>
+        <div className="kpi-card card-hover">
+          <span className="kpi-label">Descuentos Disponibles</span>
+          <p className="kpi-value text-[var(--success)]">{pagosConDescuento}</p>
+          <p className="text-xs text-[var(--success)] mt-1">Ahorro potencial: Q{Math.round(totalDescuentos).toLocaleString()}</p>
         </div>
         
-        <div className="bg-white p-5 rounded-2xl border border-slate-200">
-          <p className="text-slate-500 text-sm mb-1">Promedio Días Pago</p>
-          <p className="text-2xl font-bold text-slate-900">{data.promedio_dias_pago || 0}</p>
-          <p className="text-slate-500 text-xs mt-2 font-medium">días</p>
-        </div>
-      </div>
-
-      {/* Timeline View */}
-      <div className="card-elevated p-6">
-        <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2">
-          <CalendarIcon className="w-5 h-5 text-slate-400" />
-          Línea de Tiempo de Pagos
-        </h3>
-        
-        <div className="relative">
-          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-slate-200" />
-          <div className="space-y-4">
-            {[
-              { dias: 'Hoy', pagos: todasLasCxP.filter(c => c.dias_restantes === 0).length, monto: 0 },
-              { dias: '3 días', pagos: todasLasCxP.filter(c => c.dias_restantes <= 3).length, monto: 345000 },
-              { dias: '7 días', pagos: todasLasCxP.filter(c => c.dias_restantes <= 7).length, monto: 434000 },
-              { dias: '15 días', pagos: todasLasCxP.filter(c => c.dias_restantes <= 15).length, monto: 764000 },
-              { dias: '30 días', pagos: todasLasCxP.length, monto: 1360000 },
-            ].map((periodo, idx) => (
-              <div key={idx} className="relative flex items-center gap-4">
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center z-10 ${
-                  idx === 0 ? 'bg-rose-500' : idx === 1 ? 'bg-amber-500' : 'bg-slate-300'
-                }`}>
-                  <span className="text-white text-xs font-bold">{periodo.dias[0]}</span>
-                </div>
-                <div className="flex-1 bg-white p-3 rounded-xl border border-slate-100">
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-slate-700">En {periodo.dias.toLowerCase()}</span>
-                    <span className="text-sm text-slate-500">{periodo.pagos} pagos</span>
-                  </div>                  
-                  {periodo.monto > 0 && (
-                    <div className="mt-2 h-2 bg-slate-100 rounded-full overflow-hidden">
-                      <div 
-                        className="h-full bg-gradient-to-r from-rose-500 to-amber-500 rounded-full"
-                        style={{ width: `${(periodo.monto / 1360000) * 100}%` }}
-                      />
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+        <div className="kpi-card card-hover">
+          <span className="kpi-label">Promedio Días Pago</span>
+          <p className="kpi-value">{data.promedio_dias_pago || 0}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">días</p>
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+          <MagnifyingGlassIcon className="w-5 h-5 text-[var(--text-muted)] absolute left-4 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Buscar proveedor, factura, NIT..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="input w-full pl-12 pr-4 py-3"
+            className="input w-full pl-12"
           />
         </div>
         <select 
           value={filtroUrgencia} 
           onChange={(e) => setFiltroUrgencia(e.target.value)}
-          className="input py-3 px-4 min-w-[180px]"
+          className="input min-w-[180px]"
         >
           <option value="todos">Todos los pagos</option>
           <option value="critico">🚨 Críticos (&lt;5 días)</option>
@@ -206,91 +163,80 @@ export default function CuentasPorPagar() {
       </div>
 
       {/* Table */}
-      <div className="card-elevated overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+      <div className="card overflow-hidden">
+        <div className="p-4 border-b border-[var(--border-default)] flex items-center justify-between bg-[var(--bg-secondary)]">
           <div className="flex items-center gap-2">
-            <TruckIcon className="w-5 h-5 text-slate-400" />
-            <span className="text-sm text-slate-600">{cxpFiltradas.length} resultados</span>
+            <TruckIcon className="w-5 h-5 text-[var(--text-muted)]" />
+            <span className="text-sm text-[var(--text-muted)]">{cxpFiltradas.length} resultados</span>
           </div>
-          <span className="text-sm font-semibold text-slate-900">
+          <span className="text-sm font-semibold">
             Total: Q{totalFiltrado.toLocaleString()}
           </span>
         </div>
         
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-[var(--bg-secondary)] border-b border-[var(--border-default)]">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Proveedor</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Factura</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Monto</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Urgencia</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Días</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Vencimiento</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Descuento</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Acciones</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Proveedor</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Factura</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-[var(--text-muted)] uppercase">Monto</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase">Urgencia</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase">Días</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Vencimiento</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase">Descuento</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[var(--border-default)]">
               {cxpFiltradas.map((cxp) => {
                 const urgencia = getUrgenciaConfig(cxp.dias_restantes)
                 const ahorro = cxp.descuento_pronto_pago ? cxp.monto * 0.03 : 0
                 return (
-                  <tr key={cxp.factura} className="hover:bg-slate-50 transition-colors">
+                  <tr key={cxp.factura} className="hover:bg-[var(--bg-secondary)] transition-colors">
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center">
-                          <BuildingOfficeIcon className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 rounded-lg bg-[var(--bg-tertiary)] flex items-center justify-center">
+                          <BuildingOfficeIcon className="w-5 h-5 text-[var(--text-muted)]" />
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-900">{cxp.proveedor}</p>
-                          <p className="text-xs text-slate-500">NIT: {cxp.nit} • {cxp.tipo}</p>
+                          <p className="font-medium text-[var(--text-primary)]">{cxp.proveedor}</p>
+                          <p className="text-xs text-[var(--text-muted)]">NIT: {cxp.nit} • {cxp.tipo}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <span className="text-sm font-medium text-slate-700">{cxp.factura}</span>
+                      <span className="text-sm font-medium">{cxp.factura}</span>
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <span className="text-lg font-bold text-slate-900">Q{cxp.monto.toLocaleString()}</span>
+                      <span className="font-bold tabular-nums">Q{cxp.monto.toLocaleString()}</span>
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium ${urgencia.bgColor} ${urgencia.textColor}`}>
-                        <span className={`w-2 h-2 rounded-full ${urgencia.color}`} />
+                      <span className={`badge ${urgencia.badgeClass}`}>
+                        <span className={`inline-block w-2 h-2 rounded-full ${urgencia.color} mr-1`} />
                         {urgencia.label}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-center">
                       <span className={`text-sm font-semibold ${
-                        cxp.dias_restantes <= 5 ? 'text-rose-600' : 
-                        cxp.dias_restantes <= 10 ? 'text-amber-600' : 'text-slate-600'
+                        cxp.dias_restantes <= 5 ? 'text-[var(--danger)]' : 
+                        cxp.dias_restantes <= 10 ? 'text-[var(--warning)]' : 'text-[var(--text-secondary)]'
                       }`}>
                         {cxp.dias_restantes} días
                       </span>
                     </td>
                     <td className="px-4 py-4">
-                      <span className="text-sm text-slate-600">{cxp.vencimiento}</span>
-                      <p className="text-xs text-slate-400">{cxp.condicion}</p>
+                      <span className="text-sm text-[var(--text-secondary)]">{cxp.vencimiento}</span>
+                      <p className="text-xs text-[var(--text-muted)]">{cxp.condicion}</p>
                     </td>
                     <td className="px-4 py-4 text-center">
                       {cxp.descuento_pronto_pago ? (
-                        <div className="inline-flex items-center gap-1 px-3 py-1.5 bg-emerald-100 text-emerald-700 rounded-lg text-xs font-medium">
-                          <TagIcon className="w-3.5 h-3.5" />
-                          <span>Ahorro: Q{ahorro.toLocaleString()}</span>
+                        <div className="badge-success text-[10px]">
+                          <TagIcon className="w-3 h-3 inline mr-1" />
+                          Ahorro: Q{ahorro.toLocaleString()}
                         </div>
                       ) : (
-                        <span className="text-slate-400 text-xs">—</span>
+                        <span className="text-[var(--text-muted)] text-xs">—</span>
                       )}
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <button className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-emerald-100 hover:text-emerald-600 flex items-center justify-center transition-colors">
-                          <CheckIcon className="w-4 h-4" />
-                        </button>
-                        <button className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-rose-100 hover:text-rose-600 flex items-center justify-center transition-colors">
-                          <CreditCardIcon className="w-4 h-4" />
-                        </button>
-                      </div>
                     </td>
                   </tr>
                 )

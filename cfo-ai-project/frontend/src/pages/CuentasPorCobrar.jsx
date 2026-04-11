@@ -7,13 +7,12 @@ import {
   ArrowLeftIcon,
   ArrowDownTrayIcon,
   MagnifyingGlassIcon,
-  PhoneIcon,
-  EnvelopeIcon,
   ClockIcon,
   BuildingOfficeIcon,
   ExclamationCircleIcon,
   CheckCircleIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline'
 
 export default function CuentasPorCobrar() {
@@ -51,10 +50,10 @@ export default function CuentasPorCobrar() {
 
   const getEstadoConfig = (estado) => {
     const configs = {
-      al_corriente: { label: 'Al corriente', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: CheckCircleIcon },
-      _30_dias: { label: '1-30 días', color: 'bg-amber-100 text-amber-700 border-amber-200', icon: ClockIcon },
-      _60_dias: { label: '31-60 días', color: 'bg-orange-100 text-orange-700 border-orange-200', icon: ExclamationCircleIcon },
-      _90_dias: { label: '60+ días', color: 'bg-rose-100 text-rose-700 border-rose-200', icon: ExclamationCircleIcon }
+      al_corriente: { label: 'Al corriente', color: 'badge-success', icon: CheckCircleIcon },
+      _30_dias: { label: '1-30 días', color: 'badge-warning', icon: ClockIcon },
+      _60_dias: { label: '31-60 días', color: 'badge-danger', icon: ExclamationCircleIcon },
+      _90_dias: { label: '60+ días', color: 'badge-danger', icon: ExclamationCircleIcon }
     }
     return configs[estado] || configs.al_corriente
   }
@@ -62,23 +61,23 @@ export default function CuentasPorCobrar() {
   const totalFiltrado = cxcFiltradas.reduce((sum, c) => sum + c.monto, 0)
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in max-w-6xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link 
             to="/tesoreria" 
-            className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] flex items-center justify-center transition-colors"
           >
-            <ArrowLeftIcon className="w-5 h-5 text-slate-600" />
+            <ArrowLeftIcon className="w-5 h-5 text-[var(--text-muted)]" />
           </Link>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-              <ArrowTrendingUpIcon className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+              <ArrowTrendingUpIcon className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Cuentas por Cobrar</h1>
-              <p className="text-slate-500">{todasLasCxC.length} facturas pendientes • Promedio {data.promedio_dias_cobro} días</p>
+              <h1 className="text-2xl font-semibold">Cuentas por Cobrar</h1>
+              <p className="text-sm text-[var(--text-muted)]">{todasLasCxC.length} facturas pendientes • Promedio {data.promedio_dias_cobro} días</p>
             </div>
           </div>
         </div>
@@ -91,35 +90,39 @@ export default function CuentasPorCobrar() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-5 rounded-2xl text-white shadow-lg shadow-emerald-500/30">
-          <p className="text-emerald-100 text-sm mb-1">Total por Cobrar</p>
-          <p className="text-3xl font-bold">Q{(data.total_cxc || 0).toLocaleString()}</p>
-          <p className="text-emerald-100 text-xs mt-2">{todasLasCxC.length} facturas</p>
+        <div className="kpi-card card-hover">
+          <span className="kpi-label">Total por Cobrar</span>
+          <p className="kpi-value">Q{(data.total_cxc || 0).toLocaleString()}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">{todasLasCxC.length} facturas</p>
         </div>
         
-        <div className="bg-white p-5 rounded-2xl border border-slate-200">
-          <p className="text-slate-500 text-sm mb-1">Al Corriente</p>
-          <p className="text-2xl font-bold text-emerald-600">Q{(distribucion.al_corriente?.monto || 0).toLocaleString()}</p>
-          <p className="text-emerald-600 text-xs mt-2 font-medium">{distribucion.al_corriente?.porcentaje || 0}%</p>
+        <div className="kpi-card card-hover">
+          <span className="kpi-label">Al Corriente</span>
+          <p className="kpi-value text-[var(--success)]">Q{(distribucion.al_corriente?.monto || 0).toLocaleString()}</p>
+          <p className="text-xs text-[var(--success)] mt-1">{distribucion.al_corriente?.porcentaje || 0}%</p>
         </div>
         
-        <div className="bg-white p-5 rounded-2xl border border-slate-200">
-          <p className="text-slate-500 text-sm mb-1">1-30 días</p>
-          <p className="text-2xl font-bold text-amber-600">Q{(distribucion._30_dias?.monto || 0).toLocaleString()}</p>
-          <p className="text-amber-600 text-xs mt-2 font-medium">{distribucion._30_dias?.porcentaje || 0}%</p>
+        <div className="kpi-card card-hover">
+          <span className="kpi-label">1-30 días</span>
+          <p className="kpi-value text-[var(--warning)]">Q{(distribucion._30_dias?.monto || 0).toLocaleString()}</p>
+          <p className="text-xs text-[var(--warning)] mt-1">{distribucion._30_dias?.porcentaje || 0}%</p>
         </div>
         
-        <div className="bg-white p-5 rounded-2xl border border-slate-200">
-          <p className="text-slate-500 text-sm mb-1">+60 días (Riesgo)</p>
-          <p className="text-2xl font-bold text-rose-600">Q{((distribucion._60_dias?.monto || 0) + (distribucion._90_dias?.monto || 0)).toLocaleString()}</p>
-          <p className="text-rose-600 text-xs mt-2 font-medium">Atención requerida</p>
+        <div className="kpi-card card-hover">
+          <span className="kpi-label">+60 días (Riesgo)</span>
+          <p className="kpi-value text-[var(--danger)]">Q{((distribucion._60_dias?.monto || 0) + (distribucion._90_dias?.monto || 0)).toLocaleString()}</p>
+          <p className="text-xs text-[var(--danger)] mt-1">Atención requerida</p>
         </div>
       </div>
 
       {/* Aging Chart */}
-      <div className="card-elevated p-6">
-        <h3 className="text-lg font-bold text-slate-900 mb-4">Distribución por Antigüedad</h3>
-        <div className="space-y-4">
+      <div className="card">
+        <div className="section-header">
+          <ChartBarIcon className="w-5 h-5 text-[var(--text-muted)]" />
+          <h2 className="font-semibold">Distribución por Antigüedad</h2>
+        </div>
+        
+        <div className="p-5 pt-0 space-y-4">
           {[
             { key: 'al_corriente', label: 'Al corriente', color: 'bg-emerald-500' },
             { key: '_30_dias', label: '1-30 días vencido', color: 'bg-amber-500' },
@@ -130,12 +133,12 @@ export default function CuentasPorCobrar() {
             return (
               <div key={rango.key} className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">{rango.label}</span>
-                  <span className="text-sm font-semibold text-slate-900">
+                  <span className="text-sm text-[var(--text-secondary)]">{rango.label}</span>
+                  <span className="text-sm font-semibold tabular-nums">
                     Q{(val?.monto || 0).toLocaleString()} ({val?.porcentaje || 0}%)
                   </span>
                 </div>
-                <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div className="h-3 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
                   <div 
                     className={`h-full rounded-full ${rango.color} transition-all duration-700`}
                     style={{ width: `${val?.porcentaje || 0}%` }}
@@ -150,19 +153,19 @@ export default function CuentasPorCobrar() {
       {/* Filters */}
       <div className="flex flex-col sm:flex-row gap-4">
         <div className="relative flex-1">
-          <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+          <MagnifyingGlassIcon className="w-5 h-5 text-[var(--text-muted)] absolute left-4 top-1/2 -translate-y-1/2" />
           <input
             type="text"
             placeholder="Buscar cliente, factura, NIT..."
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
-            className="input w-full pl-12 pr-4 py-3"
+            className="input w-full pl-12"
           />
         </div>
         <select 
           value={filtroEstado} 
           onChange={(e) => setFiltroEstado(e.target.value)}
-          className="input py-3 px-4 min-w-[180px]"
+          className="input min-w-[180px]"
         >
           <option value="todos">Todos los estados</option>
           <option value="al_corriente">Al corriente</option>
@@ -173,88 +176,75 @@ export default function CuentasPorCobrar() {
       </div>
 
       {/* Table */}
-      <div className="card-elevated overflow-hidden">
-        <div className="p-4 border-b border-slate-100 flex items-center justify-between">
+      <div className="card overflow-hidden">
+        <div className="p-4 border-b border-[var(--border-default)] flex items-center justify-between bg-[var(--bg-secondary)]">
           <div className="flex items-center gap-2">
-            <UserGroupIcon className="w-5 h-5 text-slate-400" />
-            <span className="text-sm text-slate-600">{cxcFiltradas.length} resultados</span>
+            <UserGroupIcon className="w-5 h-5 text-[var(--text-muted)]" />
+            <span className="text-sm text-[var(--text-muted)]">{cxcFiltradas.length} resultados</span>
           </div>
-          <span className="text-sm font-semibold text-slate-900">
+          <span className="text-sm font-semibold">
             Total: Q{totalFiltrado.toLocaleString()}
           </span>
         </div>
         
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-[var(--bg-secondary)] border-b border-[var(--border-default)]">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Cliente</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Factura</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase">Monto</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Estado</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Días</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Vencimiento</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase">Contacto</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase">Acciones</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Cliente</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Factura</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-[var(--text-muted)] uppercase">Monto</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase">Estado</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase">Días</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Vencimiento</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Contacto</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[var(--border-default)]">
               {cxcFiltradas.map((cxc) => {
                 const estadoConfig = getEstadoConfig(cxc.estado)
                 const EstadoIcon = estadoConfig.icon
                 return (
-                  <tr key={cxc.factura} className="hover:bg-slate-50 transition-colors">
+                  <tr key={cxc.factura} className="hover:bg-[var(--bg-secondary)] transition-colors">
                     <td className="px-4 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center">
-                          <BuildingOfficeIcon className="w-5 h-5 text-white" />
+                        <div className="w-10 h-10 rounded-lg bg-[var(--bg-tertiary)] flex items-center justify-center">
+                          <BuildingOfficeIcon className="w-5 h-5 text-[var(--text-muted)]" />
                         </div>
                         <div>
-                          <p className="font-semibold text-slate-900">{cxc.cliente}</p>
-                          <p className="text-xs text-slate-500">NIT: {cxc.nit}</p>
+                          <p className="font-medium text-[var(--text-primary)]">{cxc.cliente}</p>
+                          <p className="text-xs text-[var(--text-muted)]">NIT: {cxc.nit}</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <span className="text-sm font-medium text-slate-700">{cxc.factura}</span>
+                      <span className="text-sm font-medium">{cxc.factura}</span>
                     </td>
                     <td className="px-4 py-4 text-right">
-                      <span className="text-lg font-bold text-slate-900">Q{cxc.monto.toLocaleString()}</span>
+                      <span className="font-bold tabular-nums">Q{cxc.monto.toLocaleString()}</span>
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${estadoConfig.color}`}>
+                      <span className={`inline-flex items-center gap-1.5 ${estadoConfig.color}`}>
                         <EstadoIcon className="w-3.5 h-3.5" />
                         {estadoConfig.label}
                       </span>
                     </td>
                     <td className="px-4 py-4 text-center">
                       <span className={`text-sm font-semibold ${
-                        cxc.dias > 60 ? 'text-rose-600' : 
-                        cxc.dias > 30 ? 'text-amber-600' : 'text-slate-600'
+                        cxc.dias > 60 ? 'text-[var(--danger)]' : 
+                        cxc.dias > 30 ? 'text-[var(--warning)]' : 'text-[var(--text-secondary)]'
                       }`}>
                         {cxc.dias} días
                       </span>
                     </td>
                     <td className="px-4 py-4">
-                      <span className="text-sm text-slate-600">{cxc.vencimiento}</span>
+                      <span className="text-sm text-[var(--text-secondary)]">{cxc.vencimiento}</span>
                     </td>
                     <td className="px-4 py-4">
-                      <p className="text-sm text-slate-700">{cxc.contacto}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <a href={`tel:${cxc.telefono}`} className="text-xs text-violet-600 hover:text-violet-700 flex items-center gap-1">
-                          <PhoneIcon className="w-3 h-3" /> {cxc.telefono}
-                        </a>
-                      </div>
-                    </td>
-                    <td className="px-4 py-4">
-                      <div className="flex items-center justify-center gap-2">
-                        <button className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-violet-100 hover:text-violet-600 flex items-center justify-center transition-colors">
-                          <PhoneIcon className="w-4 h-4" />
-                        </button>
-                        <button className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-violet-100 hover:text-violet-600 flex items-center justify-center transition-colors">
-                          <EnvelopeIcon className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <p className="text-sm text-[var(--text-primary)]">{cxc.contacto}</p>
+                      <a href={`tel:${cxc.telefono}`} className="text-xs text-[var(--accent-blue)] hover:underline flex items-center gap-1">
+                        {cxc.telefono}
+                      </a>
                     </td>
                   </tr>
                 )

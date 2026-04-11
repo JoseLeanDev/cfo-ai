@@ -210,3 +210,38 @@ The goal: Be helpful without being annoying. Check in a few times a day, do usef
 ## Make It Yours
 
 This is a starting point. Add your own conventions, style, and rules as you figure out what works.
+
+---
+
+## 🧠 Self-Improvement System (v2.0)
+
+This workspace uses a **self-improving memory system**. On each session:
+
+### On Session Start
+1. Read `~/self-improving/memory.md` for long-term learnings
+2. Check `~/self-improving/corrections.md` for pending corrections
+3. Apply learned preferences automatically
+
+### On User Correction
+When user says "Remember that..." or "Correction:...":
+1. Log to `~/self-improving/corrections.md`
+2. Update `~/self-improving/memory.md` with distilled learning
+3. Apply immediately
+
+### Memory Files Location
+- `~/self-improving/memory.md` - Curated long-term memory
+- `~/self-improving/corrections.md` - User corrections log
+- `~/self-improving/boundaries.md` - Privacy & consent settings
+- `~/self-improving/heartbeat-state.json` - Periodic check tracking
+
+### User Commands
+- "What have you learned about me?" → Show memory summary
+- "Export my data" → Provide all self-improvement files
+- "Wipe my data" → Delete all (requires confirmation)
+
+### Privacy Notes
+- All data stays local (~/self-improving/)
+- No cloud storage or external APIs
+- User controls boundaries in boundaries.md
+- Secrets/API keys are NEVER stored
+

@@ -45,34 +45,34 @@ export default function LibroDiario() {
   ]
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in max-w-6xl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
           <Link 
             to="/contabilidad" 
-            className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-colors"
+            className="w-10 h-10 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] flex items-center justify-center transition-colors"
           >
-            <ArrowLeftIcon className="w-5 h-5 text-slate-600" />
+            <ArrowLeftIcon className="w-5 h-5 text-[var(--text-muted)]" />
           </Link>
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-              <BookOpenIcon className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+              <BookOpenIcon className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Libro Diario</h1>
-              <p className="text-slate-500">{data.total_asientos || 0} asientos contables • {meses.find(m => m.value === mes)?.label}</p>
+              <h1 className="text-2xl font-semibold">Libro Diario</h1>
+              <p className="text-sm text-[var(--text-muted)]">{data.total_asientos || 0} asientos • {meses.find(m => m.value === mes)?.label}</p>
             </div>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
           <div className="relative">
-            <CalendarIcon className="w-5 h-5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <CalendarIcon className="w-5 h-5 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
             <select 
               value={mes} 
               onChange={(e) => setMes(e.target.value)}
-              className="input pl-10 pr-8 py-2.5 appearance-none cursor-pointer bg-white"
+              className="input pl-10 pr-8 py-2.5 appearance-none cursor-pointer"
             >
               {meses.map(m => (
                 <option key={m.value} value={m.value}>{m.label}</option>
@@ -87,16 +87,16 @@ export default function LibroDiario() {
       </div>
 
       {/* Balance Status Card */}
-      <div className={`p-4 rounded-xl border flex items-center justify-between ${
+      <div className={`p-4 rounded-lg border flex items-center justify-between ${
         data.balanceado 
-          ? 'bg-emerald-50/50 border-emerald-200' 
-          : 'bg-rose-50/50 border-rose-200'
+          ? 'bg-emerald-50 border-emerald-200' 
+          : 'bg-rose-50 border-rose-200'
       }`}>
         <div className="flex items-center gap-3">
           {data.balanceado ? (
-            <CheckCircleIcon className="w-6 h-6 text-emerald-600" />
+            <CheckCircleIcon className="w-6 h-6 text-[var(--success)]" />
           ) : (
-            <ExclamationTriangleIcon className="w-6 h-6 text-rose-600" />
+            <ExclamationTriangleIcon className="w-6 h-6 text-[var(--danger)]" />
           )}
           <div>
             <p className={`font-semibold ${data.balanceado ? 'text-emerald-800' : 'text-rose-800'}`}>
@@ -107,6 +107,7 @@ export default function LibroDiario() {
             </p>
           </div>
         </div>
+        
         {data.balanceado && (
           <span className="badge-success">✓ Balanceado</span>
         )}
@@ -114,7 +115,7 @@ export default function LibroDiario() {
 
       {/* Search Bar */}
       <div className="relative">
-        <MagnifyingGlassIcon className="w-5 h-5 text-slate-400 absolute left-4 top-1/2 -translate-y-1/2" />
+        <MagnifyingGlassIcon className="w-5 h-5 text-[var(--text-muted)] absolute left-4 top-1/2 -translate-y-1/2" />
         <input
           type="text"
           placeholder="Buscar por cuenta, descripción, documento..."
@@ -125,36 +126,36 @@ export default function LibroDiario() {
       </div>
 
       {/* Table */}
-      <div className="card-elevated overflow-hidden">
+      <div className="card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
+            <thead className="bg-[var(--bg-secondary)] border-b border-[var(--border-default)]">
               <tr>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Fecha</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Asiento</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Cuenta</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Descripción</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Debe</th>
-                <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Haber</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Doc</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Fecha</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Asiento</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Cuenta</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Descripción</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-[var(--text-muted)] uppercase">Debe</th>
+                <th className="px-4 py-3 text-right text-xs font-semibold text-[var(--text-muted)] uppercase">Haber</th>
+                <th className="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase">Doc</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-[var(--border-default)]">
               {isLoading ? (
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i}>
                     <td colSpan={7} className="px-4 py-4">
-                      <div className="h-8 bg-slate-100 rounded-lg animate-pulse" />
+                      <div className="h-8 bg-[var(--bg-secondary)] rounded-lg animate-pulse" />
                     </td>
                   </tr>
                 ))
               ) : asientosFiltrados.length === 0 ? (
                 <tr>
                   <td colSpan={7} className="px-4 py-12 text-center">
-                    <DocumentTextIcon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-                    <p className="text-slate-500">No se encontraron asientos</p>
+                    <DocumentTextIcon className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
+                    <p className="text-[var(--text-muted)]">No se encontraron asientos</p>
                     {busqueda && (
-                      <p className="text-sm text-slate-400 mt-1">Intenta con otra búsqueda</p>
+                      <p className="text-sm text-[var(--text-muted)] mt-1">Intenta con otra búsqueda</p>
                     )}
                   </td>
                 </tr>
@@ -162,59 +163,57 @@ export default function LibroDiario() {
                 asientosFiltrados.map((asiento, idx) => (
                   <tr 
                     key={asiento.asiento_id} 
-                    className={`hover:bg-slate-50 transition-colors ${
-                      idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/30'
-                    }`}
+                    className="hover:bg-[var(--bg-secondary)] transition-colors"
                   >
-                    <td className="px-4 py-3 text-sm text-slate-600 whitespace-nowrap">
+                    <td className="px-4 py-3 text-sm text-[var(--text-secondary)] whitespace-nowrap">
                       {new Date(asiento.fecha).toLocaleDateString('es-GT')}
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                      <span className="text-xs font-medium text-[var(--text-muted)] bg-[var(--bg-secondary)] px-2 py-1 rounded">
                         #{asiento.asiento_id}
                       </span>
                     </td>
                     <td className="px-4 py-3">
                       <div>
-                        <p className="text-sm font-medium text-slate-900">{asiento.cuenta_nombre}</p>
-                        <p className="text-xs text-slate-500">{asiento.cuenta_codigo}</p>
+                        <p className="text-sm font-medium">{asiento.cuenta_nombre}</p>
+                        <p className="text-xs text-[var(--text-muted)]">{asiento.cuenta_codigo}</p>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm text-slate-700 max-w-xs truncate">
+                    <td className="px-4 py-3 text-sm text-[var(--text-secondary)] max-w-xs truncate">
                       {asiento.descripcion}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {asiento.debe > 0 && (
-                        <span className="text-sm font-semibold text-emerald-600">
+                        <span className="text-sm font-semibold text-[var(--success)]">
                           Q{asiento.debe.toLocaleString()}
                         </span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
                       {asiento.haber > 0 && (
-                        <span className="text-sm font-semibold text-rose-600">
+                        <span className="text-sm font-semibold text-[var(--danger)]">
                           Q{asiento.haber.toLocaleString()}
                         </span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-center">
                       {asiento.documento && (
-                        <span className="text-xs text-slate-500">{asiento.documento}</span>
+                        <span className="text-xs text-[var(--text-muted)]">{asiento.documento}</span>
                       )}
                     </td>
                   </tr>
                 ))
               )}
             </tbody>
-            <tfoot className="bg-slate-50 border-t-2 border-slate-200">
+            <tfoot className="bg-[var(--bg-secondary)] border-t-2 border-[var(--border-default)]">
               <tr>
-                <td colSpan={4} className="px-4 py-3 text-right font-semibold text-slate-700">
+                <td colSpan={4} className="px-4 py-3 text-right font-semibold">
                   Totales del período:
                 </td>
-                <td className="px-4 py-3 text-right font-bold text-emerald-600">
+                <td className="px-4 py-3 text-right font-bold text-[var(--success)]">
                   Q{(data.debe_total || 0).toLocaleString()}
                 </td>
-                <td className="px-4 py-3 text-right font-bold text-rose-600">
+                <td className="px-4 py-3 text-right font-bold text-[var(--danger)]">
                   Q{(data.haber_total || 0).toLocaleString()}
                 </td>
                 <td></td>
@@ -226,19 +225,21 @@ export default function LibroDiario() {
 
       {/* Summary Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-white p-4 rounded-xl border border-slate-200">
-          <p className="text-sm text-slate-500 mb-1">Total Asientos</p>
-          <p className="text-2xl font-bold text-slate-900">{data.total_asientos || 0}</p>
+        <div className="kpi-card">
+          <span className="kpi-label">Total Asientos</span>
+          <p className="kpi-value">{data.total_asientos || 0}</p>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200">
-          <p className="text-sm text-slate-500 mb-1">Promedio por Asiento</p>
-          <p className="text-2xl font-bold text-slate-900">
+        
+        <div className="kpi-card">
+          <span className="kpi-label">Promedio por Asiento</span>
+          <p className="kpi-value">
             Q{data.total_asientos ? Math.round((data.debe_total || 0) / data.total_asientos).toLocaleString() : 0}
           </p>
         </div>
-        <div className="bg-white p-4 rounded-xl border border-slate-200">
-          <p className="text-sm text-slate-500 mb-1">Diferencia</p>
-          <p className={`text-2xl font-bold ${data.balanceado ? 'text-emerald-600' : 'text-rose-600'}`}>
+        
+        <div className="kpi-card">
+          <span className="kpi-label">Diferencia</span>
+          <p className={`kpi-value ${data.balanceado ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
             Q{Math.abs((data.debe_total || 0) - (data.haber_total || 0)).toLocaleString()}
           </p>
         </div>

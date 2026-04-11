@@ -14,8 +14,7 @@ import {
   CommandLineIcon,
   ChartBarIcon,
   BoltIcon,
-  ShieldCheckIcon,
-  BuildingOfficeIcon
+  ShieldCheckIcon
 } from '@heroicons/react/24/outline'
 
 // Configuración de agentes
@@ -30,9 +29,9 @@ const agenteConfig = {
   },
   'analista_ia': { 
     nombre: 'Analista IA', 
-    color: 'text-cyan-600',
-    bg: 'bg-cyan-50',
-    border: 'border-cyan-200',
+    color: 'text-blue-600',
+    bg: 'bg-blue-50',
+    border: 'border-blue-200',
     icon: SparklesIcon,
     desc: 'Insights financieros'
   },
@@ -72,9 +71,9 @@ const categoriaConfig = {
   },
   analisis_ejecutado: { 
     label: 'Análisis', 
-    color: 'text-cyan-600',
-    bg: 'bg-cyan-50',
-    border: 'border-cyan-200',
+    color: 'text-blue-600',
+    bg: 'bg-blue-50',
+    border: 'border-blue-200',
     icon: ChartBarIcon 
   },
   reporte_generado: { 
@@ -168,11 +167,11 @@ export default function LogActividades() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded bg-[var(--brand-navy)] flex items-center justify-center">
+          <div className="w-10 h-10 rounded bg-black flex items-center justify-center">
             <CpuChipIcon className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-2xl">Agentes de IA</h1>
+            <h1 className="text-2xl font-semibold">Agentes de IA</h1>
             <p className="text-sm text-[var(--text-muted)]">Monitoreo del sistema multi-agente</p>
           </div>
         </div>
@@ -186,8 +185,8 @@ export default function LogActividades() {
             Actualizar
           </button>
           
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded bg-[var(--success-bg)] border border-[var(--success)]/20">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]" />
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--success-bg)]">
+            <span className="w-2 h-2 rounded-full bg-[var(--success)]" />
             <span className="text-xs font-medium text-[var(--success)]">4 Agentes Activos</span>
           </div>
         </div>
@@ -195,7 +194,7 @@ export default function LogActividades() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="kpi-card">
+        <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Total Actividades</span>
             <ChartBarIcon className="w-4 h-4 text-[var(--text-muted)]" />
@@ -203,7 +202,7 @@ export default function LogActividades() {
           <div className="kpi-value">{stats?.total || logs.length}</div>
         </div>
 
-        <div className="kpi-card">
+        <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Éxitos</span>
             <CheckCircleIcon className="w-4 h-4 text-[var(--success)]" />
@@ -211,7 +210,7 @@ export default function LogActividades() {
           <div className="kpi-value text-[var(--success)]">{stats?.por_status?.exitoso || 0}</div>
         </div>
 
-        <div className="kpi-card">
+        <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Advertencias</span>
             <ExclamationTriangleIcon className="w-4 h-4 text-[var(--warning)]" />
@@ -219,7 +218,7 @@ export default function LogActividades() {
           <div className="kpi-value text-[var(--warning)]">{stats?.por_status?.advertencia || 0}</div>
         </div>
 
-        <div className="kpi-card">
+        <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Errores</span>
             <XCircleIcon className="w-4 h-4 text-[var(--danger)]" />
@@ -229,13 +228,13 @@ export default function LogActividades() {
       </div>
 
       {/* Agentes Status */}
-      <div className="card p-5">
-        <div className="section-header border-[var(--brand-gold)]">
-          <span className="section-number bg-[var(--brand-gold)]">01</span>
-          <h2 className="font-serif text-lg">Estado de Agentes</h2>
+      <div className="card">
+        <div className="section-header">
+          <CpuChipIcon className="w-5 h-5 text-[var(--text-muted)]" />
+          <h2 className="font-semibold">Estado de Agentes</h2>
         </div>
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-5 pt-0">
           {Object.entries(agenteConfig).filter(([key]) => key !== 'orchestrator').map(([key, config]) => (
             <div key={key} className={`p-4 rounded-lg ${config.bg} border ${config.border}`}>
               <div className="flex items-center gap-3 mb-2">
@@ -302,18 +301,20 @@ export default function LogActividades() {
       {/* Tabla */}
       <div className="card overflow-hidden">
         <div className="px-5 py-4 border-b border-[var(--border-default)] flex items-center justify-between">
-          <h2 className="font-serif text-lg">Logs de Actividad</h2>
+          <h2 className="font-semibold">Logs de Actividad</h2>
           <span className="text-xs text-[var(--text-muted)]">{logs.length} registros</span>
         </div>
 
         {isLoading ? (
           <div className="p-8 text-center">
-            <div className="w-8 h-8 border-2 border-[var(--brand-navy)] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p className="text-sm text-[var(--text-muted)]">Cargando...</p>
           </div>
         ) : logs.length === 0 ? (
-          <div className="p-8 text-center">
-            <CommandLineIcon className="w-12 h-12 text-[var(--text-muted)] mx-auto mb-3" />
+          <div className="empty-state">
+            <div className="empty-state-icon">
+              <CommandLineIcon className="w-6 h-6" />
+            </div>
             <p className="text-sm text-[var(--text-muted)]">No hay logs</p>
           </div>
         ) : (
@@ -340,7 +341,7 @@ export default function LogActividades() {
                       <tr 
                         key={log.id}
                         onClick={() => setExpandedLog(isExpanded ? null : log.id)}
-                        className="cursor-pointer hover:bg-[var(--bg-tertiary)]"
+                        className="cursor-pointer hover:bg-[var(--bg-secondary)]"
                       >
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
@@ -350,14 +351,14 @@ export default function LogActividades() {
                         </td>
                         
                         <td className="px-4 py-3">
-                          <span className={`badge ${catConfig.bg} ${catConfig.color} ${catConfig.border}`}>
+                          <span className={`badge ${catConfig.bg} ${catConfig.color} border ${catConfig.border}`}>
                             {catConfig.label}
                           </span>
                           <p className="text-xs text-[var(--text-secondary)] mt-1">{log.descripcion}</p>
                         </td>
                         
                         <td className="px-4 py-3">
-                          <span className={`badge ${statusCfg.bg} ${statusCfg.color} ${statusCfg.border}`}>
+                          <span className={`badge ${statusCfg.bg} ${statusCfg.color} border ${statusCfg.border}`}>
                             <statusCfg.icon className="w-3.5 h-3.5" />
                             {statusCfg.label}
                           </span>
@@ -378,8 +379,8 @@ export default function LogActividades() {
                       
                       {isExpanded && log.detallesJson && (
                         <tr>
-                          <td colSpan={5} className="px-4 py-3 bg-[var(--bg-tertiary)]">
-                            <pre className="text-xs font-mono overflow-x-auto p-3 bg-white rounded border">
+                          <td colSpan={5} className="px-4 py-3 bg-[var(--bg-secondary)]">
+                            <pre className="text-xs font-mono overflow-x-auto p-3 bg-white rounded border border-[var(--border-default)]">
                               {JSON.stringify(JSON.parse(log.detallesJson), null, 2)}
                             </pre>
                           </td>

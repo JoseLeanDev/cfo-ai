@@ -3,37 +3,35 @@
 @tailwind utilities;
 
 /* ============================================
-   CFO AI - Monocle × Bloomberg Design System
-   Estética: International Finance, Sophisticated Grid
-   Light Mode | Serif Headings | Monospace Data
+   CFO AI - Cal.com Design System
+   Estética: Open Source, Accessible, Trustworthy
+   Clean scheduling, neutral palette, transparency
    ============================================ */
 
 @layer base {
   :root {
-    /* Core - Warm Editorial Background */
-    --bg-primary: #F8F7F4;
-    --bg-secondary: #FFFFFF;
-    --bg-tertiary: #F0EEEA;
+    /* Core - Clean & Accessible */
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F3F4F6;
+    --bg-tertiary: #E5E7EB;
     --bg-elevated: #FFFFFF;
     
-    /* Text - High Contrast Editorial */
-    --text-primary: #1A1A1A;
-    --text-secondary: #4A4A4A;
-    --text-tertiary: #6B6B6B;
-    --text-muted: #9A9A9A;
+    /* Text - High Contrast Accessibility */
+    --text-primary: #111827;
+    --text-secondary: #4B5563;
+    --text-tertiary: #6B7280;
+    --text-muted: #9CA3AF;
     
-    /* Brand - Navy Gold Financial */
-    --brand-navy: #1E3A5F;
-    --brand-navy-light: #2A4A73;
-    --brand-gold: #B8860B;
-    --brand-gold-light: #D4A84B;
+    /* Brand - Trustworthy Black */
+    --brand-primary: #000000;
+    --brand-secondary: #1F2937;
     
-    /* Accent - Functional Colors */
+    /* Accent - Functional Blue */
     --accent-blue: #2563EB;
-    --accent-cyan: #0891B2;
-    --accent-teal: #0D9488;
+    --accent-blue-light: #3B82F6;
+    --accent-blue-subtle: #EFF6FF;
     
-    /* Semantic - Financial Data */
+    /* Semantic - Clear Status */
     --success: #059669;
     --success-bg: #ECFDF5;
     --warning: #D97706;
@@ -43,25 +41,29 @@
     --info: #2563EB;
     --info-bg: #EFF6FF;
     
-    /* Borders - Refined */
+    /* Borders - Subtle Definition */
     --border-subtle: rgba(0, 0, 0, 0.06);
-    --border-default: rgba(0, 0, 0, 0.1);
-    --border-strong: rgba(0, 0, 0, 0.15);
+    --border-default: #E5E7EB;
+    --border-strong: #D1D5DB;
     
-    /* Typography */
-    --font-serif: 'Playfair Display', Georgia, 'Times New Roman', serif;
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', 'SF Mono', monospace;
+    /* Typography - Clean Sans */
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
     
-    /* Spacing - Monocle Grid System */
-    --section-gap: 2.5rem;
+    /* Spacing - Generous & Clear */
+    --section-gap: 2rem;
     --card-padding: 1.5rem;
     
-    /* Radius - Subtle */
-    --radius-sm: 4px;
-    --radius: 6px;
-    --radius-md: 8px;
-    --radius-lg: 12px;
+    /* Radius - Soft & Friendly */
+    --radius-sm: 6px;
+    --radius: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    
+    /* Shadows - Subtle Depth */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
   }
 }
 
@@ -76,7 +78,7 @@
   
   html {
     font-family: var(--font-sans);
-    background-color: var(--bg-primary);
+    background-color: var(--bg-secondary);
     color: var(--text-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -84,55 +86,51 @@
   
   body {
     @apply min-h-screen;
-    background-color: var(--bg-primary);
+    background-color: var(--bg-secondary);
   }
   
-  /* Editorial Typography */
-  h1, h2, h3 {
-    font-family: var(--font-serif);
+  h1, h2, h3, h4 {
     font-weight: 600;
+    color: var(--text-primary);
     letter-spacing: -0.02em;
   }
   
   h1 {
-    @apply text-3xl leading-tight;
-    color: var(--brand-navy);
+    @apply text-2xl;
   }
   
   h2 {
-    @apply text-xl leading-snug;
-    color: var(--text-primary);
+    @apply text-xl;
   }
   
   h3 {
-    @apply text-lg leading-snug;
+    @apply text-lg;
   }
   
-  /* Financial Numbers */
-  .tabular-nums {
-    font-family: var(--font-mono);
-    font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
+  /* Focus styles for accessibility */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-offset-2;
+    ring-color: var(--accent-blue);
   }
   
   /* Selection */
   ::selection {
-    background-color: var(--brand-gold);
+    background-color: var(--accent-blue);
     color: white;
   }
 }
 
 /* ============================================
-   COMPONENTS - Monocle Financial
+   COMPONENTS - Clean & Accessible
    ============================================ */
 
 @layer components {
   
-  /* Cards - Clean Editorial */
+  /* Cards - Clean with subtle shadow */
   .card {
-    @apply bg-white border rounded-lg;
+    @apply bg-white rounded-lg border;
     border-color: var(--border-default);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+    box-shadow: var(--shadow-sm);
   }
   
   .card-hover {
@@ -140,43 +138,30 @@
   }
   
   .card-hover:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-md);
     transform: translateY(-1px);
   }
   
-  /* Section Headers - Monocle Style */
+  /* Section Headers - Clean */
   .section-header {
-    @apply flex items-center gap-3 pb-3 mb-4;
-    border-bottom: 2px solid var(--brand-navy);
+    @apply flex items-center gap-3 pb-4 mb-4;
+    border-bottom: 1px solid var(--border-default);
   }
   
-  .section-number {
-    @apply w-7 h-7 flex items-center justify-center text-xs font-bold rounded;
-    background-color: var(--brand-navy);
-    color: white;
-    font-family: var(--font-mono);
-  }
-  
-  /* KPI Cards - Bloomberg Style */
+  /* KPI Cards - Minimal */
   .kpi-card {
-    @apply p-5 bg-white border rounded-lg;
+    @apply p-5 bg-white rounded-lg border;
     border-color: var(--border-default);
   }
   
-  .kpi-card::before {
-    content: '';
-    @apply block h-0.5 w-12 mb-3 rounded-full;
-    background-color: var(--brand-gold);
-  }
-  
   .kpi-value {
-    @apply text-2xl font-bold tabular-nums;
+    @apply text-2xl font-bold tabular-nums mt-1;
     font-family: var(--font-mono);
-    color: var(--brand-navy);
+    color: var(--text-primary);
   }
   
   .kpi-label {
-    @apply text-xs uppercase tracking-wider mt-1;
+    @apply text-xs uppercase tracking-wider;
     color: var(--text-muted);
   }
   
@@ -193,7 +178,7 @@
     color: var(--danger);
   }
   
-  /* Navigation - Refined */
+  /* Navigation - Clean sidebar */
   .nav-link {
     @apply flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors;
     color: var(--text-secondary);
@@ -206,39 +191,50 @@
   
   .nav-link-active {
     @apply flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium;
-    background-color: var(--brand-navy);
+    background-color: var(--brand-primary);
     color: white;
   }
   
-  /* Buttons */
+  /* Buttons - Clear actions */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-colors;
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all;
   }
   
   .btn-primary {
     @apply btn;
-    background-color: var(--brand-navy);
+    background-color: var(--brand-primary);
     color: white;
   }
   
   .btn-primary:hover {
-    background-color: var(--brand-navy-light);
+    background-color: var(--brand-secondary);
   }
   
   .btn-secondary {
     @apply btn;
-    background-color: var(--bg-tertiary);
+    background-color: white;
     color: var(--text-primary);
-    border: 1px solid var(--border-default);
+    border: 1px solid var(--border-strong);
   }
   
   .btn-secondary:hover {
-    background-color: var(--border-subtle);
+    background-color: var(--bg-secondary);
   }
   
-  /* Badges */
+  .btn-ghost {
+    @apply btn;
+    background-color: transparent;
+    color: var(--text-secondary);
+  }
+  
+  .btn-ghost:hover {
+    background-color: var(--bg-tertiary);
+    color: var(--text-primary);
+  }
+  
+  /* Badges - Status indicators */
   .badge {
-    @apply inline-flex items-center gap-1 px-2 py-0.5 text-xs font-medium rounded;
+    @apply inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full;
   }
   
   .badge-success {
@@ -265,15 +261,15 @@
     color: var(--info);
   }
   
-  .badge-gold {
+  .badge-neutral {
     @apply badge;
-    background-color: rgba(184, 134, 11, 0.1);
-    color: var(--brand-gold);
+    background-color: var(--bg-tertiary);
+    color: var(--text-secondary);
   }
   
-  /* Tables - Bloomberg Style */
+  /* Tables - Clean data */
   .table-container {
-    @apply overflow-x-auto border rounded-lg;
+    @apply overflow-x-auto bg-white rounded-lg border;
     border-color: var(--border-default);
   }
   
@@ -283,41 +279,47 @@
   
   .table th {
     @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider;
-    background-color: var(--bg-tertiary);
+    background-color: var(--bg-secondary);
     color: var(--text-secondary);
-    font-family: var(--font-sans);
   }
   
   .table td {
     @apply px-4 py-3;
-    border-bottom: 1px solid var(--border-subtle);
+    border-bottom: 1px solid var(--border-default);
+  }
+  
+  .table tr:last-child td {
+    border-bottom: none;
   }
   
   .table tr:hover td {
-    background-color: var(--bg-tertiary);
+    background-color: var(--bg-secondary);
   }
   
-  /* Inputs */
+  /* Inputs - Accessible */
   .input {
     @apply w-full px-3 py-2 text-sm bg-white border rounded-md transition-colors;
-    border-color: var(--border-default);
+    border-color: var(--border-strong);
     color: var(--text-primary);
   }
   
-  .input:focus {
-    @apply outline-none ring-2 ring-offset-1;
-    border-color: var(--brand-navy);
-    ring-color: var(--brand-navy);
+  .input:hover {
+    border-color: var(--text-muted);
   }
   
-  /* Status Indicators */
+  .input:focus {
+    @apply outline-none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 3px var(--accent-blue-subtle);
+  }
+  
+  /* Status dots */
   .status-dot {
     @apply w-2 h-2 rounded-full;
   }
   
   .status-dot.online {
     background-color: var(--success);
-    box-shadow: 0 0 0 2px var(--success-bg);
   }
   
   .status-dot.warning {
@@ -328,20 +330,26 @@
     background-color: var(--danger);
   }
   
-  /* Agent Cards */
+  /* Agent cards */
   .agent-card {
-    @apply p-4 border rounded-lg transition-all;
+    @apply p-4 bg-white rounded-lg border transition-all;
     border-color: var(--border-default);
   }
   
   .agent-card:hover {
-    border-color: var(--brand-gold);
-    box-shadow: 0 2px 8px rgba(184, 134, 11, 0.1);
+    border-color: var(--accent-blue);
+    box-shadow: var(--shadow-md);
   }
   
-  .agent-card .icon-wrapper {
-    @apply w-10 h-10 rounded-lg flex items-center justify-center;
+  /* Empty states */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-12 text-center;
+  }
+  
+  .empty-state-icon {
+    @apply w-12 h-12 rounded-full flex items-center justify-center mb-4;
     background-color: var(--bg-tertiary);
+    color: var(--text-muted);
   }
 }
 
@@ -351,38 +359,21 @@
 
 @layer utilities {
   .text-brand {
-    color: var(--brand-navy);
-  }
-  
-  .text-gold {
-    color: var(--brand-gold);
+    color: var(--brand-primary);
   }
   
   .bg-brand {
-    background-color: var(--brand-navy);
-  }
-  
-  .border-brand {
-    border-color: var(--brand-navy);
-  }
-  
-  .border-gold {
-    border-color: var(--brand-gold);
-  }
-  
-  .font-serif {
-    font-family: var(--font-serif);
+    background-color: var(--brand-primary);
   }
   
   .font-mono {
     font-family: var(--font-mono);
   }
   
-  /* Financial Number Display */
+  /* Financial numbers */
   .amount {
     @apply tabular-nums font-semibold;
     font-family: var(--font-mono);
-    color: var(--brand-navy);
   }
   
   .amount-positive {
@@ -391,6 +382,12 @@
   
   .amount-negative {
     color: var(--danger);
+  }
+  
+  /* Accessibility helpers */
+  .sr-only {
+    @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
+    clip: rect(0, 0, 0, 0);
   }
 }
 
@@ -403,17 +400,8 @@
   to { opacity: 1; transform: translateY(0); }
 }
 
-@keyframes pulse-soft {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-
 .animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
-}
-
-.animate-pulse-soft {
-  animation: pulse-soft 2s ease-in-out infinite;
+  animation: fadeIn 0.2s ease-out;
 }
 
 /* ============================================
@@ -421,17 +409,17 @@
    ============================================ */
 
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--bg-secondary);
 }
 
 ::-webkit-scrollbar-thumb {
   background: var(--border-strong);
-  border-radius: 3px;
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {

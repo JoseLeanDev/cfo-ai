@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom'
 import { useTesoreriaPosicion, useTesoreriaCxC, useTesoreriaCxP, useTesoreriaProyeccion } from '../hooks/useCfoData'
-import KpiCard from '../components/common/KpiCard'
 import PageInsights from '../components/agents/PageInsights'
 import { 
   BanknotesIcon, 
@@ -12,6 +11,12 @@ import {
   CheckCircleIcon,
   ArrowRightIcon
 } from '@heroicons/react/24/outline'
+
+// Format currency
+const formatGTQ = (value) => {
+  if (!value && value !== 0) return 'Q 0'
+  return 'Q ' + value.toLocaleString('es-GT')
+}
 
 export default function Tesoreria() {
   const { data: posicion, isLoading: loadingPos } = useTesoreriaPosicion()
@@ -28,95 +33,105 @@ export default function Tesoreria() {
   const datosProyeccion = proyeccionData.proyeccion || []
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in max-w-6xl">
       {/* Header */}
-      <div>
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-            <BanknotesIcon className="w-6 h-6 text-white" />
+          <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+            <BanknotesIcon className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Tesorería</h1>
-            <p className="text-slate-500">Posición al {posicionData.fecha_corte} • Tipo de cambio: Q{posicionData.tipo_cambio}</p>
+            <h1 className="text-2xl font-semibold">Tesorería</h1>
+            <p className="text-sm text-[var(--text-muted)]">
+              Posición al {posicionData.fecha_corte} • Tipo de cambio: Q{posicionData.tipo_cambio}
+            </p>
           </div>
         </div>
       </div>
 
-      {/* AI Insights Section */}
+      {/* AI Insights */}
       <PageInsights context="tesoreria" maxInsights={3} />
 
       {/* KPIs */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <KpiCard
-          title="Disponible GTQ"
-          value={posicionData.total_disponible_gtq}
-          currency="GTQ"
-          loading={loadingPos}
-          variant="positive"
-        />
-        
-        <KpiCard
-          title="Disponible USD"
-          value={posicionData.total_disponible_usd}
-          currency="USD"
-          loading={loadingPos}
-        />
-        
-        <KpiCard
-          title="Total Consolidado"
-          value={posicionData.total_consolidado_gtq}
-          currency="GTQ"
-          loading={loadingPos}
-          variant="positive"
-        />
-        
-        <KpiCard
-          title="Días Operación"
-          value={posicionData.dias_operacion}
-          unit="días"
-          loading={loadingPos}
-          variant={posicionData.dias_operacion < 30 ? 'warning' : 'default'}
-        />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="kpi-card card-hover">
+          <div className="flex items-center justify-between mb-2">
+            <span className="kpi-label">Disponible GTQ</span>
+            <span className="badge-success">Local</span>
+          </div>
+          <div className="kpi-value">
+            {loadingPos ? '---' : formatGTQ(posicionData.total_disponible_gtq)}
+          </div>
+        </div>
+
+        <div className="kpi-card card-hover">
+          <div className="flex items-center justify-between mb-2">
+            <span className="kpi-label">Disponible USD</span>
+            <span className="badge-info">USD</span>
+          </div>
+          <div className="kpi-value">
+            {loadingPos ? '---' : new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: 'USD',
+              minimumFractionDigits: 0
+            }).format(posicionData.total_disponible_usd)}
+          </div>
+        </div>
+
+        <div className="kpi-card card-hover">
+          <div className="flex items-center justify-between mb-2">
+            <span className="kpi-label">Total Consolidado</span>
+            <CheckCircleIcon className="w-4 h-4 text-[var(--success)]" />
+          </div>
+          <div className="kpi-value">{loadingPos ? '---' : formatGTQ(posicionData.total_consolidado_gtq)}</div>
+        </div>
+
+        <div className="kpi-card card-hover">
+          <div className="flex items-center justify-between mb-2">
+            <span className="kpi-label">Días Operación</span>
+            <ClockIcon className="w-4 h-4 text-[var(--text-muted)]" />
+          </div>
+          <div className={`kpi-value ${posicionData.dias_operacion < 30 ? 'text-[var(--danger)]' : ''}`}>
+            {loadingPos ? '---' : `${posicionData.dias_operacion} días`}
+          </div>
+          {posicionData.dias_operacion < 30 && (
+            <span className="text-xs text-[var(--danger)]">Atención</span>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cuentas Bancarias */}
-        <div className="card-elevated p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                <BuildingLibraryIcon className="w-5 h-5 text-white" />
-              </div>
-              <h2 className="text-lg font-bold text-slate-900">Cuentas Bancarias</h2>
-            </div>
-            <Link to="/tesoreria/cuentas-bancarias" className="btn-secondary text-sm flex items-center gap-1">
+        <div className="card">
+          <div className="section-header">
+            <BuildingLibraryIcon className="w-5 h-5 text-[var(--text-muted)]" />
+            <h2 className="font-semibold">Cuentas Bancarias</h2>
+            <Link to="/tesoreria/cuentas-bancarias" className="ml-auto btn-secondary text-xs">
               Ver todas
-              <ArrowRightIcon className="w-4 h-4" />
+              <ArrowRightIcon className="w-3 h-3" />
             </Link>
           </div>
           
-          <div className="space-y-3">
+          <div className="space-y-3 p-5 pt-0">
             {posicionData.cuentas?.map((cuenta, idx) => (
               <div 
                 key={idx} 
-                className="group flex items-center justify-between p-4 bg-slate-50/50 hover:bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-md transition-all duration-200"
+                className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors"
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    cuenta.moneda === 'USD' 
-                      ? 'bg-gradient-to-br from-green-400 to-emerald-600' 
-                      : 'bg-gradient-to-br from-blue-400 to-blue-600'
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    cuenta.moneda === 'USD' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
                   }`}>
-                    <span className="text-white font-bold text-sm">{cuenta.moneda}</span>
+                    <span className="font-bold text-sm">{cuenta.moneda}</span>
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900">{cuenta.banco}</p>
-                    <p className="text-sm text-slate-500 capitalize">{cuenta.tipo}</p>
+                    <p className="font-medium text-[var(--text-primary)]">{cuenta.banco}</p>
+                    <p className="text-sm text-[var(--text-muted)] capitalize">{cuenta.tipo}</p>
                   </div>
                 </div>
                 
                 <div className="text-right">
-                  <p className="text-xl font-bold text-slate-900">
+                  <p className="amount">
                     {new Intl.NumberFormat('es-GT', {
                       style: 'currency',
                       currency: cuenta.moneda,
@@ -125,12 +140,12 @@ export default function Tesoreria() {
                   </p>
                   <div className="flex items-center justify-end gap-2 mt-1">
                     {cuenta.dias_sin_conciliar > 2 ? (
-                      <span className="inline-flex items-center gap-1 text-xs text-amber-600">
+                      <span className="badge-warning text-[10px]">
                         <ExclamationTriangleIcon className="w-3 h-3" />
                         Sin conciliar
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-xs text-emerald-600">
+                      <span className="badge-success text-[10px]">
                         <CheckCircleIcon className="w-3 h-3" />
                         Conciliado
                       </span>
@@ -143,49 +158,37 @@ export default function Tesoreria() {
         </div>
 
         {/* CxC Aging */}
-        <div className="card-elevated p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-400 to-violet-600 flex items-center justify-center shadow-lg shadow-violet-500/30">
-                <ArrowTrendingUpIcon className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">CxC - Aging</h2>
-                <p className="text-sm text-slate-500">Promedio {cxcData.promedio_dias_cobro} días</p>
-              </div>
+        <div className="card">
+          <div className="section-header">
+            <ArrowTrendingUpIcon className="w-5 h-5 text-[var(--text-muted)]" />
+            <div className="flex-1">
+              <h2 className="font-semibold">CxC - Aging</h2>
+              <p className="text-xs text-[var(--text-muted)]">Promedio {cxcData.promedio_dias_cobro} días</p>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold text-slate-900">
-                {new Intl.NumberFormat('es-GT', {
-                  style: 'currency',
-                  currency: 'GTQ',
-                  minimumFractionDigits: 0
-                }).format(cxcData.total_cxc || 0)}
-              </span>
-            </div>
+            <span className="amount">{formatGTQ(cxcData.total_cxc)}</span>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 p-5 pt-0">
             {Object.entries(distribucion).map(([key, val]) => {
               const labels = { 
-                al_corriente: { label: 'Al corriente', color: 'bg-emerald-500', text: 'text-emerald-700' },
-                _30_dias: { label: '1-30 días', color: 'bg-amber-500', text: 'text-amber-700' },
-                _60_dias: { label: '31-60 días', color: 'bg-orange-500', text: 'text-orange-700' },
-                _90_dias: { label: '60+ días', color: 'bg-rose-500', text: 'text-rose-700' }
+                al_corriente: { label: 'Al corriente', color: 'bg-emerald-500' },
+                _30_dias: { label: '1-30 días', color: 'bg-amber-500' },
+                _60_dias: { label: '31-60 días', color: 'bg-orange-500' },
+                _90_dias: { label: '60+ días', color: 'bg-rose-500' }
               }
-              const config = labels[key] || { label: key, color: 'bg-slate-500', text: 'text-slate-700' }
+              const config = labels[key] || { label: key, color: 'bg-gray-500' }
               
               return (
                 <div key={key} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
-                    <span className={`font-medium ${config.text}`}>{config.label}</span>
-                    <span className="font-semibold text-slate-900">
+                    <span className="font-medium text-[var(--text-secondary)]">{config.label}</span>
+                    <span className="font-semibold tabular-nums">
                       Q{(val.monto || 0).toLocaleString()} ({val.porcentaje}%)
                     </span>
                   </div>
-                  <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
                     <div 
-                      className={`h-full rounded-full ${config.color} transition-all duration-700`}
+                      className={`h-full rounded-full ${config.color}`}
                       style={{ width: `${val.porcentaje}%` }}
                     />
                   </div>
@@ -194,33 +197,27 @@ export default function Tesoreria() {
             })}
           </div>
 
-          <div className="mt-6 pt-6 border-t border-slate-100">
+          <div className="mt-4 p-5 pt-0">
             <div className="flex items-center justify-between mb-3">
-              <p className="text-sm font-semibold text-slate-700">Top Deudores</p>
-              <Link to="/tesoreria/cuentas-por-cobrar" className="text-sm text-violet-600 hover:text-violet-700 font-medium flex items-center gap-1">
-                Ver todas
-                <ArrowRightIcon className="w-4 h-4" />
-              </Link>
+              <p className="text-sm font-medium">Top Deudores</p>
+              <Link to="/tesoreria/cuentas-por-cobrar" className="text-xs text-[var(--accent-blue)] hover:underline">Ver todas →</Link>
             </div>
+            
             <div className="space-y-2">
               {cxcData.top_deudores?.slice(0, 3).map((deudor, idx) => (
-                <div key={idx} className="flex items-center justify-between py-2 px-3 rounded-lg hover:bg-slate-50 transition-colors">
+                <div key={idx} className="flex items-center justify-between py-2 px-3 rounded-lg bg-[var(--bg-secondary)]">
                   <div className="flex items-center gap-3">
-                    <span className="w-6 h-6 rounded-full bg-slate-100 text-slate-600 text-xs font-bold flex items-center justify-center">
+                    <span className="w-6 h-6 rounded-full bg-white text-[var(--text-muted)] text-xs font-medium flex items-center justify-center">
                       {idx + 1}
                     </span>
-                    <span className="text-sm text-slate-700 truncate max-w-[180px]">{deudor.cliente}</span>
+                    <span className="text-sm text-[var(--text-primary)] truncate max-w-[180px]">{deudor.cliente}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className={`text-sm font-medium ${deudor.dias > 60 ? 'text-rose-600' : 'text-slate-900'}`}>
+                    <span className={`text-sm font-medium tabular-nums ${deudor.dias > 60 ? 'text-[var(--danger)]' : ''}`}>
                       Q{deudor.monto.toLocaleString()}
                     </span>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      deudor.dias > 60 
-                        ? 'bg-rose-100 text-rose-700' 
-                        : deudor.dias > 30 
-                          ? 'bg-amber-100 text-amber-700' 
-                          : 'bg-emerald-100 text-emerald-700'
+                    <span className={`badge text-[10px] ${
+                      deudor.dias > 60 ? 'badge-danger' : deudor.dias > 30 ? 'badge-warning' : 'badge-success'
                     }`}>
                       {deudor.dias} días
                     </span>
@@ -232,56 +229,40 @@ export default function Tesoreria() {
         </div>
 
         {/* CxP */}
-        <div className="card-elevated p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-rose-400 to-rose-600 flex items-center justify-center shadow-lg shadow-rose-500/30">
-                <ArrowTrendingDownIcon className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">CxP Próximos</h2>
-                <p className="text-sm text-slate-500">Promedio {cxpData.promedio_dias_pago} días</p>
-              </div>
+        <div className="card">
+          <div className="section-header">
+            <ArrowTrendingDownIcon className="w-5 h-5 text-[var(--text-muted)]" />
+            <div className="flex-1">
+              <h2 className="font-semibold">CxP Próximos</h2>
+              <p className="text-xs text-[var(--text-muted)]">Promedio {cxpData.promedio_dias_pago} días</p>
             </div>
-            <div className="flex items-center gap-3">
-              <span className="text-2xl font-bold text-slate-900">
-                {new Intl.NumberFormat('es-GT', {
-                  style: 'currency',
-                  currency: 'GTQ',
-                  minimumFractionDigits: 0
-                }).format(cxpData.total_cxp || 0)}
-              </span>
-            </div>
+            <span className="amount">{formatGTQ(cxpData.total_cxp)}</span>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3 p-5 pt-0">
             {cxpData.proximos_pagos?.slice(0, 5).map((pago, idx) => (
               <div 
                 key={idx} 
-                className="flex items-center justify-between p-4 bg-slate-50/50 hover:bg-white rounded-xl border border-slate-100 hover:border-slate-200 hover:shadow-md transition-all duration-200"
+                className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-lg"
               >
                 <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${
-                    pago.dias_restantes <= 5 
-                      ? 'bg-rose-100 text-rose-600' 
-                      : pago.dias_restantes <= 10 
-                        ? 'bg-amber-100 text-amber-600'
-                        : 'bg-emerald-100 text-emerald-600'
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    pago.dias_restantes <= 5 ? 'bg-rose-100 text-rose-700' : 
+                    pago.dias_restantes <= 10 ? 'bg-amber-100 text-amber-700' : 
+                    'bg-emerald-100 text-emerald-700'
                   }`}>
                     <ClockIcon className="w-5 h-5" />
                   </div>
                   <div>
-                    <p className="font-semibold text-slate-900">{pago.proveedor}</p>
-                    <p className="text-sm text-slate-500">Vence en {pago.dias_restantes} días</p>
+                    <p className="font-medium text-[var(--text-primary)]">{pago.proveedor}</p>
+                    <p className="text-sm text-[var(--text-muted)]">Vence en {pago.dias_restantes} días</p>
                   </div>
                 </div>
                 
                 <div className="text-right">
-                  <p className="text-lg font-bold text-slate-900">
-                    Q{pago.monto.toLocaleString()}
-                  </p>
+                  <p className="amount">Q{pago.monto.toLocaleString()}</p>
                   {pago.descuento_pronto_pago && (
-                    <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full">
+                    <span className="badge-success text-[10px] mt-1">
                       💰 Desc: {pago.descuento_pronto_pago}
                     </span>
                   )}
@@ -292,40 +273,32 @@ export default function Tesoreria() {
           
           <Link 
             to="/tesoreria/cuentas-por-pagar" 
-            className="mt-4 w-full py-3 flex items-center justify-center gap-2 text-sm font-semibold text-slate-600 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors border border-transparent hover:border-rose-200"
+            className="flex items-center justify-center gap-2 w-full py-3 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-t border-[var(--border-default)] hover:bg-[var(--bg-secondary)] transition-colors"
           >
             Ver todos los pagos
             <ArrowRightIcon className="w-4 h-4" />
           </Link>
         </div>
 
-        {/* Cash Flow Projection - CON DATOS REALES */}
-        <div className="card-elevated p-6">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                <ArrowTrendingUpIcon className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h2 className="text-lg font-bold text-slate-900">Proyección Cash Flow</h2>
-                <p className="text-sm text-slate-500">13 semanas</p>
-              </div>
+        {/* Cash Flow Projection */}
+        <div className="card">
+          <div className="section-header">
+            <ArrowTrendingUpIcon className="w-5 h-5 text-[var(--text-muted)]" />
+            <div className="flex-1">
+              <h2 className="font-semibold">Proyección Cash Flow</h2>
+              <p className="text-xs text-[var(--text-muted)]">13 semanas</p>
             </div>
             {proyeccionData.resumen?.riesgo_quiebra_tecnica && (
-              <span className="badge-error text-xs">⚠️ Riesgo detectado</span>
+              <span className="badge-danger text-xs">⚠️ Riesgo</span>
             )}
           </div>
 
           {loadingProy ? (
             <div className="h-48 flex items-center justify-center">
-              <div className="flex items-center gap-2 text-slate-400">
-                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" />
-                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                <div className="w-2 h-2 bg-slate-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
-              </div>
+              <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
             </div>
           ) : datosProyeccion.length > 0 ? (
-            <>
+            <div className="p-5 pt-0">
               <div className="h-48 flex items-end justify-between gap-1">
                 {datosProyeccion.slice(0, 12).map((semana, i) => {
                   const valores = datosProyeccion.map(s => s.saldo_acumulado || 0)
@@ -334,10 +307,9 @@ export default function Tesoreria() {
                   const rango = maxSaldo - minSaldo || maxSaldo || 1
                   const saldo = semana.saldo_acumulado || 0
                   
-                  // Normalizar altura entre 15% y 90%
                   let altura
                   if (rango === 0) {
-                    altura = 50 // Altura fija si todos son iguales
+                    altura = 50
                   } else {
                     altura = ((saldo - minSaldo) / rango) * 75 + 15
                   }
@@ -346,23 +318,20 @@ export default function Tesoreria() {
                     <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
                       <div className="relative w-full flex items-end justify-center" style={{ height: '140px' }}>
                         <div 
-                          className={`w-full rounded-t-md transition-all duration-500 ${
-                            semana.certeza === 'baja' 
-                              ? 'bg-gradient-to-t from-cyan-300 to-cyan-400' 
-                              : semana.certeza === 'media'
-                                ? 'bg-gradient-to-t from-cyan-400 to-cyan-500'
-                                : 'bg-gradient-to-t from-cyan-500 to-cyan-600'
+                          className={`w-full rounded-t transition-all ${
+                            semana.certeza === 'baja' ? 'bg-blue-300' : 
+                            semana.certeza === 'media' ? 'bg-blue-400' : 
+                            'bg-blue-500'
                           } ${semana.alerta ? 'ring-2 ring-rose-400' : ''}`}
                           style={{ height: `${altura}%`, minHeight: '8px' }}
                         />
-                        {/* Tooltip */}
-                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-xs py-1.5 px-2.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black text-white text-xs py-1.5 px-2.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
                           S{semana.semana}: Q{saldo.toLocaleString()}
                           {semana.alerta && <span className="block text-rose-400">⚠️ {semana.alerta}</span>}
                         </div>
                       </div>
                       {i % 3 === 0 && (
-                        <span className="text-xs text-slate-400">S{i + 1}</span>
+                        <span className="text-xs text-[var(--text-muted)]">S{i + 1}</span>
                       )}
                     </div>
                   )
@@ -370,21 +339,21 @@ export default function Tesoreria() {
               </div>
 
               <div className="mt-4 grid grid-cols-3 gap-4 text-center">
-                <div className="bg-slate-50 p-3 rounded-xl">
-                  <p className="text-xs text-slate-500">Saldo Mínimo</p>
-                  <p className={`text-lg font-bold ${proyeccionData.resumen?.riesgo_quiebra_tecnica ? 'text-rose-600' : 'text-slate-900'}`}>
+                <div className="bg-[var(--bg-secondary)] p-3 rounded-lg">
+                  <p className="text-xs text-[var(--text-muted)]">Saldo Mínimo</p>
+                  <p className={`text-lg font-bold tabular-nums ${proyeccionData.resumen?.riesgo_quiebra_tecnica ? 'text-[var(--danger)]' : ''}`}>
                     Q{(proyeccionData.resumen?.saldo_minimo_proyectado || 0).toLocaleString()}
                   </p>
                 </div>
-                <div className="bg-slate-50 p-3 rounded-xl">
-                  <p className="text-xs text-slate-500">Saldo Máximo</p>
-                  <p className="text-lg font-bold text-slate-900">
+                <div className="bg-[var(--bg-secondary)] p-3 rounded-lg">
+                  <p className="text-xs text-[var(--text-muted)]">Saldo Máximo</p>
+                  <p className="text-lg font-bold tabular-nums">
                     Q{(proyeccionData.resumen?.saldo_maximo_proyectado || 0).toLocaleString()}
                   </p>
                 </div>
-                <div className="bg-slate-50 p-3 rounded-xl">
-                  <p className="text-xs text-slate-500">Semana Crítica</p>
-                  <p className={`text-lg font-bold ${proyeccionData.resumen?.semana_critica < 8 ? 'text-rose-600' : 'text-slate-900'}`}>
+                <div className="bg-[var(--bg-secondary)] p-3 rounded-lg">
+                  <p className="text-xs text-[var(--text-muted)]">Semana Crítica</p>
+                  <p className={`text-lg font-bold tabular-nums ${proyeccionData.resumen?.semana_critica < 8 ? 'text-[var(--danger)]' : ''}`}>
                     {proyeccionData.resumen?.semana_critica || '—'}
                   </p>
                 </div>
@@ -393,21 +362,21 @@ export default function Tesoreria() {
               <div className="mt-4 flex items-center justify-between text-sm">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-cyan-600"></div>
-                    <span className="text-slate-600">Alta certeza</span>
+                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <span className="text-[var(--text-muted)]">Alta certeza</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-cyan-400"></div>
-                    <span className="text-slate-600">Baja certeza</span>
+                    <div className="w-3 h-3 rounded-full bg-blue-300"></div>
+                    <span className="text-[var(--text-muted)]">Baja certeza</span>
                   </div>
                 </div>
-                <span className="text-slate-500">
+                <span className="text-[var(--text-muted)]">
                   Saldo proyectado: Q{datosProyeccion[datosProyeccion.length - 1]?.saldo_acumulado.toLocaleString()}
                 </span>
               </div>
-            </>
+            </div>
           ) : (
-            <div className="h-48 flex items-center justify-center text-slate-400">
+            <div className="h-48 flex items-center justify-center text-[var(--text-muted)]">
               No hay datos de proyección disponibles
             </div>
           )}

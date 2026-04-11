@@ -1,60 +1,66 @@
+import { ChartBarIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/outline'
 import PageInsights from '../components/agents/PageInsights'
 
 export default function Analisis() {
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-6 animate-fade-in max-w-6xl">
+      {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-          <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-          </svg>
+        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+          <ChartBarIcon className="w-5 h-5 text-white" />
         </div>
         <div>
-          <h1 className="text-3xl font-bold text-slate-900 tracking-tight">Análisis Financiero</h1>
-          <p className="text-slate-500">Ratios, rentabilidad y tendencias</p>
+          <h1 className="text-2xl font-semibold">Análisis Financiero</h1>
+          <p className="text-sm text-[var(--text-muted)]">Ratios, rentabilidad y tendencias</p>
         </div>
       </div>
 
-      {/* AI Insights Section */}
+      {/* AI Insights */}
       <PageInsights context="analisis" maxInsights={3} />
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      {/* KPIs */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {[
           { titulo: 'ROI', valor: '18.5%', anterior: '16.2%', meta: '20%', tendencia: 'up' },
           { titulo: 'Margen Bruto', valor: '42.3%', anterior: '40.1%', meta: '45%', tendencia: 'up' },
           { titulo: 'Margen Neto', valor: '12.1%', anterior: '10.8%', meta: '15%', tendencia: 'up' },
           { titulo: 'EBITDA', valor: 'Q2.4M', anterior: 'Q2.1M', meta: 'Q2.8M', tendencia: 'up' },
         ].map((kpi, idx) => (
-          <div key={idx} className="card-elevated p-6">
-            <p className="text-sm font-medium text-slate-500">{kpi.titulo}</p>
-            <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-3xl font-bold text-slate-900">{kpi.valor}</span>
-              <span className="text-xs text-emerald-600 font-medium">↑ vs mes ant.</span>
+          <div key={idx} className="kpi-card card-hover">
+            <div className="flex items-center justify-between mb-2">
+              <span className="kpi-label">{kpi.titulo}</span>
+              <span className="badge-success text-[10px]">↑ vs mes ant.</span>
             </div>
-            <p className="mt-1 text-sm text-slate-400">Meta: {kpi.meta} · Ant: {kpi.anterior}</p>
+            <div className="kpi-value">{kpi.valor}</div>
+            <p className="text-xs text-[var(--text-muted)] mt-1">Meta: {kpi.meta} · Ant: {kpi.anterior}</p>
           </div>
         ))}
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="card-elevated p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-6">Rentabilidad por Dimensión</h2>
-          <div className="space-y-4">
+        {/* Rentabilidad */}
+        <div className="card">
+          <div className="section-header">
+            <ChartBarIcon className="w-5 h-5 text-[var(--text-muted)]" />
+            <h2 className="font-semibold">Rentabilidad por Dimensión</h2>
+          </div>
+          
+          <div className="space-y-4 p-5 pt-0">
             {[
               { dimension: 'Por Producto', producto: 'Producto A', rentabilidad: 35, unidades: 1250 },
               { dimension: 'Por Línea', producto: 'Línea Industrial', rentabilidad: 28, unidades: 890 },
               { dimension: 'Por Cliente', producto: 'Cliente XYZ', rentabilidad: 42, unidades: 45 },
               { dimension: 'Por Sucursal', producto: 'Sede Central', rentabilidad: 38, unidades: 2100 },
             ].map((item, idx) => (
-              <div key={idx} className="p-4 bg-slate-50 rounded-xl">
+              <div key={idx} className="p-4 bg-[var(--bg-secondary)] rounded-lg">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-slate-500">{item.dimension}</span>
-                  <span className="text-lg font-bold text-slate-900">{item.rentabilidad}%</span>
+                  <span className="text-sm text-[var(--text-muted)]">{item.dimension}</span>
+                  <span className="font-bold tabular-nums">{item.rentabilidad}%</span>
                 </div>
-                <p className="text-sm text-slate-700">{item.producto}</p>
-                <div className="mt-2 h-2 bg-slate-200 rounded-full overflow-hidden">
+                <p className="text-sm text-[var(--text-primary)]">{item.producto}</p>
+                <div className="mt-2 h-2 bg-white rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-gradient-to-r from-primary-500 to-primary-400 rounded-full"
+                    className="h-full bg-black rounded-full"
                     style={{ width: `${item.rentabilidad}%` }}
                   />
                 </div>
@@ -63,9 +69,14 @@ export default function Analisis() {
           </div>
         </div>
 
-        <div className="card-elevated p-6">
-          <h2 className="text-lg font-bold text-slate-900 mb-6">Análisis vs Mes Anterior</h2>
-          <div className="space-y-4">
+        {/* Ratios */}
+        <div className="card">
+          <div className="section-header">
+            <ArrowTrendingUpIcon className="w-5 h-5 text-[var(--text-muted)]" />
+            <h2 className="font-semibold">Análisis vs Mes Anterior</h2>
+          </div>
+          
+          <div className="space-y-4 p-5 pt-0">
             {[
               { nombre: 'Liquidez Corriente', actual: 1.85, anterior: 1.62, umbral: 1.5, unidad: '' },
               { nombre: 'Prueba Ácida', actual: 1.32, anterior: 1.15, umbral: 1.0, unidad: '' },
@@ -78,29 +89,26 @@ export default function Analisis() {
               const saludable = ratio.nombre === 'Endeudamiento' ? ratio.actual < ratio.umbral : ratio.actual > ratio.umbral
               
               return (
-                <div key={idx} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl">
-                  <div>
-                    <p className="font-medium text-slate-900">{ratio.nombre}</p>
-                    <p className="text-sm text-slate-500">Mes anterior: {ratio.anterior}{ratio.unidad}</p>
+                <div key={idx} className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-lg">
+                  <div className="flex-1">
+                    <p className="text-sm font-medium">{ratio.nombre}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <span className={`text-xs flex items-center gap-1 ${esPositivo ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                        {esPositivo ? <ArrowTrendingUpIcon className="w-3 h-3" /> : <ArrowTrendingDownIcon className="w-3 h-3" />}
+                        {Math.abs(variacion)}%
+                      </span>
+                      <span className="text-xs text-[var(--text-muted)]">Umbral: {ratio.umbral}{ratio.unidad}</span>
+                    </div>
                   </div>
+                  
                   <div className="text-right">
-                    <span className={`text-xl font-bold ${saludable ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    <span className={`font-bold tabular-nums ${saludable ? 'text-[var(--success)]' : 'text-[var(--warning)]'}`}>
                       {ratio.actual}{ratio.unidad}
-                    </span>
-                    <span className={`block text-xs ${esPositivo ? 'text-emerald-600' : 'text-rose-500'}`}>
-                      {esPositivo ? '↑' : '↓'} {Math.abs(variacion)}% vs mes ant.
                     </span>
                   </div>
                 </div>
               )
             })}
-          </div>
-          
-          <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-100">
-            <p className="text-sm text-blue-800">
-              <strong>💡 Insight:</strong> Todos los ratios muestran mejora vs el mes anterior. 
-              La reducción de endeudamiento del 13.5% es la variación más significativa.
-            </p>
           </div>
         </div>
       </div>

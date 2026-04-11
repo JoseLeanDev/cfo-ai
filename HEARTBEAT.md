@@ -7,82 +7,89 @@ No solo mostrar datos. **Revelar oportunidades, riesgos y acciones concretas.**
 
 ---
 
+## 📋 TAREAS PROGRAMADAS (Prioridad CEO/CFO)
+
+### 🔴 PRIORIDAD 1: Customer Concentration Risk
+**Pregunta:** ¿Dependemos demasiado de 1-2 clientes?
+
+**Implementar:**
+- [ ] Widget de concentración de ingresos por cliente
+- [ ] Alerta cuando cliente >20% de ingresos
+- [ ] Visualización tipo Pareto (80/20)
+- [ ] Recomendación de diversificación
+
+**Valor:** Mitigar riesgo existencial de perder cliente mayoritario
+
+---
+
+### 🟡 PRIORIDAD 2: Working Capital Optimization  
+**Pregunta:** ¿Cuánto dinero tenemos atado en operaciones?
+
+**Implementar:**
+- [ ] C2C (Cash Conversion Cycle) calculator
+- [ ] DSO (Days Sales Outstanding) trend
+- [ ] DPO (Days Payable Outstanding) benchmark
+- [ ] Acciones sugeridas: descuentos pronto pago, negociar plazos
+
+**Valor:** Liberar efectivo atrapado en CxC e inventario
+
+---
+
+### 🟢 PRIORIDAD 3: Profitability Matrix
+**Pregunta:** ¿Qué clientes/productos son realmente rentables?
+
+**Implementar:**
+- [ ] Matriz volumen vs. margen (4 cuadrantes)
+- [ ] Identificar "clientes vampiro" (alto volumen, bajo margen)
+- [ ] Identificar "estrellas" (alto volumen, alto margen)
+- [ ] Sugerencias de repricing por segmento
+
+**Valor:** Enfocar recursos en clientes rentables, ajustar precios
+
+---
+
+### 🔵 PRIORIDAD 4: Scenario Simulator
+**Pregunta:** ¿Qué pasa si...?
+
+**Implementar:**
+- [ ] Simulador de escenarios (what-if analysis)
+- [ ] Impacto de +5% precio, -10% costos, +20% volumen
+- [ ] Break-even analysis dinámico
+- [ ] Proyección de múltiples escenarios
+
+**Valor:** Tomar decisiones con datos, no con intuición
+
+---
+
+### 🟣 PRIORIDAD 5: Weekly CFO Briefing Automático
+**Pregunta:** ¿Qué pasó esta semana y qué viene?
+
+**Implementar:**
+- [ ] Reporte ejecutivo semanal por email/Telegram
+- [ ] Top 3 insights de la semana
+- [ ] Métricas clave vs. semana anterior
+- [ ] Acciones pendientes y próximos vencimientos
+
+**Valor:** Mantener al CEO/CFO informado sin saturar
+
+---
+
 ## 📊 Valor Agregado por Eje Financiero
 
-### 1. LIQUIDEZ Y TESORERÍA
+### 1. LIQUIDEZ Y TESORERÍA ✅ (Runway Calculator - DONE)
 **Pregunta clave:** *¿Tenemos suficiente efectivo para operar y crecer?*
-
-Insights a generar:
-- [ ] **Runway Calculator:** Meses de operación con burn rate actual
-- [ ] **Cash Gap Alerts:** Días críticos antes de quiebra técnica
-- [ ] **Working Capital Score:** Días de inventario + días de cobro - días de pago
-- [ ] **Optimal Cash Buffer:** Cuánto efectivo deberíamos mantener vs. invertir
-- [ ] **FX Exposure:** Riesgo cambiario por moneda (GTQ/USD)
-
-Acciones automáticas:
-- Alertar cuando runway < 3 meses
-- Sugerir negociación de plazos con proveedores
-- Identificar clientes para cobranza prioritaria
 
 ### 2. RENTABILIDAD Y MARGEN
 **Pregunta clave:** *¿Dónde estamos ganando y perdiendo dinero?*
 
-Insights a generar:
-- [ ] **Margin Waterfall:** De ventas brutas a netas paso a paso
-- [ ] **Customer Profitability:** Cuáles clientes son rentables vs. no
-- [ ] **Product/Service Mix:** Qué líneas de negocio crecen vs. contraen
-- [ ] **Cost Structure:** Fixed vs. Variable costs trend
-- [ ] **Break-even Analysis:** Punto de equilibrio mensual
-
-Acciones automáticas:
-- Identificar "clientes vampiro" (mucho volumen, poco margen)
-- Sugerir ajustes de precios por producto
-- Alertar desviaciones de presupuesto >10%
-
 ### 3. EFICIENCIA OPERATIVA
 **Pregunta clave:** *¿Estamos usando nuestros recursos de forma óptima?*
-
-Insights a generar:
-- [ ] **C2C (Cash Conversion Cycle):** Tiempo de conversión de efectivo
-- [ ] **DSO (Days Sales Outstanding):** Eficiencia de cobranza
-- [ ] **DPO (Days Payable Outstanding):** Optimización de pagos
-- [ ] **Inventory Turnover:** Rotación de inventario
-- [ ] **OPEX Ratio:** Gastos operativos / Ingresos
-
-Acciones automáticas:
-- Sugerir descuentos pronto pago a clientes morosos
-- Identificar cuentas bancarias con saldos excesivos
-- Detectar duplicidad de gastos o pagos
 
 ### 4. RIESGOS Y CUMPLIMIENTO
 **Pregunta clave:** *¿Qué nos puede hacer daño y cómo nos protegemos?*
 
-Insights a generar:
-- [ ] **Concentration Risk:** % de ingresos por cliente (riesgo cliente único)
-- [ ] **Default Risk:** Probabilidad de incobrables por antigüedad
-- [ ] **Tax Compliance Score:** Estado de obligaciones SAT
-- [ ] **Audit Red Flags:** Transacciones atípicas detectadas por IA
-- [ ] **Liquidity Risk:** Proyección de saldos negativos
-
-Acciones automáticas:
-- Alertar cuando un cliente representa >20% de ingresos
-- Generar lista de cobranza prioritaria (riesgo de mora)
-- Recordatorios de vencimientos SAT con antelación
-
 ### 5. DECISIONES ESTRATÉGICAS
 **Pregunta clave:** *¿Qué deberíamos hacer diferente?*
-
-Insights a generar:
-- [ ] **Scenario Analysis:** Best case / Worst case / Expected
-- [ ] **Investment ROI:** Retorno de inversiones propuestas
-- [ ] **Growth vs. Profitability:** Trade-off expansión vs. margen
-- [ ] **Benchmarking:** vs. industria o histórico propio
-- [ ] **What-if Analysis:** Impacto de decisiones (+10% precio, -5% costos, etc.)
-
-Acciones automáticas:
-- Simular impacto de subir precios 5%
-- Calcular ROI de invertir en cobranza vs. factoring
-- Proyectar efecto de contratar más personal
 
 ---
 
@@ -90,16 +97,26 @@ Acciones automáticas:
 
 | Tipo de Insight | Frecuencia | Canal |
 |----------------|-----------|-------|
-**Críticos (liquidez, riesgos)** | Cada 5h | Telegram + Dashboard |
-**Tácticos (margen, eficiencia)** | Diario | Dashboard + Email |
-**Estratégicos (ROI, escenarios)** | Semanal | Reporte ejecutivo |
-**Cumplimiento** | Según vencimientos | Alertas push |
+| **Críticos (liquidez, riesgos)** | Cada 5h | Telegram + Dashboard |
+| **Tácticos (margen, eficiencia)** | Diario | Dashboard + Email |
+| **Estratégicos (ROI, escenarios)** | Semanal | Reporte ejecutivo |
+| **Cumplimiento** | Según vencimientos | Alertas push |
 
 ---
 
 ## 📱 Configuración de Notificaciones
 
-**Usuario Telegram:** josearias96
+**Usuario Telegram:** josearias96 *(pendiente configurar bot)*
+
+### Para configurar Telegram:
+```bash
+# 1. Crear bot con @BotFather, obtener token
+# 2. Configurar en OpenClaw:
+openclaw config set channels.telegram.botToken "YOUR_BOT_TOKEN"
+openclaw config set channels.telegram.dmPolicy "pairing"
+openclaw config set channels.telegram.enabled true
+openclaw gateway restart
+```
 
 **Plantilla de Alertas de Valor:**
 
@@ -122,7 +139,7 @@ negociar línea de crédito por Q300,000
 
 ---
 
-## ✅ Niveles de Autonomía (Actualizado)
+## ✅ Niveles de Autonomía
 
 ### HAGO DIRECTO (Sin aprobación)
 - Cálculos automáticos de ratios financieros
@@ -135,7 +152,7 @@ negociar línea de crédito por Q300,000
 - Alertas de umbral cruzado
 - Reportes automáticos generados
 
-### REQUIERO APROBACIÓN
+### REQUIERO APROBACIÓN (Telegram)
 - Cambios en fórmulas de cálculo clave
 - Nuevas integraciones (bancos, SAT)
 - Deploy a producción
@@ -153,13 +170,26 @@ negociar línea de crédito por Q300,000
 
 ---
 
-## 🎯 Próximas Mejoras Prioritarias
+## 🎯 Estado de Implementación
 
-1. **Runway Calculator** con gráfico de proyección
-2. **Customer Profitability Matrix** (volumen vs. margen)
-3. **Cash Gap Alert System** con acciones sugeridas
-4. **Scenario Simulator** (what-if analysis)
-5. **Weekly CFO Briefing** automático por email/Telegram
+| Prioridad | Tarea | Estado | Commit |
+|-----------|-------|--------|--------|
+| ✅ | Runway Calculator | DONE | 999b188 |
+| 🔴 | Customer Concentration Risk | TODO | - |
+| 🟡 | Working Capital Optimization | TODO | - |
+| 🟢 | Profitability Matrix | TODO | - |
+| 🔵 | Scenario Simulator | TODO | - |
+| 🟣 | Weekly CFO Briefing | TODO | - |
+
+---
+
+## 🚀 Próximo Commit Planificado
+
+**feat: Customer Concentration Risk Widget**
+- Análisis de ingresos por cliente
+- Alerta de concentración >20%
+- Visualización Pareto (80/20)
+- Recomendaciones de diversificación
 
 ---
 
@@ -168,15 +198,17 @@ negociar línea de crédito por Q300,000
 ```json
 {
   "lastChecks": {
-    "liquidez": null,
+    "liquidez": "2026-04-12T01:54:00Z",
     "rentabilidad": null,
     "eficiencia": null,
     "riesgos": null,
     "estrategia": null
   },
-  "currentCycle": 1,
-  "insightsGenerados": 0,
+  "currentCycle": 2,
+  "insightsGenerados": 1,
   "accionesTomadas": 0,
-  "lastRun": null
+  "lastRun": "2026-04-12T01:54:00Z",
+  "telegramConfigured": false,
+  "telegramUsername": "josearias96"
 }
 ```

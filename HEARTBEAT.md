@@ -106,17 +106,17 @@ No solo mostrar datos. **Revelar oportunidades, riesgos y acciones concretas.**
 
 ## 📱 Configuración de Notificaciones
 
-**Usuario Telegram:** josearias96 *(pendiente configurar bot)*
+**Usuario Telegram:** josearias96 ✅ (Pairing aprobado - esperando primer mensaje)
 
-### Para configurar Telegram:
-```bash
-# 1. Crear bot con @BotFather, obtener token
-# 2. Configurar en OpenClaw:
-openclaw config set channels.telegram.botToken "YOUR_BOT_TOKEN"
-openclaw config set channels.telegram.dmPolicy "pairing"
-openclaw config set channels.telegram.enabled true
-openclaw gateway restart
-```
+**Bot configurado:** `8645687152:AAGJ3hLfYVsvtgC7DqUl6tVJfL8eN63e8M4`
+**Tu Telegram ID:** `7148683500` ✅
+**Estado:** Configurado y aprobado. Para activar, envía mensaje a tu bot en Telegram.
+
+### Para completar la configuración:
+1. Abre Telegram
+2. Busca tu bot o usa: `t.me/cfoai_bot`  
+3. Envía: `/start` o cualquier mensaje
+4. Yo responderé y podré enviarte alertas automáticas
 
 **Plantilla de Alertas de Valor:**
 
@@ -175,7 +175,7 @@ negociar línea de crédito por Q300,000
 | Prioridad | Tarea | Estado | Commit |
 |-----------|-------|--------|--------|
 | ✅ | Runway Calculator | DONE | 999b188 |
-| 🔴 | Customer Concentration Risk | TODO | - |
+| ✅ | Customer Concentration Risk | DONE | a0fdc65 |
 | 🟡 | Working Capital Optimization | TODO | - |
 | 🟢 | Profitability Matrix | TODO | - |
 | 🔵 | Scenario Simulator | TODO | - |

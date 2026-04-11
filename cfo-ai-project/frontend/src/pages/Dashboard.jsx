@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useDashboard, useInsights } from '../hooks/useCfoData'
 import RunwayCalculator from '../components/dashboard/RunwayCalculator'
+import CustomerConcentrationRisk from '../components/dashboard/CustomerConcentrationRisk'
 import { 
   CalendarIcon, 
   BanknotesIcon,
@@ -156,6 +157,24 @@ export default function Dashboard() {
         promedioIngresosMensual={kpis.ventas_mes?.value ? kpis.ventas_mes.value * 0.85 : 2500000}
         promedioGastosMensual={2200000}
         proyeccionMeses={12}
+      />
+
+      {/* Customer Concentration Risk - Insight #1 */}
+      <CustomerConcentrationRisk 
+        clientes={[
+          { id: 1, nombre: 'Constructora Metropolitana', ingresos: 8500000 },
+          { id: 2, nombre: 'Grupo Industrial Centroamericano', ingresos: 6200000 },
+          { id: 3, nombre: 'Inversiones del Norte', ingresos: 4100000 },
+          { id: 4, nombre: 'Distribuidora del Sur', ingresos: 2800000 },
+          { id: 5, nombre: 'Comercializadora Maya', ingresos: 1900000 },
+          { id: 6, nombre: 'Importadora del Pacífico', ingresos: 1500000 },
+          { id: 7, nombre: 'Suministros Industriales', ingresos: 1200000 },
+          { id: 8, nombre: 'Ferretería La Unión', ingresos: 800000 },
+          { id: 9, nombre: 'Materiales de Construcción XYZ', ingresos: 650000 },
+          { id: 10, nombre: 'Otros clientes', ingresos: 1200000 }
+        ]}
+        umbralAlerta={20}
+        umbralCritico={30}
       />
 
       {/* Main Grid */}

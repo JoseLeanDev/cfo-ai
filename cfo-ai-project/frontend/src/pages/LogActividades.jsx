@@ -371,7 +371,7 @@ export default function LogActividades() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-2">
                             <ClockIcon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-                            <span className="text-xs text-[var(--text-muted)]">{formatFecha(log.createdAt)}</span>
+                            <span className="text-xs text-[var(--text-muted)]">{formatFecha(log.fecha || log.createdAt)}</span>
                             {isExpanded ? <ChevronUpIcon className="w-4 h-4" /> : <ChevronDownIcon className="w-4 h-4" />}
                           </div>
                         </td>

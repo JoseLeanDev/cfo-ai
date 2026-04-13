@@ -29,7 +29,7 @@ class MaintenanceAgentIA {
 
     try {
       // Archivar logs antiguos (más de 90 días)
-      const logsViejos = await db.all(`
+      const logsViejos = await db.allAsync(`
         SELECT * FROM agentes_logs
         WHERE created_at < datetime('now', '-90 days')
         ORDER BY created_at ASC
@@ -49,7 +49,7 @@ class MaintenanceAgentIA {
 
         // Eliminar de BD
         const ids = logsViejos.map(l => l.id).join(',');
-        await db.run(`DELETE FROM agentes_logs WHERE id IN (${ids})`);
+        await db.runAsync(`DELETE FROM agentes_logs WHERE id IN (${ids})`);
 
         await logAgentActivity({
           agente_nombre: this.nombre,
@@ -85,10 +85,10 @@ class MaintenanceAgentIA {
 
     try {
       // Obtener estadísticas de la BD
-      const stats = await db.get(`SELECT COUNT(*) as total FROM sqlite_master WHERE type='table'`);
-      const tamaño = await db.get(`SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()`);
+      const stats = await db.getAsync(`SELECT COUNT(*) as total FROM sqlite_master WHERE type='table'`);
+      const tamaño = await db.getAsync(`SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()`);
       
-      const tablasGrandes = await db.all(`
+      const tablasGrandes = await db.allAsync(`
         SELECT name, 
                (SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name=t.name) as count
         FROM sqlite_master t
@@ -111,8 +111,8 @@ Genera un reporte de salud del sistema.`,
       );
 
       // Ejecutar optimizaciones básicas
-      await db.run('VACUUM');
-      await db.run('ANALYZE');
+      await db.runAsync('VACUUM');
+      await db.runAsync('ANALYZE');
 
       await logAgentActivity({
         agente_nombre: this.nombre,
@@ -239,7 +239,7 @@ Genera un "System Health Score".`,
 
   async checkDB() {
     try {
-      await db.get('SELECT 1');
+      await db.getAsync('SELECT 1');
       return { estado: 'ok', latencia_ms: 0 };
     } catch (e) {
       return { estado: 'error', error: e.message };
@@ -256,7 +256,7 @@ Genera un "System Health Score".`,
   }
 
   async checkErrores() {
-    const errores = await db.all(`
+    const errores = await db.allAsync(`
       SELECT COUNT(*) as count FROM agentes_logs 
       WHERE resultado_status = 'error' 
       AND created_at >= datetime('now', '-24 hours')
@@ -265,7 +265,7 @@ Genera un "System Health Score".`,
   }
 
   async checkAgentes() {
-    const ultimosLogs = await db.all(`
+    const ultimosLogs = await db.allAsync(`
       SELECT agente_nombre, MAX(created_at) as last_run
       FROM agentes_logs
       WHERE created_at >= datetime('now', '-24 hours')

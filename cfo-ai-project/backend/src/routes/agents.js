@@ -141,7 +141,7 @@ router.get('/logs', async (req, res) => {
       SELECT 
         COUNT(*) as total,
         COUNT(DISTINCT agente_tipo) as agentesActivos,
-        SUM(CASE WHEN resultado_status = 'exito' THEN 1 ELSE 0 END) as exitosos,
+        SUM(CASE WHEN resultado_status = 'exitoso' THEN 1 ELSE 0 END) as exitosos,
         SUM(CASE WHEN resultado_status = 'error' THEN 1 ELSE 0 END) as errores,
         SUM(CASE WHEN resultado_status = 'advertencia' THEN 1 ELSE 0 END) as advertencias
       FROM agentes_logs
@@ -174,6 +174,24 @@ router.get('/logs', async (req, res) => {
       ORDER BY count DESC
     `, [empresaId]);
     
+    // Agrupar por status
+    const porStatus = await db.allAsync(`
+      SELECT 
+        resultado_status as status,
+        COUNT(*) as count
+      FROM agentes_logs
+      WHERE empresa_id = ? 
+        AND created_at >= datetime('now', '-${dias} days')
+      GROUP BY resultado_status
+      ORDER BY count DESC
+    `, [empresaId]);
+    
+    // Convertir porStatus a objeto
+    const porStatusObj = porStatus.reduce((acc, row) => {
+      acc[row.status] = row.count;
+      return acc;
+    }, {});
+    
     res.json({
       status: 'success',
       timestamp: new Date().toISOString(),
@@ -186,7 +204,8 @@ router.get('/logs', async (req, res) => {
           errores: stats?.errores || 0,
           advertencias: stats?.advertencias || 0,
           porCategoria,
-          porAgente
+          porAgente,
+          por_status: porStatusObj
         },
         pagination: {
           total: stats?.total || 0,

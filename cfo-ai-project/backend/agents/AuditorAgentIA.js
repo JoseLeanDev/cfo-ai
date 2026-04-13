@@ -27,7 +27,7 @@ class AuditorAgentIA {
 
     try {
       // Obtener datos recientes
-      const transacciones = await db.all(`
+      const transacciones = await db.allAsync(`
         SELECT t.*, c.nombre as cuenta_nombre, c.codigo as cuenta_codigo
         FROM transacciones t
         JOIN cuentas_contables c ON t.cuenta_id = c.id
@@ -36,7 +36,7 @@ class AuditorAgentIA {
         LIMIT 100
       `);
 
-      const saldos = await db.all(`
+      const saldos = await db.allAsync(`
         SELECT c.codigo, c.nombre, c.tipo, s.saldo_actual, s.periodo
         FROM cuentas_contables c
         JOIN saldos_cuentas s ON c.id = s.cuenta_id
@@ -80,7 +80,7 @@ class AuditorAgentIA {
       // Guardar anomalías detectadas en tabla
       if (analisis.anomalias?.length > 0) {
         for (const anomalia of analisis.anomalias.slice(0, 10)) {
-          await db.run(`
+          await db.runAsync(`
             INSERT INTO alertas_financieras 
             (tipo, nivel, titulo, descripcion, monto_afectado, estado, metadata, created_at)
             VALUES (?, ?, ?, ?, ?, 'activa', ?, datetime('now'))
@@ -143,7 +143,7 @@ class AuditorAgentIA {
       const fechaAyer = ayer.toISOString().split('T')[0];
 
       // Obtener datos del día anterior
-      const datosDia = await db.all(`
+      const datosDia = await db.allAsync(`
         SELECT 
           COUNT(*) as total_trans,
           SUM(CASE WHEN tipo = 'debe' THEN monto ELSE 0 END) as total_debe,
@@ -153,7 +153,7 @@ class AuditorAgentIA {
         WHERE DATE(fecha) = ?
       `, [fechaAyer]);
 
-      const transaccionesDia = await db.all(`
+      const transaccionesDia = await db.allAsync(`
         SELECT t.*, c.nombre as cuenta_nombre
         FROM transacciones t
         JOIN cuentas_contables c ON t.cuenta_id = c.id
@@ -215,7 +215,7 @@ class AuditorAgentIA {
       const mesAnterior = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
       const mesAnteriorStr = mesAnterior.toISOString().slice(0, 7);
 
-      const cierre = await db.get(`
+      const cierre = await db.getAsync(`
         SELECT * FROM cierres_mensuales WHERE mes = ?
       `, [mesAnteriorStr]);
 

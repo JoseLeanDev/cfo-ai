@@ -30,7 +30,7 @@ class AnalistaFinancieroIA {
       // Recopilar métricas clave
       const metricas = await this.obtenerMetricasActuales();
       const tendencias = await this.obtenerTendencias(30);
-      const alertasPendientes = await db.all(`
+      const alertasPendientes = await db.allAsync(`
         SELECT * FROM alertas_financieras 
         WHERE estado = 'activa' 
         ORDER BY created_at DESC 
@@ -47,7 +47,7 @@ class AnalistaFinancieroIA {
       const analisis = resultado.analisis;
 
       // Guardar briefing en tabla
-      await db.run(`
+      await db.runAsync(`
         INSERT INTO briefings_diarios 
         (fecha, resumen_ejecutivo, insights_json, alertas_count, estado, created_at)
         VALUES (date('now'), ?, ?, ?, 'generado', datetime('now'))
@@ -101,7 +101,7 @@ class AnalistaFinancieroIA {
     try {
       const hoy = new Date().toISOString().split('T')[0];
       
-      const snapshot = await db.get(`
+      const snapshot = await db.getAsync(`
         SELECT 
           COUNT(DISTINCT t.id) as transacciones_hoy,
           SUM(CASE WHEN t.tipo = 'debe' THEN t.monto ELSE 0 END) as total_debe,
@@ -124,7 +124,7 @@ Genera un "estado del sistema" ejecutivo.`,
         'analisis'
       );
 
-      await db.run(`
+      await db.runAsync(`
         INSERT INTO snapshots_diarios 
         (fecha, datos_json, analisis_ia, estado, created_at)
         VALUES (?, ?, ?, 'completado', datetime('now'))
@@ -163,7 +163,7 @@ Genera un "estado del sistema" ejecutivo.`,
     console.log(`[${this.nombre}] 📊 Generando reporte semanal con IA...`);
 
     try {
-      const datosSemana = await db.all(`
+      const datosSemana = await db.allAsync(`
         SELECT 
           DATE(fecha) as dia,
           COUNT(*) as transacciones,
@@ -175,7 +175,7 @@ Genera un "estado del sistema" ejecutivo.`,
         ORDER BY dia DESC
       `);
 
-      const topCuentas = await db.all(`
+      const topCuentas = await db.allAsync(`
         SELECT c.nombre, c.codigo, SUM(ABS(t.monto)) as volumen
         FROM transacciones t
         JOIN cuentas_contables c ON t.cuenta_id = c.id
@@ -228,7 +228,7 @@ Genera un "estado del sistema" ejecutivo.`,
     console.log(`[${this.nombre}] 🔮 Generando proyección mensual con IA...`);
 
     try {
-      const historico = await db.all(`
+      const historico = await db.allAsync(`
         SELECT 
           strftime('%Y-%m', fecha) as mes,
           SUM(CASE WHEN tipo = 'debe' THEN monto ELSE 0 END) as total_debe,
@@ -273,7 +273,7 @@ Genera un "estado del sistema" ejecutivo.`,
   // ============ HELPERS ============
 
   async obtenerMetricasActuales() {
-    return await db.get(`
+    return await db.getAsync(`
       SELECT 
         (SELECT SUM(saldo_actual) FROM saldos_cuentas WHERE periodo = strftime('%Y-%m', 'now') AND cuenta_id IN (SELECT id FROM cuentas_contables WHERE tipo = 'activo')) as activos_totales,
         (SELECT SUM(saldo_actual) FROM saldos_cuentas WHERE periodo = strftime('%Y-%m', 'now') AND cuenta_id IN (SELECT id FROM cuentas_contables WHERE tipo = 'pasivo')) as pasivos_totales,
@@ -283,7 +283,7 @@ Genera un "estado del sistema" ejecutivo.`,
   }
 
   async obtenerTendencias(dias) {
-    return await db.all(`
+    return await db.allAsync(`
       SELECT 
         DATE(fecha) as dia,
         SUM(CASE WHEN tipo = 'debe' THEN monto ELSE 0 END) as ingresos,

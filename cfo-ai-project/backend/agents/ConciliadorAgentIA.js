@@ -27,7 +27,7 @@ class ConciliadorAgentIA {
 
     try {
       // Obtener conciliaciones pendientes
-      const conciliaciones = await db.all(`
+      const conciliaciones = await db.allAsync(`
         SELECT c.*, cb.nombre as banco_nombre, cb.numero_cuenta
         FROM conciliaciones c
         JOIN cuentas_bancarias cb ON c.cuenta_bancaria_id = cb.id
@@ -52,13 +52,13 @@ class ConciliadorAgentIA {
       // Para cada conciliación, obtener datos y analizar
       const resultados = [];
       for (const conc of conciliaciones) {
-        const movimientosBanco = await db.all(`
+        const movimientosBanco = await db.allAsync(`
           SELECT * FROM movimientos_bancarios
           WHERE cuenta_bancaria_id = ? AND fecha BETWEEN ? AND ?
           ORDER BY fecha DESC
         `, [conc.cuenta_bancaria_id, conc.fecha_inicio, conc.fecha_fin || 'now']);
 
-        const transaccionesLibro = await db.all(`
+        const transaccionesLibro = await db.allAsync(`
           SELECT t.*, c.nombre as cuenta_nombre
           FROM transacciones t
           JOIN cuentas_contables c ON t.cuenta_id = c.id
@@ -72,7 +72,7 @@ class ConciliadorAgentIA {
         
         if (analisis.exito) {
           // Guardar sugerencias del IA
-          await db.run(`
+          await db.runAsync(`
             UPDATE conciliaciones 
             SET notas_ia = ?, diferencias_detectadas = ?, 
                 sugerencias_json = ?, updated_at = datetime('now')
@@ -132,7 +132,7 @@ class ConciliadorAgentIA {
     console.log(`[${this.nombre}] ⚠️ Verificando conciliaciones viejas...`);
 
     try {
-      const viejas = await db.all(`
+      const viejas = await db.allAsync(`
         SELECT c.*, cb.nombre as banco_nombre,
                julianday('now') - julianday(c.fecha_inicio) as dias_pendiente
         FROM conciliaciones c
@@ -196,7 +196,7 @@ Genera alertas priorizadas y recomendaciones de acción urgente.`,
 
     try {
       // Buscar movimientos bancarios sin conciliar
-      const movimientos = await db.all(`
+      const movimientos = await db.allAsync(`
         SELECT mb.*, cb.nombre as banco_nombre
         FROM movimientos_bancarios mb
         JOIN cuentas_bancarias cb ON mb.cuenta_bancaria_id = cb.id
@@ -207,7 +207,7 @@ Genera alertas priorizadas y recomendaciones de acción urgente.`,
       `);
 
       // Buscar transacciones sin match
-      const transacciones = await db.all(`
+      const transacciones = await db.allAsync(`
         SELECT t.*, c.nombre as cuenta_nombre
         FROM transacciones t
         JOIN cuentas_contables c ON t.cuenta_id = c.id
@@ -234,7 +234,7 @@ Devuelve máximo 20 sugerencias.`,
 
       // Guardar sugerencias
       for (const sug of sugerencias.slice(0, 20)) {
-        await db.run(`
+        await db.runAsync(`
           INSERT INTO sugerencias_conciliacion 
           (movimiento_id, transaccion_id, confianza, razon, estado, created_at)
           VALUES (?, ?, ?, ?, 'pendiente', datetime('now'))

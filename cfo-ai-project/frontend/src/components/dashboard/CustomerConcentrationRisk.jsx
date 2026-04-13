@@ -88,7 +88,7 @@ export default function CustomerConcentrationRisk({
   }
   
   const { 
-    clientes, 
+    clientes: clientesProcesados, 
     totalIngresos, 
     clienteMayor, 
     top3, 
@@ -206,7 +206,7 @@ export default function CustomerConcentrationRisk({
           <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3">Distribución de Ingresos (Pareto)</h3>
           
           <div className="space-y-2">
-            {clientes.slice(0, 8).map((cliente, i) => {
+            {clientesProcesados.slice(0, 8).map((cliente, i) => {
               const esRiesgo = cliente.porcentaje >= umbralAlerta
               return (
                 <div key={cliente.id || i} className="flex items-center gap-3">
@@ -234,9 +234,9 @@ export default function CustomerConcentrationRisk({
               )
             })}
           </div>          
-          {clientes.length > 8 && (
+          {clientesProcesados.length > 8 && (
             <p className="text-xs text-[var(--text-muted)] mt-2 text-center">
-              +{clientes.length - 8} clientes más
+              +{clientesProcesados.length - 8} clientes más
             </p>
           )}
         </div>

@@ -144,6 +144,11 @@ export default function LogActividades() {
     dias: 7
   })
 
+  // Debug: log de respuesta del API
+  if (data?.data) {
+    console.log('Agentes logs:', data.data)
+  }
+
   const logs = data?.data?.logs || []
   const stats = data?.data?.estadisticas || {}
 

@@ -170,16 +170,28 @@ CREATE TABLE IF NOT EXISTS alertas_financieras (
 -- Insights histórico
 CREATE TABLE IF NOT EXISTS insights_historico (
   id SERIAL PRIMARY KEY,
+  insight_id VARCHAR(255) UNIQUE,
   empresa_id INTEGER DEFAULT 1,
-  tipo VARCHAR(100) NOT NULL,
-  categoria VARCHAR(100),
-  titulo VARCHAR(255),
-  descripcion TEXT,
-  datos_json JSONB,
-  severidad VARCHAR(20),
+  type VARCHAR(100) NOT NULL,
+  category VARCHAR(100),
+  title VARCHAR(255),
+  description TEXT,
+  severity VARCHAR(20),
+  impact DECIMAL(15,2),
+  currency VARCHAR(10) DEFAULT 'GTQ',
+  action TEXT,
+  action_label VARCHAR(255),
+  change_percent DECIMAL(10,2),
+  periodo_desde DATE,
+  periodo_hasta DATE,
+  agent_source VARCHAR(255),
+  agent_version VARCHAR(20),
+  status VARCHAR(50) DEFAULT 'active',
   dismissed BOOLEAN DEFAULT FALSE,
   dismissed_at TIMESTAMP,
-  created_at TIMESTAMP DEFAULT NOW()
+  dismissed_by INTEGER,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
 );
 
 -- Asientos contables

@@ -215,34 +215,49 @@ router.get('/insights', async (req, res) => {
     });
 
     // Guardar insights en histórico (async, no bloquea response)
+    const isPostgresSave = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
     const saveToHistory = async () => {
       try {
         const db = req.app.get('db');
         for (const insight of combinedInsights) {
-          await db.runAsync(`
-            INSERT OR REPLACE INTO insights_historico 
-            (insight_id, empresa_id, type, severity, title, description, impact, currency, 
-             category, action, action_label, change_percent, periodo_desde, periodo_hasta,
-             agent_source, agent_version)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          `, [
-            insight.id,
-            empresaId,
-            insight.type,
-            insight.severity,
-            insight.title,
-            insight.description,
-            insight.impact || 0,
-            insight.currency || 'GTQ',
-            insight.category,
-            insight.action,
-            insight.actionLabel,
-            insight.change || 0,
-            responseData.periodo_analisis.desde,
-            responseData.periodo_analisis.hasta,
-            'AnalistaFinanciero/PredictorCashFlow',
-            '1.0'
-          ]);
+          if (isPostgresSave) {
+            // PostgreSQL: INSERT ... ON CONFLICT
+            await db.runAsync(`
+              INSERT INTO insights_historico 
+              (insight_id, empresa_id, type, severity, title, description, impact, currency, 
+               category, action, action_label, change_percent, periodo_desde, periodo_hasta,
+               agent_source, agent_version)
+              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+              ON CONFLICT (insight_id) DO UPDATE SET
+                type = EXCLUDED.type,
+                severity = EXCLUDED.severity,
+                title = EXCLUDED.title,
+                description = EXCLUDED.description,
+                impact = EXCLUDED.impact,
+                updated_at = CURRENT_TIMESTAMP
+            `, [
+              insight.id, empresaId, insight.type, insight.severity, insight.title,
+              insight.description, insight.impact || 0, insight.currency || 'GTQ',
+              insight.category, insight.action, insight.actionLabel, insight.change || 0,
+              responseData.periodo_analisis.desde, responseData.periodo_analisis.hasta,
+              'AnalistaFinanciero/PredictorCashFlow', '1.0'
+            ]);
+          } else {
+            // SQLite: INSERT OR REPLACE
+            await db.runAsync(`
+              INSERT OR REPLACE INTO insights_historico 
+              (insight_id, empresa_id, type, severity, title, description, impact, currency, 
+               category, action, action_label, change_percent, periodo_desde, periodo_hasta,
+               agent_source, agent_version)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `, [
+              insight.id, empresaId, insight.type, insight.severity, insight.title,
+              insight.description, insight.impact || 0, insight.currency || 'GTQ',
+              insight.category, insight.action, insight.actionLabel, insight.change || 0,
+              responseData.periodo_analisis.desde, responseData.periodo_analisis.hasta,
+              'AnalistaFinanciero/PredictorCashFlow', '1.0'
+            ]);
+          }
         }
       } catch (err) {
         console.error('[Insights] Error guardando en histórico:', err.message);
@@ -311,9 +326,11 @@ router.get('/insights/historico', async (req, res) => {
     const severity = req.query.severity;
     const days = parseInt(req.query.days) || 30;
     
+    // Detectar PostgreSQL
+    const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
+    
     let query = `
       SELECT 
-        id,
         insight_id as id,
         type,
         severity,
@@ -333,7 +350,7 @@ router.get('/insights/historico', async (req, res) => {
       FROM insights_historico
       WHERE empresa_id = ? 
         AND status = ?
-        AND created_at >= date('now', '-${days} days')
+        AND created_at >= ${isPostgres ? `CURRENT_DATE - INTERVAL '${days} days'` : `date('now', '-${days} days')`}
     `;
     
     const params = [empresaId, status];
@@ -362,7 +379,7 @@ router.get('/insights/historico', async (req, res) => {
         SUM(CASE WHEN severity = 'info' THEN 1 ELSE 0 END) as info
       FROM insights_historico
       WHERE empresa_id = ? AND status = 'active'
-        AND created_at >= date('now', '-${days} days')
+        AND created_at >= ${isPostgres ? `CURRENT_DATE - INTERVAL '${days} days'` : `date('now', '-${days} days')`}
     `, [empresaId]);
     
     res.json({

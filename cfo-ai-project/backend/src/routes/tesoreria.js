@@ -80,14 +80,14 @@ router.get('/cxc', async (req, res) => {
         SUM(CASE WHEN dias_atraso > 60 THEN monto_total ELSE 0 END) as _90_dias,
         SUM(monto_total) as total
       FROM cuentas_cobrar 
-      WHERE empresa_id = ? AND estado != 'cobrada'
+      WHERE empresa_id = ? AND estado ${isPostgres ? "<> 'cobrada'" : "!= 'cobrada'"}
     `, [empresaId]);
 
     // Usar cliente_nombre y monto_total
     const topDeudores = await db.allAsync(`
       SELECT cliente_nombre as cliente, monto_total as monto, dias_atraso as dias
       FROM cuentas_cobrar 
-      WHERE empresa_id = ? AND estado != 'cobrada'
+      WHERE empresa_id = ? AND estado ${isPostgres ? "<> 'cobrada'" : "!= 'cobrada'"}
       ORDER BY monto_total DESC
       LIMIT 5
     `, [empresaId]);
@@ -95,7 +95,7 @@ router.get('/cxc', async (req, res) => {
     const promedioDias = await db.getAsync(`
       SELECT AVG(dias_atraso) as promedio
       FROM cuentas_cobrar 
-      WHERE empresa_id = ? AND estado != 'cobrada'
+      WHERE empresa_id = ? AND estado ${isPostgres ? "<> 'cobrada'" : "!= 'cobrada'"}
     `, [empresaId]);
 
     const total = distribucion.total || 1;
@@ -143,12 +143,13 @@ router.get('/cxp', async (req, res) => {
     const dias = parseInt(req.query.proximos_dias) || 30;
     
     // Usar nombres de columnas PostgreSQL
+    // Para PostgreSQL: fecha_vencimiento - CURRENT_DATE devuelve integer (días)
     const cxp = await db.allAsync(`
       SELECT 
         proveedor_nombre as proveedor,
         monto_total as monto,
         fecha_vencimiento,
-        ${isPostgres ? 'EXTRACT(DAY FROM fecha_vencimiento - CURRENT_DATE)' : "julianday(fecha_vencimiento) - julianday('now')"} as dias_restantes
+        ${isPostgres ? '(fecha_vencimiento - CURRENT_DATE)::integer' : "CAST(julianday(fecha_vencimiento) - julianday('now') AS INTEGER)"} as dias_restantes
       FROM cuentas_pagar 
       WHERE empresa_id = ? 
         AND estado = 'pendiente'
@@ -158,7 +159,7 @@ router.get('/cxp', async (req, res) => {
 
     const total = await db.getAsync(`
       SELECT SUM(monto_total) as total, 
-             AVG(${isPostgres ? 'EXTRACT(DAY FROM fecha_vencimiento - CURRENT_DATE)' : "julianday(fecha_vencimiento) - julianday('now')"}) as promedio_dias
+             AVG(${isPostgres ? '(fecha_vencimiento - CURRENT_DATE)::integer' : "CAST(julianday(fecha_vencimiento) - julianday('now') AS INTEGER)"}) as promedio_dias
       FROM cuentas_pagar 
       WHERE empresa_id = ? AND estado = 'pendiente'
     `, [empresaId]);

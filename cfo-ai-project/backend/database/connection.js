@@ -102,64 +102,30 @@ if (isProduction && process.env.DATABASE_URL) {
 
 /**
  * Convierte sintaxis SQLite a PostgreSQL
+ * IMPORTANTE: NO convertir = 0 o = 1 globalmente - eso rompe CASE statements
  */
 function sqliteToPostgres(sql) {
-  // Procesar en orden específico para evitar conflictos
-  let result = sql;
+  let result = sql
+    // 1. datetime('now') → NOW()
+    .replace(/datetime\s*\(\s*['"]now['"]\s*\)/gi, 'NOW()')
+    // 2. date('now') → CURRENT_DATE  
+    .replace(/date\s*\(\s*['"]now['"]\s*\)/gi, 'CURRENT_DATE')
+    // 3. date('now', '-X days') → CURRENT_DATE - INTERVAL 'X days'
+    .replace(/date\s*\(\s*['"]now['"]\s*,\s*['"]([+-]\d+)\s+days?['"]\s*\)/gi, "CURRENT_DATE - INTERVAL '$1 days'")
+    // 4. datetime('now', '-X days') → NOW() - INTERVAL 'X days'
+    .replace(/datetime\s*\(\s*['"]now['"]\s*,\s*['"]([+-]\d+)\s+days?['"]\s*\)/gi, "NOW() - INTERVAL '$1 days'")
+    // 5. strftime('%Y-%m', ...) → TO_CHAR(..., 'YYYY-MM')
+    .replace(/strftime\s*\(\s*['"]%Y-%m['"]\s*,\s*([^)]+)\)/gi, "TO_CHAR($1, 'YYYY-MM')")
+    // 6. julianday(...) - julianday(...) → (... - ...) en días
+    .replace(/julianday\s*\(([^)]+)\)\s*-\s*julianday\s*\(([^)]+)\)/gi, '($1 - $2)')
+    // 7. != 'string' → <> 'string' (solo para strings)
+    .replace(/!=\s*('[^']*')/g, '<> $1');
   
-  // 1. Guardar protecciones: marcar expresiones que NO deben modificarse
-  const protectedExprs = [];
-  
-  // Proteger COALESCE(x, 0) y COALESCE(x, 1) - mantener los números como números
-  result = result.replace(/COALESCE\s*\(\s*([^,]+)\s*,\s*(\d+)\s*\)/gi, (match, col, num) => {
-    const id = protectedExprs.length;
-    protectedExprs.push(`COALESCE(${col}, ${num})`);
-    return `__PROTECTED_${id}__`;
-  });
-  
-  // Proteger CASE WHEN ... = 0/1 THEN dentro de expresiones CASE
-  result = result.replace(/(CASE\s+WHEN\s+[^=]+)=\(0|1)\b(\s+THEN)/gi, (match, prefix, num, suffix) => {
-    const id = protectedExprs.length;
-    protectedExprs.push(`${prefix}=${num}${suffix}`);
-    return `__PROTECTED_${id}__`;
-  });
-  
-  // 2. Aplicar conversiones SQLite → PostgreSQL
-  
-  // Booleanos: = 1 → = TRUE, = 0 → = FALSE (SOLO para columnas booleanas, no para números)
-  // Solo reemplazar cuando está comparando columnas booleanas conocidas
-  result = result.replace(/(\s+activa\s*=\s*)1\b/gi, '$1TRUE');
-  result = result.replace(/(\s+activa\s*=\s*)0\b/gi, '$1FALSE');
-  result = result.replace(/(\s+resuelta\s*=\s*)1\b/gi, '$1TRUE');
-  result = result.replace(/(\s+resuelta\s*=\s*)0\b/gi, '$1FALSE');
-  result = result.replace(/(\s+dismissed\s*=\s*)1\b/gi, '$1TRUE');
-  result = result.replace(/(\s+dismissed\s*=\s*)0\b/gi, '$1FALSE');
-  
-  // datetime('now') → NOW()
-  result = result.replace(/datetime\s*\(\s*['"]now['"]\s*\)/gi, 'NOW()');
-  
-  // date('now') → CURRENT_DATE
-  result = result.replace(/date\s*\(\s*['"]now['"]\s*\)/gi, 'CURRENT_DATE');
-  
-  // date('now', '-X days') → CURRENT_DATE - INTERVAL 'X days'
-  result = result.replace(/date\s*\(\s*['"]now['"]\s*,\s*['"]([+-]\d+)\s+days?['"]\s*\)/gi, "CURRENT_DATE - INTERVAL '$1 days'");
-  
-  // datetime('now', '-X days') → NOW() - INTERVAL 'X days'
-  result = result.replace(/datetime\s*\(\s*['"]now['"]\s*,\s*['"]([+-]\d+)\s+days?['"]\s*\)/gi, "NOW() - INTERVAL '$1 days'");
-  
-  // strftime('%Y-%m', ...) → TO_CHAR(..., 'YYYY-MM')
-  result = result.replace(/strftime\s*\(\s*['"]%Y-%m['"]\s*,\s*([^)]+)\)/gi, "TO_CHAR($1, 'YYYY-MM')");
-  
-  // ? → $1, $2, etc.
+  // 8. Convertir ? → $1, $2, etc. (contar ocurrencias)
   let paramCount = 0;
   result = result.replace(/\?/g, () => {
     paramCount++;
     return `$${paramCount}`;
-  });
-  
-  // 3. Restaurar expresiones protegidas
-  protectedExprs.forEach((expr, id) => {
-    result = result.replace(`__PROTECTED_${id}__`, expr);
   });
   
   return result;

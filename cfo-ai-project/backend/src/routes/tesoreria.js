@@ -31,21 +31,24 @@ router.get('/posicion', async (req, res) => {
     `, [empresaId]);
 
     const tipoCambio = 7.75;
-    const totalConsolidado = (totales.total_gtq || 0) + (totales.total_usd || 0) * tipoCambio;
-    const diasOperacion = Math.floor((totales.total_gtq || 0) / 50000);
+    const totalGTQ = parseFloat(totales.total_gtq) || 0;
+    const totalUSD = parseFloat(totales.total_usd) || 0;
+    const totalConsolidado = totalGTQ + totalUSD * tipoCambio;
+    const diasOperacion = Math.floor(totalGTQ / 50000);
 
     res.json({
       status: 'success',
       timestamp: new Date().toISOString(),
       data: {
         fecha_corte: new Date().toISOString().split('T')[0],
-        total_disponible_gtq: totales.total_gtq || 0,
-        total_disponible_usd: totales.total_usd || 0,
+        total_disponible_gtq: totalGTQ,
+        total_disponible_usd: totalUSD,
         tipo_cambio: tipoCambio,
         total_consolidado_gtq: totalConsolidado,
         dias_operacion: diasOperacion,
         cuentas: cuentas.map(c => ({
           ...c,
+          saldo: parseFloat(c.saldo) || 0,
           dias_sin_conciliar: Math.floor(c.dias_sin_conciliar || 0)
         }))
       },

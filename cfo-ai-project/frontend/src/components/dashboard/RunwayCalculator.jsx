@@ -23,9 +23,23 @@ export default function RunwayCalculator({
   promedioGastosMensual = 0,
   proyeccionMeses = 12 
 }) {
+  // Debug: mostrar props recibidos
+  console.log('RunwayCalculator props:', { 
+    saldoActual, 
+    promedioIngresosMensual, 
+    promedioGastosMensual,
+    esRentable: promedioIngresosMensual > promedioGastosMensual 
+  })
   
   const calcularRunway = useMemo(() => {
     const beneficioMensual = promedioIngresosMensual - promedioGastosMensual
+    
+    // Debug
+    console.log('Calculando runway:', { 
+      beneficioMensual, 
+      ingresos: promedioIngresosMensual, 
+      gastos: promedioGastosMensual 
+    })
     const burnRate = promedioGastosMensual - promedioIngresosMensual // Negativo si es rentable
     
     // Si es rentable (ingresos > gastos)

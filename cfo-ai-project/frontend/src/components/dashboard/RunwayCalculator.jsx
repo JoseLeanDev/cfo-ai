@@ -51,9 +51,14 @@ export default function RunwayCalculator({
   }, [saldoActual, promedioIngresosMensual, promedioGastosMensual])
   
   const generarProyeccion = useMemo(() => {
-    const { burnRate } = calcularRunway
+    const { burnRate, estado } = calcularRunway
     const datos = []
     let saldoProyectado = saldoActual
+    
+    // Si es rentable, proyectar crecimiento; si no, proyectar quema de efectivo
+    const variacionMensual = estado === 'profitable' 
+      ? Math.abs(burnRate) || (promedioIngresosMensual * 0.1) // 10% de ingresos como crecimiento por defecto
+      : -burnRate
     
     for (let i = 0; i <= proyeccionMeses; i++) {
       const mes = new Date()
@@ -61,16 +66,16 @@ export default function RunwayCalculator({
       
       datos.push({
         mes: mes.toLocaleDateString('es-GT', { month: 'short', year: '2-digit' }),
-        saldo: saldoProyectado,
-        esCritico: saldoProyectado < burnRate * 3,
-        esPeligro: saldoProyectado <= 0
+        saldo: Math.max(0, saldoProyectado),
+        esCritico: estado !== 'profitable' && saldoProyectado < Math.abs(burnRate) * 3,
+        esPeligro: estado !== 'profitable' && saldoProyectado <= 0
       })
       
-      saldoProyectado -= burnRate
+      saldoProyectado += variacionMensual
     }
     
     return datos
-  }, [saldoActual, calcularRunway.burnRate, proyeccionMeses])
+  }, [saldoActual, calcularRunway.burnRate, calcularRunway.estado, proyeccionMeses, promedioIngresosMensual])
   
   const { meses, burnRate, estado, mensaje } = calcularRunway
   const proyeccion = generarProyeccion

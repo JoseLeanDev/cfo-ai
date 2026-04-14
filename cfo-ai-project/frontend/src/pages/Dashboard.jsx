@@ -155,8 +155,8 @@ export default function Dashboard() {
       {/* Runway Calculator - Insight Crítico */}
       <RunwayCalculator 
         saldoActual={kpis.disponible_gtq?.value || 0}
-        promedioIngresosMensual={kpis.ventas_mes?.value ? kpis.ventas_mes.value * 0.85 : 2500000}
-        promedioGastosMensual={2200000}
+        promedioIngresosMensual={kpis.runway?.promedio_ingresos_mensual || kpis.ventas_mes?.value || 0}
+        promedioGastosMensual={kpis.runway?.promedio_gastos_mensual || 0}
         proyeccionMeses={12}
       />
 

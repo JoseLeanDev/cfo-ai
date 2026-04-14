@@ -45,6 +45,36 @@ router.get('/', async (req, res) => {
         AND strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now')
     `, [empresaId]);
 
+    // Promedios de los últimos 6 meses para runway calculator
+    const promedios6Meses = await db.getAsync(`
+      SELECT 
+        AVG(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as avg_ingresos_mes,
+        AVG(CASE WHEN tipo = 'salida' THEN monto ELSE 0 END) as avg_gastos_mes,
+        COUNT(DISTINCT strftime('%Y-%m', fecha)) as meses_con_datos
+      FROM transacciones 
+      WHERE empresa_id = ? 
+        AND fecha >= date('now', '-6 months')
+    `, [empresaId]);
+
+    // Calcular promedios reales solo de meses con datos
+    const mesesHistoricos = await db.allAsync(`
+      SELECT 
+        strftime('%Y-%m', fecha) as mes,
+        SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as ingresos,
+        SUM(CASE WHEN tipo = 'salida' THEN monto ELSE 0 END) as gastos
+      FROM transacciones 
+      WHERE empresa_id = ? 
+        AND fecha >= date('now', '-6 months')
+      GROUP BY strftime('%Y-%m', fecha)
+    `, [empresaId]);
+    
+    const avgIngresos = mesesHistoricos.length > 0 
+      ? mesesHistoricos.reduce((sum, m) => sum + m.ingresos, 0) / mesesHistoricos.length 
+      : (ventasMes.total || 0);
+    const avgGastos = mesesHistoricos.length > 0 
+      ? mesesHistoricos.reduce((sum, m) => sum + m.gastos, 0) / mesesHistoricos.length 
+      : 0;
+
     // Alertas activas
     const alertas = [];
     
@@ -115,6 +145,11 @@ router.get('/', async (req, res) => {
           cxp_total: {
             value: cxpResumen.total_cxp || 0,
             currency: 'GTQ'
+          },
+          runway: {
+            promedio_ingresos_mensual: Math.round(avgIngresos),
+            promedio_gastos_mensual: Math.round(avgGastos),
+            meses_historicos: mesesHistoricos.length
           }
         }
       },

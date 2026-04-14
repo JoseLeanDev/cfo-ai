@@ -282,6 +282,17 @@ Devuelve máximo 20 sugerencias.`,
   iniciarScheduler() {
     console.log(`[${this.nombre}] 🚀 Iniciando scheduler...`);
 
+    // Log de inicio del sistema
+    logAgentActivity({
+      agente_nombre: this.nombre,
+      agente_tipo: this.tipo,
+      agente_version: this.version,
+      categoria: 'sincronizacion_datos',
+      descripcion: `🟢 Agente iniciado y listo. Tareas: conciliación 08:00, sugerencias 10:00, alertas día 3.`,
+      resultado_status: 'exitoso',
+      duracion_ms: 0
+    });
+
     // Diario 08:00: Analizar conciliaciones
     this.tareasActivas.push(cron.schedule('0 8 * * *', async () => {
       await this.analizarConciliacionesPendientes();

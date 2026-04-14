@@ -282,6 +282,17 @@ Genera un "System Health Score".`,
   iniciarScheduler() {
     console.log(`[${this.nombre}] 🚀 Iniciando scheduler...`);
 
+    // Log de inicio del sistema
+    logAgentActivity({
+      agente_nombre: this.nombre,
+      agente_tipo: this.tipo,
+      agente_version: this.version,
+      categoria: 'sincronizacion_datos',
+      descripcion: `🟢 Agente iniciado y listo. Tareas: limpieza 02:00, optimización dom 03:00, health check cada 4h.`,
+      resultado_status: 'exitoso',
+      duracion_ms: 0
+    });
+
     // Diario 02:00: Limpiar logs
     this.tareasActivas.push(cron.schedule('0 2 * * *', async () => {
       await this.limpiarLogsViejos();

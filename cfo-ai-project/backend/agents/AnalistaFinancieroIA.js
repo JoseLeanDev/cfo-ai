@@ -308,6 +308,17 @@ Genera un "estado del sistema" ejecutivo.`,
   iniciarScheduler() {
     console.log(`[${this.nombre}] 🚀 Iniciando scheduler...`);
 
+    // Log de inicio del sistema
+    logAgentActivity({
+      agente_nombre: this.nombre,
+      agente_tipo: this.tipo,
+      agente_version: this.version,
+      categoria: 'sincronizacion_datos',
+      descripcion: `🟢 Agente iniciado y listo. Tareas: briefing 07:00, snapshot 18:00, resumen viernes 17:00.`,
+      resultado_status: 'exitoso',
+      duracion_ms: 0
+    });
+
     // Diario 07:00: Briefing matutino
     this.tareasActivas.push(cron.schedule('0 7 * * *', async () => {
       await this.generarBriefingMatutino();

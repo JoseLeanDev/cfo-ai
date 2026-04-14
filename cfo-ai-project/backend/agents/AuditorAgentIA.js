@@ -270,6 +270,17 @@ Genera una alerta ejecutiva y recomendaciones urgentes.`,
   iniciarScheduler() {
     console.log(`[${this.nombre}] 🚀 Iniciando scheduler de agente IA...`);
 
+    // Log de inicio del sistema
+    logAgentActivity({
+      agente_nombre: this.nombre,
+      agente_tipo: this.tipo,
+      agente_version: this.version,
+      categoria: 'sincronizacion_datos',
+      descripcion: `🟢 Agente iniciado y listo para operar. Tareas programadas: cada 45 min, 06:00 diario, día 5 mensual.`,
+      resultado_status: 'exitoso',
+      duracion_ms: 0
+    });
+
     // Cada 45 minutos: Detección de anomalías
     this.tareasActivas.push(cron.schedule('*/45 * * * *', async () => {
       await this.detectarAnomaliasConIA();

@@ -38,7 +38,7 @@ const Variacion = ({ value }) => {
 
 export default function Dashboard() {
   const { data: dashboardData, isLoading } = useDashboard()
-  const { data: insightsData, isLoading: isLoadingInsights } = useInsights()
+  const { data: insightsData, isLoading: isLoadingInsights } = useInsights('dashboard')
   const [animatedValues, setAnimatedValues] = useState({})
 
   const kpis = dashboardData?.data?.kpis || {}

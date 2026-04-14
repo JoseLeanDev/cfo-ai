@@ -31,8 +31,8 @@ export const useAlertas = () => {
   })
 }
 
-export const useInsights = () => {
-  return useQuery('insights', endpoints.analisis.insights, {
+export const useInsights = (context = 'all') => {
+  return useQuery(['insights', context], () => endpoints.analisis.insights(context), {
     refetchInterval: 5 * 60 * 1000,
     staleTime: 2 * 60 * 1000,
   })

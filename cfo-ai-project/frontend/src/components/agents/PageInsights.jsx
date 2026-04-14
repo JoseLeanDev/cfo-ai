@@ -23,7 +23,7 @@ export default function PageInsights({
   maxInsights = 3,
   title: customTitle
 }) {
-  const { data: insightsData, isLoading: isLoadingReal, error: errorReal } = useInsights()
+  const { data: insightsData, isLoading: isLoadingReal, error: errorReal } = useInsights(context)
   const { data: historicoData, isLoading: isLoadingHist } = useInsightsHistorico({ limit: maxInsights, days: 30 })
   
   // Usar insights en tiempo real si existen, si no, usar histórico

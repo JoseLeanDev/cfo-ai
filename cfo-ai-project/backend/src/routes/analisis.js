@@ -18,11 +18,12 @@ router.get('/insights', async (req, res) => {
   try {
     const db = req.app.get('db');
     const empresaId = req.query.empresa_id || 1;
+    const context = req.query.context || 'all';
     const skipCache = req.query.skip_cache === 'true';
     const umbral = parseFloat(req.query.umbral) || 20;
 
     // Verificar cache
-    const cacheKey = `insights_${empresaId}`;
+    const cacheKey = `insights_${empresaId}_${context}`;
     const cached = insightsCache.get(cacheKey);
     
     if (!skipCache && cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
@@ -70,6 +71,28 @@ router.get('/insights', async (req, res) => {
       return tipoMap[tipoBackend] || 'oportunidad';
     };
 
+    // Mapear cada tipo de insight a su contexto de negocio
+    const mapContextoInsight = (tipoBackend, category) => {
+      const contexts = [];
+      
+      // Tesorería: flujo de caja, pagos, cobros
+      if (['cxp_vencidas', 'cxc_vencidas', 'deterioro_flujo_caja', 'transaccion_fin_semana'].includes(tipoBackend)) {
+        contexts.push('tesoreria');
+      }
+      
+      // Contabilidad: gastos, márgenes, transacciones, auditoría
+      if (['margen_decreciente', 'gasto_anormal', 'gasto_reducido', 'gasto_inusual_alto', 'variacion_umbral', 'transaccion_anomala'].includes(tipoBackend)) {
+        contexts.push('contabilidad');
+      }
+      
+      // Análisis: clientes, proyecciones, tendencias, comparativas
+      if (['cliente_en_riesgo', 'cliente_crecimiento', 'tendencia_negativa_cliente', 'proyeccion_variacion', 'caida_ingresos_brusca', 'aumento_ingresos_brusco', 'tendencia_ingresos_decreciente'].includes(tipoBackend)) {
+        contexts.push('analisis');
+      }
+      
+      return contexts.length > 0 ? contexts : ['general'];
+    };
+
     const combinedInsights = [
       ...insightsResult.insights.map(i => ({
         id: `insight_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -80,6 +103,7 @@ router.get('/insights', async (req, res) => {
         impact: i.monto_impacto || i.impact || 0,
         currency: i.currency || 'GTQ',
         category: i.categoria || i.category || 'general',
+        contexts: mapContextoInsight(i.tipo || i.type, i.categoria || i.category),
         action: i.accion_sugerida || i.action,
         actionLabel: i.actionLabel || 'Ver detalle',
         change: i.cambio || i.change || 0,
@@ -94,6 +118,7 @@ router.get('/insights', async (req, res) => {
         impact: a.datos?.monto_actual || a.datos?.monto_total || 0,
         currency: 'GTQ',
         category: a.categoria,
+        contexts: mapContextoInsight(a.tipo || a.categoria, a.categoria),
         action: a.accion_recomendada,
         actionLabel: 'Revisar',
         isNew: true
@@ -107,6 +132,7 @@ router.get('/insights', async (req, res) => {
         impact: a.datos?.monto_actual || a.datos?.monto_total || a.datos?.flujo_actual || 0,
         currency: 'GTQ',
         category: a.categoria,
+        contexts: mapContextoInsight(a.tipo || a.categoria, a.categoria),
         action: a.accion_recomendada,
         actionLabel: 'Revisar',
         isNew: true
@@ -117,19 +143,24 @@ router.get('/insights', async (req, res) => {
     const severidadOrder = { critical: 0, warning: 1, info: 2 };
     combinedInsights.sort((a, b) => severidadOrder[a.severity] - severidadOrder[b.severity]);
 
+    // Filtrar por contexto si se solicita
+    const filteredInsights = context === 'all' || context === 'dashboard'
+      ? combinedInsights
+      : combinedInsights.filter(i => i.contexts.includes(context) || i.contexts.includes('general'));
+
     // Calcular métricas resumen
     const metricas = {
-      total_insights: combinedInsights.length,
+      total_insights: filteredInsights.length,
       por_severidad: {
-        critical: combinedInsights.filter(i => i.severity === 'critical').length,
-        warning: combinedInsights.filter(i => i.severity === 'warning').length,
-        info: combinedInsights.filter(i => i.severity === 'info').length
+        critical: filteredInsights.filter(i => i.severity === 'critical').length,
+        warning: filteredInsights.filter(i => i.severity === 'warning').length,
+        info: filteredInsights.filter(i => i.severity === 'info').length
       },
-      por_tipo: combinedInsights.reduce((acc, i) => {
+      por_tipo: filteredInsights.reduce((acc, i) => {
         acc[i.type] = (acc[i.type] || 0) + 1;
         return acc;
       }, {}),
-      impacto_total_estimado: combinedInsights.reduce((sum, i) => sum + (i.impact || 0), 0)
+      impacto_total_estimado: filteredInsights.reduce((sum, i) => sum + (i.impact || 0), 0)
     };
 
     const responseData = {
@@ -137,20 +168,21 @@ router.get('/insights', async (req, res) => {
       timestamp: new Date().toISOString(),
       source: 'real-time',
       empresa_id: empresaId,
+      context: context,
       periodo_analisis: {
         desde: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
         hasta: new Date().toISOString().split('T')[0]
       },
       metricas_resumen: metricas,
-      insights: combinedInsights,
-      acciones_prioritarias: combinedInsights
+      insights: filteredInsights,
+      acciones_prioritarias: filteredInsights
         .filter(i => i.severity === 'critical' || i.severity === 'warning')
         .slice(0, 5)
         .map(i => i.action),
       _meta: {
         agentes_utilizados: ['AnalistaFinanciero', 'PredictorCashFlow'],
-        cache_ttl_minutos: 60,
-        parametros: { umbral }
+        cache_ttl_minutos: 5,
+        parametros: { umbral, context }
       }
     };
 

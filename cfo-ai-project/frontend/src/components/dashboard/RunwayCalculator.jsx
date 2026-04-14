@@ -25,18 +25,22 @@ export default function RunwayCalculator({
 }) {
   
   const calcularRunway = useMemo(() => {
-    const burnRate = promedioGastosMensual - promedioIngresosMensual
+    const beneficioMensual = promedioIngresosMensual - promedioGastosMensual
+    const burnRate = promedioGastosMensual - promedioIngresosMensual // Negativo si es rentable
     
-    if (burnRate <= 0) {
+    // Si es rentable (ingresos > gastos)
+    if (beneficioMensual > 0) {
       return {
         meses: Infinity,
         burnRate: 0,
+        beneficioMensual,
         estado: 'profitable',
-        mensaje: 'Empresa rentable - no hay burn rate'
+        mensaje: `Generando Q${beneficioMensual.toLocaleString()} por mes`
       }
     }
     
-    const meses = saldoActual / burnRate
+    // Si quema efectivo (gastos > ingresos)
+    const meses = saldoActual / Math.abs(beneficioMensual)
     
     let estado = 'saludable'
     if (meses < 3) estado = 'critico'
@@ -44,21 +48,22 @@ export default function RunwayCalculator({
     
     return {
       meses,
-      burnRate,
+      burnRate: Math.abs(beneficioMensual),
+      beneficioMensual: 0,
       estado,
       mensaje: `${meses.toFixed(1)} meses de operación`
     }
   }, [saldoActual, promedioIngresosMensual, promedioGastosMensual])
   
   const generarProyeccion = useMemo(() => {
-    const { burnRate, estado } = calcularRunway
+    const { beneficioMensual, estado } = calcularRunway
     const datos = []
     let saldoProyectado = saldoActual
     
-    // Si es rentable, proyectar crecimiento; si no, proyectar quema de efectivo
+    // Variación mensual: positiva si rentable, negativa si quema efectivo
     const variacionMensual = estado === 'profitable' 
-      ? Math.abs(burnRate) || (promedioIngresosMensual * 0.1) // 10% de ingresos como crecimiento por defecto
-      : -burnRate
+      ? beneficioMensual 
+      : -(calcularRunway.burnRate)
     
     for (let i = 0; i <= proyeccionMeses; i++) {
       const mes = new Date()
@@ -66,18 +71,19 @@ export default function RunwayCalculator({
       
       datos.push({
         mes: mes.toLocaleDateString('es-GT', { month: 'short', year: '2-digit' }),
-        saldo: Math.max(0, saldoProyectado),
-        esCritico: estado !== 'profitable' && saldoProyectado < Math.abs(burnRate) * 3,
-        esPeligro: estado !== 'profitable' && saldoProyectado <= 0
+        saldo: Math.max(0, Math.round(saldoProyectado)),
+        esCritico: estado !== 'profitable' && saldoProyectado < calcularRunway.burnRate * 3,
+        esPeligro: estado !== 'profitable' && saldoProyectado <= 0,
+        esCrecimiento: estado === 'profitable'
       })
       
       saldoProyectado += variacionMensual
     }
     
     return datos
-  }, [saldoActual, calcularRunway.burnRate, calcularRunway.estado, proyeccionMeses, promedioIngresosMensual])
+  }, [saldoActual, calcularRunway, proyeccionMeses])
   
-  const { meses, burnRate, estado, mensaje } = calcularRunway
+  const { meses, burnRate, beneficioMensual, estado, mensaje } = calcularRunway
   const proyeccion = generarProyeccion
   
   const configEstado = {
@@ -149,12 +155,16 @@ export default function RunwayCalculator({
           </div>
           
           <div className="p-4 rounded-lg bg-[var(--bg-secondary)]">
-            <span className="text-sm text-[var(--text-muted)]">Burn Rate Mensual</span>
+            <span className="text-sm text-[var(--text-muted)]">
+              {estado === 'profitable' ? 'Beneficio Mensual' : 'Burn Rate Mensual'}
+            </span>
             <p className="text-2xl font-bold text-[var(--text-primary)]">
-              Q{burnRate.toLocaleString()}
+              Q{(estado === 'profitable' ? beneficioMensual : burnRate).toLocaleString()}
             </p>
             <p className="text-xs text-[var(--text-muted)] mt-1">
-              {promedioGastosMensual > promedioIngresosMensual ? 'Pérdida neta' : 'Ganancia neta'}
+              {estado === 'profitable' 
+                ? 'Ingresos superan gastos' 
+                : promedioGastosMensual > promedioIngresosMensual ? 'Pérdida neta' : 'Ganancia neta'}
             </p>
           </div>
           
@@ -190,23 +200,26 @@ export default function RunwayCalculator({
         
         {/* Gráfico de Proyección */}
         <div>
-          <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3">Proyección de Efectivo</h3>
+          <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
+            {estado === 'profitable' ? 'Proyección de Crecimiento' : 'Proyección de Efectivo'}
+          </h3>
           
           <div className="h-48 flex items-end gap-1">
             {proyeccion.slice(0, 12).map((p, i) => {
               const maxSaldo = Math.max(...proyeccion.map(x => x.saldo))
               const minSaldo = Math.min(...proyeccion.map(x => x.saldo))
-              const range = maxSaldo - minSaldo || 1
-              const height = Math.max(5, ((p.saldo - minSaldo) / range) * 100)
+              const range = maxSaldo - minSaldo || maxSaldo || 1
+              const height = Math.max(5, ((p.saldo - (estado === 'profitable' ? 0 : minSaldo)) / range) * 100)
               
               return (
                 <div key={i} className="flex-1 flex flex-col items-center">
                   <div 
                     className={`w-full rounded-t transition-all ${
                       p.esPeligro ? 'bg-rose-400' : 
-                      p.esCritico ? 'bg-amber-400' : 'bg-emerald-400'
+                      p.esCritico ? 'bg-amber-400' : 
+                      p.esCrecimiento ? 'bg-emerald-500' : 'bg-emerald-400'
                     }`}
-                    style={{ height: `${height}%` }}
+                    style={{ height: `${Math.min(100, height)}%` }}
                   />
                   <span className="text-[10px] text-[var(--text-muted)] mt-1 truncate w-full text-center">
                     {p.mes}
@@ -217,15 +230,23 @@ export default function RunwayCalculator({
           </div>          
           {/* Leyenda */}
           <div className="flex items-center justify-center gap-4 mt-3 text-xs">
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" /> Saludable
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-amber-400" /> Atención
-            </span>
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full bg-rose-400" /> Crítico
-            </span>
+            {estado === 'profitable' ? (
+              <span className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500" /> Crecimiento proyectado
+              </span>
+            ) : (
+              <>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-emerald-400" /> Saludable
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-amber-400" /> Atención
+                </span>
+                <span className="flex items-center gap-1">
+                  <span className="w-2 h-2 rounded-full bg-rose-400" /> Crítico
+                </span>
+              </>
+            )}
           </div>
         </div>
         

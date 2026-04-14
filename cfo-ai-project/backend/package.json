@@ -7,6 +7,7 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "migrate": "node database/migrate.js",
+    "migrate:postgres": "node database/migrate-postgres.js",
     "seed": "node database/seed.js",
     "scheduler": "node src/scheduler/run.js",
     "scheduler:setup": "node src/scheduler/setup.js",
@@ -26,6 +27,7 @@
     "helmet": "^7.1.0",
     "morgan": "^1.10.0",
     "node-cron": "^3.0.3",
+    "pg": "^8.11.3",
     "sqlite3": "^5.1.6"
   },
   "devDependencies": {

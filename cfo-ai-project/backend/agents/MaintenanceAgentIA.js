@@ -169,8 +169,10 @@ Genera un "System Health Score".`,
         agente_nombre: this.nombre,
         agente_tipo: this.tipo,
         agente_version: this.version,
-        categoria: 'analisis_ejecutado',
-        descripcion: `Health check completado. Score: ${healthScore}/100`,
+        categoria: healthScore < 80 ? 'alerta_detectada' : 'sincronizacion_datos',
+        descripcion: healthScore < 80 
+          ? `⚠️ Health check del sistema detectó problemas. Score: ${healthScore}/100. Requiere atención técnica.`
+          : `Health check del sistema completado. Score: ${healthScore}/100`,
         detalles_json: JSON.stringify({ checks, health_score: healthScore }),
         resultado_status: healthScore < 80 ? 'advertencia' : 'exitoso',
         duracion_ms: Date.now() - startTime

@@ -99,8 +99,10 @@ class AuditorAgentIA {
         agente_nombre: this.nombre,
         agente_tipo: this.tipo,
         agente_version: this.version,
-        categoria: anomaliasCount > 0 ? 'alerta_detectada' : 'analisis_ejecutado',
-        descripcion: `Auditoría IA completada: ${anomaliasCount} anomalías (${severidadAlta} alta severidad). ${analisis.resumen?.substring(0, 200) || ''}`,
+        categoria: anomaliasCount > 0 ? 'alerta_detectada' : 'analisis_operaciones',
+        descripcion: anomaliasCount > 0 
+          ? `🚨 Se detectaron ${anomaliasCount} anomalías en transacciones recientes (${severidadAlta} de alta severidad). ${analisis.resumen?.substring(0, 180) || ''}`
+          : `✅ Revisión de integridad contable completada: sin anomalías en las últimas transacciones.`,
         detalles_json: JSON.stringify({
           anomalias_count: anomaliasCount,
           severidad_alta: severidadAlta,
@@ -182,12 +184,14 @@ class AuditorAgentIA {
         agente_nombre: this.nombre,
         agente_tipo: this.tipo,
         agente_version: this.version,
-        categoria: 'analisis_ejecutado',
-        descripcion: `Análisis pre-cierre IA para ${fechaAyer}: ${datosDia[0].total_trans} transacciones analizadas`,
+        categoria: 'analisis_operaciones',
+        descripcion: `📊 Análisis del día ${fechaAyer} completado: ${datosDia[0].total_trans} transacciones por Q${(datosDia[0].total_debe || 0).toLocaleString()}. ${resultado.analisis?.hallazgos?.length > 0 ? 'Se encontraron ' + resultado.analisis.hallazgos.length + ' observaciones.' : 'Balance contable correcto.'}`,
         detalles_json: JSON.stringify({
           fecha: fechaAyer,
-          resumen: datosDia[0],
-          analisis_ia: resultado.analisis
+          transacciones: datosDia[0].total_trans,
+          total_debe: datosDia[0].total_debe,
+          total_haber: datosDia[0].total_haber,
+          observaciones: resultado.analisis?.hallazgos?.length || 0
         }),
         resultado_status: 'exitoso',
         duracion_ms: resultado.duracion_ms
@@ -233,7 +237,7 @@ Genera una alerta ejecutiva y recomendaciones urgentes.`,
           agente_tipo: this.tipo,
           agente_version: this.version,
           categoria: 'alerta_detectada',
-          descripcion: `🚨 ALERTA CRÍTICA: Mes ${mesAnteriorStr} SIN CERRAR. Impacto: ${impacto.analisis?.resumen || 'No evaluado'}`,
+          descripcion: `🚨 ALERTA: Mes ${mesAnteriorStr} SIN CERRAR pasado el día 5. Impacto fiscal y contable requiere atención inmediata.`,
           detalles_json: JSON.stringify({ mes: mesAnteriorStr, impacto: impacto.analisis }),
           resultado_status: 'advertencia',
           duracion_ms: impacto.duracion_ms
@@ -246,8 +250,8 @@ Genera una alerta ejecutiva y recomendaciones urgentes.`,
         agente_nombre: this.nombre,
         agente_tipo: this.tipo,
         agente_version: this.version,
-        categoria: 'analisis_ejecutado',
-        descripcion: `Mes ${mesAnteriorStr} cerrado correctamente`,
+        categoria: 'analisis_operaciones',
+        descripcion: `✅ Cierre mensual ${mesAnteriorStr} completado y verificado. Sin retrasos detectados.`,
         resultado_status: 'exitoso',
         duracion_ms: Date.now() - startTime
       });

@@ -4,6 +4,7 @@
  * Da recomendaciones basadas en datos
  */
 const BaseAgent = require('../BaseAgent');
+const { logAgentActivity } = require('../../services/agentLogger');
 
 class AnalistaFinanciero extends BaseAgent {
   constructor() {
@@ -104,6 +105,19 @@ class AnalistaFinanciero extends BaseAgent {
     analysis += `📋 **CxC pendientes:** ${ratios.cxcPendientes} facturas\n`;
     analysis += `📋 **CxP pendientes:** ${ratios.cxpPendientes} pagos`;
 
+    await logAgentActivity({
+      agente_nombre: this.name,
+      agente_tipo: this.role,
+      agente_version: '1.0.0',
+      categoria: 'analisis_liquidez',
+      descripcion: `💧 Análisis de liquidez completado: ratio ${ratios.ratioLiquidez !== 'N/A' ? ratios.ratioLiquidez : 'N/A'}. Capital de trabajo GTQ ${ratios.capitalTrabajo.toLocaleString()}.`,
+      detalles_json: JSON.stringify({ ratios, empresa_id: empresaId }),
+      entidad_tipo: 'empresa',
+      entidad_id: empresaId,
+      resultado_status: ratios.ratioLiquidez !== 'N/A' && parseFloat(ratios.ratioLiquidez) < 1 ? 'advertencia' : 'exitoso',
+      duracion_ms: 0
+    });
+
     return this.formatResponse(analysis, 'analysis', ratios, recommendations);
   }
 
@@ -152,6 +166,19 @@ class AnalistaFinanciero extends BaseAgent {
       recommendations.push('Evaluar precios de productos/servicios');
     }
 
+    await logAgentActivity({
+      agente_nombre: this.name,
+      agente_tipo: this.role,
+      agente_version: '1.0.0',
+      categoria: 'analisis_rentabilidad',
+      descripcion: `📈 Análisis de rentabilidad del mes: margen ${margen}% (${utilidad >= 0 ? 'utilidad' : 'pérdida'} de GTQ ${Math.abs(utilidad).toLocaleString()}).`,
+      detalles_json: JSON.stringify({ ventas: totalVentas, gastos: totalGastos, margen, empresa_id: empresaId }),
+      entidad_tipo: 'empresa',
+      entidad_id: empresaId,
+      resultado_status: parseFloat(margen) < 10 ? 'advertencia' : 'exitoso',
+      duracion_ms: 0
+    });
+
     return this.formatResponse(analysis, 'analysis', data, recommendations);
   }
 
@@ -171,6 +198,19 @@ class AnalistaFinanciero extends BaseAgent {
       `📤 Cuentas por Pagar: GTQ ${(kpis?.cxp_total || 0).toLocaleString()}\n` +
       `📋 Obligaciones SAT Pendientes: ${kpis?.obligaciones_pendientes || 0}\n\n` +
       `Posición neta: GTQ ${((kpis?.posicion_bancaria || 0) + (kpis?.cxc_total || 0) - (kpis?.cxp_total || 0)).toLocaleString()}`;
+
+    await logAgentActivity({
+      agente_nombre: this.name,
+      agente_tipo: this.role,
+      agente_version: '1.0.0',
+      categoria: 'analisis_operaciones',
+      descripcion: `📊 KPIs actualizados: efectivo GTQ ${(kpis?.posicion_bancaria || 0).toLocaleString()}, CxC GTQ ${(kpis?.cxc_total || 0).toLocaleString()}, CxP GTQ ${(kpis?.cxp_total || 0).toLocaleString()}.`,
+      detalles_json: JSON.stringify({ kpis, empresa_id: empresaId }),
+      entidad_tipo: 'empresa',
+      entidad_id: empresaId,
+      resultado_status: 'exitoso',
+      duracion_ms: 0
+    });
 
     return this.formatResponse(analysis, 'analysis', kpis);
   }
@@ -479,7 +519,6 @@ class AnalistaFinanciero extends BaseAgent {
       }
 
     } catch (error) {
-      console.error('[AnalistaFinanciero] Error en generateInsights:', error);
       insights.push({
         tipo: 'error',
         severidad: 'alta',
@@ -489,6 +528,30 @@ class AnalistaFinanciero extends BaseAgent {
         accion_sugerida: 'Contactar soporte técnico si el problema persiste.'
       });
     }
+
+    // Log de actividad con resumen de negocio
+    const criticos = insights.filter(i => i.severidad === 'alta').length;
+    const medios = insights.filter(i => i.severidad === 'media').length;
+    
+    await logAgentActivity({
+      agente_nombre: this.name,
+      agente_tipo: this.role,
+      agente_version: '1.0.0',
+      categoria: insights.length > 0 ? 'analisis_ejecutado' : 'analisis_operaciones',
+      descripcion: insights.length > 0 
+        ? `📊 Análisis financiero completado: ${insights.length} insights generados (${criticos} críticos, ${medios} medios).`
+        : `✅ Análisis financiero completado: sin hallazgos significativos.`,
+      detalles_json: JSON.stringify({
+        total_insights: insights.length,
+        criticos,
+        medios,
+        empresa_id: empresaId
+      }),
+      entidad_tipo: 'empresa',
+      entidad_id: empresaId,
+      resultado_status: criticos > 0 ? 'advertencia' : 'exitoso',
+      duracion_ms: 0
+    });
 
     return {
       agent: this.name,

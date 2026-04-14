@@ -98,9 +98,14 @@ class ConciliadorAgentIA {
         agente_nombre: this.nombre,
         agente_tipo: this.tipo,
         agente_version: this.version,
-        categoria: 'analisis_ejecutado',
-        descripcion: `Analizadas ${conciliaciones.length} conciliaciones: ${totalDiferencias} diferencias detectadas`,
-        detalles_json: JSON.stringify({ conciliaciones: resultados }),
+        categoria: 'conciliacion_bancaria',
+        descripcion: totalDiferencias > 0 
+          ? `🏦 Conciliación bancaria: ${conciliaciones.length} cuentas analizadas con ${totalDiferencias} diferencias detectadas entre libro y banco.`
+          : `✅ Conciliación bancaria: ${conciliaciones.length} cuentas conciliadas sin diferencias. Tesorería sincronizada.`,
+        detalles_json: JSON.stringify({
+          cuentas_analizadas: conciliaciones.length,
+          diferencias: totalDiferencias
+        }),
         resultado_status: totalDiferencias > 0 ? 'advertencia' : 'exitoso',
         duracion_ms: Date.now() - startTime
       });
@@ -156,10 +161,10 @@ Genera alertas priorizadas y recomendaciones de acción urgente.`,
           agente_tipo: this.tipo,
           agente_version: this.version,
           categoria: 'alerta_detectada',
-          descripcion: `🚨 ${viejas.length} conciliaciones pendientes por más de 10 días`,
-          detalles_json: JSON.stringify({ 
-            count: viejas.length, 
-            impacto: impacto.analisis 
+          descripcion: `🚨 ${viejas.length} conciliaciones bancarias llevan más de 10 días sin cerrar. Riesgo de discrepancias no detectadas en tesorería.`,
+          detalles_json: JSON.stringify({
+            count: viejas.length,
+            bancos_afectados: viejas.map(v => v.banco_nombre)
           }),
           resultado_status: 'advertencia',
           duracion_ms: impacto.duracion_ms
@@ -171,8 +176,8 @@ Genera alertas priorizadas y recomendaciones de acción urgente.`,
           agente_nombre: this.nombre,
           agente_tipo: this.tipo,
           agente_version: this.version,
-          categoria: 'analisis_ejecutado',
-          descripcion: 'Todas las conciliaciones están al día',
+          categoria: 'conciliacion_bancaria',
+          descripcion: `✅ Todas las conciliaciones bancarias están al día. Sin discrepancias pendientes en cuentas.`,
           resultado_status: 'exitoso',
           duracion_ms: Date.now() - startTime
         });
@@ -250,9 +255,14 @@ Devuelve máximo 20 sugerencias.`,
         agente_nombre: this.nombre,
         agente_tipo: this.tipo,
         agente_version: this.version,
-        categoria: 'sincronizacion_datos',
-        descripcion: `Generadas ${sugerencias.length} sugerencias de emparejamiento`,
-        detalles_json: JSON.stringify({ sugerencias_count: sugerencias.length }),
+        categoria: 'conciliacion_bancaria',
+        descripcion: sugerencias.length > 0 
+          ? `💡 IA identificó ${sugerencias.length} posibles emparejamientos automáticos entre movimientos bancarios y registros contables.`
+          : `🔍 Revisión de emparejamientos completada: sin sugerencias automáticas pendientes.`,
+        detalles_json: JSON.stringify({
+          sugerencias_generadas: sugerencias.length,
+          movimientos_analizados: movimientos.length
+        }),
         resultado_status: 'exitoso',
         duracion_ms: analisis.duracion_ms
       });

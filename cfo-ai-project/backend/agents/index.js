@@ -45,16 +45,7 @@ class AgentOrchestratorIA {
       for (const [nombre, agente] of Object.entries(this.agentes)) {
         console.log(`\n🚀 Iniciando ${agente.nombre}...`);
         agente.iniciarScheduler();
-        
-        await logAgentActivity({
-          agente_nombre: agente.nombre,
-          agente_tipo: agente.tipo,
-          agente_version: agente.version,
-          categoria: 'sincronizacion_datos',
-          descripcion: `Agente de IA iniciado correctamente`,
-          resultado_status: 'exitoso',
-          duracion_ms: 0
-        });
+        // No loggear inicio de agente - es ruido técnico
       }
 
       this.estado = 'activo';
@@ -222,19 +213,19 @@ class AgentOrchestratorIA {
       );
       
       console.log(`✅ LLM responde: ${testResponse.substring(0, 50)}...`);
+      // No loggear health check exitoso - es ruido técnico
 
+    } catch (error) {
+      console.error('❌ Health check falló:', error.message);
       await logAgentActivity({
         agente_nombre: 'Orchestrator IA',
         agente_tipo: 'orchestrator',
         agente_version: '2.0.0',
-        categoria: 'analisis_ejecutado',
-        descripcion: 'Health check inicial completado - Sistema OK',
-        resultado_status: 'exitoso',
+        categoria: 'error_sistema',
+        descripcion: `Health check inicial falló: ${error.message}`,
+        resultado_status: 'error',
         duracion_ms: 0
       });
-
-    } catch (error) {
-      console.error('❌ Health check falló:', error.message);
       throw error;
     }
   }

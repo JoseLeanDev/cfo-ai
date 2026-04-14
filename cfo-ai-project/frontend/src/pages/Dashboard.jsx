@@ -42,7 +42,7 @@ export default function Dashboard() {
   const [animatedValues, setAnimatedValues] = useState({})
 
   const kpis = dashboardData?.data?.kpis || {}
-  const insights = insightsData?.data?.insights || []
+  const insights = insightsData?.insights || []
 
   // Animate numbers
   useEffect(() => {
@@ -74,8 +74,9 @@ export default function Dashboard() {
   const getInsightStyles = (tipo) => {
     switch (tipo) {
       case 'oportunidad': return 'border-l-[var(--success)] bg-[var(--success-bg)]'
-      case 'riesgo': return 'border-l-[var(--warning)] bg-[var(--warning-bg)]'
-      case 'critico': return 'border-l-[var(--danger)] bg-[var(--danger-bg)]'
+      case 'alerta': return 'border-l-[var(--warning)] bg-[var(--warning-bg)]'
+      case 'gasto': return 'border-l-[var(--danger)] bg-[var(--danger-bg)]'
+      case 'ingreso': return 'border-l-[var(--success)] bg-[var(--success-bg)]'
       default: return 'border-l-[var(--accent-blue)] bg-[var(--info-bg)]'
     }
   }
@@ -92,10 +93,10 @@ export default function Dashboard() {
         </div>
         
         <div className="flex items-center gap-3">
-          {insights.filter(i => i.tipo === 'critico').length > 0 && (
+          {insights.filter(i => i.severity === 'critical').length > 0 && (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--danger-bg)]">
               <ExclamationTriangleIcon className="w-4 h-4 text-[var(--danger)]" />
-              <span className="text-xs font-medium text-[var(--danger)]">{insights.filter(i => i.tipo === 'critico').length} crítico(s)</span>
+              <span className="text-xs font-medium text-[var(--danger)]">{insights.filter(i => i.severity === 'critical').length} crítico(s)</span>
             </div>
           )}
           
@@ -205,18 +206,18 @@ export default function Dashboard() {
                 {insights.slice(0, 4).map((insight, idx) => (
                   <div
                     key={idx}
-                    className={`p-4 rounded-lg border-l-4 ${getInsightStyles(insight.tipo)}`}
+                    className={`p-4 rounded-lg border-l-4 ${getInsightStyles(insight.type)}`}
                   >
                     <div className="flex items-start gap-3">
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1">
-                          <span className={`badge-${insight.prioridad === 'alta' ? 'danger' : insight.prioridad === 'media' ? 'warning' : 'info'}`}>
-                            {insight.prioridad}
+                          <span className={`badge-${insight.severity === 'critical' ? 'danger' : insight.severity === 'warning' ? 'warning' : 'info'}`}>
+                            {insight.severity === 'critical' ? 'alta' : insight.severity === 'warning' ? 'media' : 'baja'}
                           </span>
-                          <span className="text-xs text-[var(--text-muted)] uppercase">{insight.categoria}</span>
+                          <span className="text-xs text-[var(--text-muted)] uppercase">{insight.category}</span>
                         </div>
-                        <h3 className="font-medium text-[var(--text-primary)] text-sm">{insight.titulo}</h3>
-                        <p className="text-xs text-[var(--text-secondary)] mt-1">{insight.descripcion}</p>
+                        <h3 className="font-medium text-[var(--text-primary)] text-sm">{insight.title}</h3>
+                        <p className="text-xs text-[var(--text-secondary)] mt-1">{insight.description}</p>
                       </div>
                     </div>
                   </div>

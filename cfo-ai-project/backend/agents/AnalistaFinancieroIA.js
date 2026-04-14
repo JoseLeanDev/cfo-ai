@@ -61,12 +61,12 @@ class AnalistaFinancieroIA {
         agente_nombre: this.nombre,
         agente_tipo: this.tipo,
         agente_version: this.version,
-        categoria: 'reporte_generado',
-        descripcion: `Briefing matutino generado: ${analisis.insights?.length || 0} insights. ${analisis.brief_ejecutivo?.substring(0, 150) || ''}`,
+        categoria: 'reporte_ejecutivo',
+        descripcion: `📋 Briefing ejecutivo del día generado con ${analisis.insights?.length || 0} insights. ${alertasPendientes.length > 0 ? alertasPendientes.length + ' alertas financieras requieren atención.' : 'Sin alertas críticas pendientes.'}`,
         detalles_json: JSON.stringify({
           insights_count: analisis.insights?.length,
           alertas_activas: alertasPendientes.length,
-          tokens_usados: resultado.tokens_usados
+          resumen: analisis.brief_ejecutivo?.substring(0, 200)
         }),
         resultado_status: 'exitoso',
         duracion_ms: resultado.duracion_ms
@@ -138,9 +138,15 @@ Genera un "estado del sistema" ejecutivo.`,
         agente_nombre: this.nombre,
         agente_tipo: this.tipo,
         agente_version: this.version,
-        categoria: 'sincronizacion_datos',
-        descripcion: `Snapshot diario completado: ${snapshot.transacciones_hoy} transacciones, ${snapshot.alertas_activas} alertas activas`,
-        detalles_json: JSON.stringify({ snapshot, analisis: analisis.analisis }),
+        categoria: 'analisis_liquidez',
+        descripcion: `📊 Posición diaria actualizada: ${snapshot.transacciones_hoy} transacciones procesadas. ${snapshot.conciliaciones_pendientes > 0 ? snapshot.conciliaciones_pendientes + ' conciliaciones bancarias pendientes.' : 'Tesorería al día.'}`,
+        detalles_json: JSON.stringify({
+          transacciones: snapshot.transacciones_hoy,
+          total_debe: snapshot.total_debe,
+          total_haber: snapshot.total_haber,
+          alertas_activas: snapshot.alertas_activas,
+          conciliaciones_pendientes: snapshot.conciliaciones_pendientes
+        }),
         resultado_status: 'exitoso',
         duracion_ms: analisis.duracion_ms
       });
@@ -200,11 +206,11 @@ Genera un "estado del sistema" ejecutivo.`,
         agente_nombre: this.nombre,
         agente_tipo: this.tipo,
         agente_version: this.version,
-        categoria: 'reporte_generado',
-        descripcion: 'Reporte semanal generado con IA',
+        categoria: 'reporte_ejecutivo',
+        descripcion: `📈 Reporte semanal ejecutivo generado: análisis de ${datosSemana.length} días de operación. Volumen en cuentas principales evaluado.`,
         detalles_json: JSON.stringify({
           dias_analizados: datosSemana.length,
-          analisis: analisis.analisis
+          top_cuentas: topCuentas.slice(0, 3).map(c => c.nombre)
         }),
         resultado_status: 'exitoso',
         duracion_ms: analisis.duracion_ms
@@ -254,9 +260,9 @@ Genera un "estado del sistema" ejecutivo.`,
         agente_nombre: this.nombre,
         agente_tipo: this.tipo,
         agente_version: this.version,
-        categoria: 'reporte_generado',
-        descripcion: 'Proyección mensual generada con IA',
-        detalles_json: JSON.stringify({ proyeccion: proyeccion.analisis }),
+        categoria: 'analisis_liquidez',
+        descripcion: `🔮 Proyección financiera mensual generada a partir de ${historico.length} meses de histórico. Tendencias de liquidez y riesgos identificados.`,
+        detalles_json: JSON.stringify({ meses_historico: historico.length }),
         resultado_status: 'exitoso',
         duracion_ms: proyeccion.duracion_ms
       });

@@ -23,7 +23,7 @@ class OrchestratorAgent extends BaseAgent {
    */
   registerAgent(agentInstance) {
     this.agents.set(agentInstance.name, agentInstance);
-    console.log(`[Orchestrator] Agente registrado: ${agentInstance.name}`);
+    // Silencio: el registro de agentes es ruido técnico, no valor de negocio
   }
 
   /**
@@ -87,13 +87,11 @@ class OrchestratorAgent extends BaseAgent {
     try {
       // 1. Determinar qué agentes deben responder
       const targetAgents = await this.routeQuery(query, context);
-      console.log(`[Orchestrator] Routing to: ${targetAgents.join(', ')}`);
 
       // 2. Ejecutar agentes en paralelo
       const agentPromises = targetAgents.map(async (agentName) => {
         const agent = this.agents.get(agentName);
         if (!agent) {
-          console.warn(`[Orchestrator] Agente no encontrado: ${agentName}`);
           return null;
         }
 
@@ -104,7 +102,6 @@ class OrchestratorAgent extends BaseAgent {
           );
           return { agent: agentName, response };
         } catch (error) {
-          console.error(`[Orchestrator] Error en ${agentName}:`, error);
           return { 
             agent: agentName, 
             response: {
@@ -128,7 +125,6 @@ class OrchestratorAgent extends BaseAgent {
       return synthesizedResponse;
 
     } catch (error) {
-      console.error('[Orchestrator] Error:', error);
       return this.formatResponse(
         'Lo siento, hubo un error procesando tu consulta. Por favor intenta de nuevo.',
         'error'

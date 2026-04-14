@@ -46,24 +46,48 @@ router.get('/insights', async (req, res) => {
     ]);
 
     // Combinar insights financieros con anomalías de cash flow
+    // Mapear tipos del backend a tipos del frontend
+    const mapTipoInsight = (tipoBackend) => {
+      const tipoMap = {
+        'gasto_anormal': 'gasto',
+        'gasto_reducido': 'gasto',
+        'gasto_inusual_alto': 'gasto',
+        'cliente_en_riesgo': 'alerta',
+        'cliente_crecimiento': 'ingreso',
+        'tendencia_negativa_cliente': 'alerta',
+        'transaccion_anomala': 'alerta',
+        'caida_ingresos_brusca': 'alerta',
+        'aumento_ingresos_brusco': 'ingreso',
+        'tendencia_ingresos_decreciente': 'alerta',
+        'deterioro_flujo_caja': 'alerta',
+        'proyeccion_variacion': 'oportunidad',
+        'margen_decreciente': 'alerta',
+        'cxp_vencidas': 'alerta',
+        'cxc_vencidas': 'alerta',
+        'variacion_umbral': 'alerta',
+        'transaccion_fin_semana': 'alerta'
+      };
+      return tipoMap[tipoBackend] || 'oportunidad';
+    };
+
     const combinedInsights = [
       ...insightsResult.insights.map(i => ({
         id: `insight_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-        type: i.type || 'oportunidad',
-        severity: i.severity || 'info',
-        title: i.title || i.titulo || 'Insight',
-        description: i.description || i.descripcion || '',
-        impact: i.impact || i.monto_impacto || 0,
+        type: mapTipoInsight(i.tipo || i.type),
+        severity: i.severidad === 'alta' ? 'critical' : i.severidad === 'media' ? 'warning' : 'info',
+        title: i.titulo || i.title || 'Insight',
+        description: i.descripcion || i.description || '',
+        impact: i.monto_impacto || i.impact || 0,
         currency: i.currency || 'GTQ',
-        category: i.category || i.categoria || 'general',
-        action: i.action || i.accion_sugerida,
+        category: i.categoria || i.category || 'general',
+        action: i.accion_sugerida || i.action,
         actionLabel: i.actionLabel || 'Ver detalle',
-        change: i.change || i.cambio || 0,
+        change: i.cambio || i.change || 0,
         isNew: true
       })),
       ...anomaliesResult.anomalias.map((a, idx) => ({
         id: `anomalia_${Date.now()}_${idx}`,
-        type: 'alerta',
+        type: mapTipoInsight(a.tipo || a.categoria),
         severity: a.severidad === 'critica' ? 'critical' : a.severidad === 'alta' ? 'warning' : 'info',
         title: a.titulo,
         description: a.descripcion,
@@ -76,7 +100,7 @@ router.get('/insights', async (req, res) => {
       })),
       ...anomaliesResult.alertas.map((a, idx) => ({
         id: `alerta_${Date.now()}_${idx}`,
-        type: 'alerta',
+        type: mapTipoInsight(a.tipo || a.categoria),
         severity: a.severidad === 'critica' ? 'critical' : a.severidad === 'alta' ? 'warning' : 'info',
         title: a.titulo,
         description: a.descripcion,

@@ -1,4 +1,5 @@
 import { useInsights, useInsightsHistorico } from '../../hooks/useCfoData'
+import { endpoints } from '../../services/cfoApi'
 import { 
   SparklesIcon,
   ArrowTrendingUpIcon,
@@ -89,6 +90,31 @@ export default function PageInsights({
     info: { badge: 'bg-blue-100 text-blue-700' },
     warning: { badge: 'bg-amber-100 text-amber-700' },
     critical: { badge: 'bg-rose-100 text-rose-700' }
+  }
+
+  // Manejar acción de insight y registrar en log
+  const handleInsightAction = async (insight) => {
+    try {
+      await endpoints.agents.createLog({
+        agente_nombre: 'Usuario',
+        agente_tipo: 'user_action',
+        categoria: 'accion_insight',
+        descripcion: `Usuario ejecutó acción sobre insight: "${insight.title}". Acción: ${insight.action || 'Ver detalle'}`,
+        detalles_json: JSON.stringify({
+          insight_id: insight.id,
+          insight_type: insight.type,
+          insight_severity: insight.severity,
+          insight_title: insight.title,
+          action_taken: insight.action || 'Ver detalle',
+          context: context,
+          timestamp: new Date().toISOString()
+        }),
+        resultado_status: 'exitoso'
+      })
+    } catch (error) {
+      // Silenciar error de logging para no interrumpir UX
+      console.warn('Error al registrar acción de insight:', error)
+    }
   }
   
   if (isLoading) {
@@ -187,6 +213,16 @@ export default function PageInsights({
                         }).format(Math.abs(insight.impact))}
                       </span>
                     </div>
+                  )}
+
+                  {/* Acción sugerida */}
+                  {insight.action && (
+                    <button
+                      onClick={() => handleInsightAction(insight)}
+                      className="mt-2 text-xs font-medium text-primary-600 hover:text-primary-700 px-2 py-1 rounded hover:bg-primary-50 transition-colors"
+                    >
+                      {insight.actionLabel || 'Ver acción'} →
+                    </button>
                   )}
                 </div>
               </div>

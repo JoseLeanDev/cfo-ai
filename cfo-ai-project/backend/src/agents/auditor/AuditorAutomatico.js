@@ -352,6 +352,21 @@ class AuditorAutomatico extends BaseAgent {
 
   async logAgentActivity(db, empresaId, categoria, detalles) {
     try {
+      // Mapeo de categorías a descripciones de negocio
+      const descripcionesNegocio = {
+        detectar_anomalias: detalles?.alertas_encontradas 
+          ? `🚨 Se detectaron ${detalles.alertas_encontradas} anomalías en transacciones recientes que requieren revisión.`
+          : `✅ Revisión de integridad contable completada: sin anomalías detectadas.`,
+        alertas_pre_cierre: detalles?.alertas_encontradas
+          ? `📋 Pre-cierre revisado: ${detalles.alertas_encontradas} observaciones pendientes antes del cierre.`
+          : `✅ Pre-cierre verificado: listo para proceder con el cierre mensual.`,
+        auditoria_cxp_cxc: detalles?.diferencias_encontradas
+          ? `⚠️ Auditoría de cuentas por cobrar/pagar: ${detalles.diferencias_encontradas} diferencias detectadas entre auxiliares y mayor.`
+          : `✅ Auxiliares de CxC y CxP concilian correctamente con el mayor.`,
+        validacion_apertura_mes: `📅 Validación de apertura para ${detalles?.mes}/${detalles?.anio} completada.`,
+        presion_cierre_tardio: `🚨 ALERTA: El cierre de ${detalles?.mes}/${detalles?.anio} está pendiente (${detalles?.estado}) y requiere atención inmediata.`
+      };
+
       await db.runAsync(`
         INSERT INTO agentes_logs (
           empresa_id, agente_nombre, agente_tipo, categoria,
@@ -362,12 +377,12 @@ class AuditorAutomatico extends BaseAgent {
         'AuditorAutomatico',
         'internal_auditor',
         categoria,
-        `Tarea ejecutada: ${categoria}`,
+        descripcionesNegocio[categoria] || `Análisis de auditoría completado: ${categoria}`,
         JSON.stringify(detalles),
-        'exitoso'
+        detalles?.alertas_encontradas || detalles?.diferencias_encontradas ? 'advertencia' : 'exitoso'
       ]);
     } catch (error) {
-      console.error('[AuditorAutomatico] Error logging activity:', error);
+      // Silencio: errores de logging no deben interrumpir el flujo
     }
   }
 

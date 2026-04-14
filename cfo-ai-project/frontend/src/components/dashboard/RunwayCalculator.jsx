@@ -91,7 +91,7 @@ export default function RunwayCalculator({
     return datos
   }, [saldoActual, calcularRunway, proyeccionMeses])
   
-  const { meses, burnRate, beneficioMensual, estado, mensaje, mesesAcumulandoDoble } = calcularRunway
+  const { meses, burnRate, beneficioMensual, estado, mensaje } = calcularRunway
   const proyeccion = generarProyeccion
   
   const configEstado = {
@@ -155,18 +155,16 @@ export default function RunwayCalculator({
         {/* KPI Principal */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className={`p-4 rounded-lg ${config.bg} border ${config.border}`}>
-            <span className="text-sm text-[var(--text-muted)]">
-              {estado === 'profitable' ? 'Crecimiento' : 'Runway'}
-            </span>
+            <span className="text-sm text-[var(--text-muted)]">Runway</span>
             <p className={`text-3xl font-bold ${config.color}`}>
               {estado === 'profitable' 
-                ? 'Sin límite' 
+                ? 'Sin riesgo' 
                 : `${meses.toFixed(1)} meses`}
             </p>
             <p className="text-xs text-[var(--text-muted)] mt-1">
-              {estado === 'profitable' && mesesAcumulandoDoble 
-                ? `Duplicas efectivo en ${mesesAcumulandoDoble} meses` 
-                : mensaje}
+              {estado === 'profitable' 
+                ? `Acumulando Q${beneficioMensual.toLocaleString()} por mes` 
+                : `${meses.toFixed(1)} meses de operación con el efectivo actual`}
             </p>
           </div>
           
@@ -217,7 +215,7 @@ export default function RunwayCalculator({
         {/* Gráfico de Proyección */}
         <div>
           <h3 className="text-sm font-medium text-[var(--text-secondary)] mb-3">
-            {estado === 'profitable' ? 'Proyección de Crecimiento' : 'Proyección de Efectivo'}
+            Proyección de Efectivo (12 meses)
           </h3>
           
           <div className="h-48 flex items-end gap-1 px-2">
@@ -255,7 +253,7 @@ export default function RunwayCalculator({
           <div className="flex items-center justify-center gap-4 mt-3 text-xs">
             {estado === 'profitable' ? (
               <span className="flex items-center gap-1">
-                <span className="w-2 h-2 rounded-full bg-emerald-500" /> Crecimiento proyectado
+                <span className="w-2 h-2 rounded-full bg-emerald-500" /> Acumulación de efectivo
               </span>
             ) : (
               <>

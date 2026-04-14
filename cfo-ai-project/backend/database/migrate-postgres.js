@@ -76,12 +76,11 @@ CREATE TABLE IF NOT EXISTS cuentas_bancarias (
   empresa_id INTEGER DEFAULT 1,
   cuenta_contable_id INTEGER REFERENCES cuentas_contables(id),
   banco VARCHAR(255) NOT NULL,
+  tipo VARCHAR(50), -- corriente, ahorro, etc
   numero_cuenta VARCHAR(100),
-  tipo_cuenta VARCHAR(50), -- corriente, ahorro, etc
+  saldo DECIMAL(15,2) DEFAULT 0,
   moneda VARCHAR(10) DEFAULT 'GTQ',
-  saldo_banco DECIMAL(15,2) DEFAULT 0,
-  saldo_contable DECIMAL(15,2) DEFAULT 0,
-  diferencia DECIMAL(15,2) DEFAULT 0,
+  ultima_conciliacion DATE,
   activa BOOLEAN DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT NOW(),
   updated_at TIMESTAMP DEFAULT NOW()

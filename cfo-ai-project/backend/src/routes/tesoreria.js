@@ -71,13 +71,13 @@ router.get('/cxc', async (req, res) => {
   try {
     const empresaId = req.query.empresa_id || 1;
     
-    // Para PostgreSQL: usar NULLIF para manejar NULLs y evitar comparación booleana
+    // Para PostgreSQL: usar sintaxis compatible - evitar = 0 en CASE
     const distribucion = await db.getAsync(`
       SELECT 
-        SUM(CASE WHEN COALESCE(dias_atraso, 0) = 0 THEN monto_total ELSE 0 END) as al_corriente,
-        SUM(CASE WHEN COALESCE(dias_atraso, 0) > 0 AND COALESCE(dias_atraso, 0) <= 30 THEN monto_total ELSE 0 END) as _30_dias,
-        SUM(CASE WHEN COALESCE(dias_atraso, 0) > 30 AND COALESCE(dias_atraso, 0) <= 60 THEN monto_total ELSE 0 END) as _60_dias,
-        SUM(CASE WHEN COALESCE(dias_atraso, 0) > 60 THEN monto_total ELSE 0 END) as _90_dias,
+        SUM(CASE WHEN dias_atraso IS NULL OR dias_atraso <= 0 THEN monto_total ELSE 0 END) as al_corriente,
+        SUM(CASE WHEN dias_atraso > 0 AND dias_atraso <= 30 THEN monto_total ELSE 0 END) as _30_dias,
+        SUM(CASE WHEN dias_atraso > 30 AND dias_atraso <= 60 THEN monto_total ELSE 0 END) as _60_dias,
+        SUM(CASE WHEN dias_atraso > 60 THEN monto_total ELSE 0 END) as _90_dias,
         SUM(monto_total) as total
       FROM cuentas_cobrar 
       WHERE empresa_id = ? AND estado ${isPostgres ? "<> 'cobrada'" : "!= 'cobrada'"}
@@ -93,7 +93,7 @@ router.get('/cxc', async (req, res) => {
     `, [empresaId]);
 
     const promedioDias = await db.getAsync(`
-      SELECT AVG(COALESCE(dias_atraso, 0)) as promedio
+      SELECT AVG(CASE WHEN dias_atraso IS NULL THEN 0 ELSE dias_atraso END) as promedio
       FROM cuentas_cobrar 
       WHERE empresa_id = ? AND estado ${isPostgres ? "<> 'cobrada'" : "!= 'cobrada'"}
     `, [empresaId]);

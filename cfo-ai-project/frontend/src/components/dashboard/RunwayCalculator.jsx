@@ -220,25 +220,31 @@ export default function RunwayCalculator({
             {estado === 'profitable' ? 'Proyección de Crecimiento' : 'Proyección de Efectivo'}
           </h3>
           
-          <div className="h-48 flex items-end gap-1">
+          <div className="h-48 flex items-end gap-1 px-2">
             {proyeccion.slice(0, 12).map((p, i) => {
+              // Encontrar min y max para escalar
               const maxSaldo = Math.max(...proyeccion.map(x => x.saldo))
               const minSaldo = Math.min(...proyeccion.map(x => x.saldo))
               
-              // Calcular altura: siempre como porcentaje del máximo para que se vea bien
-              const height = Math.max(10, (p.saldo / maxSaldo) * 100)
+              // Calcular altura: entre 20% y 100% del contenedor
+              // Usar escala logarítmica para que se vean mejor las diferencias
+              const ratio = maxSaldo > 0 ? p.saldo / maxSaldo : 0
+              const heightPercent = Math.max(20, Math.min(100, ratio * 100))
               
               return (
-                <div key={i} className="flex-1 flex flex-col items-center" style={{ minHeight: '20px' }}>
+                <div key={i} className="flex-1 flex flex-col items-center justify-end h-full">
                   <div 
                     className={`w-full rounded-t transition-all ${
-                      p.esPeligro ? 'bg-rose-400' : 
-                      p.esCritico ? 'bg-amber-400' : 
+                      p.esPeligro ? 'bg-rose-500' : 
+                      p.esCritico ? 'bg-amber-500' : 
                       p.esCrecimiento ? 'bg-emerald-500' : 'bg-emerald-400'
                     }`}
-                    style={{ height: `${height}%`, minHeight: '4px' }}
+                    style={{ 
+                      height: `${heightPercent}%`,
+                      minHeight: '20px'
+                    }}
                   />
-                  <span className="text-[10px] text-[var(--text-muted)] mt-1 truncate w-full text-center">
+                  <span className="text-[10px] text-[var(--text-muted)] mt-1 truncate w-full text-center leading-tight">
                     {p.mes}
                   </span>
                 </div>

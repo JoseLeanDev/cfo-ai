@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const db = require('../../database/connection');
 
+// Detectar PostgreSQL
+const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
+
 // GET /api/dashboard
 router.get('/', async (req, res) => {
   try {
@@ -14,163 +17,184 @@ router.get('/', async (req, res) => {
         SUM(CASE WHEN moneda = 'USD' THEN saldo ELSE 0 END) as total_usd,
         COUNT(*) as num_cuentas
       FROM cuentas_bancarias 
-      WHERE empresa_id = ? AND activa = 1
+      WHERE empresa_id = ? AND activa = TRUE
     `, [empresaId]);
 
-    // CxC resumen
+    // CxC resumen - usar nombres de columnas PostgreSQL
     const cxcResumen = await db.getAsync(`
       SELECT 
-        SUM(monto) as total_cxc,
-        SUM(CASE WHEN dias_atraso > 30 THEN monto ELSE 0 END) as vencido,
+        SUM(monto_total) as total_cxc,
+        SUM(CASE WHEN dias_atraso > 30 THEN monto_total ELSE 0 END) as vencido,
         AVG(dias_atraso) as promedio_dias
       FROM cuentas_cobrar 
       WHERE empresa_id = ? AND estado != 'cobrada'
     `, [empresaId]);
 
-    // CxP resumen
+    // CxP resumen - usar nombres de columnas PostgreSQL
     const cxpResumen = await db.getAsync(`
       SELECT 
-        SUM(monto) as total_cxp,
-        SUM(CASE WHEN fecha_vencimiento < date('now') THEN monto ELSE 0 END) as vencido
+        SUM(monto_total) as total_cxp,
+        SUM(CASE WHEN fecha_vencimiento < CURRENT_DATE THEN monto_total ELSE 0 END) as vencido
       FROM cuentas_pagar 
       WHERE empresa_id = ? AND estado = 'pendiente'
     `, [empresaId]);
 
-    // Ventas del mes
+    // Ventas del mes - usar TO_CHAR para PostgreSQL
     const ventasMes = await db.getAsync(`
       SELECT SUM(monto) as total
       FROM transacciones 
       WHERE empresa_id = ? 
         AND tipo = 'entrada' 
-        AND strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now')
+        AND ${isPostgres ? "TO_CHAR(fecha, 'YYYY-MM')" : "strftime('%Y-%m', fecha)"} = ${isPostgres ? "TO_CHAR(CURRENT_DATE, 'YYYY-MM')" : "strftime('%Y-%m', 'now')"}
     `, [empresaId]);
 
     // Promedios de los últimos 6 meses para runway calculator
-    const promedios6Meses = await db.getAsync(`
-      SELECT 
-        AVG(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as avg_ingresos_mes,
-        AVG(CASE WHEN tipo = 'salida' THEN monto ELSE 0 END) as avg_gastos_mes,
-        COUNT(DISTINCT strftime('%Y-%m', fecha)) as meses_con_datos
-      FROM transacciones 
-      WHERE empresa_id = ? 
-        AND fecha >= date('now', '-6 months')
-    `, [empresaId]);
-
-    // Calcular promedios reales solo de meses con datos
     const mesesHistoricos = await db.allAsync(`
       SELECT 
-        strftime('%Y-%m', fecha) as mes,
+        ${isPostgres ? "TO_CHAR(fecha, 'YYYY-MM')" : "strftime('%Y-%m', fecha)"} as mes,
         SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as ingresos,
         SUM(CASE WHEN tipo = 'salida' THEN monto ELSE 0 END) as gastos
       FROM transacciones 
       WHERE empresa_id = ? 
-        AND fecha >= date('now', '-6 months')
-      GROUP BY strftime('%Y-%m', fecha)
+        AND fecha >= ${isPostgres ? "CURRENT_DATE - INTERVAL '6 months'" : "date('now', '-6 months')"}
+      GROUP BY ${isPostgres ? "TO_CHAR(fecha, 'YYYY-MM')" : "strftime('%Y-%m', fecha)"}
     `, [empresaId]);
     
     const avgIngresos = mesesHistoricos.length > 0 
-      ? mesesHistoricos.reduce((sum, m) => sum + m.ingresos, 0) / mesesHistoricos.length 
-      : (ventasMes.total || 0);
+      ? mesesHistoricos.reduce((sum, m) => sum + (parseFloat(m.ingresos) || 0), 0) / mesesHistoricos.length 
+      : (ventasMes?.total || 0);
     const avgGastos = mesesHistoricos.length > 0 
-      ? mesesHistoricos.reduce((sum, m) => sum + m.gastos, 0) / mesesHistoricos.length 
+      ? mesesHistoricos.reduce((sum, m) => sum + (parseFloat(m.gastos) || 0), 0) / mesesHistoricos.length 
       : 0;
 
     // Alertas activas
     const alertas = [];
+
+    // Alerta: CxC vencido alto
+    const cxcVencidoAlto = await db.getAsync(`
+      SELECT SUM(monto_total) as total
+      FROM cuentas_cobrar
+      WHERE empresa_id = ? AND dias_atraso > 30
+    `, [empresaId]);
     
-    // Alerta de liquidez
-    const diasOperacion = Math.floor((posicionBancaria.total_gtq || 0) / 50000);
-    if (diasOperacion < 20) {
+    if (cxcVencidoAlto?.total > 100000) {
       alertas.push({
-        level: 'warning',
-        category: 'liquidez',
-        message: `Proyección muestra ${diasOperacion} días de liquidez`,
-        action_required: '/tesoreria/proyeccion',
-        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        tipo: 'cxc_vencido',
+        nivel: 'advertencia',
+        mensaje: `CxC vencido > 30 días: Q${parseFloat(cxcVencidoAlto.total).toLocaleString()}`,
+        monto: parseFloat(cxcVencidoAlto.total)
       });
     }
 
-    // Alerta CxC vencido
-    if (cxcResumen.vencido > 500000) {
+    // Alerta: Posición bancaria baja
+    const totalGTQ = parseFloat(posicionBancaria?.total_gtq) || 0;
+    const totalUSD = parseFloat(posicionBancaria?.total_usd) || 0;
+    if (totalGTQ < 500000) {
       alertas.push({
-        level: 'critical',
-        category: 'operacion',
-        message: `CxC vencido supera Q500,000 (actual: Q${Math.floor(cxcResumen.vencido).toLocaleString()})`,
-        action_required: '/tesoreria/cxc',
-        due_date: new Date().toISOString().split('T')[0]
+        tipo: 'liquidez_baja',
+        nivel: 'critico',
+        mensaje: 'Posición bancaria GTQ por debajo de Q500,000',
+        monto: totalGTQ
       });
     }
 
-    // Alerta SAT
-    const obligacionesPendientes = await db.getAsync(`
-      SELECT COUNT(*) as count
-      FROM obligaciones_sat 
-      WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento <= date('now', '+7 days')
+    // Cuentas bancarias detalle
+    const cuentasBancarias = await db.allAsync(`
+      SELECT banco, tipo, numero_cuenta as numero, saldo, moneda
+      FROM cuentas_bancarias
+      WHERE empresa_id = ? AND activa = TRUE
+      ORDER BY saldo DESC
     `, [empresaId]);
 
-    if (obligacionesPendientes.count > 0) {
-      alertas.push({
-        level: 'warning',
-        category: 'cumplimiento',
-        message: `${obligacionesPendientes.count} obligación(es) SAT en próximos 7 días`,
-        action_required: '/sat/calendario',
-        due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
-      });
-    }
+    // Próximos vencimientos CxP
+    const proximosVencimientos = await db.allAsync(`
+      SELECT 
+        proveedor_nombre as proveedor,
+        factura_numero as factura,
+        monto_total as monto,
+        fecha_vencimiento
+      FROM cuentas_pagar
+      WHERE empresa_id = ? 
+        AND estado = 'pendiente'
+        AND fecha_vencimiento <= ${isPostgres ? "CURRENT_DATE + INTERVAL '15 days'" : "date('now', '+15 days')"}
+      ORDER BY fecha_vencimiento
+      LIMIT 5
+    `, [empresaId]);
+
+    // CxC por cobrar urgentemente
+    const cxcUrgentes = await db.allAsync(`
+      SELECT 
+        cliente_nombre as cliente,
+        factura_numero as factura,
+        monto_total as monto,
+        dias_atraso
+      FROM cuentas_cobrar
+      WHERE empresa_id = ? 
+        AND estado = 'atrasada'
+        AND dias_atraso > 30
+      ORDER BY dias_atraso DESC
+      LIMIT 5
+    `, [empresaId]);
+
+    // Calcular runway
+    const runwayMeses = avgGastos > 0 ? Math.round((totalGTQ + totalUSD * 7.8) / avgGastos) : 0;
+
+    // Calcular Working Capital Ratio
+    const totalCxC = parseFloat(cxcResumen?.total_cxc) || 0;
+    const totalCxP = parseFloat(cxpResumen?.total_cxp) || 0;
+    const workingCapitalRatio = totalCxP > 0 ? (totalCxC / totalCxP).toFixed(2) : '0.00';
 
     res.json({
       status: 'success',
       timestamp: new Date().toISOString(),
       data: {
-        kpis: {
-          ventas_mes: {
-            value: ventasMes.total || 0,
-            currency: 'GTQ',
-            var: 6.7
-          },
-          disponible_gtq: {
-            value: posicionBancaria.total_gtq || 0,
-            currency: 'GTQ',
-            var: 2.1
-          },
-          dias_operacion: {
-            value: diasOperacion,
-            trend: diasOperacion < 30 ? 'down' : 'stable'
-          },
-          cxc_total: {
-            value: cxcResumen.total_cxc || 0,
-            currency: 'GTQ',
-            var: -5.2
-          },
-          cxp_total: {
-            value: cxpResumen.total_cxp || 0,
-            currency: 'GTQ'
-          },
-          runway: {
-            promedio_ingresos_mensual: Math.round(avgIngresos),
-            promedio_gastos_mensual: Math.round(avgGastos),
-            meses_historicos: mesesHistoricos.length
-          }
+        // Posición tesorería
+        tesoreria: {
+          total_gtq: totalGTQ,
+          total_usd: totalUSD,
+          total_usd_gtq: totalUSD * 7.8, // Tipo de cambio aproximado
+          total_general: totalGTQ + totalUSD * 7.8,
+          num_cuentas: posicionBancaria?.num_cuentas || 0,
+          cuentas: cuentasBancarias || []
+        },
+        // CxC
+        cxc: {
+          total: totalCxC,
+          vencido: parseFloat(cxcResumen?.vencido) || 0,
+          promedio_dias: Math.round(parseFloat(cxcResumen?.promedio_dias) || 0),
+          urgentes: cxcUrgentes || []
+        },
+        // CxP
+        cxp: {
+          total: totalCxP,
+          vencido: parseFloat(cxpResumen?.vencido) || 0,
+          proximos_vencimientos: proximosVencimientos || []
+        },
+        // Métricas operativas
+        operacion: {
+          ventas_mes: parseFloat(ventasMes?.total) || 0,
+          avg_ingresos_mes: Math.round(avgIngresos),
+          avg_gastos_mes: Math.round(avgGastos),
+          avg_utilidad_mes: Math.round(avgIngresos - avgGastos),
+          runway_meses: runwayMeses,
+          working_capital_ratio: parseFloat(workingCapitalRatio)
+        },
+        // Alertas
+        alertas: alertas,
+        // Resumen ejecutivo
+        resumen: {
+          working_capital: totalCxC - totalCxP,
+          posicion_neta: (totalGTQ + totalUSD * 7.8) + totalCxC - totalCxP,
+          salud_financiera: runwayMeses >= 6 ? 'buena' : runwayMeses >= 3 ? 'regular' : 'critica'
         }
-      },
-      alerts: alertas,
-      ui_components: {
-        cards: [
-          { type: 'currency', title: 'Ventas del Mes', data_key: 'ventas_mes' },
-          { type: 'currency', title: 'Disponible GTQ', data_key: 'disponible_gtq' },
-          { type: 'number', title: 'Días Operación', data_key: 'dias_operacion', unit: 'días' },
-          { type: 'currency', title: 'CxC Total', data_key: 'cxc_total' }
-        ],
-        charts: [
-          { type: 'line', title: 'Tendencia 6 Meses', endpoint: '/analisis/tendencias' }
-        ]
       }
     });
+
   } catch (error) {
-    console.error('Error en dashboard:', error);
+    console.error('❌ Error en dashboard:', error);
     res.status(500).json({
       status: 'error',
-      message: error.message,
+      message: 'Error cargando dashboard: ' + error.message,
       timestamp: new Date().toISOString()
     });
   }

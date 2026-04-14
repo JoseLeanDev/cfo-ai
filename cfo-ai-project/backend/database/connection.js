@@ -105,6 +105,9 @@ if (isProduction && process.env.DATABASE_URL) {
  */
 function sqliteToPostgres(sql) {
   return sql
+    // Booleanos: = 1 → = TRUE, = 0 → = FALSE (para columnas booleanas)
+    .replace(/\s*=\s*1(?![0-9])/g, ' = TRUE')
+    .replace(/\s*=\s*0(?![0-9])/g, ' = FALSE')
     // datetime('now') → NOW()
     .replace(/datetime\s*\(\s*['"]now['"]\s*\)/gi, 'NOW()')
     // date('now') → CURRENT_DATE
@@ -115,9 +118,8 @@ function sqliteToPostgres(sql) {
     .replace(/datetime\s*\(\s*['"]now['"]\s*,\s*['"]([+-]\d+)\s+days?['"]\s*\)/gi, "NOW() - INTERVAL '$1 days'")
     // strftime('%Y-%m', ...) → TO_CHAR(..., 'YYYY-MM')
     .replace(/strftime\s*\(\s*['"]%Y-%m['"]\s*,\s*([^)]+)\)/gi, "TO_CHAR($1, 'YYYY-MM')")
-    // ? → $1, $2, etc. (esto se hace con la librería pg, no manualmente)
+    // ? → $1, $2, etc.
     .replace(/\?/g, (match, offset, string) => {
-      // Contar cuántos ? hay antes
       const count = (string.slice(0, offset).match(/\?/g) || []).length;
       return `$${count + 1}`;
     });

@@ -2,21 +2,23 @@ const express = require('express');
 const router = express.Router();
 const db = require('../../database/connection');
 
+const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
+
 // GET /api/tesoreria/posicion
 router.get('/posicion', async (req, res) => {
   try {
     const empresaId = req.query.empresa_id || 1;
     
+    // Usar nombres de columnas correctos para PostgreSQL
     const cuentas = await db.allAsync(`
       SELECT 
         banco,
         tipo,
         saldo,
         moneda,
-        ultima_conciliacion,
-        julianday('now') - julianday(ultima_conciliacion) as dias_sin_conciliar
+        ${isPostgres ? 'NULL' : "julianday('now') - julianday(ultima_conciliacion)"} as dias_sin_conciliar
       FROM cuentas_bancarias 
-      WHERE empresa_id = ? AND activa = 1
+      WHERE empresa_id = ? AND activa = TRUE
       ORDER BY saldo DESC
     `, [empresaId]);
 
@@ -25,7 +27,7 @@ router.get('/posicion', async (req, res) => {
         SUM(CASE WHEN moneda = 'GTQ' THEN saldo ELSE 0 END) as total_gtq,
         SUM(CASE WHEN moneda = 'USD' THEN saldo ELSE 0 END) as total_usd
       FROM cuentas_bancarias 
-      WHERE empresa_id = ? AND activa = 1
+      WHERE empresa_id = ? AND activa = TRUE
     `, [empresaId]);
 
     const tipoCambio = 7.75;
@@ -44,7 +46,7 @@ router.get('/posicion', async (req, res) => {
         dias_operacion: diasOperacion,
         cuentas: cuentas.map(c => ({
           ...c,
-          dias_sin_conciliar: Math.floor(c.dias_sin_conciliar)
+          dias_sin_conciliar: Math.floor(c.dias_sin_conciliar || 0)
         }))
       },
       ui_components: {
@@ -69,22 +71,24 @@ router.get('/cxc', async (req, res) => {
   try {
     const empresaId = req.query.empresa_id || 1;
     
+    // Usar monto_total en lugar de monto para PostgreSQL
     const distribucion = await db.getAsync(`
       SELECT 
-        SUM(CASE WHEN dias_atraso = 0 THEN monto ELSE 0 END) as al_corriente,
-        SUM(CASE WHEN dias_atraso > 0 AND dias_atraso <= 30 THEN monto ELSE 0 END) as _30_dias,
-        SUM(CASE WHEN dias_atraso > 30 AND dias_atraso <= 60 THEN monto ELSE 0 END) as _60_dias,
-        SUM(CASE WHEN dias_atraso > 60 THEN monto ELSE 0 END) as _90_dias,
-        SUM(monto) as total
+        SUM(CASE WHEN dias_atraso = 0 THEN monto_total ELSE 0 END) as al_corriente,
+        SUM(CASE WHEN dias_atraso > 0 AND dias_atraso <= 30 THEN monto_total ELSE 0 END) as _30_dias,
+        SUM(CASE WHEN dias_atraso > 30 AND dias_atraso <= 60 THEN monto_total ELSE 0 END) as _60_dias,
+        SUM(CASE WHEN dias_atraso > 60 THEN monto_total ELSE 0 END) as _90_dias,
+        SUM(monto_total) as total
       FROM cuentas_cobrar 
       WHERE empresa_id = ? AND estado != 'cobrada'
     `, [empresaId]);
 
+    // Usar cliente_nombre y monto_total
     const topDeudores = await db.allAsync(`
-      SELECT cliente, monto, dias_atraso as dias
+      SELECT cliente_nombre as cliente, monto_total as monto, dias_atraso as dias
       FROM cuentas_cobrar 
       WHERE empresa_id = ? AND estado != 'cobrada'
-      ORDER BY monto DESC
+      ORDER BY monto_total DESC
       LIMIT 5
     `, [empresaId]);
 
@@ -138,22 +142,23 @@ router.get('/cxp', async (req, res) => {
     const empresaId = req.query.empresa_id || 1;
     const dias = parseInt(req.query.proximos_dias) || 30;
     
+    // Usar nombres de columnas PostgreSQL
     const cxp = await db.allAsync(`
       SELECT 
-        proveedor,
-        monto,
+        proveedor_nombre as proveedor,
+        monto_total as monto,
         fecha_vencimiento,
-        julianday(fecha_vencimiento) - julianday('now') as dias_restantes,
-        descuento_pronto_pago
+        ${isPostgres ? 'EXTRACT(DAY FROM fecha_vencimiento - CURRENT_DATE)' : "julianday(fecha_vencimiento) - julianday('now')"} as dias_restantes
       FROM cuentas_pagar 
       WHERE empresa_id = ? 
         AND estado = 'pendiente'
-        AND fecha_vencimiento <= date('now', '+${dias} days')
+        AND fecha_vencimiento <= ${isPostgres ? `CURRENT_DATE + INTERVAL '${dias} days'` : `date('now', '+${dias} days')`}
       ORDER BY fecha_vencimiento
     `, [empresaId]);
 
     const total = await db.getAsync(`
-      SELECT SUM(monto) as total, AVG(julianday(fecha_vencimiento) - julianday('now')) as promedio_dias
+      SELECT SUM(monto_total) as total, 
+             AVG(${isPostgres ? 'EXTRACT(DAY FROM fecha_vencimiento - CURRENT_DATE)' : "julianday(fecha_vencimiento) - julianday('now')"}) as promedio_dias
       FROM cuentas_pagar 
       WHERE empresa_id = ? AND estado = 'pendiente'
     `, [empresaId]);
@@ -167,7 +172,7 @@ router.get('/cxp', async (req, res) => {
         proximos_pagos: cxp.map(p => ({
           ...p,
           dias_restantes: Math.ceil(p.dias_restantes),
-          ahorro_si_paga_hoy: p.descuento_pronto_pago ? p.monto * 0.02 : 0
+          ahorro_si_paga_hoy: 0 // Descuento no está en el esquema PostgreSQL
         }))
       },
       ui_components: {

@@ -71,13 +71,13 @@ router.get('/cxc', async (req, res) => {
   try {
     const empresaId = req.query.empresa_id || 1;
     
-    // Usar monto_total en lugar de monto para PostgreSQL
+    // Para PostgreSQL: usar NULLIF para manejar NULLs y evitar comparación booleana
     const distribucion = await db.getAsync(`
       SELECT 
-        SUM(CASE WHEN dias_atraso = 0 THEN monto_total ELSE 0 END) as al_corriente,
-        SUM(CASE WHEN dias_atraso > 0 AND dias_atraso <= 30 THEN monto_total ELSE 0 END) as _30_dias,
-        SUM(CASE WHEN dias_atraso > 30 AND dias_atraso <= 60 THEN monto_total ELSE 0 END) as _60_dias,
-        SUM(CASE WHEN dias_atraso > 60 THEN monto_total ELSE 0 END) as _90_dias,
+        SUM(CASE WHEN COALESCE(dias_atraso, 0) = 0 THEN monto_total ELSE 0 END) as al_corriente,
+        SUM(CASE WHEN COALESCE(dias_atraso, 0) > 0 AND COALESCE(dias_atraso, 0) <= 30 THEN monto_total ELSE 0 END) as _30_dias,
+        SUM(CASE WHEN COALESCE(dias_atraso, 0) > 30 AND COALESCE(dias_atraso, 0) <= 60 THEN monto_total ELSE 0 END) as _60_dias,
+        SUM(CASE WHEN COALESCE(dias_atraso, 0) > 60 THEN monto_total ELSE 0 END) as _90_dias,
         SUM(monto_total) as total
       FROM cuentas_cobrar 
       WHERE empresa_id = ? AND estado ${isPostgres ? "<> 'cobrada'" : "!= 'cobrada'"}
@@ -93,7 +93,7 @@ router.get('/cxc', async (req, res) => {
     `, [empresaId]);
 
     const promedioDias = await db.getAsync(`
-      SELECT AVG(dias_atraso) as promedio
+      SELECT AVG(COALESCE(dias_atraso, 0)) as promedio
       FROM cuentas_cobrar 
       WHERE empresa_id = ? AND estado ${isPostgres ? "<> 'cobrada'" : "!= 'cobrada'"}
     `, [empresaId]);
@@ -104,27 +104,30 @@ router.get('/cxc', async (req, res) => {
       status: 'success',
       timestamp: new Date().toISOString(),
       data: {
-        total_cxc: distribucion.total || 0,
-        promedio_dias_cobro: Math.round(promedioDias.promedio || 0),
+        total_cxc: parseFloat(distribucion.total) || 0,
+        promedio_dias_cobro: Math.round(parseFloat(promedioDias.promedio) || 0),
         distribucion_aging: {
           al_corriente: { 
-            monto: distribucion.al_corriente || 0, 
-            porcentaje: parseFloat(((distribucion.al_corriente || 0) / total * 100).toFixed(1))
+            monto: parseFloat(distribucion.al_corriente) || 0, 
+            porcentaje: parseFloat(((parseFloat(distribucion.al_corriente) || 0) / total * 100).toFixed(1))
           },
           _30_dias: { 
-            monto: distribucion._30_dias || 0, 
-            porcentaje: parseFloat(((distribucion._30_dias || 0) / total * 100).toFixed(1))
+            monto: parseFloat(distribucion._30_dias) || 0, 
+            porcentaje: parseFloat(((parseFloat(distribucion._30_dias) || 0) / total * 100).toFixed(1))
           },
           _60_dias: { 
-            monto: distribucion._60_dias || 0, 
-            porcentaje: parseFloat(((distribucion._60_dias || 0) / total * 100).toFixed(1))
+            monto: parseFloat(distribucion._60_dias) || 0, 
+            porcentaje: parseFloat(((parseFloat(distribucion._60_dias) || 0) / total * 100).toFixed(1))
           },
           _90_dias: { 
-            monto: distribucion._90_dias || 0, 
-            porcentaje: parseFloat(((distribucion._90_dias || 0) / total * 100).toFixed(1))
+            monto: parseFloat(distribucion._90_dias) || 0, 
+            porcentaje: parseFloat(((parseFloat(distribucion._90_dias) || 0) / total * 100).toFixed(1))
           }
         },
-        top_deudores: topDeudores
+        top_deudores: topDeudores.map(d => ({
+          ...d,
+          monto: parseFloat(d.monto) || 0
+        }))
       },
       ui_components: {
         chart: 'aging_pie_chart',
@@ -168,12 +171,13 @@ router.get('/cxp', async (req, res) => {
       status: 'success',
       timestamp: new Date().toISOString(),
       data: {
-        total_cxp: total.total || 0,
-        promedio_dias_pago: Math.round(total.promedio_dias || 0),
+        total_cxp: parseFloat(total.total) || 0,
+        promedio_dias_pago: Math.round(parseFloat(total.promedio_dias) || 0),
         proximos_pagos: cxp.map(p => ({
           ...p,
-          dias_restantes: Math.ceil(p.dias_restantes),
-          ahorro_si_paga_hoy: 0 // Descuento no está en el esquema PostgreSQL
+          monto: parseFloat(p.monto) || 0,
+          dias_restantes: Math.ceil(parseFloat(p.dias_restantes)),
+          ahorro_si_paga_hoy: 0
         }))
       },
       ui_components: {

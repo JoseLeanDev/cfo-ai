@@ -155,20 +155,29 @@ router.get('/', async (req, res) => {
           total_usd_gtq: totalUSD * 7.8, // Tipo de cambio aproximado
           total_general: totalGTQ + totalUSD * 7.8,
           num_cuentas: posicionBancaria?.num_cuentas || 0,
-          cuentas: cuentasBancarias || []
+          cuentas: (cuentasBancarias || []).map(c => ({
+            ...c,
+            saldo: parseFloat(c.saldo) || 0
+          }))
         },
         // CxC
         cxc: {
           total: totalCxC,
           vencido: parseFloat(cxcResumen?.vencido) || 0,
           promedio_dias: Math.round(parseFloat(cxcResumen?.promedio_dias) || 0),
-          urgentes: cxcUrgentes || []
+          urgentes: (cxcUrgentes || []).map(c => ({
+            ...c,
+            monto: parseFloat(c.monto) || 0
+          }))
         },
         // CxP
         cxp: {
           total: totalCxP,
           vencido: parseFloat(cxpResumen?.vencido) || 0,
-          proximos_vencimientos: proximosVencimientos || []
+          proximos_vencimientos: (proximosVencimientos || []).map(p => ({
+            ...p,
+            monto: parseFloat(p.monto) || 0
+          }))
         },
         // Métricas operativas
         operacion: {

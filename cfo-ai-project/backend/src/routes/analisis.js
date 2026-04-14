@@ -5,9 +5,9 @@ const router = express.Router();
 const AnalistaFinanciero = require('../agents/analista/AnalistaFinanciero');
 const PredictorCashFlow = require('../agents/predictor/PredictorCashFlow');
 
-// Cache simple en memoria para insights (TTL: 1 hora)
+// Cache simple en memoria para insights (TTL: 5 minutos)
 const insightsCache = new Map();
-const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hora
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
 
 /**
  * GET /api/analisis/insights

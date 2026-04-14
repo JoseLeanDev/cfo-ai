@@ -267,7 +267,7 @@ class PredictorCashFlow extends BaseAgent {
 
       // Detectar anomalías por categoría
       for (const [categoria, stats] of Object.entries(categoriaStats)) {
-        if (stats.totales.length >= 3) {
+        if (stats.totales.length >= 2) {
           const promedio = stats.totales.reduce((a, b) => a + b, 0) / stats.totales.length;
           const desviacion = Math.sqrt(
             stats.totales.reduce((sq, n) => sq + Math.pow(n - promedio, 2), 0) / stats.totales.length
@@ -341,16 +341,15 @@ class PredictorCashFlow extends BaseAgent {
         ORDER BY mes ASC
       `, [empresaId, seisMesesAtras]);
 
-      if (ingresosMensuales.length >= 3) {
+      if (ingresosMensuales.length >= 2) {
         const n = ingresosMensuales.length;
         const totales = ingresosMensuales.map(i => i.total);
         
-        // Calcular promedio móvil y detectar cambios bruscos
-        for (let i = 2; i < n; i++) {
-          const promedioMovil = (totales[i-2] + totales[i-1]) / 2;
-          const variacion = ((totales[i] - promedioMovil) / promedioMovil) * 100;
+        // Detectar cambio brusco mes a mes
+        for (let i = 1; i < n; i++) {
+          const variacion = ((totales[i] - totales[i-1]) / totales[i-1]) * 100;
 
-          if (Math.abs(variacion) > 25) {
+          if (Math.abs(variacion) > 20) {
             const esCaida = variacion < 0;
             anomalias.push({
               tipo: esCaida ? 'caida_ingresos_brusca' : 'aumento_ingresos_brusco',
@@ -359,11 +358,11 @@ class PredictorCashFlow extends BaseAgent {
               titulo: esCaida 
                 ? `🚨 Caída brusca de ingresos: ${Math.abs(variacion).toFixed(1)}%`
                 : `📈 Aumento significativo de ingresos: ${variacion.toFixed(1)}%`,
-              descripcion: `En ${ingresosMensuales[i].mes} se detectó una ${esCaida ? 'caída' : 'subida'} del ${Math.abs(variacion).toFixed(1)}% respecto al promedio de los meses anteriores.`,
+              descripcion: `En ${ingresosMensuales[i].mes} se detectó una ${esCaida ? 'caída' : 'subida'} del ${Math.abs(variacion).toFixed(1)}% respecto al mes anterior (${ingresosMensuales[i-1].mes}: GTQ ${totales[i-1].toLocaleString()} → ${ingresosMensuales[i].mes}: GTQ ${totales[i].toLocaleString()}).`,
               datos: {
                 mes: ingresosMensuales[i].mes,
                 monto_actual: totales[i],
-                promedio_anterior: promedioMovil,
+                monto_anterior: totales[i-1],
                 variacion_porcentaje: variacion,
                 clientes_activos: ingresosMensuales[i].clientes_activos,
                 transacciones: ingresosMensuales[i].transacciones
@@ -375,25 +374,27 @@ class PredictorCashFlow extends BaseAgent {
           }
         }
 
-        // Detectar tendencia decreciente sostenida
-        const ultimos3Meses = ingresosMensuales.slice(-3);
-        const tendenciaDecreciente = ultimos3Meses[0].total > ultimos3Meses[1].total && 
-                                     ultimos3Meses[1].total > ultimos3Meses[2].total;
-        
-        if (tendenciaDecreciente) {
-          const reduccionTotal = ((ultimos3Meses[0].total - ultimos3Meses[2].total) / ultimos3Meses[0].total) * 100;
-          alertas.push({
-            tipo: 'tendencia_ingresos_decreciente',
-            categoria: 'ingresos',
-            severidad: reduccionTotal > 30 ? 'alta' : 'media',
-            titulo: `Tendencia decreciente en ingresos (-${reduccionTotal.toFixed(1)}%)`,
-            descripcion: `Los ingresos han disminuido consistentemente en los últimos 3 meses (${ultimos3Meses[0].mes}: GTQ ${ultimos3Meses[0].total.toLocaleString()} → ${ultimos3Meses[2].mes}: GTQ ${ultimos3Meses[2].total.toLocaleString()}).`,
-            datos: {
-              meses: ultimos3Meses.map(m => ({ mes: m.mes, monto: m.total })),
-              reduccion_total: reduccionTotal
-            },
-            accion_recomendada: 'Llamar a clientes principales para evaluar satisfacción. Revisar precios vs competencia. Considerar campaña promocional.'
-          });
+        // Detectar tendencia decreciente sostenida (últimos 3 meses si hay 3+)
+        if (n >= 3) {
+          const ultimos3Meses = ingresosMensuales.slice(-3);
+          const tendenciaDecreciente = ultimos3Meses[0].total > ultimos3Meses[1].total && 
+                                       ultimos3Meses[1].total > ultimos3Meses[2].total;
+          
+          if (tendenciaDecreciente) {
+            const reduccionTotal = ((ultimos3Meses[0].total - ultimos3Meses[2].total) / ultimos3Meses[0].total) * 100;
+            alertas.push({
+              tipo: 'tendencia_ingresos_decreciente',
+              categoria: 'ingresos',
+              severidad: reduccionTotal > 30 ? 'alta' : 'media',
+              titulo: `Tendencia decreciente en ingresos (-${reduccionTotal.toFixed(1)}%)`,
+              descripcion: `Los ingresos han disminuido consistentemente en los últimos 3 meses (${ultimos3Meses[0].mes}: GTQ ${ultimos3Meses[0].total.toLocaleString()} → ${ultimos3Meses[2].mes}: GTQ ${ultimos3Meses[2].total.toLocaleString()}).`,
+              datos: {
+                meses: ultimos3Meses.map(m => ({ mes: m.mes, monto: m.total })),
+                reduccion_total: reduccionTotal
+              },
+              accion_recomendada: 'Llamar a clientes principales para evaluar satisfacción. Revisar precios vs competencia. Considerar campaña promocional.'
+            });
+          }
         }
       }
 

@@ -267,16 +267,16 @@ class AnalistaFinanciero extends BaseAgent {
           const promedio = stats.total / stats.meses.length;
           const variacion = ((gasto.total_mes - promedio) / promedio) * 100;
 
-          if (variacion > 30) {
+          if (variacion > 20) {
             insights.push({
               tipo: 'gasto_anormal',
               severidad: variacion > 50 ? 'alta' : 'media',
               titulo: `Aumento significativo en ${gasto.categoria}`,
-              descripcion: `Los gastos en ${gasto.categoria} han aumentado un ${variacion.toFixed(1)}% respecto al promedio de los últimos 3 meses (Promedio: GTQ ${promedio.toLocaleString()}, Actual: GTQ ${gasto.total_mes.toLocaleString()}).`,
+              descripcion: `Los gastos en ${gasto.categoria} han aumentado un ${variacion.toFixed(1)}% respecto al promedio de los últimos meses (Promedio: GTQ ${promedio.toLocaleString()}, Actual: GTQ ${gasto.total_mes.toLocaleString()}).`,
               monto_impacto: gasto.total_mes - promedio,
               accion_sugerida: `Revisar facturas de ${gasto.categoria} y verificar si el aumento es justificado o se requiere negociar con proveedores.`
             });
-          } else if (variacion < -25) {
+          } else if (variacion < -20) {
             insights.push({
               tipo: 'gasto_reducido',
               severidad: 'baja',
@@ -286,6 +286,16 @@ class AnalistaFinanciero extends BaseAgent {
               accion_sugerida: `Verificar que no haya servicios suspendidos o pagos pendientes no registrados.`
             });
           }
+        } else if (stats && stats.meses.length === 1 && gasto.total_mes > 50000) {
+          // Solo un mes disponible: alertar si el gasto es significativo
+          insights.push({
+            tipo: 'gasto_anormal',
+            severidad: 'media',
+            titulo: `Gasto significativo en ${gasto.categoria}`,
+            descripcion: `Se registró un gasto de GTQ ${gasto.total_mes.toLocaleString()} en ${gasto.categoria} durante ${mesActual}. Como es el único mes con datos, se recomienda monitorear esta categoría.`,
+            monto_impacto: gasto.total_mes,
+            accion_sugerida: `Verificar que todas las facturas de ${gasto.categoria} estén correctamente autorizadas y registradas.`
+          });
         }
       }
 
@@ -321,53 +331,65 @@ class AnalistaFinanciero extends BaseAgent {
       });
 
       for (const [clienteId, stats] of Object.entries(clientesStats)) {
-        if (stats.meses.length >= 3) {
+        if (stats.meses.length >= 2) {
           const mesesOrdenados = stats.meses.sort((a, b) => b.mes.localeCompare(a.mes));
           const promedioHistorico = stats.total / stats.meses.length;
           const mesActualIngreso = mesesOrdenados.find(m => m.mes === mesActual);
+          const mesAnterior = mesesOrdenados.find(m => m.mes !== mesActual);
 
-          if (mesActualIngreso) {
-            const variacion = ((mesActualIngreso.monto - promedioHistorico) / promedioHistorico) * 100;
+          if (mesActualIngreso && mesAnterior) {
+            const variacionMesAMes = ((mesActualIngreso.monto - mesAnterior.monto) / mesAnterior.monto) * 100;
+            const variacionVsPromedio = ((mesActualIngreso.monto - promedioHistorico) / promedioHistorico) * 100;
 
-            if (variacion < -40) {
+            if (variacionMesAMes < -30 || variacionVsPromedio < -40) {
               insights.push({
                 tipo: 'cliente_en_riesgo',
                 severidad: 'alta',
                 titulo: `Caída significativa en compras: ${stats.nombre}`,
-                descripcion: `El cliente ${stats.nombre} ha reducido sus compras un ${Math.abs(variacion).toFixed(1)}% este mes (Promedio histórico: GTQ ${promedioHistorico.toLocaleString()}, Actual: GTQ ${mesActualIngreso.monto.toLocaleString()}).`,
-                monto_impacto: promedioHistorico - mesActualIngreso.monto,
+                descripcion: `El cliente ${stats.nombre} ha reducido sus compras. Variación mes a mes: ${variacionMesAMes.toFixed(1)}%. (Mes anterior: GTQ ${mesAnterior.monto.toLocaleString()}, Actual: GTQ ${mesActualIngreso.monto.toLocaleString()}).`,
+                monto_impacto: mesAnterior.monto - mesActualIngreso.monto,
                 accion_sugerida: `Contactar al cliente ${stats.nombre} para identificar motivos de la reducción y ofrecer incentivos de volumen o revisar precios.`
               });
-            } else if (variacion > 50) {
+            } else if (variacionMesAMes > 40 || variacionVsPromedio > 50) {
               insights.push({
                 tipo: 'cliente_crecimiento',
                 severidad: 'baja',
                 titulo: `Crecimiento destacado: ${stats.nombre}`,
-                descripcion: `El cliente ${stats.nombre} ha incrementado sus compras un ${variacion.toFixed(1)}% este mes (Promedio histórico: GTQ ${promedioHistorico.toLocaleString()}, Actual: GTQ ${mesActualIngreso.monto.toLocaleString()}).`,
-                monto_impacto: mesActualIngreso.monto - promedioHistorico,
+                descripcion: `El cliente ${stats.nombre} ha incrementado sus compras. Variación: +${variacionMesAMes.toFixed(1)}% respecto al mes anterior (GTQ ${mesAnterior.monto.toLocaleString()} → GTQ ${mesActualIngreso.monto.toLocaleString()}).`,
+                monto_impacto: mesActualIngreso.monto - mesAnterior.monto,
                 accion_sugerida: `Agradecer al cliente y evaluar oportunidad de negociar contrato de exclusividad o volumen mínimo.`
               });
             }
           }
 
-          // Detectar tendencia decreciente en últimos 3 meses
-          const ultimos3 = mesesOrdenados.slice(0, 3);
-          if (ultimos3.length === 3) {
+          // Detectar tendencia decreciente en últimos 3 meses (solo si hay 3+)
+          if (stats.meses.length >= 3) {
+            const ultimos3 = mesesOrdenados.slice(0, 3);
             const tendencia = ultimos3[0].monto < ultimos3[1].monto && ultimos3[1].monto < ultimos3[2].monto;
             if (tendencia) {
               const reduccionTotal = ((ultimos3[0].monto - ultimos3[2].monto) / ultimos3[2].monto) * 100;
-              if (reduccionTotal > 25) {
+              if (reduccionTotal > 20) {
                 insights.push({
                   tipo: 'tendencia_negativa_cliente',
                   severidad: 'media',
                   titulo: `Tendencia decreciente: ${stats.nombre}`,
-                  descripcion: `El cliente ${stats.nombre} muestra una tendencia decreciente sostenida en los últimos 3 meses (Reducción total: ${reduccionTotal.toFixed(1)}%).`,
+                  descripcion: `El cliente ${stats.nombre} muestra una tendencia decreciente sostenida en los últimos meses (Reducción total: ${reduccionTotal.toFixed(1)}%).`,
                   monto_impacto: ultimos3[2].monto - ultimos3[0].monto,
                   accion_sugerida: `Programar reunión comercial con ${stats.nombre} para entender necesidades y recuperar volumen.`
                 });
               }
             }
           }
+        } else if (stats.meses.length === 1 && stats.meses[0].monto > 100000) {
+          // Solo un mes: si es cliente grande, dar insight
+          insights.push({
+            tipo: 'cliente_crecimiento',
+            severidad: 'baja',
+            titulo: `Nuevo cliente significativo: ${stats.nombre}`,
+            descripcion: `El cliente ${stats.nombre} registró compras por GTQ ${stats.meses[0].monto.toLocaleString()} en ${stats.meses[0].mes}. Monitorear evolución en próximos meses.`,
+            monto_impacto: stats.meses[0].monto,
+            accion_sugerida: `Dar seguimiento personalizado para consolidar la relación comercial.`
+          });
         }
       }
 
@@ -379,24 +401,30 @@ class AnalistaFinanciero extends BaseAgent {
         ORDER BY monto DESC
       `, [empresaId]);
 
-      // Detectar montos atípicos
-      if (transaccionesRecientes.length > 5) {
+      if (transaccionesRecientes.length > 0) {
         const montos = transaccionesRecientes.map(t => t.monto).sort((a, b) => a - b);
-        const q1 = montos[Math.floor(montos.length * 0.25)];
-        const q3 = montos[Math.floor(montos.length * 0.75)];
-        const iqr = q3 - q1;
-        const limiteSuperior = q3 + (1.5 * iqr);
-        const limiteInferior = q1 - (1.5 * iqr);
+        const promedioMontos = montos.reduce((a, b) => a + b, 0) / montos.length;
+        let atipicos = [];
 
-        const atipicos = transaccionesRecientes.filter(t => t.monto > limiteSuperior || t.monto < limiteInferior);
+        if (montos.length >= 5) {
+          const q1 = montos[Math.floor(montos.length * 0.25)];
+          const q3 = montos[Math.floor(montos.length * 0.75)];
+          const iqr = q3 - q1;
+          const limiteSuperior = q3 + (1.5 * iqr);
+          const limiteInferior = q1 - (1.5 * iqr);
+          atipicos = transaccionesRecientes.filter(t => t.monto > limiteSuperior || t.monto < limiteInferior);
+        } else {
+          // Con pocas transacciones: marcar como atípica si supera 2x el promedio o es > Q25,000
+          atipicos = transaccionesRecientes.filter(t => t.monto > Math.max(promedioMontos * 2, 25000));
+        }
 
         for (const t of atipicos.slice(0, 3)) { // Máximo 3 anomalías
           const esIngreso = t.tipo === 'ingreso';
           insights.push({
             tipo: 'transaccion_anomala',
-            severidad: !esIngreso && t.monto > limiteSuperior ? 'alta' : 'media',
+            severidad: !esIngreso && t.monto > promedioMontos * 3 ? 'alta' : 'media',
             titulo: `Transacción atípica detectada: ${t.descripcion || 'Sin descripción'}`,
-            descripcion: `Se detectó una transacción de ${esIngreso ? 'INGRESO' : 'EGRESO'} por GTQ ${t.monto.toLocaleString()} que está fuera del rango normal de operaciones. Fecha: ${t.fecha}.`,
+            descripcion: `Se detectó una transacción de ${esIngreso ? 'INGRESO' : 'EGRESO'} por GTQ ${t.monto.toLocaleString()}. Fecha: ${t.fecha}.`,
             monto_impacto: t.monto,
             accion_sugerida: esIngreso 
               ? `Verificar que el ingreso por GTQ ${t.monto.toLocaleString()} esté correctamente documentado y aplicado al cliente correcto.`
@@ -418,7 +446,7 @@ class AnalistaFinanciero extends BaseAgent {
         ORDER BY mes ASC
       `, [empresaId, seisMesesAtras]);
 
-      if (datos6Meses.length >= 4) {
+      if (datos6Meses.length >= 2) {
         const utilidades = datos6Meses.map(d => d.ingresos - d.egresos);
         const n = utilidades.length;
 
@@ -428,20 +456,33 @@ class AnalistaFinanciero extends BaseAgent {
         const sumXY = utilidades.reduce((sum, y, i) => sum + i * y, 0);
         const sumX2 = utilidades.reduce((sum, _, i) => sum + i * i, 0);
 
-        const pendiente = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
-        const promedioUtilidad = sumY / n;
+        const divisor = n * sumX2 - sumX * sumX;
+        let pendiente = 0;
+        let promedioUtilidad = sumY / n;
+
+        if (divisor !== 0) {
+          pendiente = (n * sumXY - sumX * sumY) / divisor;
+        }
 
         // Proyección próximo mes
         const proyeccionProximoMes = promedioUtilidad + (pendiente * (n / 2));
-        const variacionProyectada = ((proyeccionProximoMes - promedioUtilidad) / promedioUtilidad) * 100;
+        const variacionProyectada = promedioUtilidad !== 0 
+          ? ((proyeccionProximoMes - promedioUtilidad) / promedioUtilidad) * 100 
+          : 0;
 
-        if (Math.abs(variacionProyectada) > 15) {
-          const esPositiva = variacionProyectada > 0;
+        if (Math.abs(variacionProyectada) > 10 || n === 2) {
+          const esPositiva = variacionProyectada > 0 || (n === 2 && utilidades[1] > utilidades[0]);
+          const titulo = n === 2 
+            ? (esPositiva ? '📈 Utilidad en crecimiento' : '📉 Utilidad en declive')
+            : (esPositiva ? '📈 Proyección de mejora en utilidad' : '📉 Alerta de reducción proyectada');
+          
           insights.push({
             tipo: 'proyeccion_variacion',
             severidad: !esPositiva ? 'alta' : 'baja',
-            titulo: esPositiva ? '📈 Proyección de mejora en utilidad' : '📉 Alerta de reducción proyectada',
-            descripcion: `Basado en la tendencia de los últimos ${n} meses, se proyecta una ${esPositiva ? 'mejora' : 'reducción'} del ${Math.abs(variacionProyectada).toFixed(1)}% en la utilidad del próximo mes (Proyección: GTQ ${proyeccionProximoMes.toLocaleString()} vs Promedio: GTQ ${promedioUtilidad.toLocaleString()}).`,
+            titulo: titulo,
+            descripcion: n === 2 
+              ? `Comparando los últimos 2 meses, la utilidad pasó de GTQ ${utilidades[0].toLocaleString()} a GTQ ${utilidades[1].toLocaleString()}. Tendencia ${esPositiva ? 'positiva' : 'negativa'}.`
+              : `Basado en la tendencia de los últimos ${n} meses, se proyecta una ${esPositiva ? 'mejora' : 'reducción'} del ${Math.abs(variacionProyectada).toFixed(1)}% en la utilidad del próximo mes (Proyección: GTQ ${proyeccionProximoMes.toLocaleString()} vs Promedio: GTQ ${promedioUtilidad.toLocaleString()}).`,
             monto_impacto: Math.abs(proyeccionProximoMes - promedioUtilidad),
             accion_sugerida: esPositiva
               ? 'Capitalizar la tendencia positiva: identificar qué productos/clientes están impulsando el crecimiento y enfocar esfuerzos comerciales.'
@@ -458,7 +499,7 @@ class AnalistaFinanciero extends BaseAgent {
         const margenActual = margenes[margenes.length - 1].margen;
         const margenPromedio = margenes.reduce((sum, m) => sum + m.margen, 0) / margenes.length;
 
-        if (margenActual < margenPromedio - 5) {
+        if (n >= 3 && margenActual < margenPromedio - 5) {
           insights.push({
             tipo: 'margen_decreciente',
             severidad: margenActual < 10 ? 'alta' : 'media',

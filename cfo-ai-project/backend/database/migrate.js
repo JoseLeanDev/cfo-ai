@@ -1,6 +1,14 @@
 const db = require('./connection');
 
+// Detectar si estamos usando PostgreSQL
+const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
+
 const addMissingColumns = async () => {
+  if (isPostgres) {
+    console.log('  ℹ️  PostgreSQL detectado, omitiendo verificación de columnas (PRAGMA no disponible)');
+    return;
+  }
+  
   console.log('🔄 Verificando columnas faltantes...');
   
   try {
@@ -26,6 +34,11 @@ const addMissingColumns = async () => {
 
 const createInsightsTable = async () => {
   console.log('🔄 Verificando tabla de insights histórico...');
+  
+  if (isPostgres) {
+    console.log('  ℹ️  PostgreSQL: tabla creada por migrate-postgres.js');
+    return;
+  }
   
   await db.runAsync(`
     CREATE TABLE IF NOT EXISTS insights_historico (
@@ -67,6 +80,11 @@ const createInsightsTable = async () => {
 const createAgentesLogsTable = async () => {
   console.log('🔄 Verificando tabla de logs de agentes...');
   
+  if (isPostgres) {
+    console.log('  ℹ️  PostgreSQL: tabla creada por migrate-postgres.js');
+    return;
+  }
+  
   await db.runAsync(`
     CREATE TABLE IF NOT EXISTS agentes_logs (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -100,6 +118,11 @@ const createAgentesLogsTable = async () => {
 const createTables = async () => {
   console.log('🏗️  Creando tablas...');
   
+  if (isPostgres) {
+    console.log('🐘 PostgreSQL detectado - usando migrate-postgres.js para tablas principales');
+    console.log('   Ejecuta: node database/migrate-postgres.js');
+  }
+  
   // Primero agregar columnas faltantes a tablas existentes
   await addMissingColumns();
   
@@ -108,6 +131,12 @@ const createTables = async () => {
   
   // Crear tabla de logs de agentes
   await createAgentesLogsTable();
+
+  // Solo crear tablas SQLite si NO estamos en PostgreSQL
+  if (isPostgres) {
+    console.log('✅ Migración SQLite omitida (PostgreSQL en uso)');
+    return;
+  }
 
   // Empresa
   await db.runAsync(`

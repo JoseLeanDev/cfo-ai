@@ -34,7 +34,7 @@ async function logAgentActivity(params) {
     impacto_moneda = 'GTQ',
     resultado_status = 'exitoso',
     duracion_ms = null,
-    empresa_id = 'default'
+    empresa_id = 1
   } = params;
 
   try {

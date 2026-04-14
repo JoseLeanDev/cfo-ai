@@ -17,7 +17,7 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
 router.get('/insights', async (req, res) => {
   try {
     const db = req.app.get('db');
-    const empresaId = req.query.empresa_id || 'default';
+    const empresaId = req.query.empresa_id || 1;
     const skipCache = req.query.skip_cache === 'true';
     const umbral = parseFloat(req.query.umbral) || 20;
 
@@ -249,7 +249,7 @@ router.delete('/insights/cache', async (req, res) => {
 router.get('/insights/historico', async (req, res) => {
   try {
     const db = req.app.get('db');
-    const empresaId = req.query.empresa_id || 'default';
+    const empresaId = req.query.empresa_id || 1;
     const limit = parseInt(req.query.limit) || 50;
     const offset = parseInt(req.query.offset) || 0;
     const status = req.query.status || 'active';

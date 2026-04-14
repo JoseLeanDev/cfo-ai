@@ -79,7 +79,7 @@ router.post('/execute', async (req, res) => {
 router.get('/logs', async (req, res) => {
   try {
     const db = req.app.get('db');
-    const empresaId = req.query.empresa_id || 'default';
+    const empresaId = req.query.empresa_id || 1;
     const limit = parseInt(req.query.limit) || 50;
     const offset = parseInt(req.query.offset) || 0;
     const agente = req.query.agente;
@@ -233,7 +233,7 @@ router.post('/logs', async (req, res) => {
   try {
     const db = req.app.get('db');
     const {
-      empresa_id = 'default',
+      empresa_id = 1,
       agente_nombre,
       agente_tipo,
       agente_version = '1.0',

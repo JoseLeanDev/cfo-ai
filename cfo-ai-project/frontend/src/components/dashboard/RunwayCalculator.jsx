@@ -34,22 +34,15 @@ export default function RunwayCalculator({
   const calcularRunway = useMemo(() => {
     const beneficioMensual = promedioIngresosMensual - promedioGastosMensual
     
-    // Debug
-    console.log('Calculando runway:', { 
-      beneficioMensual, 
-      ingresos: promedioIngresosMensual, 
-      gastos: promedioGastosMensual 
-    })
-    const burnRate = promedioGastosMensual - promedioIngresosMensual // Negativo si es rentable
-    
     // Si es rentable (ingresos > gastos)
     if (beneficioMensual > 0) {
       return {
-        meses: Infinity,
+        meses: null, // No hay runway cuando eres rentable
         burnRate: 0,
         beneficioMensual,
         estado: 'profitable',
-        mensaje: `Generando Q${beneficioMensual.toLocaleString()} por mes`
+        mensaje: `Generando Q${beneficioMensual.toLocaleString()} por mes`,
+        mesesAcumulandoDoble: Math.ceil(saldoActual / beneficioMensual) // Cuántos meses para duplicar efectivo
       }
     }
     
@@ -65,7 +58,8 @@ export default function RunwayCalculator({
       burnRate: Math.abs(beneficioMensual),
       beneficioMensual: 0,
       estado,
-      mensaje: `${meses.toFixed(1)} meses de operación`
+      mensaje: `${meses.toFixed(1)} meses de operación`,
+      mesesAcumulandoDoble: null
     }
   }, [saldoActual, promedioIngresosMensual, promedioGastosMensual])
   
@@ -97,7 +91,7 @@ export default function RunwayCalculator({
     return datos
   }, [saldoActual, calcularRunway, proyeccionMeses])
   
-  const { meses, burnRate, beneficioMensual, estado, mensaje } = calcularRunway
+  const { meses, burnRate, beneficioMensual, estado, mensaje, mesesAcumulandoDoble } = calcularRunway
   const proyeccion = generarProyeccion
   
   const configEstado = {
@@ -161,11 +155,19 @@ export default function RunwayCalculator({
         {/* KPI Principal */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className={`p-4 rounded-lg ${config.bg} border ${config.border}`}>
-            <span className="text-sm text-[var(--text-muted)]">Runway</span>
+            <span className="text-sm text-[var(--text-muted)]">
+              {estado === 'profitable' ? 'Crecimiento' : 'Runway'}
+            </span>
             <p className={`text-3xl font-bold ${config.color}`}>
-              {meses === Infinity ? '∞' : `${meses.toFixed(1)} meses`}
+              {estado === 'profitable' 
+                ? 'Sin límite' 
+                : `${meses.toFixed(1)} meses`}
             </p>
-            <p className="text-xs text-[var(--text-muted)] mt-1">{mensaje}</p>
+            <p className="text-xs text-[var(--text-muted)] mt-1">
+              {estado === 'profitable' && mesesAcumulandoDoble 
+                ? `Duplicas efectivo en ${mesesAcumulandoDoble} meses` 
+                : mensaje}
+            </p>
           </div>
           
           <div className="p-4 rounded-lg bg-[var(--bg-secondary)]">
@@ -222,34 +224,19 @@ export default function RunwayCalculator({
             {proyeccion.slice(0, 12).map((p, i) => {
               const maxSaldo = Math.max(...proyeccion.map(x => x.saldo))
               const minSaldo = Math.min(...proyeccion.map(x => x.saldo))
-              const range = maxSaldo - minSaldo || maxSaldo || 1
-              // Para empresas rentables: calcular desde 0 para mostrar crecimiento real
-              // Para empresas con pérdidas: calcular desde el mínimo para mostrar degradación
-              const base = estado === 'profitable' ? 0 : minSaldo
-              const height = Math.max(5, ((p.saldo - base) / range) * 100)
               
-              // Debug
-              if (i === 0 || i === 11) {
-                console.log(`Barra ${i}:`, { 
-                  saldo: p.saldo, 
-                  maxSaldo, 
-                  minSaldo, 
-                  range, 
-                  base, 
-                  height,
-                  estado 
-                })
-              }
+              // Calcular altura: siempre como porcentaje del máximo para que se vea bien
+              const height = Math.max(10, (p.saldo / maxSaldo) * 100)
               
               return (
-                <div key={i} className="flex-1 flex flex-col items-center min-h-[5px]">
+                <div key={i} className="flex-1 flex flex-col items-center" style={{ minHeight: '20px' }}>
                   <div 
-                    className={`w-full rounded-t transition-all min-h-[5px] ${
+                    className={`w-full rounded-t transition-all ${
                       p.esPeligro ? 'bg-rose-400' : 
                       p.esCritico ? 'bg-amber-400' : 
                       p.esCrecimiento ? 'bg-emerald-500' : 'bg-emerald-400'
                     }`}
-                    style={{ height: `${Math.max(5, Math.min(100, height))}%` }}
+                    style={{ height: `${height}%`, minHeight: '4px' }}
                   />
                   <span className="text-[10px] text-[var(--text-muted)] mt-1 truncate w-full text-center">
                     {p.mes}

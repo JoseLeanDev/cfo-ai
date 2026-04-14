@@ -34,32 +34,34 @@ export default function RunwayCalculator({
   const calcularRunway = useMemo(() => {
     const beneficioMensual = promedioIngresosMensual - promedioGastosMensual
     
+    // Runway = cuántos meses puedo operar con el efectivo actual
+    // Si dejo de tener ingresos, cuánto dura mi efectivo con los gastos actuales
+    const runwayMeses = promedioGastosMensual > 0 
+      ? saldoActual / promedioGastosMensual 
+      : 999 // Si no hay gastos, runway es prácticamente infinito
+    
     // Si es rentable (ingresos > gastos)
     if (beneficioMensual > 0) {
       return {
-        meses: null, // No hay runway cuando eres rentable
-        burnRate: 0,
+        meses: runwayMeses,
         beneficioMensual,
+        gastosMensuales: promedioGastosMensual,
         estado: 'profitable',
-        mensaje: `Generando Q${beneficioMensual.toLocaleString()} por mes`,
-        mesesAcumulandoDoble: Math.ceil(saldoActual / beneficioMensual) // Cuántos meses para duplicar efectivo
+        mensaje: `Operando con beneficio de Q${beneficioMensual.toLocaleString()} por mes`
       }
     }
     
     // Si quema efectivo (gastos > ingresos)
-    const meses = saldoActual / Math.abs(beneficioMensual)
-    
     let estado = 'saludable'
-    if (meses < 3) estado = 'critico'
-    else if (meses < 6) estado = 'atencion'
+    if (runwayMeses < 3) estado = 'critico'
+    else if (runwayMeses < 6) estado = 'atencion'
     
     return {
-      meses,
-      burnRate: Math.abs(beneficioMensual),
+      meses: runwayMeses,
       beneficioMensual: 0,
+      gastosMensuales: promedioGastosMensual,
       estado,
-      mensaje: `${meses.toFixed(1)} meses de operación`,
-      mesesAcumulandoDoble: null
+      mensaje: `${runwayMeses.toFixed(1)} meses de operación`
     }
   }, [saldoActual, promedioIngresosMensual, promedioGastosMensual])
   
@@ -91,7 +93,7 @@ export default function RunwayCalculator({
     return datos
   }, [saldoActual, calcularRunway, proyeccionMeses])
   
-  const { meses, burnRate, beneficioMensual, estado, mensaje } = calcularRunway
+  const { meses, beneficioMensual, estado, mensaje } = calcularRunway
   const proyeccion = generarProyeccion
   
   const configEstado = {
@@ -157,28 +159,26 @@ export default function RunwayCalculator({
           <div className={`p-4 rounded-lg ${config.bg} border ${config.border}`}>
             <span className="text-sm text-[var(--text-muted)]">Runway</span>
             <p className={`text-3xl font-bold ${config.color}`}>
-              {estado === 'profitable' 
-                ? 'Sin riesgo' 
-                : `${meses.toFixed(1)} meses`}
+              {meses.toFixed(1)} meses
             </p>
             <p className="text-xs text-[var(--text-muted)] mt-1">
               {estado === 'profitable' 
-                ? `Acumulando Q${beneficioMensual.toLocaleString()} por mes` 
-                : `${meses.toFixed(1)} meses de operación con el efectivo actual`}
+                ? `Con beneficio de Q${beneficioMensual.toLocaleString()} por mes` 
+                : `${meses.toFixed(1)} meses con el efectivo actual`}
             </p>
           </div>
           
           <div className="p-4 rounded-lg bg-[var(--bg-secondary)]">
             <span className="text-sm text-[var(--text-muted)]">
-              {estado === 'profitable' ? 'Beneficio Mensual' : 'Burn Rate Mensual'}
+              {estado === 'profitable' ? 'Beneficio Mensual' : 'Pérdida Mensual'}
             </span>
             <p className="text-2xl font-bold text-[var(--text-primary)]">
-              Q{(estado === 'profitable' ? beneficioMensual : burnRate).toLocaleString()}
+              Q{Math.abs(beneficioMensual).toLocaleString()}
             </p>
             <p className="text-xs text-[var(--text-muted)] mt-1">
               {estado === 'profitable' 
                 ? 'Ingresos superan gastos' 
-                : promedioGastosMensual > promedioIngresosMensual ? 'Pérdida neta' : 'Ganancia neta'}
+                : 'Gastos superan ingresos'}
             </p>
           </div>
           

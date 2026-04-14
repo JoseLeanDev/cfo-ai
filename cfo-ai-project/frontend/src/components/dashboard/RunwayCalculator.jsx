@@ -223,17 +223,33 @@ export default function RunwayCalculator({
               const maxSaldo = Math.max(...proyeccion.map(x => x.saldo))
               const minSaldo = Math.min(...proyeccion.map(x => x.saldo))
               const range = maxSaldo - minSaldo || maxSaldo || 1
-              const height = Math.max(5, ((p.saldo - (estado === 'profitable' ? 0 : minSaldo)) / range) * 100)
+              // Para empresas rentables: calcular desde 0 para mostrar crecimiento real
+              // Para empresas con pérdidas: calcular desde el mínimo para mostrar degradación
+              const base = estado === 'profitable' ? 0 : minSaldo
+              const height = Math.max(5, ((p.saldo - base) / range) * 100)
+              
+              // Debug
+              if (i === 0 || i === 11) {
+                console.log(`Barra ${i}:`, { 
+                  saldo: p.saldo, 
+                  maxSaldo, 
+                  minSaldo, 
+                  range, 
+                  base, 
+                  height,
+                  estado 
+                })
+              }
               
               return (
-                <div key={i} className="flex-1 flex flex-col items-center">
+                <div key={i} className="flex-1 flex flex-col items-center min-h-[5px]">
                   <div 
-                    className={`w-full rounded-t transition-all ${
+                    className={`w-full rounded-t transition-all min-h-[5px] ${
                       p.esPeligro ? 'bg-rose-400' : 
                       p.esCritico ? 'bg-amber-400' : 
                       p.esCrecimiento ? 'bg-emerald-500' : 'bg-emerald-400'
                     }`}
-                    style={{ height: `${Math.min(100, height)}%` }}
+                    style={{ height: `${Math.max(5, Math.min(100, height))}%` }}
                   />
                   <span className="text-[10px] text-[var(--text-muted)] mt-1 truncate w-full text-center">
                     {p.mes}

@@ -74,9 +74,8 @@ CREATE TABLE IF NOT EXISTS saldos_cuentas (
 CREATE TABLE IF NOT EXISTS cuentas_bancarias (
   id SERIAL PRIMARY KEY,
   empresa_id INTEGER DEFAULT 1,
-  cuenta_contable_id INTEGER REFERENCES cuentas_contables(id),
   banco VARCHAR(255) NOT NULL,
-  tipo VARCHAR(50), -- corriente, ahorro, etc
+  tipo VARCHAR(50),
   numero_cuenta VARCHAR(100),
   saldo DECIMAL(15,2) DEFAULT 0,
   moneda VARCHAR(10) DEFAULT 'GTQ',

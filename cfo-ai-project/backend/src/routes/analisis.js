@@ -3,10 +3,12 @@ const router = express.Router();
 
 // Importar agentes con fallback
 let AnalistaFinanciero, PredictorCashFlow;
+const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
+
 try {
-  AnalistaFinanciero = require('../agents/analista/AnalistaFinanciero');
+  AnalistaFinanciero = require('../../agents/AnalistaFinancieroAgent');
 } catch (e) {
-  console.warn('[Analisis] AnalistaFinanciero no encontrado en ruta esperada');
+  console.warn('[Analisis] AnalistaFinanciero no encontrado:', e.message);
   // Fallback: crear clase dummy
   AnalistaFinanciero = class {
     async generateInsights() {
@@ -16,9 +18,9 @@ try {
 }
 
 try {
-  PredictorCashFlow = require('../agents/predictor/PredictorCashFlow');
+  PredictorCashFlow = require('../../agents/AnalistaFinancieroIA');
 } catch (e) {
-  console.warn('[Analisis] PredictorCashFlow no encontrado en ruta esperada');
+  console.warn('[Analisis] PredictorCashFlow no encontrado:', e.message);
   // Fallback: crear clase dummy
   PredictorCashFlow = class {
     async detectAnomalies() {
@@ -30,6 +32,193 @@ try {
 // Cache simple en memoria para insights (TTL: 5 minutos)
 const insightsCache = new Map();
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
+
+// Helper: Generar insights desde la base de datos
+async function generateInsightsFromDB(db, empresaId) {
+  const insights = [];
+  const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
+  
+  try {
+    // Insight 1: CxC vencidas (>30 días)
+    const cxcVencidas = await db.getAsync(`
+      SELECT COUNT(*) as count, SUM(monto_pendiente) as total
+      FROM cuentas_cobrar 
+      WHERE empresa_id = ? AND estado ${isPostgres ? "<> 'cobrada'" : "!= 'cobrada'"} AND dias_atraso > 30
+    `, [empresaId]);
+    
+    if (cxcVencidas && parseInt(cxcVencidas.count) > 0) {
+      insights.push({
+        tipo: 'cxc_vencidas',
+        severidad: 'alta',
+        titulo: `${cxcVencidas.count} facturas de clientes vencidas`,
+        descripcion: `Tienes Q${Math.round(parseFloat(cxcVencidas.total) || 0).toLocaleString()} pendiente de cobro con más de 30 días de atraso.`,
+        monto_impacto: parseFloat(cxcVencidas.total) || 0,
+        accion_sugerida: 'Contactar clientes con más de 30 días de atraso',
+        categoria: 'tesoreria'
+      });
+    }
+    
+    // Insight 2: CxP próximas a vencer (próximos 7 días)
+    const cxpProximas = await db.getAsync(`
+      SELECT COUNT(*) as count, SUM(monto_total) as total
+      FROM cuentas_pagar 
+      WHERE empresa_id = ? AND estado = 'pendiente' 
+      AND ${isPostgres ? '(fecha_vencimiento - CURRENT_DATE)' : "CAST(julianday(fecha_vencimiento) - julianday('now') AS INTEGER)"} BETWEEN 0 AND 7
+    `, [empresaId]);
+    
+    if (cxpProximas && parseInt(cxpProximas.count) > 0) {
+      insights.push({
+        tipo: 'cxp_vencidas',
+        severidad: 'media',
+        titulo: `${cxpProximas.count} pagos pendientes esta semana`,
+        descripcion: `Tienes Q${Math.round(parseFloat(cxpProximas.total) || 0).toLocaleString()} en pagos que vencen en los próximos 7 días.`,
+        monto_impacto: parseFloat(cxpProximas.total) || 0,
+        accion_sugerida: 'Programar pagos de proveedores',
+        categoria: 'tesoreria'
+      });
+    }
+    
+    // Insight 3: CxP ya vencidas
+    const cxpVencidas = await db.getAsync(`
+      SELECT COUNT(*) as count, SUM(monto_total) as total
+      FROM cuentas_pagar 
+      WHERE empresa_id = ? AND estado = 'pendiente' 
+      AND ${isPostgres ? '(fecha_vencimiento - CURRENT_DATE)' : "CAST(julianday(fecha_vencimiento) - julianday('now') AS INTEGER)"} < 0
+    `, [empresaId]);
+    
+    if (cxpVencidas && parseInt(cxpVencidas.count) > 0) {
+      insights.push({
+        tipo: 'cxp_vencidas',
+        severidad: 'alta',
+        titulo: `${cxpVencidas.count} pagos a proveedores vencidos`,
+        descripcion: `Tienes Q${Math.round(parseFloat(cxpVencidas.total) || 0).toLocaleString()} en facturas vencidas con proveedores.`,
+        monto_impacto: parseFloat(cxpVencidas.total) || 0,
+        accion_sugerida: 'Negociar pronto pago o extensión con proveedores',
+        categoria: 'tesoreria'
+      });
+    }
+    
+    // Insight 4: Posición de liquidez
+    const liquidez = await db.getAsync(`
+      SELECT SUM(saldo) as total_disponible
+      FROM cuentas_bancarias 
+      WHERE empresa_id = ? AND activa = TRUE AND moneda = 'GTQ'
+    `, [empresaId]);
+    
+    const diasOperacion = Math.floor((parseFloat(liquidez?.total_disponible) || 0) / 50000);
+    
+    if (diasOperacion < 30) {
+      insights.push({
+        tipo: 'deterioro_flujo_caja',
+        severidad: diasOperacion < 15 ? 'alta' : 'media',
+        titulo: `Liquidez limitada: ${diasOperacion} días de operación`,
+        descripcion: `Tu efectivo disponible cubre aproximadamente ${diasOperacion} días de operación. Considera acelerar cobranzas.`,
+        monto_impacto: parseFloat(liquidez?.total_disponible) || 0,
+        accion_sugerida: 'Acelerar cobranzas de clientes',
+        categoria: 'tesoreria'
+      });
+    }
+    
+    // Insight 5: Comparativa de gastos vs mes anterior
+    const gastosMes = await db.getAsync(`
+      SELECT 
+        COALESCE(SUM(CASE WHEN ${isPostgres ? "fecha >= DATE_TRUNC('month', CURRENT_DATE)" : "strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now')"} THEN monto ELSE 0 END), 0) as mes_actual,
+        COALESCE(SUM(CASE WHEN ${isPostgres ? "fecha >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND fecha < DATE_TRUNC('month', CURRENT_DATE)" : "strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now', '-1 month')"} THEN monto ELSE 0 END), 0) as mes_anterior
+      FROM transacciones t
+      JOIN cuentas_contables c ON t.cuenta_id = c.id
+      WHERE t.tipo = 'debe' AND c.codigo LIKE '51%'
+    `);
+    
+    const variacionGastos = parseFloat(gastosMes.mes_anterior) > 0 
+      ? ((parseFloat(gastosMes.mes_actual) - parseFloat(gastosMes.mes_anterior)) / parseFloat(gastosMes.mes_anterior)) * 100 
+      : 0;
+    
+    if (Math.abs(variacionGastos) > 20) {
+      insights.push({
+        tipo: variacionGastos > 0 ? 'gasto_anormal' : 'gasto_reducido',
+        severidad: Math.abs(variacionGastos) > 50 ? 'alta' : 'media',
+        titulo: `Gastos operativos ${variacionGastos > 0 ? 'aumentaron' : 'disminuyeron'} ${Math.abs(variacionGastos).toFixed(1)}%`,
+        descripcion: `Comparado con el mes anterior, tus gastos operativos han ${variacionGastos > 0 ? 'subido' : 'bajado'} significativamente.`,
+        monto_impacto: Math.abs(parseFloat(gastosMes.mes_actual) - parseFloat(gastosMes.mes_anterior)),
+        accion_sugerida: 'Revisar desglose de gastos',
+        categoria: 'contabilidad'
+      });
+    }
+    
+  } catch (error) {
+    console.error('[generateInsightsFromDB] Error:', error.message);
+  }
+  
+  return { insights };
+}
+
+// Helper: Detectar anomalías desde la base de datos
+async function detectAnomaliesFromDB(db, empresaId, umbral) {
+  const anomalias = [];
+  const alertas = [];
+  const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
+  
+  try {
+    // Anomalía 1: Transacciones inusualmente grandes
+    const transaccionesGrandes = await db.allAsync(`
+      SELECT t.*, c.nombre as cuenta_nombre
+      FROM transacciones t
+      JOIN cuentas_contables c ON t.cuenta_id = c.id
+      WHERE t.fecha >= ${isPostgres ? "CURRENT_DATE - INTERVAL '30 days'" : "date('now', '-30 days')"}
+      AND ABS(t.monto) > (
+        SELECT AVG(ABS(monto)) * 3 
+        FROM transacciones 
+        WHERE fecha >= ${isPostgres ? "CURRENT_DATE - INTERVAL '90 days'" : "date('now', '-90 days')"}
+      )
+      ORDER BY ABS(t.monto) DESC
+      LIMIT 5
+    `);
+    
+    for (const t of transaccionesGrandes) {
+      anomalias.push({
+        tipo: 'transaccion_anomala',
+        categoria: 'contabilidad',
+        severidad: 'alta',
+        titulo: `Transacción inusual: ${t.cuenta_nombre}`,
+        descripcion: `Monto de Q${Math.round(parseFloat(t.monto)).toLocaleString()} es significativamente mayor al promedio histórico.`,
+        datos: { monto_total: parseFloat(t.monto), cuenta: t.cuenta_nombre },
+        accion_recomendada: 'Verificar transacción manualmente'
+      });
+    }
+    
+    // Anomalía 2: Clientes con caída repentina de compras
+    const clienteCaida = await db.allAsync(`
+      SELECT 
+        cc.cliente_nombre,
+        SUM(CASE WHEN ${isPostgres ? "cc.fecha_emision >= CURRENT_DATE - INTERVAL '30 days'" : "cc.fecha_emision >= date('now', '-30 days')"} THEN cc.monto_total ELSE 0 END) as mes_actual,
+        SUM(CASE WHEN ${isPostgres ? "cc.fecha_emision >= CURRENT_DATE - INTERVAL '60 days' AND cc.fecha_emision < CURRENT_DATE - INTERVAL '30 days'" : "cc.fecha_emision >= date('now', '-60 days') AND cc.fecha_emision < date('now', '-30 days')"} THEN cc.monto_total ELSE 0 END) as mes_anterior
+      FROM cuentas_cobrar cc
+      WHERE cc.empresa_id = ? AND cc.estado ${isPostgres ? "<> 'cobrada'" : "!= 'cobrada'"}
+      GROUP BY cc.cliente_nombre
+      HAVING mes_anterior > 0
+    `, [empresaId]);
+    
+    for (const c of clienteCaida) {
+      const variacion = ((parseFloat(c.mes_actual) - parseFloat(c.mes_anterior)) / parseFloat(c.mes_anterior)) * 100;
+      if (variacion < -50) {
+        anomalias.push({
+          tipo: 'cliente_en_riesgo',
+          categoria: 'analisis',
+          severidad: 'alta',
+          titulo: `${c.cliente_nombre}: caída del ${Math.abs(variacion).toFixed(0)}%`,
+          descripcion: `Este cliente ha reducido significativamente sus compras en el último mes.`,
+          datos: { monto_actual: parseFloat(c.mes_actual), monto_anterior: parseFloat(c.mes_anterior) },
+          accion_recomendada: 'Contactar al cliente para evaluar relación comercial'
+        });
+      }
+    }
+    
+  } catch (error) {
+    console.error('[detectAnomaliesFromDB] Error:', error.message);
+  }
+  
+  return { anomalias, alertas };
+}
 
 /**
  * GET /api/analisis/insights
@@ -58,15 +247,37 @@ router.get('/insights', async (req, res) => {
       });
     }
 
-    // Instanciar agentes
+    // Instanciar agentes (o usar wrappers si no tienen los métodos esperados)
     const analista = new AnalistaFinanciero();
     const predictor = new PredictorCashFlow();
 
-    // Ejecutar análisis en paralelo
-    const [insightsResult, anomaliesResult] = await Promise.all([
-      analista.generateInsights(db, empresaId),
-      predictor.detectAnomalies(db, empresaId, umbral)
-    ]);
+    // Ejecutar análisis en paralelo (con wrappers para compatibilidad)
+    let insightsResult, anomaliesResult;
+    
+    try {
+      // Intentar usar métodos nativos primero
+      if (typeof analista.generateInsights === 'function') {
+        insightsResult = await analista.generateInsights(db, empresaId);
+      } else {
+        // Fallback: generar insights desde DB
+        insightsResult = await generateInsightsFromDB(db, empresaId);
+      }
+    } catch (e) {
+      console.warn('[Insights] Error en analista:', e.message);
+      insightsResult = await generateInsightsFromDB(db, empresaId);
+    }
+    
+    try {
+      if (typeof predictor.detectAnomalies === 'function') {
+        anomaliesResult = await predictor.detectAnomalies(db, empresaId, umbral);
+      } else {
+        // Fallback: detectar anomalías desde DB
+        anomaliesResult = await detectAnomaliesFromDB(db, empresaId, umbral);
+      }
+    } catch (e) {
+      console.warn('[Insights] Error en predictor:', e.message);
+      anomaliesResult = await detectAnomaliesFromDB(db, empresaId, umbral);
+    }
 
     // Combinar insights financieros con anomalías de cash flow
     // Mapear tipos del backend a tipos del frontend

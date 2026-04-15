@@ -54,7 +54,8 @@ export const endpoints = {
     tendencias: (metrica) => cfoApi.get('/analisis/tendencias', { params: { metrica } }),
     insights: (context = 'all') => cfoApi.get('/analisis/insights', { params: { context } }),
     insightsHistorico: (params) => cfoApi.get('/analisis/insights/historico', { params }),
-    dismissInsight: (id) => cfoApi.patch(`/analisis/insights/${id}/dismiss`, {})
+    dismissInsight: (id) => cfoApi.patch(`/analisis/insights/${id}/dismiss`, {}),
+    workingCapital: (params = {}) => cfoApi.get('/analisis/working-capital', { params })
   },
   sat: {
     calendario: () => cfoApi.get('/sat/calendario'),

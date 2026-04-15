@@ -782,4 +782,245 @@ router.get('/tendencias', async (req, res) => {
   }
 });
 
+// GET /api/analisis/working-capital
+// Calcula métricas de capital de trabajo: DSO, DPO, DIO, C2C
+router.get('/working-capital', async (req, res) => {
+  try {
+    const db = req.app.get('db');
+    const empresaId = req.query.empresa_id || 1;
+    const periodoMeses = parseInt(req.query.meses) || 6;
+    
+    // ===== DSO (Days Sales Outstanding) =====
+    // Días promedio que tardan los clientes en pagar
+    const dsoData = await db.getAsync(`
+      SELECT 
+        AVG(dias_atraso) as dias_promedio_atraso,
+        COUNT(*) as total_facturas,
+        SUM(CASE WHEN dias_atraso > 0 THEN monto_pendiente ELSE 0 END) as monto_vencido,
+        SUM(monto_pendiente) as monto_total_cxc,
+        AVG(CASE WHEN dias_atraso <= 0 THEN ABS(dias_atraso) END) as dias_pago_anticipado
+      FROM cuentas_cobrar 
+      WHERE empresa_id = ? AND estado != 'cobrada'
+    `, [empresaId]);
+    
+    const dso = {
+      valor: Math.round(parseFloat(dsoData?.dias_promedio_atraso) || 30),
+      benchmark_sector: 38,
+      monto_vencido: parseFloat(dsoData?.monto_vencido) || 0,
+      monto_total: parseFloat(dsoData?.monto_total_cxc) || 0,
+      porcentaje_vencido: dsoData?.monto_total_cxc > 0 
+        ? ((parseFloat(dsoData?.monto_vencido) || 0) / parseFloat(dsoData?.monto_total_cxc) * 100).toFixed(1)
+        : 0
+    };
+    
+    // ===== DPO (Days Payable Outstanding) =====
+    // Días promedio que tardamos en pagar a proveedores
+    const dpoData = await db.getAsync(`
+      SELECT 
+        AVG(CAST((julianday(fecha_vencimiento) - julianday(fecha_emision)) AS INTEGER)) as dias_plazo_promedio,
+        AVG(CASE WHEN fecha_pago IS NOT NULL 
+          THEN CAST((julianday(fecha_pago) - julianday(fecha_emision)) AS INTEGER)
+          ELSE CAST((julianday('now') - julianday(fecha_emision)) AS INTEGER)
+        END) as dias_pago_real,
+        COUNT(*) as total_facturas,
+        SUM(CASE WHEN fecha_vencimiento < date('now') AND estado = 'pendiente' THEN monto_total ELSE 0 END) as monto_vencido
+      FROM cuentas_pagar 
+      WHERE empresa_id = ?
+    `, [empresaId]);
+    
+    const dpo = {
+      dias_plazo: Math.round(parseFloat(dpoData?.dias_plazo_promedio) || 30),
+      dias_real: Math.round(parseFloat(dpoData?.dias_pago_real) || 30),
+      benchmark_sector: 45,
+      monto_vencido: parseFloat(dpoData?.monto_vencido) || 0
+    };
+    
+    // ===== DIO (Days Inventory Outstanding) =====
+    // Días de inventario (simulado con datos disponibles)
+    // En un sistema real, usaría tabla de inventario
+    const dio = {
+      valor: 45, // Placeholder - necesitaría datos de inventario
+      benchmark_sector: 40,
+      nota: 'Requiere datos de inventario para cálculo real'
+    };
+    
+    // ===== C2C (Cash Conversion Cycle) =====
+    // C2C = DIO + DSO - DPO
+    const c2c = dio.valor + dso.valor - dpo.dias_real;
+    
+    // ===== Tendencias históricas (últimos 6 meses) =====
+    const tendencias = [];
+    for (let i = periodoMeses - 1; i >= 0; i--) {
+      const mes = await db.getAsync(`
+        SELECT 
+          strftime('%Y-%m', date('now', '-${i} months')) as periodo,
+          COALESCE(AVG(CASE WHEN dias_atraso IS NOT NULL THEN dias_atraso END), 30) as dso_mes
+        FROM cuentas_cobrar
+        WHERE empresa_id = ? 
+          AND strftime('%Y-%m', fecha_emision) = strftime('%Y-%m', date('now', '-${i} months'))
+      `, [empresaId]);
+      
+      if (mes?.periodo) {
+        tendencias.push({
+          periodo: mes.periodo,
+          dso: Math.round(parseFloat(mes.dso_mes) || 30)
+        });
+      }
+    }
+    
+    // ===== Recomendaciones accionables =====
+    const recomendaciones = [];
+    
+    // Recomendación 1: Reducir DSO
+    if (dso.valor > dso.benchmark_sector) {
+      const diasReduccion = dso.valor - dso.benchmark_sector;
+      const efectivoLiberado = Math.round((dso.monto_total * diasReduccion) / dso.valor);
+      
+      recomendaciones.push({
+        tipo: 'dso_reduccion',
+        titulo: `Reducir días de cobro en ${diasReduccion} días`,
+        descripcion: `Tu DSO actual (${dso.valor} días) está por encima del benchmark del sector (${dso.benchmark_sector} días).`,
+        impacto_efectivo: efectivoLiberado,
+        acciones: [
+          'Implementar descuento 2% por pronto pago (10 días)',
+          'Enviar recordatorios automatizados a los 20 días',
+          'Revisar política de crédito para nuevos clientes'
+        ],
+        prioridad: 'alta'
+      });
+    }
+    
+    // Recomendación 2: Optimizar DPO
+    if (dpo.dias_real < dpo.benchmark_sector) {
+      const diasExtension = Math.min(dpo.benchmark_sector - dpo.dias_real, 15);
+      const efectivoRetenido = Math.round((dpo.dias_plazo * 100000 * diasExtension) / 30); // Estimación
+      
+      recomendaciones.push({
+        tipo: 'dpo_optimizacion',
+        titulo: `Negociar mejores plazos con proveedores`,
+        descripcion: `Pagas en ${dpo.dias_real} días, pero podrías extender a ${dpo.dias_plazo + diasExtension} días.`,
+        impacto_efectivo: efectivoRetenido,
+        acciones: [
+          'Negociar plazos extendidos con top 5 proveedores',
+          'Aprovechar descuentos por pronto pago solo si > costo de capital',
+          'Centralizar pagos para mejorar negociación'
+        ],
+        prioridad: 'media'
+      });
+    }
+    
+    // Recomendación 3: Reducir C2C
+    const c2cBenchmark = dio.benchmark_sector + dso.benchmark_sector - dpo.benchmark_sector;
+    if (c2c > c2cBenchmark) {
+      const diasExceso = c2c - c2cBenchmark;
+      
+      recomendaciones.push({
+        tipo: 'c2c_optimizacion',
+        titulo: `Reducir Cash Conversion Cycle en ${diasExceso} días`,
+        descripcion: `Tu C2C (${c2c} días) está por encima del óptimo (${c2cBenchmark} días). Tienes efectivo atado en operaciones.`,
+        impacto_efectivo: Math.round((dso.monto_total * diasExceso) / 365),
+        acciones: [
+          'Acelerar cobranzas (DSO)',
+          'Negociar mejores plazos de pago (DPO)',
+          'Optimizar niveles de inventario (DIO)'
+        ],
+        prioridad: 'alta'
+      });
+    }
+    
+    // ===== Alertas =====
+    const alertas = [];
+    if (dso.valor > 60) {
+      alertas.push({
+        tipo: 'dso_critico',
+        severidad: 'critica',
+        mensaje: `DSO de ${dso.valor} días indica problemas serios de cobranza`,
+        accion_urgente: 'Revisar política de crédito y agendar llamadas con deudores mayores'
+      });
+    }
+    
+    if (dpo.monto_vencido > 100000) {
+      alertas.push({
+        tipo: 'cxp_vencidas',
+        severidad: 'alta',
+        mensaje: `Q${dpo.monto_vencido.toLocaleString()} en pagos a proveedores vencidos`,
+        accion_urgente: 'Negociar extensiones o programar pagos inmediatos'
+      });
+    }
+    
+    res.json({
+      status: 'success',
+      timestamp: new Date().toISOString(),
+      data: {
+        periodo_analisis: `${periodoMeses} meses`,
+        metricas_principales: {
+          dso: {
+            nombre: 'Days Sales Outstanding',
+            descripcion: 'Días promedio de cobro',
+            valor: dso.valor,
+            unidad: 'días',
+            benchmark: dso.benchmark_sector,
+            diferencia_benchmark: dso.valor - dso.benchmark_sector,
+            status: dso.valor <= dso.benchmark_sector ? 'optimo' : dso.valor <= dso.benchmark_sector + 10 ? 'atencion' : 'critico',
+            monto_vencido: dso.monto_vencido,
+            porcentaje_vencido: parseFloat(dso.porcentaje_vencido)
+          },
+          dpo: {
+            nombre: 'Days Payable Outstanding',
+            descripcion: 'Días promedio de pago a proveedores',
+            dias_plazo: dpo.dias_plazo,
+            dias_real: dpo.dias_real,
+            unidad: 'días',
+            benchmark: dpo.benchmark_sector,
+            monto_vencido: dpo.monto_vencido
+          },
+          dio: {
+            nombre: 'Days Inventory Outstanding',
+            descripcion: 'Días de inventario',
+            valor: dio.valor,
+            unidad: 'días',
+            benchmark: dio.benchmark_sector,
+            nota: dio.nota
+          },
+          c2c: {
+            nombre: 'Cash Conversion Cycle',
+            descripcion: 'Ciclo de conversión de efectivo',
+            valor: c2c,
+            formula: 'DIO + DSO - DPO',
+            detalle: `${dio.valor} + ${dso.valor} - ${dpo.dias_real} = ${c2c}`,
+            unidad: 'días',
+            interpretacion: c2c < 30 ? 'Excelente' : c2c < 60 ? 'Bueno' : c2c < 90 ? 'Regular' : 'Necesita atención',
+            benchmark: c2cBenchmark
+          }
+        },
+        tendencias_mensuales: tendencias,
+        recomendaciones: recomendaciones.sort((a, b) => {
+          const prioridad = { alta: 0, media: 1, baja: 2 };
+          return prioridad[a.prioridad] - prioridad[b.prioridad];
+        }),
+        alertas,
+        resumen_ejecutivo: {
+          efectivo_atraso_cobro: dso.monto_vencido,
+          oportunidad_optimizacion: recomendaciones.reduce((sum, r) => sum + (r.impacto_efectivo || 0), 0),
+          dias_efectivo_atrapado: c2c
+        }
+      },
+      ui_components: {
+        dashboard: 'working_capital_dashboard',
+        charts: ['dso_trend', 'c2c_gauge', 'cash_flow_timeline'],
+        tabla: 'recomendaciones_accionables'
+      }
+    });
+    
+  } catch (error) {
+    console.error('[GET /working-capital] Error:', error);
+    res.status(500).json({ 
+      status: 'error', 
+      message: 'Error al calcular métricas de working capital',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      timestamp: new Date().toISOString()
+    });
+  }
+});
+
 module.exports = router;

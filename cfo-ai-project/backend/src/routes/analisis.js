@@ -2,30 +2,25 @@ const express = require('express');
 const router = express.Router();
 
 // Importar agentes con fallback
-let AnalistaFinanciero, PredictorCashFlow;
+let AnalistaFinancieroAgent, PredictorCashFlowInstance;
 const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
 
 try {
-  AnalistaFinanciero = require('../../agents/AnalistaFinancieroAgent');
+  AnalistaFinancieroAgent = require('../../agents/AnalistaFinancieroAgent');
 } catch (e) {
-  console.warn('[Analisis] AnalistaFinanciero no encontrado:', e.message);
-  // Fallback: crear clase dummy
-  AnalistaFinanciero = class {
-    async generateInsights() {
-      return { insights: [] };
-    }
+  console.warn('[Analisis] AnalistaFinancieroAgent no encontrado:', e.message);
+  AnalistaFinancieroAgent = class {
+    async generateInsights() { return { insights: [] }; }
   };
 }
 
 try {
-  PredictorCashFlow = require('../../agents/AnalistaFinancieroIA');
+  // AnalistaFinancieroIA se exporta como instancia (new AnalistaFinancieroIA())
+  PredictorCashFlowInstance = require('../../agents/AnalistaFinancieroIA');
 } catch (e) {
   console.warn('[Analisis] PredictorCashFlow no encontrado:', e.message);
-  // Fallback: crear clase dummy
-  PredictorCashFlow = class {
-    async detectAnomalies() {
-      return { anomalias: [], alertas: [] };
-    }
+  PredictorCashFlowInstance = {
+    async detectAnomalies() { return { anomalias: [], alertas: [] }; }
   };
 }
 
@@ -36,14 +31,13 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
 // Helper: Generar insights desde la base de datos
 async function generateInsightsFromDB(db, empresaId) {
   const insights = [];
-  const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
   
   try {
-    // Insight 1: CxC vencidas (>30 días)
+    // Insight 1: CxC vencidas (>30 días) - usar consulta simple
     const cxcVencidas = await db.getAsync(`
       SELECT COUNT(*) as count, SUM(monto_pendiente) as total
       FROM cuentas_cobrar 
-      WHERE empresa_id = ? AND estado ${isPostgres ? "<> 'cobrada'" : "!= 'cobrada'"} AND dias_atraso > 30
+      WHERE empresa_id = ? AND estado != 'cobrada' AND dias_atraso > 30
     `, [empresaId]);
     
     if (cxcVencidas && parseInt(cxcVencidas.count) > 0) {
@@ -63,7 +57,8 @@ async function generateInsightsFromDB(db, empresaId) {
       SELECT COUNT(*) as count, SUM(monto_total) as total
       FROM cuentas_pagar 
       WHERE empresa_id = ? AND estado = 'pendiente' 
-      AND ${isPostgres ? '(fecha_vencimiento - CURRENT_DATE)' : "CAST(julianday(fecha_vencimiento) - julianday('now') AS INTEGER)"} BETWEEN 0 AND 7
+      AND fecha_vencimiento <= date('now', '+7 days')
+      AND fecha_vencimiento >= date('now')
     `, [empresaId]);
     
     if (cxpProximas && parseInt(cxpProximas.count) > 0) {
@@ -83,7 +78,7 @@ async function generateInsightsFromDB(db, empresaId) {
       SELECT COUNT(*) as count, SUM(monto_total) as total
       FROM cuentas_pagar 
       WHERE empresa_id = ? AND estado = 'pendiente' 
-      AND ${isPostgres ? '(fecha_vencimiento - CURRENT_DATE)' : "CAST(julianday(fecha_vencimiento) - julianday('now') AS INTEGER)"} < 0
+      AND fecha_vencimiento < date('now')
     `, [empresaId]);
     
     if (cxpVencidas && parseInt(cxpVencidas.count) > 0) {
@@ -119,11 +114,11 @@ async function generateInsightsFromDB(db, empresaId) {
       });
     }
     
-    // Insight 5: Comparativa de gastos vs mes anterior
+    // Insight 5: Comparativa de gastos vs mes anterior (simplificado)
     const gastosMes = await db.getAsync(`
       SELECT 
-        COALESCE(SUM(CASE WHEN ${isPostgres ? "fecha >= DATE_TRUNC('month', CURRENT_DATE)" : "strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now')"} THEN monto ELSE 0 END), 0) as mes_actual,
-        COALESCE(SUM(CASE WHEN ${isPostgres ? "fecha >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND fecha < DATE_TRUNC('month', CURRENT_DATE)" : "strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now', '-1 month')"} THEN monto ELSE 0 END), 0) as mes_anterior
+        COALESCE(SUM(CASE WHEN strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now') THEN monto ELSE 0 END), 0) as mes_actual,
+        COALESCE(SUM(CASE WHEN strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now', '-1 month') THEN monto ELSE 0 END), 0) as mes_anterior
       FROM transacciones t
       JOIN cuentas_contables c ON t.cuenta_id = c.id
       WHERE t.tipo = 'debe' AND c.codigo LIKE '51%'
@@ -156,19 +151,18 @@ async function generateInsightsFromDB(db, empresaId) {
 async function detectAnomaliesFromDB(db, empresaId, umbral) {
   const anomalias = [];
   const alertas = [];
-  const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
   
   try {
-    // Anomalía 1: Transacciones inusualmente grandes
+    // Anomalía 1: Transacciones inusualmente grandes (últimos 30 días)
     const transaccionesGrandes = await db.allAsync(`
       SELECT t.*, c.nombre as cuenta_nombre
       FROM transacciones t
       JOIN cuentas_contables c ON t.cuenta_id = c.id
-      WHERE t.fecha >= ${isPostgres ? "CURRENT_DATE - INTERVAL '30 days'" : "date('now', '-30 days')"}
+      WHERE t.fecha >= date('now', '-30 days')
       AND ABS(t.monto) > (
         SELECT AVG(ABS(monto)) * 3 
         FROM transacciones 
-        WHERE fecha >= ${isPostgres ? "CURRENT_DATE - INTERVAL '90 days'" : "date('now', '-90 days')"}
+        WHERE fecha >= date('now', '-90 days')
       )
       ORDER BY ABS(t.monto) DESC
       LIMIT 5
@@ -186,14 +180,14 @@ async function detectAnomaliesFromDB(db, empresaId, umbral) {
       });
     }
     
-    // Anomalía 2: Clientes con caída repentina de compras
+    // Anomalía 2: Clientes con caída repentina de compras (simplificado)
     const clienteCaida = await db.allAsync(`
       SELECT 
         cc.cliente_nombre,
-        SUM(CASE WHEN ${isPostgres ? "cc.fecha_emision >= CURRENT_DATE - INTERVAL '30 days'" : "cc.fecha_emision >= date('now', '-30 days')"} THEN cc.monto_total ELSE 0 END) as mes_actual,
-        SUM(CASE WHEN ${isPostgres ? "cc.fecha_emision >= CURRENT_DATE - INTERVAL '60 days' AND cc.fecha_emision < CURRENT_DATE - INTERVAL '30 days'" : "cc.fecha_emision >= date('now', '-60 days') AND cc.fecha_emision < date('now', '-30 days')"} THEN cc.monto_total ELSE 0 END) as mes_anterior
+        SUM(CASE WHEN cc.fecha_emision >= date('now', '-30 days') THEN cc.monto_total ELSE 0 END) as mes_actual,
+        SUM(CASE WHEN cc.fecha_emision >= date('now', '-60 days') AND cc.fecha_emision < date('now', '-30 days') THEN cc.monto_total ELSE 0 END) as mes_anterior
       FROM cuentas_cobrar cc
-      WHERE cc.empresa_id = ? AND cc.estado ${isPostgres ? "<> 'cobrada'" : "!= 'cobrada'"}
+      WHERE cc.empresa_id = ? AND cc.estado != 'cobrada'
       GROUP BY cc.cliente_nombre
       HAVING mes_anterior > 0
     `, [empresaId]);
@@ -248,8 +242,9 @@ router.get('/insights', async (req, res) => {
     }
 
     // Instanciar agentes (o usar wrappers si no tienen los métodos esperados)
-    const analista = new AnalistaFinanciero();
-    const predictor = new PredictorCashFlow();
+    // Nota: PredictorCashFlowInstance ya es una instancia (no usar 'new')
+    const analista = new AnalistaFinancieroAgent();
+    const predictor = PredictorCashFlowInstance;
 
     // Ejecutar análisis en paralelo (con wrappers para compatibilidad)
     let insightsResult, anomaliesResult;

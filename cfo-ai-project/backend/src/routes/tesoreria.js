@@ -9,9 +9,9 @@ router.get('/posicion', async (req, res) => {
   try {
     const empresaId = req.query.empresa_id || 1;
     
-    // Usar nombres de columnas correctos para PostgreSQL
+    // Usar DISTINCT para eliminar duplicados de la BD
     const cuentas = await db.allAsync(`
-      SELECT 
+      SELECT DISTINCT
         banco,
         tipo,
         saldo,

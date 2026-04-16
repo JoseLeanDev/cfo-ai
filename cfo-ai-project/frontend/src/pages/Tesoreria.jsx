@@ -29,30 +29,30 @@ export default function Tesoreria() {
   const cxpData = cxp?.data || {}
   const proyeccionData = proyeccion?.data || {}
 
-  const distribucion = cxcData.distribucion_aging || {}
-  const datosProyeccion = proyeccionData.proyeccion || []
+  // DEBUG: Log para ver cuántas cuentas llegan
+  console.log('[DEBUG] posicionData:', posicionData)
+  console.log('[DEBUG] cuentas:', posicionData.cuentas)
+  console.log('[DEBUG] cantidad de cuentas:', posicionData.cuentas?.length)
 
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl">
       {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
-            <BanknotesIcon className="w-5 h-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-semibold">Tesorería</h1>
-            <p className="text-sm text-[var(--text-muted)]">
-              Posición al {posicionData.fecha_corte} • Tipo de cambio: Q{posicionData.tipo_cambio}
-            </p>
-          </div>
+      <div className="flex items-center gap-3">
+        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+          <BanknotesIcon className="w-5 h-5 text-white" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-semibold">Tesorería</h1>
+          <p className="text-sm text-[var(--text-muted)]">
+            Posición al {posicionData.fecha_corte} • Tipo de cambio: Q{posicionData.tipo_cambio}
+          </p>
         </div>
       </div>
 
       {/* AI Insights */}
       <PageInsights context="tesoreria" maxInsights={3} />
 
-      {/* KPIs */}
+      {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
@@ -81,9 +81,11 @@ export default function Tesoreria() {
         <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Total Consolidado</span>
-            <CheckCircleIcon className="w-4 h-4 text-[var(--success)]" />
+            <ArrowTrendingUpIcon className="w-4 h-4 text-[var(--success)]" />
           </div>
-          <div className="kpi-value">{loadingPos ? '---' : formatGTQ(posicionData.total_consolidado_gtq)}</div>
+          <div className="kpi-value">
+            {loadingPos ? '---' : formatGTQ(posicionData.total_consolidado_gtq)}
+          </div>
         </div>
 
         <div className="kpi-card card-hover">
@@ -100,6 +102,7 @@ export default function Tesoreria() {
         </div>
       </div>
 
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cuentas Bancarias */}
         <div className="card">
@@ -113,47 +116,60 @@ export default function Tesoreria() {
           </div>
           
           <div className="space-y-3 p-5 pt-0">
-            {posicionData.cuentas?.map((cuenta, idx) => (
-              <div 
-                key={idx} 
-                className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors"
-              >
-                <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                    cuenta.moneda === 'USD' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
-                  }`}>
-                    <span className="font-bold text-sm">{cuenta.moneda}</span>
-                  </div>
-                  <div>
-                    <p className="font-medium text-[var(--text-primary)]">{cuenta.banco}</p>
-                    <p className="text-sm text-[var(--text-muted)] capitalize">{cuenta.tipo}</p>
-                  </div>
-                </div>
-                
-                <div className="text-right">
-                  <p className="amount">
-                    {new Intl.NumberFormat('es-GT', {
-                      style: 'currency',
-                      currency: cuenta.moneda,
-                      minimumFractionDigits: 0
-                    }).format(cuenta.saldo)}
-                  </p>
-                  <div className="flex items-center justify-end gap-2 mt-1">
-                    {cuenta.dias_sin_conciliar > 2 ? (
-                      <span className="badge-warning text-[10px]">
-                        <ExclamationTriangleIcon className="w-3 h-3" />
-                        Sin conciliar
-                      </span>
-                    ) : (
-                      <span className="badge-success text-[10px]">
-                        <CheckCircleIcon className="w-3 h-3" />
-                        Conciliado
-                      </span>
-                    )}
-                  </div>
-                </div>
+            {/* DEBUG: Mostrar contador */}
+            {!loadingPos && posicionData.cuentas && (
+              <div className="text-xs text-[var(--text-muted)] mb-2">
+                Total de cuentas recibidas: {posicionData.cuentas.length}
               </div>
-            ))}
+            )}
+            
+            {loadingPos ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-16 bg-[var(--bg-secondary)] rounded-lg animate-pulse" />
+              ))
+            ) : (
+              posicionData.cuentas?.map((cuenta, idx) => (
+                <div 
+                  key={`${cuenta.banco}-${cuenta.moneda}-${idx}`}
+                  className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-lg hover:bg-[var(--bg-tertiary)] transition-colors"
+                >
+                  <div className="flex items-center gap-4">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                      cuenta.moneda === 'USD' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      <span className="font-bold text-sm">{cuenta.moneda}</span>
+                    </div>
+                    <div>
+                      <p className="font-medium text-[var(--text-primary)]">{cuenta.banco}</p>
+                      <p className="text-sm text-[var(--text-muted)] capitalize">{cuenta.tipo}</p>
+                    </div>
+                  </div>
+                  
+                  <div className="text-right">
+                    <p className="amount">
+                      {new Intl.NumberFormat('es-GT', {
+                        style: 'currency',
+                        currency: cuenta.moneda,
+                        minimumFractionDigits: 0
+                      }).format(cuenta.saldo)}
+                    </p>
+                    <div className="flex items-center justify-end gap-2 mt-1">
+                      {cuenta.dias_sin_conciliar > 2 ? (
+                        <span className="badge-warning text-[10px]">
+                          <ExclamationTriangleIcon className="w-3 h-3" />
+                          Sin conciliar
+                        </span>
+                      ) : (
+                        <span className="badge-success text-[10px]">
+                          <CheckCircleIcon className="w-3 h-3" />
+                          Conciliado
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
@@ -167,42 +183,40 @@ export default function Tesoreria() {
             </div>
             <span className="amount">{formatGTQ(cxcData.total_cxc)}</span>
           </div>
-
+          
           <div className="space-y-4 p-5 pt-0">
-            {Object.entries(distribucion).map(([key, val]) => {
-              const labels = { 
+            {Object.entries(cxcData.distribucion_aging || {}).map(([rango, datos]) => {
+              const config = {
                 al_corriente: { label: 'Al corriente', color: 'bg-emerald-500' },
                 _30_dias: { label: '1-30 días', color: 'bg-amber-500' },
                 _60_dias: { label: '31-60 días', color: 'bg-orange-500' },
                 _90_dias: { label: '60+ días', color: 'bg-rose-500' }
-              }
-              const config = labels[key] || { label: key, color: 'bg-gray-500' }
-              
+              }[rango] || { label: rango, color: 'bg-gray-500' }
+
               return (
-                <div key={key} className="space-y-2">
+                <div key={rango} className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="font-medium text-[var(--text-secondary)]">{config.label}</span>
                     <span className="font-semibold tabular-nums">
-                      Q{(val.monto || 0).toLocaleString()} ({val.porcentaje}%)
+                      Q{(datos.monto || 0).toLocaleString()} ({datos.porcentaje}%)
                     </span>
                   </div>
                   <div className="h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full rounded-full ${config.color}`}
-                      style={{ width: `${val.porcentaje}%` }}
-                    />
+                    <div className={`h-full rounded-full ${config.color}`} style={{ width: `${datos.porcentaje}%` }} />
                   </div>
                 </div>
               )
             })}
           </div>
 
+          {/* Top Deudores */}
           <div className="mt-4 p-5 pt-0">
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-medium">Top Deudores</p>
-              <Link to="/tesoreria/cuentas-por-cobrar" className="text-xs text-[var(--accent-blue)] hover:underline">Ver todas →</Link>
+              <Link to="/tesoreria/cuentas-por-cobrar" className="text-xs text-[var(--accent-blue)] hover:underline">
+                Ver todas →
+              </Link>
             </div>
-            
             <div className="space-y-2">
               {cxcData.top_deudores?.slice(0, 3).map((deudor, idx) => (
                 <div key={idx} className="flex items-center justify-between py-2 px-3 rounded-lg bg-[var(--bg-secondary)]">
@@ -216,9 +230,7 @@ export default function Tesoreria() {
                     <span className={`text-sm font-medium tabular-nums ${deudor.dias > 60 ? 'text-[var(--danger)]' : ''}`}>
                       Q{deudor.monto.toLocaleString()}
                     </span>
-                    <span className={`badge text-[10px] ${
-                      deudor.dias > 60 ? 'badge-danger' : deudor.dias > 30 ? 'badge-warning' : 'badge-success'
-                    }`}>
+                    <span className={`badge text-[10px] ${deudor.dias > 60 ? 'badge-danger' : deudor.dias > 30 ? 'badge-warning' : 'badge-success'}`}>
                       {deudor.dias} días
                     </span>
                   </div>
@@ -228,7 +240,7 @@ export default function Tesoreria() {
           </div>
         </div>
 
-        {/* CxP */}
+        {/* CxP Próximos */}
         <div className="card">
           <div className="section-header">
             <ArrowTrendingDownIcon className="w-5 h-5 text-[var(--text-muted)]" />
@@ -238,13 +250,10 @@ export default function Tesoreria() {
             </div>
             <span className="amount">{formatGTQ(cxpData.total_cxp)}</span>
           </div>
-
+          
           <div className="space-y-3 p-5 pt-0">
             {cxpData.proximos_pagos?.slice(0, 5).map((pago, idx) => (
-              <div 
-                key={idx} 
-                className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-lg"
-              >
+              <div key={idx} className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-lg">
                 <div className="flex items-center gap-4">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                     pago.dias_restantes <= 5 ? 'bg-rose-100 text-rose-700' : 
@@ -271,16 +280,13 @@ export default function Tesoreria() {
             ))}
           </div>
           
-          <Link 
-            to="/tesoreria/cuentas-por-pagar" 
-            className="flex items-center justify-center gap-2 w-full py-3 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-t border-[var(--border-default)] hover:bg-[var(--bg-secondary)] transition-colors"
-          >
+          <Link to="/tesoreria/cuentas-por-pagar" className="flex items-center justify-center gap-2 w-full py-3 text-sm text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-t border-[var(--border-default)] hover:bg-[var(--bg-secondary)] transition-colors">
             Ver todos los pagos
             <ArrowRightIcon className="w-4 h-4" />
           </Link>
         </div>
 
-        {/* Cash Flow Projection */}
+        {/* Proyección Cash Flow */}
         <div className="card">
           <div className="section-header">
             <ArrowTrendingUpIcon className="w-5 h-5 text-[var(--text-muted)]" />
@@ -292,52 +298,44 @@ export default function Tesoreria() {
               <span className="badge-danger text-xs">⚠️ Riesgo</span>
             )}
           </div>
-
+          
           {loadingProy ? (
             <div className="h-48 flex items-center justify-center">
               <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : datosProyeccion.length > 0 ? (
+          ) : proyeccionData.proyeccion?.length > 0 ? (
             <div className="p-5 pt-0">
               <div className="h-48 flex items-end justify-between gap-1">
-                {datosProyeccion.slice(0, 12).map((semana, i) => {
-                  const valores = datosProyeccion.map(s => s.saldo_acumulado || 0)
-                  const maxSaldo = Math.max(...valores)
-                  const minSaldo = Math.min(...valores)
-                  const rango = maxSaldo - minSaldo || maxSaldo || 1
-                  const saldo = semana.saldo_acumulado || 0
-                  
-                  let altura
-                  if (rango === 0) {
-                    altura = 50
-                  } else {
-                    altura = ((saldo - minSaldo) / rango) * 75 + 15
-                  }
-                  
+                {proyeccionData.proyeccion.slice(0, 12).map((semana, idx) => {
+                  const saldos = proyeccionData.proyeccion.map(s => s.saldo_acumulado || 0)
+                  const maxSaldo = Math.max(...saldos)
+                  const minSaldo = Math.min(...saldos)
+                  const range = maxSaldo - minSaldo || maxSaldo || 1
+                  const altura = ((semana.saldo_acumulado - minSaldo) / range * 75) + 15
+
                   return (
-                    <div key={i} className="flex-1 flex flex-col items-center gap-1 group">
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-1 group">
                       <div className="relative w-full flex items-end justify-center" style={{ height: '140px' }}>
-                        <div 
-                          className={`w-full rounded-t transition-all ${
-                            semana.certeza === 'baja' ? 'bg-blue-300' : 
-                            semana.certeza === 'media' ? 'bg-blue-400' : 
-                            'bg-blue-500'
-                          } ${semana.alerta ? 'ring-2 ring-rose-400' : ''}`}
-                          style={{ height: `${altura}%`, minHeight: '8px' }}
+                        <div className={`w-full rounded-t transition-all ${
+                          semana.certeza === 'baja' ? 'bg-blue-300' :
+                          semana.certeza === 'media' ? 'bg-blue-400' :
+                          'bg-blue-500'
+                        } ${semana.alerta ? 'ring-2 ring-rose-400' : ''}`}
+                          style={{ height: `${Math.max(altura, 8)}%`, minHeight: '8px' }}
                         />
                         <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black text-white text-xs py-1.5 px-2.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
-                          S{semana.semana}: Q{saldo.toLocaleString()}
+                          S{semana.semana}: Q{semana.saldo_acumulado.toLocaleString()}
                           {semana.alerta && <span className="block text-rose-400">⚠️ {semana.alerta}</span>}
                         </div>
                       </div>
-                      {i % 3 === 0 && (
-                        <span className="text-xs text-[var(--text-muted)]">S{i + 1}</span>
+                      {idx % 3 === 0 && (
+                        <span className="text-xs text-[var(--text-muted)]">S{idx + 1}</span>
                       )}
                     </div>
                   )
                 })}
               </div>
-
+              
               <div className="mt-4 grid grid-cols-3 gap-4 text-center">
                 <div className="bg-[var(--bg-secondary)] p-3 rounded-lg">
                   <p className="text-xs text-[var(--text-muted)]">Saldo Mínimo</p>
@@ -358,20 +356,20 @@ export default function Tesoreria() {
                   </p>
                 </div>
               </div>
-
+              
               <div className="mt-4 flex items-center justify-between text-sm">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-blue-500"></div>
+                    <div className="w-3 h-3 rounded-full bg-blue-500" />
                     <span className="text-[var(--text-muted)]">Alta certeza</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-blue-300"></div>
+                    <div className="w-3 h-3 rounded-full bg-blue-300" />
                     <span className="text-[var(--text-muted)]">Baja certeza</span>
                   </div>
                 </div>
                 <span className="text-[var(--text-muted)]">
-                  Saldo proyectado: Q{datosProyeccion[datosProyeccion.length - 1]?.saldo_acumulado.toLocaleString()}
+                  Saldo proyectado: Q{proyeccionData.proyeccion[proyeccionData.proyeccion.length - 1]?.saldo_acumulado.toLocaleString()}
                 </span>
               </div>
             </div>

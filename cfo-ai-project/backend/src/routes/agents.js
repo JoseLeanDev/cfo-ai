@@ -3,6 +3,7 @@
  */
 const express = require('express');
 const router = express.Router();
+const { ejecutarTareasPendientesWakeUp } = require('../services/wakeUpScheduler');
 
 // GET /api/agents/status - Estado del sistema de agentes programados
 router.get('/status', async (req, res) => {

@@ -54,14 +54,11 @@ const PROVEEDORES = [
   { nombre: 'Publicidad y Marketing 360°', terminos: 'n/15', descuento: null },
 ];
 
-// Cuentas bancarias
+// Cuentas bancarias (escenario realista PYME: 2-3 cuentas)
 const CUENTAS_BANCARIAS = [
   { banco: 'Banco Industrial', tipo: 'monetaria', numero: '019-012345-6', saldo: 1250000, moneda: 'GTQ' },
-  { banco: 'Banco G&T Continental', tipo: 'monetaria', numero: '045-098765-4', saldo: 875000, moneda: 'GTQ' },
   { banco: 'BAC Credomatic', tipo: 'monetaria', numero: '789-456123-0', saldo: 520000, moneda: 'GTQ' },
   { banco: 'Banco Agromercantil', tipo: 'ahorro', numero: '156-789234-1', saldo: 185000, moneda: 'USD' },
-  { banco: 'Banco Promerica', tipo: 'plazo_fijo', numero: '267-345678-9', saldo: 450000, moneda: 'GTQ' },
-  { banco: 'Ficohsa Guatemala', tipo: 'monetaria', numero: '378-567890-2', saldo: 320000, moneda: 'GTQ' },
 ];
 
 // Helper functions
@@ -507,6 +504,9 @@ const seedData = async () => {
   // ============================================
   const tiempoTotal = ((Date.now() - startTime) / 1000).toFixed(2);
   
+  const totalCuentasGTQ = CUENTAS_BANCARIAS.filter(c => c.moneda === 'GTQ').reduce((a, c) => a + c.saldo, 0);
+  const totalCuentasUSD = CUENTAS_BANCARIAS.filter(c => c.moneda === 'USD').reduce((a, c) => a + c.saldo, 0);
+  
   console.log('\n' + '='.repeat(50));
   console.log('✅ CARGA DE DATOS COMPLETADA EXITOSAMENTE');
   console.log('='.repeat(50));
@@ -514,7 +514,10 @@ const seedData = async () => {
   console.log(`   Empresa: ${EMPRESA.nombre}`);
   console.log(`   NIT: ${EMPRESA.nit}`);
   console.log(`\n💰 POSICIÓN FINANCIERA:`);
-  console.log(`   • Disponible bancario: Q${CUENTAS_BANCARIAS.filter(c => c.moneda === 'GTQ').reduce((a, c) => a + c.saldo, 0).toLocaleString()} + $${CUENTAS_BANCARIAS.filter(c => c.moneda === 'USD').reduce((a, c) => a + c.saldo, 0).toLocaleString()}`);
+  console.log(`   • Cuentas bancarias: ${CUENTAS_BANCARIAS.length} (GTQ: ${CUENTAS_BANCARIAS.filter(c => c.moneda === 'GTQ').length}, USD: ${CUENTAS_BANCARIAS.filter(c => c.moneda === 'USD').length})`);
+  console.log(`   • Disponible GTQ: Q${totalCuentasGTQ.toLocaleString()}`);
+  console.log(`   • Disponible USD: $${totalCuentasUSD.toLocaleString()} (≈Q${(totalCuentasUSD * 7.75).toLocaleString()})`);
+  console.log(`   • Total consolidado: Q${(totalCuentasGTQ + totalCuentasUSD * 7.75).toLocaleString()}`);
   console.log(`   • CxC Total: Q${cxcStats.total.toLocaleString()}`);
   console.log(`   • CxP Total: Q${cxpStats.total.toLocaleString()}`);
   console.log(`   • Working Capital: Q${(cxcStats.total - cxpStats.total).toLocaleString()}`);

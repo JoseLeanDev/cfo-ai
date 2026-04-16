@@ -348,9 +348,9 @@ export default function LogActividades() {
               </thead>
               <tbody>
                 {logs.map((log) => {
-                  const ageConfig = agenteConfig[log.agenteTipo] || agenteConfig.orchestrator
+                  const ageConfig = agenteConfig[log.agentetipo] || agenteConfig.orchestrator
                   const catConfig = categoriaConfig[log.categoria] || categoriaConfig.insight_generado
-                  const statusCfg = statusConfig[log.resultadoStatus] || statusConfig.exitoso
+                  const statusCfg = statusConfig[log.resultadostatus] || statusConfig.exitoso
                   const isExpanded = expandedLog === log.id
                   
                   return (
@@ -382,7 +382,7 @@ export default function LogActividades() {
                         </td>
                         
                         <td className="px-4 py-3">
-                          <span className="font-mono text-xs">{formatDuracion(log.duracionMs)}</span>
+                          <span className="font-mono text-xs">{formatDuracion(log.duracionms)}</span>
                         </td>
                         
                         <td className="px-4 py-3">
@@ -394,11 +394,11 @@ export default function LogActividades() {
                         </td>
                       </tr>
                       
-                      {isExpanded && log.detallesJson && (
+                      {isExpanded && log.detallesjson && (
                         <tr>
                           <td colSpan={5} className="px-4 py-3 bg-[var(--bg-secondary)]">
                             <pre className="text-xs font-mono overflow-x-auto p-3 bg-white rounded border border-[var(--border-default)]">
-                              {JSON.stringify(JSON.parse(log.detallesJson), null, 2)}
+                              {JSON.stringify(JSON.parse(log.detallesjson), null, 2)}
                             </pre>
                           </td>
                         </tr>

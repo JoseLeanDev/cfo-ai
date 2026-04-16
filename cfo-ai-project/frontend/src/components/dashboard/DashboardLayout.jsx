@@ -10,6 +10,7 @@ import {
   XMarkIcon,
 } from '@heroicons/react/24/outline'
 import { useState } from 'react'
+import AgentChat from '../agents/AgentChat'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
@@ -144,6 +145,9 @@ export default function DashboardLayout({ children }) {
           {children}
         </main>
       </div>
+      
+      {/* AI Chat Assistant - Floating bubble */}
+      <AgentChat />
     </div>
   )
 }

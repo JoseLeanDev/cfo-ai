@@ -67,6 +67,7 @@ app.use('/api/agents', require('./routes/agents')); // Multi-Agent System
 app.use('/api/agents/conciliador', require('./routes/conciliador')); // Agente Conciliador Bancario
 app.use('/api/cierre', require('./routes/cierre')); // Cierre Mensual y Conciliación
 app.use('/api/scheduler', require('./routes/scheduler')); // Scheduler System
+app.use('/api/test', require('./routes/test')); // Test endpoints
 
 // Health check
 app.get('/api/health', (req, res) => {

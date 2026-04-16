@@ -176,6 +176,8 @@ negociar línea de crédito por Q300,000
 |-----------|-------|--------|--------|
 | ✅ | Runway Calculator | DONE | 999b188 |
 | ✅ | Customer Concentration Risk | DONE | a0fdc65 |
+| ✅ | Fix cuentas duplicadas | DONE | fc0d5d8 |
+| 🟡 | Cash Conversion Cycle (CCC) | NEXT | - |
 | 🟡 | Working Capital Optimization | TODO | - |
 | 🟢 | Profitability Matrix | TODO | - |
 | 🔵 | Scenario Simulator | TODO | - |
@@ -184,6 +186,21 @@ negociar línea de crédito por Q300,000
 ---
 
 ## 🚀 Próximo Commit Planificado
+
+**feat: Cash Conversion Cycle Dashboard**
+- Sección dedicada CCC en Tesorería
+- Gráfica de evolución temporal (DSO + DIO + DPO)
+- Benchmark vs industria
+- Acciones sugeridas para optimizar
+
+---
+
+## 📝 Notas de Trabajo
+
+**⚠️ IMPORTANTE:** Todo trabajo de frontend debe:
+1. Ser deployado a Render (no solo localhost)
+2. Hacer commit y push a GitHub
+3. Verificar en https://cfo-ai-backend-4n29.onrender.com/
 
 **feat: Customer Concentration Risk Widget**
 - Análisis de ingresos por cliente

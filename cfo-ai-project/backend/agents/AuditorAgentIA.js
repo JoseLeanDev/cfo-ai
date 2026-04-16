@@ -101,13 +101,15 @@ class AuditorAgentIA {
         agente_version: this.version,
         categoria: anomaliasCount > 0 ? 'alerta_detectada' : 'analisis_operaciones',
         descripcion: anomaliasCount > 0 
-          ? `🚨 Se detectaron ${anomaliasCount} anomalías en transacciones recientes (${severidadAlta} de alta severidad). ${analisis.resumen?.substring(0, 180) || ''}`
-          : `✅ Revisión de integridad contable completada: sin anomalías en las últimas transacciones.`,
+          ? `🔍 Revisé ${transacciones.length} transacciones recientes y detecté ${anomaliasCount} anomalías: ${analisis.anomalias.slice(0, 3).map(a => a.tipo).join(', ')}${analisis.anomalias.length > 3 ? ' y otras' : ''}. ${severidadAlta} de alta prioridad requieren atención inmediata.`
+          : `✅ Auditoría completada: revisé ${transacciones.length} transacciones de las últimas 48h. No detecté anomalías ni riesgos significativos. El estado contable es correcto.`,
         detalles_json: JSON.stringify({
+          transacciones_revisadas: transacciones.length,
           anomalias_count: anomaliasCount,
           severidad_alta: severidadAlta,
+          anomalias_tipos: analisis.anomalias?.map(a => ({tipo: a.tipo, severidad: a.severidad})),
           riesgo_general: analisis.riesgo_general,
-          tokens_usados: resultado.tokens_usados
+          duracion_analisis_ms: resultado.duracion_ms
         }),
         resultado_status: severidadAlta > 0 ? 'advertencia' : 'exitoso',
         duracion_ms: resultado.duracion_ms
@@ -270,13 +272,13 @@ Genera una alerta ejecutiva y recomendaciones urgentes.`,
   iniciarScheduler() {
     console.log(`[${this.nombre}] 🚀 Iniciando scheduler de agente IA...`);
 
-    // Log de inicio del sistema
+    // Log de inicio del sistema - menos técnico, más orientado a valor
     logAgentActivity({
       agente_nombre: this.nombre,
       agente_tipo: this.tipo,
       agente_version: this.version,
       categoria: 'sincronizacion_datos',
-      descripcion: `🟢 Agente iniciado y listo para operar. Tareas programadas: cada 45 min, 06:00 diario, día 5 mensual.`,
+      descripcion: `👋 Agente Auditor listo. Estaré revisando transacciones cada 45 minutos, generando informes diarios a las 6:00 AM y verificando cierres mensuales el día 5 de cada mes.`,
       resultado_status: 'exitoso',
       duracion_ms: 0
     });

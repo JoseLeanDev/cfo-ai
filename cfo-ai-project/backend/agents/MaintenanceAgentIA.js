@@ -288,7 +288,7 @@ Genera un "System Health Score".`,
       agente_tipo: this.tipo,
       agente_version: this.version,
       categoria: 'sincronizacion_datos',
-      descripcion: `🟢 Agente iniciado y listo. Tareas: limpieza 02:00, optimización dom 03:00, health check cada 4h.`,
+      descripcion: `👋 Maintenance listo. Haré limpieza de logs antiguos diariamente a las 2:00 AM, optimización de base de datos los domingos a las 3:00 AM, backup mensual el día 15, y health checks cada 4 horas.`,
       resultado_status: 'exitoso',
       duracion_ms: 0
     });

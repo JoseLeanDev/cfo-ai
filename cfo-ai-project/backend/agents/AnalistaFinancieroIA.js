@@ -62,10 +62,11 @@ class AnalistaFinancieroIA {
         agente_tipo: this.tipo,
         agente_version: this.version,
         categoria: 'reporte_ejecutivo',
-        descripcion: `📋 Briefing ejecutivo del día generado con ${analisis.insights?.length || 0} insights. ${alertasPendientes.length > 0 ? alertasPendientes.length + ' alertas financieras requieren atención.' : 'Sin alertas críticas pendientes.'}`,
+        descripcion: `🌅 Briefing matutino generado: ${analisis.insights?.length || 0} insights clave identificados. ${alertasPendientes.length > 0 ? `${alertasPendientes.length} alertas requieren atención hoy.` : 'No hay alertas urgentes para hoy.'} ${analisis.recomendaciones_prioritarias?.length > 0 ? `Recomendaciones: ${analisis.recomendaciones_prioritarias.join(', ')}.` : ''}`,
         detalles_json: JSON.stringify({
           insights_count: analisis.insights?.length,
           alertas_activas: alertasPendientes.length,
+          riesgo_nivel: analisis.riesgo_general,
           resumen: analisis.brief_ejecutivo?.substring(0, 200)
         }),
         resultado_status: 'exitoso',
@@ -139,7 +140,7 @@ Genera un "estado del sistema" ejecutivo.`,
         agente_tipo: this.tipo,
         agente_version: this.version,
         categoria: 'analisis_liquidez',
-        descripcion: `📊 Posición diaria actualizada: ${snapshot.transacciones_hoy} transacciones procesadas. ${snapshot.conciliaciones_pendientes > 0 ? snapshot.conciliaciones_pendientes + ' conciliaciones bancarias pendientes.' : 'Tesorería al día.'}`,
+        descripcion: `📈 Resumen diario: procesamos ${snapshot.transacciones_hoy} transacciones con movimiento total de Q${((snapshot.total_debe || 0) + (snapshot.total_haber || 0)).toLocaleString()}. ${snapshot.alertas_activas > 0 ? `Hay ${snapshot.alertas_activas} alertas financieras que requieren revisión.` : 'Sin alertas críticas.'} ${snapshot.conciliaciones_pendientes > 0 ? `Pendientes: ${snapshot.conciliaciones_pendientes} conciliaciones bancarias.` : 'Tesorería conciliada al día.'}`,
         detalles_json: JSON.stringify({
           transacciones: snapshot.transacciones_hoy,
           total_debe: snapshot.total_debe,
@@ -314,7 +315,7 @@ Genera un "estado del sistema" ejecutivo.`,
       agente_tipo: this.tipo,
       agente_version: this.version,
       categoria: 'sincronizacion_datos',
-      descripcion: `🟢 Agente iniciado y listo. Tareas: briefing 07:00, snapshot 18:00, resumen viernes 17:00.`,
+      descripcion: `👋 Analista Financiero listo. Generaré briefings ejecutivos a las 7:00 AM, snapshots diarios a las 6:00 PM, reportes semanales los viernes a las 5:00 PM y proyecciones mensuales el día 1 de cada mes.`,
       resultado_status: 'exitoso',
       duracion_ms: 0
     });

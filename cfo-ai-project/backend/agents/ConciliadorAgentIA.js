@@ -288,7 +288,7 @@ Devuelve máximo 20 sugerencias.`,
       agente_tipo: this.tipo,
       agente_version: this.version,
       categoria: 'sincronizacion_datos',
-      descripcion: `🟢 Agente iniciado y listo. Tareas: conciliación 08:00, sugerencias 10:00, alertas día 3.`,
+      descripcion: `👋 Conciliador Bancario listo. Analizaré conciliaciones pendientes diariamente a las 8:00 AM, buscaré emparejamientos automáticos a las 10:00 AM, y alertaré sobre discrepancias viejas el día 3 de cada mes.`,
       resultado_status: 'exitoso',
       duracion_ms: 0
     });

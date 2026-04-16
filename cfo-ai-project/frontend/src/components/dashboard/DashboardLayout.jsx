@@ -8,7 +8,6 @@ import {
   CpuChipIcon,
   Bars3Icon,
   XMarkIcon,
-  BuildingOffice2Icon
 } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 
@@ -37,10 +36,7 @@ export default function DashboardLayout({ children }) {
           <div className="fixed inset-y-0 left-0 w-64 bg-white border-r border-[var(--border-default)]">
             <div className="flex h-16 items-center justify-between px-4 border-b border-[var(--border-default)]">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded bg-black flex items-center justify-center">
-                  <BuildingOffice2Icon className="w-4 h-4 text-white" />
-                </div>
-                <span className="font-semibold text-lg">CFO AI</span>
+                <img src="/logo.jpg" alt="CFO AI Logo" className="h-8 w-auto object-contain" />
               </div>
               <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-[var(--bg-secondary)] rounded">
                 <XMarkIcon className="w-5 h-5 text-[var(--text-secondary)]" />
@@ -72,15 +68,9 @@ export default function DashboardLayout({ children }) {
         <div className="flex flex-col flex-1 bg-white border-r border-[var(--border-default)]">
           {/* Logo */}
           <div className="flex items-center h-16 px-5 border-b border-[var(--border-default)]">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded bg-black flex items-center justify-center">
-                <BuildingOffice2Icon className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <span className="font-semibold text-lg">CFO AI</span>
-                <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider">DICSA</p>
-              </div>
-            </div>
+            <Link to="/" className="flex items-center gap-3">
+              <img src="/logo.jpg" alt="CFO AI Logo" className="h-10 w-auto object-contain" />
+            </Link>
           </div>
           
           {/* Navigation */}

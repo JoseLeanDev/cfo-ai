@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { useTesoreriaPosicion, useTesoreriaCxC, useTesoreriaCxP, useTesoreriaProyeccion } from '../hooks/useCfoData'
+import { useTesoreriaPosicion, useTesoreriaCxC, useTesoreriaCxP, useTesoreriaProyeccion, useWorkingCapital } from '../hooks/useCfoData'
 import PageInsights from '../components/agents/PageInsights'
 import { 
   BanknotesIcon, 
@@ -9,7 +9,9 @@ import {
   BuildingLibraryIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
-  ArrowRightIcon
+  ArrowRightIcon,
+  ArrowPathIcon,
+  LightBulbIcon
 } from '@heroicons/react/24/outline'
 
 // Format currency
@@ -23,16 +25,14 @@ export default function Tesoreria() {
   const { data: cxc, isLoading: loadingCxC } = useTesoreriaCxC()
   const { data: cxp, isLoading: loadingCxP } = useTesoreriaCxP()
   const { data: proyeccion, isLoading: loadingProy } = useTesoreriaProyeccion(13)
+  const { data: workingCapital, isLoading: loadingWC } = useWorkingCapital({ meses: 6 })
 
   const posicionData = posicion?.data || {}
   const cxcData = cxc?.data || {}
   const cxpData = cxp?.data || {}
   const proyeccionData = proyeccion?.data || {}
-
-  // DEBUG: Log para ver cuántas cuentas llegan
-  console.log('[DEBUG] posicionData:', posicionData)
-  console.log('[DEBUG] cuentas:', posicionData.cuentas)
-  console.log('[DEBUG] cantidad de cuentas:', posicionData.cuentas?.length)
+  const wcData = workingCapital?.data || {}
+  const metricas = wcData.metricas_principales || {}
 
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl">
@@ -102,6 +102,151 @@ export default function Tesoreria() {
         </div>
       </div>
 
+      {/* Cash Conversion Cycle Section */}
+      <div className="card">
+        <div className="section-header">
+          <ArrowPathIcon className="w-5 h-5 text-[var(--text-muted)]" />
+          <div className="flex-1">
+            <h2 className="font-semibold">Cash Conversion Cycle</h2>
+            <p className="text-xs text-[var(--text-muted)]">
+              {metricas.c2c?.interpretacion || 'Calculando...'} • Benchmark: {metricas.c2c?.benchmark || '—'} días
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className={`text-2xl font-bold ${
+              (metricas.c2c?.valor || 0) < 30 ? 'text-emerald-600' : 
+              (metricas.c2c?.valor || 0) < 60 ? 'text-amber-600' : 
+              (metricas.c2c?.valor || 0) < 90 ? 'text-orange-600' : 'text-rose-600'
+            }`}>
+              {loadingWC ? '—' : `${metricas.c2c?.valor || 0} días`}
+            </span>
+          </div>
+        </div>
+        
+        <div className="p-5 pt-0">
+          {loadingWC ? (
+            <div className="h-32 flex items-center justify-center">
+              <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <>
+              {/* CCC Visualization */}
+              <div className="flex items-center justify-between mb-6">
+                {/* DIO */}
+                <div className="flex-1 text-center">
+                  <div className="text-3xl font-bold text-blue-600">{metricas.dio?.valor || 0}</div>
+                  <div className="text-xs text-[var(--text-muted)] mt-1">DIO</div>
+                  <div className="text-[10px] text-[var(--text-muted)]">Días Inventario</div>
+                </div>
+                
+                <div className="text-2xl text-[var(--text-muted)]">+</div>
+                
+                {/* DSO */}
+                <div className="flex-1 text-center">
+                  <div className="text-3xl font-bold text-purple-600">{metricas.dso?.valor || 0}</div>
+                  <div className="text-xs text-[var(--text-muted)] mt-1">DSO</div>
+                  <div className="text-[10px] text-[var(--text-muted)]">Días Cobro</div>
+                </div>
+                
+                <div className="text-2xl text-[var(--text-muted)]">−</div>
+                
+                {/* DPO */}
+                <div className="flex-1 text-center">
+                  <div className="text-3xl font-bold text-emerald-600">{metricas.dpo?.dias_real || 0}</div>
+                  <div className="text-xs text-[var(--text-muted)] mt-1">DPO</div>
+                  <div className="text-[10px] text-[var(--text-muted)]">Días Pago</div>
+                </div>
+                
+                <div className="text-2xl text-[var(--text-muted)]">=</div>
+                
+                {/* C2C */}
+                <div className="flex-1 text-center">
+                  <div className={`text-3xl font-bold ${
+                    (metricas.c2c?.valor || 0) < 30 ? 'text-emerald-600' : 
+                    (metricas.c2c?.valor || 0) < 60 ? 'text-amber-600' : 
+                    (metricas.c2c?.valor || 0) < 90 ? 'text-orange-600' : 'text-rose-600'
+                  }`}>
+                    {metricas.c2c?.valor || 0}
+                  </div>
+                  <div className="text-xs text-[var(--text-muted)] mt-1">CCC</div>
+                  <div className="text-[10px] text-[var(--text-muted)]">Ciclo de Efectivo</div>
+                </div>
+              </div>
+              
+              {/* Progress bar visualization */}
+              <div className="relative h-4 bg-[var(--bg-tertiary)] rounded-full overflow-hidden mb-4">
+                <div className="absolute left-0 h-full bg-blue-500" style={{ width: `${Math.min((metricas.dio?.valor || 0) / 120 * 100, 33)}%` }} />
+                <div className="absolute h-full bg-purple-500" style={{ left: `${Math.min((metricas.dio?.valor || 0) / 120 * 100, 33)}%`, width: `${Math.min((metricas.dso?.valor || 0) / 120 * 100, 33)}%` }} />
+                <div className="absolute h-full bg-emerald-500" style={{ right: '0', width: `${Math.min((metricas.dpo?.dias_real || 0) / 120 * 100, 33)}%` }} />
+              </div>
+              <div className="flex justify-between text-xs text-[var(--text-muted)] mb-6">
+                <span className="text-blue-600">Inventario</span>
+                <span className="text-purple-600">Cobro</span>
+                <span className="text-emerald-600">Pago</span>
+              </div>
+              
+              {/* Recommendations */}
+              {wcData.recomendaciones?.length > 0 && (
+                <div className="space-y-3">
+                  <h3 className="text-sm font-medium flex items-center gap-2">
+                    <LightBulbIcon className="w-4 h-4 text-amber-500" />
+                    Acciones Recomendadas
+                  </h3>
+                  {wcData.recomendaciones.slice(0, 2).map((rec, idx) => (
+                    <div key={idx} className="bg-[var(--bg-secondary)] p-3 rounded-lg">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-[var(--text-primary)]">{rec.titulo}</p>
+                          <p className="text-xs text-[var(--text-muted)] mt-1">{rec.descripcion}</p>
+                          {rec.acciones?.length > 0 && (
+                            <ul className="mt-2 space-y-1">
+                              {rec.acciones.slice(0, 2).map((acc, i) => (
+                                <li key={i} className="text-xs text-[var(--text-secondary)] flex items-center gap-1">
+                                  <span className="w-1 h-1 rounded-full bg-[var(--accent-blue)]" />
+                                  {acc}
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+                        {rec.impacto_efectivo > 0 && (
+                          <span className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-1 rounded">
+                            +Q{rec.impacto_efectivo.toLocaleString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              
+              {/* Alertas */}
+              {wcData.alertas?.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {wcData.alertas.map((alerta, idx) => (
+                    <div key={idx} className={`p-3 rounded-lg flex items-start gap-2 ${
+                      alerta.severidad === 'critica' ? 'bg-rose-50 border border-rose-200' : 'bg-amber-50 border border-amber-200'
+                    }`}>
+                      <ExclamationTriangleIcon className={`w-4 h-4 flex-shrink-0 ${
+                        alerta.severidad === 'critica' ? 'text-rose-500' : 'text-amber-500'
+                      }`} />
+                      <div>
+                        <p className={`text-sm font-medium ${
+                          alerta.severidad === 'critica' ? 'text-rose-700' : 'text-amber-700'
+                        }`}>
+                          {alerta.mensaje}
+                        </p>
+                        <p className="text-xs text-[var(--text-muted)] mt-1">{alerta.accion_urgente}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+
       {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Cuentas Bancarias */}
@@ -116,13 +261,6 @@ export default function Tesoreria() {
           </div>
           
           <div className="space-y-3 p-5 pt-0">
-            {/* DEBUG: Mostrar contador */}
-            {!loadingPos && posicionData.cuentas && (
-              <div className="text-xs text-[var(--text-muted)] mb-2">
-                Total de cuentas recibidas: {posicionData.cuentas.length}
-              </div>
-            )}
-            
             {loadingPos ? (
               Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="h-16 bg-[var(--bg-secondary)] rounded-lg animate-pulse" />

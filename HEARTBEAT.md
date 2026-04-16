@@ -35,6 +35,19 @@ No solo mostrar datos. **Revelar oportunidades, riesgos y acciones concretas.**
 
 ---
 
+### 🟠 PRIORIDAD 6: Reactivar Chatbot AI Assistant
+**Problema:** El componente AgentChat existe pero no está integrado en el layout
+
+**Implementar:**
+- [ ] Importar AgentChat en DashboardLayout
+- [ ] Agregar burbuja flotante en todas las páginas
+- [ ] Verificar conexión con backend /api/agents/chat
+- [ ] Quick actions: "¿Cuál es mi runway?", "KPIs", "Obligaciones SAT"
+
+**Valor:** Acceso instantáneo a insights financieros vía chat
+
+---
+
 ### 🟢 PRIORIDAD 3: Profitability Matrix
 **Pregunta:** ¿Qué clientes/productos son realmente rentables?
 
@@ -178,6 +191,7 @@ negociar línea de crédito por Q300,000
 | ✅ | Customer Concentration Risk | DONE | a0fdc65 |
 | ✅ | Fix cuentas duplicadas | DONE | fc0d5d8 |
 | 🟡 | Cash Conversion Cycle (CCC) | NEXT | - |
+| 🟡 | Chatbot/AI Assistant (burbuja) | TODO | - |
 | 🟡 | Working Capital Optimization | TODO | - |
 | 🟢 | Profitability Matrix | TODO | - |
 | 🔵 | Scenario Simulator | TODO | - |

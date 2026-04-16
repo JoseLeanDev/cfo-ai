@@ -114,6 +114,8 @@ function sqliteToPostgres(sql) {
     .replace(/date\s*\(\s*['"]now['"]\s*,\s*['"]([+-]\d+)\s+days?['"]\s*\)/gi, "CURRENT_DATE - INTERVAL '$1 days'")
     // 4. datetime('now', '-X days') → NOW() - INTERVAL 'X days'
     .replace(/datetime\s*\(\s*['"]now['"]\s*,\s*['"]([+-]\d+)\s+days?['"]\s*\)/gi, "NOW() - INTERVAL '$1 days'")
+    // 4b. datetime('now', '-${dias} days') → NOW() - INTERVAL '${dias} days' (para template literals)
+    .replace(/datetime\s*\(\s*['"]now['"]\s*,\s*['"]-\$(\{[^}]+\})\s+days?['"]\s*\)/gi, "NOW() - INTERVAL '$1 days'")
     // 5. strftime('%Y-%m', ...) → TO_CHAR(..., 'YYYY-MM')
     .replace(/strftime\s*\(\s*['"]%Y-%m['"]\s*,\s*([^)]+)\)/gi, "TO_CHAR($1, 'YYYY-MM')")
     // 6. julianday(...) - julianday(...) → (... - ...) en días

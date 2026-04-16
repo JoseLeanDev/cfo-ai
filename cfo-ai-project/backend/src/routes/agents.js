@@ -87,6 +87,13 @@ router.get('/logs', async (req, res) => {
     const status = req.query.status;
     const dias = parseInt(req.query.dias) || 7;
     
+    // Detectar si es PostgreSQL
+    const isPostgres = !!db.pool;
+    
+    const dateFilter = isPostgres 
+      ? `created_at >= NOW() - INTERVAL '${dias} days'`
+      : `created_at >= datetime('now', '-${dias} days')`;
+    
     let query = `
       SELECT 
         id,
@@ -105,7 +112,7 @@ router.get('/logs', async (req, res) => {
         duracion_ms as duracionMs
       FROM agentes_logs
       WHERE empresa_id = ? 
-        AND created_at >= datetime('now', '-${dias} days')
+        AND ${dateFilter}
     `;
     
     const params = [empresaId];
@@ -137,54 +144,92 @@ router.get('/logs', async (req, res) => {
     }));
     
     // Obtener estadísticas
-    const stats = await db.getAsync(`
-      SELECT 
-        COUNT(*) as total,
-        COUNT(DISTINCT agente_tipo) as agentesActivos,
-        SUM(CASE WHEN resultado_status = 'exitoso' THEN 1 ELSE 0 END) as exitosos,
-        SUM(CASE WHEN resultado_status = 'error' THEN 1 ELSE 0 END) as errores,
-        SUM(CASE WHEN resultado_status = 'advertencia' THEN 1 ELSE 0 END) as advertencias
-      FROM agentes_logs
-      WHERE empresa_id = ? 
-        AND created_at >= datetime('now', '-${dias} days')
-    `, [empresaId]);
+    const statsQuery = isPostgres
+      ? `SELECT 
+          COUNT(*) as total,
+          COUNT(DISTINCT agente_tipo) as agentesActivos,
+          SUM(CASE WHEN resultado_status = 'exitoso' THEN 1 ELSE 0 END) as exitosos,
+          SUM(CASE WHEN resultado_status = 'error' THEN 1 ELSE 0 END) as errores,
+          SUM(CASE WHEN resultado_status = 'advertencia' THEN 1 ELSE 0 END) as advertencias
+        FROM agentes_logs
+        WHERE empresa_id = ? 
+          AND created_at >= NOW() - INTERVAL '${dias} days'`
+      : `SELECT 
+          COUNT(*) as total,
+          COUNT(DISTINCT agente_tipo) as agentesActivos,
+          SUM(CASE WHEN resultado_status = 'exitoso' THEN 1 ELSE 0 END) as exitosos,
+          SUM(CASE WHEN resultado_status = 'error' THEN 1 ELSE 0 END) as errores,
+          SUM(CASE WHEN resultado_status = 'advertencia' THEN 1 ELSE 0 END) as advertencias
+        FROM agentes_logs
+        WHERE empresa_id = ? 
+          AND created_at >= datetime('now', '-${dias} days')`;
+    
+    const stats = await db.getAsync(statsQuery, [empresaId]);
     
     // Agrupar por categoría
-    const porCategoria = await db.allAsync(`
-      SELECT 
-        categoria,
-        COUNT(*) as count
-      FROM agentes_logs
-      WHERE empresa_id = ? 
-        AND created_at >= datetime('now', '-${dias} days')
-      GROUP BY categoria
-      ORDER BY count DESC
-    `, [empresaId]);
+    const porCategoriaQuery = isPostgres
+      ? `SELECT 
+          categoria,
+          COUNT(*) as count
+        FROM agentes_logs
+        WHERE empresa_id = ? 
+          AND created_at >= NOW() - INTERVAL '${dias} days'
+        GROUP BY categoria
+        ORDER BY count DESC`
+      : `SELECT 
+          categoria,
+          COUNT(*) as count
+        FROM agentes_logs
+        WHERE empresa_id = ? 
+          AND created_at >= datetime('now', '-${dias} days')
+        GROUP BY categoria
+        ORDER BY count DESC`;
+    
+    const porCategoria = await db.allAsync(porCategoriaQuery, [empresaId]);
     
     // Agrupar por agente
-    const porAgente = await db.allAsync(`
-      SELECT 
-        agente_tipo as agente,
-        agente_nombre as nombre,
-        COUNT(*) as count
-      FROM agentes_logs
-      WHERE empresa_id = ? 
-        AND created_at >= datetime('now', '-${dias} days')
-      GROUP BY agente_tipo, agente_nombre
-      ORDER BY count DESC
-    `, [empresaId]);
+    const porAgenteQuery = isPostgres
+      ? `SELECT 
+          agente_tipo as agente,
+          agente_nombre as nombre,
+          COUNT(*) as count
+        FROM agentes_logs
+        WHERE empresa_id = ? 
+          AND created_at >= NOW() - INTERVAL '${dias} days'
+        GROUP BY agente_tipo, agente_nombre
+        ORDER BY count DESC`
+      : `SELECT 
+          agente_tipo as agente,
+          agente_nombre as nombre,
+          COUNT(*) as count
+        FROM agentes_logs
+        WHERE empresa_id = ? 
+          AND created_at >= datetime('now', '-${dias} days')
+        GROUP BY agente_tipo, agente_nombre
+        ORDER BY count DESC`;
+    
+    const porAgente = await db.allAsync(porAgenteQuery, [empresaId]);
     
     // Agrupar por status
-    const porStatus = await db.allAsync(`
-      SELECT 
-        resultado_status as status,
-        COUNT(*) as count
-      FROM agentes_logs
-      WHERE empresa_id = ? 
-        AND created_at >= datetime('now', '-${dias} days')
-      GROUP BY resultado_status
-      ORDER BY count DESC
-    `, [empresaId]);
+    const porStatusQuery = isPostgres
+      ? `SELECT 
+          resultado_status as status,
+          COUNT(*) as count
+        FROM agentes_logs
+        WHERE empresa_id = ? 
+          AND created_at >= NOW() - INTERVAL '${dias} days'
+        GROUP BY resultado_status
+        ORDER BY count DESC`
+      : `SELECT 
+          resultado_status as status,
+          COUNT(*) as count
+        FROM agentes_logs
+        WHERE empresa_id = ? 
+          AND created_at >= datetime('now', '-${dias} days')
+        GROUP BY resultado_status
+        ORDER BY count DESC`;
+    
+    const porStatus = await db.allAsync(porStatusQuery, [empresaId]);
     
     // Convertir porStatus a objeto
     const porStatusObj = porStatus.reduce((acc, row) => {

@@ -12,12 +12,7 @@ const aiService = require('../src/services/aiService');
 
 class AgentOrchestratorIA {
   constructor() {
-    this.agentes = {
-      auditor: AuditorAgentIA,
-      analista: AnalistaFinancieroIA,
-      conciliador: ConciliadorAgentIA,
-      maintenance: MaintenanceAgentIA
-    };
+    this.agentes = new Map(); // Usar Map para instancias
     this.estado = 'detenido';
     this.inicioTimestamp = null;
   }
@@ -41,11 +36,20 @@ class AgentOrchestratorIA {
     console.log(`🎯 Modelo: ${aiService.config.model}\n`);
 
     try {
-      // Iniciar cada agente
-      for (const [nombre, agente] of Object.entries(this.agentes)) {
-        console.log(`\n🚀 Iniciando ${agente.nombre}...`);
+      // Crear e iniciar cada agente (instancias)
+      const agenteClasses = {
+        auditor_ia: AuditorAgentIA,
+        analista_ia: AnalistaFinancieroIA,
+        conciliador_ia: ConciliadorAgentIA,
+        maintenance_ia: MaintenanceAgentIA
+      };
+
+      for (const [key, AgenteClass] of Object.entries(agenteClasses)) {
+        console.log(`\n🚀 Creando instancia de ${AgenteClass.name}...`);
+        const agente = new AgenteClass();
         agente.iniciarScheduler();
-        // No loggear inicio de agente - es ruido técnico
+        this.agentes.set(key, agente);
+        console.log(`✅ ${agente.nombre} iniciado`);
       }
 
       this.estado = 'activo';
@@ -53,6 +57,7 @@ class AgentOrchestratorIA {
 
       console.log('\n✅ ==========================================');
       console.log('✅ TODOS LOS AGENTES DE IA INICIADOS');
+      console.log(`✅ Total: ${this.agentes.size} agentes`);
       console.log('✅ ==========================================\n');
 
       // Ejecutar health check inicial
@@ -79,8 +84,8 @@ class AgentOrchestratorIA {
   detener() {
     console.log('\n🛑 Deteniendo agentes de IA...\n');
     
-    for (const [nombre, agente] of Object.entries(this.agentes)) {
-      console.log(`⏹️  Deteniendo ${nombre}...`);
+    for (const [key, agente] of this.agentes) {
+      console.log(`⏹️  Deteniendo ${key}...`);
       agente.detener();
     }
 
@@ -96,18 +101,23 @@ class AgentOrchestratorIA {
       ? Math.floor((new Date() - this.inicioTimestamp) / 1000)
       : 0;
 
-    return {
-      estado: this.estado,
-      inicio: this.inicioTimestamp,
-      tiempo_activo_segundos: tiempoActivo,
-      agentes: Object.entries(this.agentes).map(([key, agente]) => ({
+    const agentesArray = [];
+    for (const [key, agente] of this.agentes) {
+      agentesArray.push({
         id: key,
         nombre: agente.nombre,
         tipo: agente.tipo,
         version: agente.version,
         descripcion: agente.descripcion,
         activo: true
-      })),
+      });
+    }
+
+    return {
+      estado: this.estado,
+      inicio: this.inicioTimestamp,
+      tiempo_activo_segundos: tiempoActivo,
+      agentes: agentesArray,
       llm: aiService.getStats()
     };
   }
@@ -116,7 +126,7 @@ class AgentOrchestratorIA {
    * Ejecutar tarea manual de un agente
    */
   async ejecutarTarea(agenteId, tarea) {
-    const agente = this.agentes[agenteId];
+    const agente = this.agentes.get(agenteId);
     if (!agente) {
       throw new Error(`Agente ${agenteId} no encontrado`);
     }

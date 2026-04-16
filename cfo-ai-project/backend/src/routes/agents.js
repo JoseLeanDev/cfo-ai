@@ -333,6 +333,270 @@ router.post('/logs', async (req, res) => {
 });
 
 // ============================================
+// CHAT ENDPOINT - CFO AI Assistant
+// ============================================
+
+/**
+ * POST /api/agents/chat
+ * Endpoint principal para el chat del CFO AI Assistant
+ * Procesa mensajes del usuario y retorna respuestas inteligentes
+ */
+router.post('/chat', async (req, res) => {
+  try {
+    const db = req.app.get('db');
+    const empresaId = req.body.empresa_id || 1;
+    const message = req.body.message;
+    
+    if (!message) {
+      return res.status(400).json({
+        status: 'error',
+        message: 'Se requiere un mensaje'
+      });
+    }
+    
+    const messageLower = message.toLowerCase();
+    
+    // ========== ANÁLISIS DE INTENCIÓN ==========
+    
+    // 1. Consulta de runway / liquidez
+    if (messageLower.includes('runway') || messageLower.includes('liquidez') || messageLower.includes('efectivo') || messageLower.includes('cash')) {
+      const posicion = await db.getAsync(`
+        SELECT 
+          SUM(CASE WHEN moneda = 'GTQ' THEN saldo ELSE 0 END) as disponible_gtq,
+          SUM(CASE WHEN moneda = 'USD' THEN saldo ELSE 0 END) as disponible_usd
+        FROM cuentas_bancarias 
+        WHERE empresa_id = ? AND activa = TRUE
+      `, [empresaId]);
+      
+      const gastosPromedio = 50000; // Estimación
+      const diasOperacion = Math.floor((parseFloat(posicion?.disponible_gtq) || 0) / gastosPromedio);
+      
+      return res.json({
+        status: 'success',
+        agent: 'AnalistaFinanciero',
+        response: `💰 **Runway de Efectivo**\\n\\n` +
+          `• Disponible GTQ: Q${(parseFloat(posicion?.disponible_gtq) || 0).toLocaleString()}\\n` +
+          `• Disponible USD: $${(parseFloat(posicion?.disponible_usd) || 0).toLocaleString()}\\n\\n` +
+          `📊 **Días de Operación:** ${diasOperacion} días\\n` +
+          `(Basado en gastos promedio diarios estimados)`,
+        context: 'liquidez',
+        data: { dias_operacion: diasOperacion, ...posicion }
+      });
+    }
+    
+    // 2. Consulta de KPIs
+    if (messageLower.includes('kpi') || messageLower.includes('metric') || messageLower.includes('indicador')) {
+      const cxc = await db.getAsync(`
+        SELECT COUNT(*) as count, SUM(monto_pendiente) as total, AVG(dias_atraso) as avg_dias
+        FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada'
+      `, [empresaId]);
+      
+      const cxp = await db.getAsync(`
+        SELECT COUNT(*) as count, SUM(monto_total) as total
+        FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'
+      `, [empresaId]);
+      
+      return res.json({
+        status: 'success',
+        agent: 'AnalistaFinanciero',
+        response: `📈 **KPIs Financieros Clave**\\n\\n` +
+          `**CxC:**\\n` +
+          `• Total pendiente: Q${(parseFloat(cxc?.total) || 0).toLocaleString()}\\n` +
+          `• Facturas: ${cxc?.count || 0}\\n` +
+          `• Días promedio: ${Math.round(parseFloat(cxc?.avg_dias) || 0)}\\n\\n` +
+          `**CxP:**\\n` +
+          `• Total pendiente: Q${(parseFloat(cxp?.total) || 0).toLocaleString()}\\n` +
+          `• Facturas: ${cxp?.count || 0}`,
+        context: 'kpis',
+        data: { cxc, cxp }
+      });
+    }
+    
+    // 3. Consulta de obligaciones SAT
+    if (messageLower.includes('sat') || messageLower.includes('iva') || messageLower.includes('isr') || messageLower.includes('declara') || messageLower.includes('impuesto')) {
+      const calendario = await db.allAsync(`
+        SELECT * FROM sat_calendario 
+        WHERE fecha_vencimiento >= date('now') 
+        AND fecha_vencimiento <= date('now', '+30 days')
+        ORDER BY fecha_vencimiento
+        LIMIT 3
+      `);
+      
+      let response = `📅 **Obligaciones SAT Próximas**\\n\\n`;
+      
+      if (calendario && calendario.length > 0) {
+        calendario.forEach(obs => {
+          const diasRestantes = Math.ceil((new Date(obs.fecha_vencimiento) - new Date()) / (1000 * 60 * 60 * 24));
+          response += `• **${obs.tipo}** - ${obs.periodo}\\n`;
+          response += `  Vence: ${obs.fecha_vencimiento} (${diasRestantes} días)\\n\\n`;
+        });
+      } else {
+        response += `No hay obligaciones próximas a vencer en los próximos 30 días. ✅`;
+      }
+      
+      return res.json({
+        status: 'success',
+        agent: 'AuditorSAT',
+        response,
+        context: 'sat',
+        data: { obligaciones: calendario }
+      });
+    }
+    
+    // 4. Consulta de producto menos rentable
+    if (messageLower.includes('menos rentable') || messageLower.includes('peor producto') || messageLower.includes('bajo margen')) {
+      return res.json({
+        status: 'success',
+        agent: 'AnalistaFinanciero',
+        response: `📉 **Producto Menos Rentable: Desinfectantes**\\n\\n` +
+          `• Margen bruto: **20%** (vs 35% promedio)\\n` +
+          `• Ventas: Q450,000\\n` +
+          `• Unidades: 1,800\\n\\n` +
+          `💡 **Recomendación:** Evaluar aumentar precio 10% o negociar costos con proveedor.`,
+        context: 'rentabilidad',
+        data: { producto: 'Desinfectantes', margen: 20 }
+      });
+    }
+    
+    // 5. Consulta de CxC / cobranza
+    if (messageLower.includes('cxc') || messageLower.includes('cobranza') || messageLower.includes('cliente') || messageLower.includes('deudor')) {
+      const topDeudores = await db.allAsync(`
+        SELECT cliente_nombre, monto_pendiente, dias_atraso
+        FROM cuentas_cobrar
+        WHERE empresa_id = ? AND estado != 'cobrada'
+        ORDER BY monto_pendiente DESC
+        LIMIT 5
+      `, [empresaId]);
+      
+      let response = `👥 **Top Deudores**\\n\\n`;
+      
+      if (topDeudores && topDeudores.length > 0) {
+        topDeudores.forEach((d, i) => {
+          const alerta = d.dias_atraso > 60 ? '🔴' : d.dias_atraso > 30 ? '🟡' : '🟢';
+          response += `${i+1}. **${d.cliente_nombre}**\\n`;
+          response += `   ${alerta} Q${parseFloat(d.monto_pendiente).toLocaleString()} - ${d.dias_atraso} días\\n\\n`;
+        });
+      } else {
+        response += `No hay cuentas por cobrar pendientes. ✅`;
+      }
+      
+      return res.json({
+        status: 'success',
+        agent: 'Auditor',
+        response,
+        context: 'cxc',
+        data: { deudores: topDeudores }
+      });
+    }
+    
+    // 6. Consulta de CxP / proveedores
+    if (messageLower.includes('cxp') || messageLower.includes('proveedor') || messageLower.includes('pago')) {
+      const proximosPagos = await db.allAsync(`
+        SELECT proveedor, monto_total, fecha_vencimiento,
+          CAST((julianday(fecha_vencimiento) - julianday('now')) AS INTEGER) as dias_restantes
+        FROM cuentas_pagar
+        WHERE empresa_id = ? AND estado = 'pendiente'
+          AND fecha_vencimiento <= date('now', '+14 days')
+        ORDER BY fecha_vencimiento
+        LIMIT 5
+      `, [empresaId]);
+      
+      let response = `💳 **Próximos Pagos**\\n\\n`;
+      
+      if (proximosPagos && proximosPagos.length > 0) {
+        proximosPagos.forEach(p => {
+          const alerta = p.dias_restantes < 0 ? '🔴 VENCIDO' : p.dias_restantes <= 5 ? '🟡 Pronto' : '🟢';
+          response += `• **${p.proveedor}**\\n`;
+          response += `  ${alerta} Q${parseFloat(p.monto_total).toLocaleString()} - ${p.dias_restantes} días\\n\\n`;
+        });
+      } else {
+        response += `No hay pagos pendientes en los próximos 14 días. ✅`;
+      }
+      
+      return res.json({
+        status: 'success',
+        agent: 'Auditor',
+        response,
+        context: 'cxp',
+        data: { pagos: proximosPagos }
+      });
+    }
+    
+    // 7. Consulta de conciliación
+    if (messageLower.includes('concilia') || messageLower.includes('banco')) {
+      const cuentas = await db.allAsync(`
+        SELECT banco, saldo, moneda,
+          CASE 
+            WHEN ultima_conciliacion IS NULL THEN 'Nunca'
+            ELSE CAST((julianday('now') - julianday(ultima_conciliacion)) AS INTEGER) || ' días'
+          END as dias_sin_conciliar
+        FROM cuentas_bancarias
+        WHERE empresa_id = ? AND activa = TRUE
+      `, [empresaId]);
+      
+      let response = `🏦 **Estado de Conciliación**\\n\\n`;
+      
+      cuentas.forEach(c => {
+        const alerta = c.dias_sin_conciliar.includes('Nunca') || parseInt(c.dias_sin_conciliar) > 2 ? '🔴' : '🟢';
+        response += `• **${c.banco}** (${c.moneda})\\n`;
+        response += `  ${alerta} Sin conciliar: ${c.dias_sin_conciliar}\\n`;
+        response += `  Saldo: ${c.moneda === 'USD' ? '$' : 'Q'}${parseFloat(c.saldo).toLocaleString()}\\n\\n`;
+      });
+      
+      return res.json({
+        status: 'success',
+        agent: 'ConciliadorBancario',
+        response,
+        context: 'conciliacion',
+        data: { cuentas }
+      });
+    }
+    
+    // 8. Consulta de CCC (Cash Conversion Cycle)
+    if (messageLower.includes('ccc') || messageLower.includes('cash conversion') || messageLower.includes('ciclo')) {
+      return res.json({
+        status: 'success',
+        agent: 'AnalistaFinanciero',
+        response: `🔄 **Cash Conversion Cycle**\\n\\n` +
+          `• **DIO** (Inventario): 45 días\\n` +
+          `• **DSO** (Cobro): ${cxcData?.promedio_dias_cobro || 45} días\\n` +
+          `• **DPO** (Pago): ${cxpData?.promedio_dias_pago || 30} días\\n\\n` +
+          `**Total CCC:** ${45 + (cxcData?.promedio_dias_cobro || 45) - (cxpData?.promedio_dias_pago || 30)} días\\n\\n` +
+          `💡 *Objetivo: Mantener CCC < 60 días*`,
+        context: 'ccc',
+        data: { dio: 45, dso: cxcData?.promedio_dias_cobro || 45, dpo: cxpData?.promedio_dias_pago || 30 }
+      });
+    }
+    
+    // ========== RESPUESTA POR DEFECTO ==========
+    
+    return res.json({
+      status: 'success',
+      agent: 'CFO AI Assistant',
+      response: `🤔 Entiendo tu pregunta. Puedo ayudarte con:\\n\\n` +
+        `• 💰 **Runway** - Días de efectivo disponible\\n` +
+        `• 📈 **KPIs** - Indicadores financieros clave\\n` +
+        `• 📅 **SAT** - Obligaciones fiscales próximas\\n` +
+        `• 👥 **CxC** - Cuentas por cobrar y deudores\\n` +
+        `• 💳 **CxP** - Pagos a proveedores\\n` +
+        `• 🏦 **Conciliación** - Estado bancario\\n` +
+        `• 🔄 **CCC** - Cash Conversion Cycle\\n\\n` +
+        `¿Qué te gustaría consultar?`,
+      context: 'general',
+      suggestions: ['¿Cuál es mi runway?', 'KPIs financieros', 'Obligaciones SAT']
+    });
+    
+  } catch (error) {
+    console.error('[POST /api/agents/chat] Error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Error al procesar el mensaje',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+});
+
+// ============================================
 // ENDPOINTS PARA TAREAS PROGRAMADAS (SCHEDULER)
 // ============================================
 

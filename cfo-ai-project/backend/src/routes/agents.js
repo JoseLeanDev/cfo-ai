@@ -91,7 +91,7 @@ router.get('/logs', async (req, res) => {
     const isPostgres = !!db.pool;
     
     const dateFilter = isPostgres 
-      ? `created_at >= NOW() - INTERVAL '${dias} days'`
+      ? `created_at >= (NOW() AT TIME ZONE 'UTC') - INTERVAL '${dias} days'`
       : `created_at >= datetime('now', '-${dias} days')`;
     
     let query = `
@@ -217,7 +217,7 @@ router.get('/logs', async (req, res) => {
           COUNT(*) as count
         FROM agentes_logs
         WHERE empresa_id = ? 
-          AND created_at >= NOW() - INTERVAL '${dias} days'
+          AND created_at >= (NOW() AT TIME ZONE 'UTC') - INTERVAL '${dias} days'
         GROUP BY resultado_status
         ORDER BY count DESC`
       : `SELECT 

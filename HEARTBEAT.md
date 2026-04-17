@@ -190,12 +190,14 @@ negociar línea de crédito por Q300,000
 | ✅ | Runway Calculator | DONE | 999b188 |
 | ✅ | Customer Concentration Risk | DONE | a0fdc65 |
 | ✅ | Fix cuentas duplicadas | DONE | fc0d5d8 |
-| 🟡 | Cash Conversion Cycle (CCC) | NEXT | - |
-| 🟡 | Chatbot/AI Assistant (burbuja) | TODO | - |
-| 🟡 | Working Capital Optimization | TODO | - |
-| 🟢 | Profitability Matrix | TODO | - |
-| 🔵 | Scenario Simulator | TODO | - |
-| 🟣 | Weekly CFO Briefing | TODO | - |
+| ✅ | Fix CCC mostrando 0 | FIXED | ead49d8 |
+| ✅ | Fix Chatbot error variables | FIXED | ead49d8 |
+| 🟡 | Cash Conversion Cycle (CCC) - Mejoras | NEXT | - |
+| 🟡 | Chatbot/AI Assistant (burbuja) - Testing | TODO | - |
+| 🟢 | Working Capital Optimization | TODO | - |
+| 🔵 | Profitability Matrix | TODO | - |
+| 🟣 | Scenario Simulator | TODO | - |
+| 🟤 | Weekly CFO Briefing | TODO | - |
 
 ---
 

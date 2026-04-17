@@ -349,8 +349,8 @@ router.post('/chat', async (req, res) => {
     
     if (!message) {
       return res.status(400).json({
-        status: 'error',
-        message: 'Se requiere un mensaje'
+        success: false,
+        error: 'Se requiere un mensaje'
       });
     }
     
@@ -372,15 +372,16 @@ router.post('/chat', async (req, res) => {
       const diasOperacion = Math.floor((parseFloat(posicion?.disponible_gtq) || 0) / gastosPromedio);
       
       return res.json({
-        status: 'success',
-        agent: 'AnalistaFinanciero',
-        response: `💰 **Runway de Efectivo**\n\n` +
-          `• Disponible GTQ: Q${(parseFloat(posicion?.disponible_gtq) || 0).toLocaleString()}\n` +
-          `• Disponible USD: $${(parseFloat(posicion?.disponible_usd) || 0).toLocaleString()}\n\n` +
-          `📊 **Días de Operación:** ${diasOperacion} días\n` +
-          `(Basado en gastos promedio diarios estimados)`,
-        context: 'liquidez',
-        data: { dias_operacion: diasOperacion, ...posicion }
+        success: true,
+        response: {
+          content: `💰 **Runway de Efectivo**\n\n` +
+            `• Disponible GTQ: Q${(parseFloat(posicion?.disponible_gtq) || 0).toLocaleString()}\n` +
+            `• Disponible USD: $${(parseFloat(posicion?.disponible_usd) || 0).toLocaleString()}\n\n` +
+            `📊 **Días de Operación:** ${diasOperacion} días\n` +
+            `(Basado en gastos promedio diarios estimados)`,
+          agent: 'AnalistaFinanciero',
+          type: 'analysis'
+        }
       });
     }
     
@@ -398,18 +399,19 @@ router.post('/chat', async (req, res) => {
       const cxp = await db.getAsync(cxpQuery, [empresaId]);
       
       return res.json({
-        status: 'success',
-        agent: 'AnalistaFinanciero',
-        response: `📈 **KPIs Financieros Clave**\n\n` +
-          `**CxC:**\n` +
-          `• Total pendiente: Q${(parseFloat(cxc?.total) || 0).toLocaleString()}\n` +
-          `• Facturas: ${cxc?.count || 0}\n` +
-          `• Días promedio: ${Math.round(parseFloat(cxc?.avg_dias) || 0)}\n\n` +
-          `**CxP:**\n` +
-          `• Total pendiente: Q${(parseFloat(cxp?.total) || 0).toLocaleString()}\n` +
-          `• Facturas: ${cxp?.count || 0}`,
-        context: 'kpis',
-        data: { cxc, cxp }
+        success: true,
+        response: {
+          content: `📈 **KPIs Financieros Clave**\n\n` +
+            `**CxC:**\n` +
+            `• Total pendiente: Q${(parseFloat(cxc?.total) || 0).toLocaleString()}\n` +
+            `• Facturas: ${cxc?.count || 0}\n` +
+            `• Días promedio: ${Math.round(parseFloat(cxc?.avg_dias) || 0)}\n\n` +
+            `**CxP:**\n` +
+            `• Total pendiente: Q${(parseFloat(cxp?.total) || 0).toLocaleString()}\n` +
+            `• Facturas: ${cxp?.count || 0}`,
+          agent: 'AnalistaFinanciero',
+          type: 'analysis'
+        }
       });
     }
     
@@ -423,39 +425,41 @@ router.post('/chat', async (req, res) => {
         LIMIT 3
       `);
       
-      let response = `📅 **Obligaciones SAT Próximas**\n\n`;
+      let respText = `📅 **Obligaciones SAT Próximas**\n\n`;
       
       if (calendario && calendario.length > 0) {
         calendario.forEach(obs => {
           const diasRestantes = Math.ceil((new Date(obs.fecha_vencimiento) - new Date()) / (1000 * 60 * 60 * 24));
-          response += `• **${obs.tipo}** - ${obs.periodo}\n`;
-          response += `  Vence: ${obs.fecha_vencimiento} (${diasRestantes} días)\n\n`;
+          respText += `• **${obs.tipo}** - ${obs.periodo}\n`;
+          respText += `  Vence: ${obs.fecha_vencimiento} (${diasRestantes} días)\n\n`;
         });
       } else {
-        response += `No hay obligaciones próximas a vencer en los próximos 30 días. ✅`;
+        respText += `No hay obligaciones próximas a vencer en los próximos 30 días. ✅`;
       }
       
       return res.json({
-        status: 'success',
-        agent: 'AuditorSAT',
-        response,
-        context: 'sat',
-        data: { obligaciones: calendario }
+        success: true,
+        response: {
+          content: respText,
+          agent: 'AuditorSAT',
+          type: 'alert'
+        }
       });
     }
     
     // 4. Consulta de producto menos rentable
     if (messageLower.includes('menos rentable') || messageLower.includes('peor producto') || messageLower.includes('bajo margen')) {
       return res.json({
-        status: 'success',
-        agent: 'AnalistaFinanciero',
-        response: `📉 **Producto Menos Rentable: Desinfectantes**\n\n` +
-          `• Margen bruto: **20%** (vs 35% promedio)\n` +
-          `• Ventas: Q450,000\n` +
-          `• Unidades: 1,800\n\n` +
-          `💡 **Recomendación:** Evaluar aumentar precio 10% o negociar costos con proveedor.`,
-        context: 'rentabilidad',
-        data: { producto: 'Desinfectantes', margen: 20 }
+        success: true,
+        response: {
+          content: `📉 **Producto Menos Rentable: Desinfectantes**\n\n` +
+            `• Margen bruto: **20%** (vs 35% promedio)\n` +
+            `• Ventas: Q450,000\n` +
+            `• Unidades: 1,800\n\n` +
+            `💡 **Recomendación:** Evaluar aumentar precio 10% o negociar costos con proveedor.`,
+          agent: 'AnalistaFinanciero',
+          type: 'analysis'
+        }
       });
     }
     
@@ -467,24 +471,25 @@ router.post('/chat', async (req, res) => {
         
       const topDeudores = await db.allAsync(deudoresQuery, [empresaId]);
       
-      let response = `👥 **Top Deudores**\n\n`;
+      let respText = `👥 **Top Deudores**\n\n`;
       
       if (topDeudores && topDeudores.length > 0) {
         topDeudores.forEach((d, i) => {
           const alerta = d.dias_atraso > 60 ? '🔴' : d.dias_atraso > 30 ? '🟡' : '🟢';
-          response += `${i+1}. **${d.cliente}**\n`;
-          response += `   ${alerta} Q${parseFloat(d.monto).toLocaleString()} - ${d.dias_atraso} días\n\n`;
+          respText += `${i+1}. **${d.cliente}**\n`;
+          respText += `   ${alerta} Q${parseFloat(d.monto).toLocaleString()} - ${d.dias_atraso} días\n\n`;
         });
       } else {
-        response += `No hay cuentas por cobrar pendientes. ✅`;
+        respText += `No hay cuentas por cobrar pendientes. ✅`;
       }
       
       return res.json({
-        status: 'success',
-        agent: 'Auditor',
-        response,
-        context: 'cxc',
-        data: { deudores: topDeudores }
+        success: true,
+        response: {
+          content: respText,
+          agent: 'Auditor',
+          type: 'alert'
+        }
       });
     }
     
@@ -496,24 +501,25 @@ router.post('/chat', async (req, res) => {
         
       const proximosPagos = await db.allAsync(pagosQuery, [empresaId]);
       
-      let response = `💳 **Próximos Pagos**\n\n`;
+      let respText = `💳 **Próximos Pagos**\n\n`;
       
       if (proximosPagos && proximosPagos.length > 0) {
         proximosPagos.forEach(p => {
           const alerta = p.dias_restantes < 0 ? '🔴 VENCIDO' : p.dias_restantes <= 5 ? '🟡 Pronto' : '🟢';
-          response += `• **${p.proveedor}**\n`;
-          response += `  ${alerta} Q${parseFloat(p.monto).toLocaleString()} - ${p.dias_restantes} días\n\n`;
+          respText += `• **${p.proveedor}**\n`;
+          respText += `  ${alerta} Q${parseFloat(p.monto).toLocaleString()} - ${p.dias_restantes} días\n\n`;
         });
       } else {
-        response += `No hay pagos pendientes en los próximos 14 días. ✅`;
+        respText += `No hay pagos pendientes en los próximos 14 días. ✅`;
       }
       
       return res.json({
-        status: 'success',
-        agent: 'Auditor',
-        response,
-        context: 'cxp',
-        data: { pagos: proximosPagos }
+        success: true,
+        response: {
+          content: respText,
+          agent: 'Auditor',
+          type: 'alert'
+        }
       });
     }
     
@@ -529,21 +535,22 @@ router.post('/chat', async (req, res) => {
         WHERE empresa_id = ? AND activa = TRUE
       `, [empresaId]);
       
-      let response = `🏦 **Estado de Conciliación**\n\n`;
+      let respText = `🏦 **Estado de Conciliación**\n\n`;
       
       cuentas.forEach(c => {
         const alerta = c.dias_sin_conciliar.includes('Nunca') || parseInt(c.dias_sin_conciliar) > 2 ? '🔴' : '🟢';
-        response += `• **${c.banco}** (${c.moneda})\n`;
-        response += `  ${alerta} Sin conciliar: ${c.dias_sin_conciliar}\n`;
-        response += `  Saldo: ${c.moneda === 'USD' ? '$' : 'Q'}${parseFloat(c.saldo).toLocaleString()}\n\n`;
+        respText += `• **${c.banco}** (${c.moneda})\n`;
+        respText += `  ${alerta} Sin conciliar: ${c.dias_sin_conciliar}\n`;
+        respText += `  Saldo: ${c.moneda === 'USD' ? '$' : 'Q'}${parseFloat(c.saldo).toLocaleString()}\n\n`;
       });
       
       return res.json({
-        status: 'success',
-        agent: 'ConciliadorBancario',
-        response,
-        context: 'conciliacion',
-        data: { cuentas }
+        success: true,
+        response: {
+          content: respText,
+          agent: 'ConciliadorBancario',
+          type: 'analysis'
+        }
       });
     }
     
@@ -565,43 +572,44 @@ router.post('/chat', async (req, res) => {
       const ccc = dio + dso - dpo;
       
       return res.json({
-        status: 'success',
-        agent: 'AnalistaFinanciero',
-        response: `🔄 **Cash Conversion Cycle**\n\n` +
-          `• **DIO** (Inventario): ${dio} días\n` +
-          `• **DSO** (Cobro): ${dso} días\n` +
-          `• **DPO** (Pago): ${dpo} días\n\n` +
-          `**Total CCC:** ${ccc} días\n\n` +
-          `💡 *Objetivo: Mantener CCC < 60 días*`,
-        context: 'ccc',
-        data: { dio, dso, dpo, ccc }
+        success: true,
+        response: {
+          content: `🔄 **Cash Conversion Cycle**\n\n` +
+            `• **DIO** (Inventario): ${dio} días\n` +
+            `• **DSO** (Cobro): ${dso} días\n` +
+            `• **DPO** (Pago): ${dpo} días\n\n` +
+            `**Total CCC:** ${ccc} días\n\n` +
+            `💡 *Objetivo: Mantener CCC < 60 días*`,
+          agent: 'AnalistaFinanciero',
+          type: 'analysis'
+        }
       });
     }
     
     // ========== RESPUESTA POR DEFECTO ==========
     
     return res.json({
-      status: 'success',
-      agent: 'CFO AI Assistant',
-      response: `🤔 Entiendo tu pregunta. Puedo ayudarte con:\n\n` +
-        `• 💰 **Runway** - Días de efectivo disponible\n` +
-        `• 📈 **KPIs** - Indicadores financieros clave\n` +
-        `• 📅 **SAT** - Obligaciones fiscales próximas\n` +
-        `• 👥 **CxC** - Cuentas por cobrar y deudores\n` +
-        `• 💳 **CxP** - Pagos a proveedores\n` +
-        `• 🏦 **Conciliación** - Estado bancario\n` +
-        `• 🔄 **CCC** - Cash Conversion Cycle\n\n` +
-        `¿Qué te gustaría consultar?`,
-      context: 'general',
-      suggestions: ['¿Cuál es mi runway?', 'KPIs financieros', 'Obligaciones SAT']
+      success: true,
+      response: {
+        content: `🤔 Entiendo tu pregunta. Puedo ayudarte con:\n\n` +
+          `• 💰 **Runway** - Días de efectivo disponible\n` +
+          `• 📈 **KPIs** - Indicadores financieros clave\n` +
+          `• 📅 **SAT** - Obligaciones fiscales próximas\n` +
+          `• 👥 **CxC** - Cuentas por cobrar y deudores\n` +
+          `• 💳 **CxP** - Pagos a proveedores\n` +
+          `• 🏦 **Conciliación** - Estado bancario\n` +
+          `• 🔄 **CCC** - Cash Conversion Cycle\n\n` +
+          `¿Qué te gustaría consultar?`,
+        agent: 'CFO AI Assistant',
+        type: 'welcome'
+      }
     });
     
   } catch (error) {
     console.error('[POST /api/agents/chat] Error:', error);
     res.status(500).json({
-      status: 'error',
-      message: 'Error al procesar el mensaje',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      success: false,
+      error: 'Error al procesar el mensaje'
     });
   }
 });

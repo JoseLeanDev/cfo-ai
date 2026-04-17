@@ -191,7 +191,7 @@ negociar línea de crédito por Q300,000
 | ✅ | Customer Concentration Risk | DONE | a0fdc65 |
 | ✅ | Fix cuentas duplicadas | DONE | fc0d5d8 |
 | ✅ | Fix CCC mostrando 0 | FIXED | ead49d8 |
-| ✅ | Fix Chatbot error variables | FIXED | ead49d8 |
+| ✅ | Fix Chatbot error estructura respuesta | FIXED | 2f53658 |
 | 🟡 | Cash Conversion Cycle (CCC) - Mejoras | NEXT | - |
 | 🟡 | Chatbot/AI Assistant (burbuja) - Testing | TODO | - |
 | 🟢 | Working Capital Optimization | TODO | - |

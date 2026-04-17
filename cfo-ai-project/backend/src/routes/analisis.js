@@ -840,9 +840,9 @@ router.get('/working-capital', async (req, res) => {
     // Días promedio que tardamos en pagar a proveedores
     const dpoQuery = isPostgres ? `
       SELECT 
-        COALESCE(AVG(CAST((julianday(fecha_vencimiento) - julianday(fecha_emision)) AS INTEGER)), 30) as dias_plazo_promedio,
+        COALESCE(AVG(EXTRACT(DAY FROM (fecha_vencimiento - fecha_emision))), 30) as dias_plazo_promedio,
         COUNT(*) as total_facturas,
-        COALESCE(SUM(CASE WHEN fecha_vencimiento < date('now') AND estado = 'pendiente' THEN monto_total ELSE 0 END), 0) as monto_vencido
+        COALESCE(SUM(CASE WHEN fecha_vencimiento < CURRENT_DATE AND estado = 'pendiente' THEN monto_total ELSE 0 END), 0) as monto_vencido
       FROM cuentas_pagar 
       WHERE empresa_id = ?
     ` : `
@@ -890,11 +890,11 @@ router.get('/working-capital', async (req, res) => {
     for (let i = periodoMeses - 1; i >= 0; i--) {
       const mesQuery = isPostgres ? `
         SELECT 
-          to_char(date('now', '-${i} months'), 'YYYY-MM') as periodo,
+          TO_CHAR(CURRENT_DATE - INTERVAL '${i} months', 'YYYY-MM') as periodo,
           COALESCE(AVG(CASE WHEN dias_atraso IS NOT NULL THEN dias_atraso END), 30) as dso_mes
         FROM cuentas_cobrar
         WHERE empresa_id = ? 
-          AND to_char(fecha_emision, 'YYYY-MM') = to_char(date('now', '-${i} months'), 'YYYY-MM')
+          AND TO_CHAR(fecha_emision, 'YYYY-MM') = TO_CHAR(CURRENT_DATE - INTERVAL '${i} months', 'YYYY-MM')
       ` : `
         SELECT 
           strftime('%Y-%m', date('now', '-${i} months')) as periodo,

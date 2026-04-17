@@ -790,9 +790,12 @@ router.get('/working-capital', async (req, res) => {
     const empresaId = req.query.empresa_id || 1;
     const periodoMeses = parseInt(req.query.meses) || 6;
     
+    // Detectar si es PostgreSQL o SQLite
+    const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
+    
     // ===== DSO (Days Sales Outstanding) =====
     // Días promedio que tardan los clientes en pagar
-    const dsoData = await db.getAsync(`
+    const dsoQuery = isPostgres ? `
       SELECT 
         AVG(dias_atraso) as dias_promedio_atraso,
         COUNT(*) as total_facturas,
@@ -801,7 +804,18 @@ router.get('/working-capital', async (req, res) => {
         AVG(CASE WHEN dias_atraso <= 0 THEN ABS(dias_atraso) END) as dias_pago_anticipado
       FROM cuentas_cobrar 
       WHERE empresa_id = ? AND estado != 'cobrada'
-    `, [empresaId]);
+    ` : `
+      SELECT 
+        AVG(dias_atraso) as dias_promedio_atraso,
+        COUNT(*) as total_facturas,
+        SUM(CASE WHEN dias_atraso > 0 THEN monto ELSE 0 END) as monto_vencido,
+        SUM(monto) as monto_total_cxc,
+        AVG(CASE WHEN dias_atraso <= 0 THEN ABS(dias_atraso) END) as dias_pago_anticipado
+      FROM cuentas_cobrar 
+      WHERE empresa_id = ? AND estado != 'cobrada'
+    `;
+    
+    const dsoData = await db.getAsync(dsoQuery, [empresaId]);
     
     const dso = {
       valor: Math.round(parseFloat(dsoData?.dias_promedio_atraso) || 30),
@@ -815,7 +829,7 @@ router.get('/working-capital', async (req, res) => {
     
     // ===== DPO (Days Payable Outstanding) =====
     // Días promedio que tardamos en pagar a proveedores
-    const dpoData = await db.getAsync(`
+    const dpoQuery = isPostgres ? `
       SELECT 
         AVG(CAST((julianday(fecha_vencimiento) - julianday(fecha_emision)) AS INTEGER)) as dias_plazo_promedio,
         AVG(CASE WHEN fecha_pago IS NOT NULL 
@@ -826,7 +840,20 @@ router.get('/working-capital', async (req, res) => {
         SUM(CASE WHEN fecha_vencimiento < date('now') AND estado = 'pendiente' THEN monto_total ELSE 0 END) as monto_vencido
       FROM cuentas_pagar 
       WHERE empresa_id = ?
-    `, [empresaId]);
+    ` : `
+      SELECT 
+        AVG(CAST((julianday(fecha_vencimiento) - julianday(fecha_emision)) AS INTEGER)) as dias_plazo_promedio,
+        AVG(CASE 
+          WHEN estado = 'pagada' THEN CAST((julianday(fecha_vencimiento) - julianday(fecha_emision)) AS INTEGER)
+          ELSE CAST((julianday('now') - julianday(fecha_emision)) AS INTEGER)
+        END) as dias_pago_real,
+        COUNT(*) as total_facturas,
+        SUM(CASE WHEN fecha_vencimiento < date('now') AND estado = 'pendiente' THEN monto ELSE 0 END) as monto_vencido
+      FROM cuentas_pagar 
+      WHERE empresa_id = ?
+    `;
+    
+    const dpoData = await db.getAsync(dpoQuery, [empresaId]);
     
     const dpo = {
       dias_plazo: Math.round(parseFloat(dpoData?.dias_plazo_promedio) || 30),
@@ -851,14 +878,23 @@ router.get('/working-capital', async (req, res) => {
     // ===== Tendencias históricas (últimos 6 meses) =====
     const tendencias = [];
     for (let i = periodoMeses - 1; i >= 0; i--) {
-      const mes = await db.getAsync(`
+      const mesQuery = isPostgres ? `
+        SELECT 
+          to_char(date('now', '-${i} months'), 'YYYY-MM') as periodo,
+          COALESCE(AVG(CASE WHEN dias_atraso IS NOT NULL THEN dias_atraso END), 30) as dso_mes
+        FROM cuentas_cobrar
+        WHERE empresa_id = ? 
+          AND to_char(fecha_emision, 'YYYY-MM') = to_char(date('now', '-${i} months'), 'YYYY-MM')
+      ` : `
         SELECT 
           strftime('%Y-%m', date('now', '-${i} months')) as periodo,
           COALESCE(AVG(CASE WHEN dias_atraso IS NOT NULL THEN dias_atraso END), 30) as dso_mes
         FROM cuentas_cobrar
         WHERE empresa_id = ? 
           AND strftime('%Y-%m', fecha_emision) = strftime('%Y-%m', date('now', '-${i} months'))
-      `, [empresaId]);
+      `;
+      
+      const mes = await db.getAsync(mesQuery, [empresaId]);
       
       if (mes?.periodo) {
         tendencias.push({

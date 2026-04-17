@@ -1,6 +1,3 @@
-/**
- * Agents Routes - API endpoints para el sistema multi-agente
- */
 const express = require('express');
 const router = express.Router();
 const { ejecutarTareasPendientesWakeUp } = require('../services/wakeUpScheduler');
@@ -347,6 +344,9 @@ router.post('/chat', async (req, res) => {
     const empresaId = req.body.empresa_id || 1;
     const message = req.body.message;
     
+    // Detectar si es PostgreSQL o SQLite
+    const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
+    
     if (!message) {
       return res.status(400).json({
         status: 'error',
@@ -374,10 +374,10 @@ router.post('/chat', async (req, res) => {
       return res.json({
         status: 'success',
         agent: 'AnalistaFinanciero',
-        response: `💰 **Runway de Efectivo**\\n\\n` +
-          `• Disponible GTQ: Q${(parseFloat(posicion?.disponible_gtq) || 0).toLocaleString()}\\n` +
-          `• Disponible USD: $${(parseFloat(posicion?.disponible_usd) || 0).toLocaleString()}\\n\\n` +
-          `📊 **Días de Operación:** ${diasOperacion} días\\n` +
+        response: `💰 **Runway de Efectivo**\n\n` +
+          `• Disponible GTQ: Q${(parseFloat(posicion?.disponible_gtq) || 0).toLocaleString()}\n` +
+          `• Disponible USD: $${(parseFloat(posicion?.disponible_usd) || 0).toLocaleString()}\n\n` +
+          `📊 **Días de Operación:** ${diasOperacion} días\n` +
           `(Basado en gastos promedio diarios estimados)`,
         context: 'liquidez',
         data: { dias_operacion: diasOperacion, ...posicion }
@@ -386,26 +386,27 @@ router.post('/chat', async (req, res) => {
     
     // 2. Consulta de KPIs
     if (messageLower.includes('kpi') || messageLower.includes('metric') || messageLower.includes('indicador')) {
-      const cxc = await db.getAsync(`
-        SELECT COUNT(*) as count, SUM(monto_pendiente) as total, AVG(dias_atraso) as avg_dias
-        FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada'
-      `, [empresaId]);
+      const cxcQuery = isPostgres 
+        ? `SELECT COUNT(*) as count, SUM(monto_pendiente) as total, AVG(dias_atraso) as avg_dias FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada'`
+        : `SELECT COUNT(*) as count, SUM(monto) as total, AVG(dias_atraso) as avg_dias FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada'`;
+        
+      const cxpQuery = isPostgres
+        ? `SELECT COUNT(*) as count, SUM(monto_total) as total FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'`
+        : `SELECT COUNT(*) as count, SUM(monto) as total FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'`;
       
-      const cxp = await db.getAsync(`
-        SELECT COUNT(*) as count, SUM(monto_total) as total
-        FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'
-      `, [empresaId]);
+      const cxc = await db.getAsync(cxcQuery, [empresaId]);
+      const cxp = await db.getAsync(cxpQuery, [empresaId]);
       
       return res.json({
         status: 'success',
         agent: 'AnalistaFinanciero',
-        response: `📈 **KPIs Financieros Clave**\\n\\n` +
-          `**CxC:**\\n` +
-          `• Total pendiente: Q${(parseFloat(cxc?.total) || 0).toLocaleString()}\\n` +
-          `• Facturas: ${cxc?.count || 0}\\n` +
-          `• Días promedio: ${Math.round(parseFloat(cxc?.avg_dias) || 0)}\\n\\n` +
-          `**CxP:**\\n` +
-          `• Total pendiente: Q${(parseFloat(cxp?.total) || 0).toLocaleString()}\\n` +
+        response: `📈 **KPIs Financieros Clave**\n\n` +
+          `**CxC:**\n` +
+          `• Total pendiente: Q${(parseFloat(cxc?.total) || 0).toLocaleString()}\n` +
+          `• Facturas: ${cxc?.count || 0}\n` +
+          `• Días promedio: ${Math.round(parseFloat(cxc?.avg_dias) || 0)}\n\n` +
+          `**CxP:**\n` +
+          `• Total pendiente: Q${(parseFloat(cxp?.total) || 0).toLocaleString()}\n` +
           `• Facturas: ${cxp?.count || 0}`,
         context: 'kpis',
         data: { cxc, cxp }
@@ -422,13 +423,13 @@ router.post('/chat', async (req, res) => {
         LIMIT 3
       `);
       
-      let response = `📅 **Obligaciones SAT Próximas**\\n\\n`;
+      let response = `📅 **Obligaciones SAT Próximas**\n\n`;
       
       if (calendario && calendario.length > 0) {
         calendario.forEach(obs => {
           const diasRestantes = Math.ceil((new Date(obs.fecha_vencimiento) - new Date()) / (1000 * 60 * 60 * 24));
-          response += `• **${obs.tipo}** - ${obs.periodo}\\n`;
-          response += `  Vence: ${obs.fecha_vencimiento} (${diasRestantes} días)\\n\\n`;
+          response += `• **${obs.tipo}** - ${obs.periodo}\n`;
+          response += `  Vence: ${obs.fecha_vencimiento} (${diasRestantes} días)\n\n`;
         });
       } else {
         response += `No hay obligaciones próximas a vencer en los próximos 30 días. ✅`;
@@ -448,10 +449,10 @@ router.post('/chat', async (req, res) => {
       return res.json({
         status: 'success',
         agent: 'AnalistaFinanciero',
-        response: `📉 **Producto Menos Rentable: Desinfectantes**\\n\\n` +
-          `• Margen bruto: **20%** (vs 35% promedio)\\n` +
-          `• Ventas: Q450,000\\n` +
-          `• Unidades: 1,800\\n\\n` +
+        response: `📉 **Producto Menos Rentable: Desinfectantes**\n\n` +
+          `• Margen bruto: **20%** (vs 35% promedio)\n` +
+          `• Ventas: Q450,000\n` +
+          `• Unidades: 1,800\n\n` +
           `💡 **Recomendación:** Evaluar aumentar precio 10% o negociar costos con proveedor.`,
         context: 'rentabilidad',
         data: { producto: 'Desinfectantes', margen: 20 }
@@ -460,21 +461,19 @@ router.post('/chat', async (req, res) => {
     
     // 5. Consulta de CxC / cobranza
     if (messageLower.includes('cxc') || messageLower.includes('cobranza') || messageLower.includes('cliente') || messageLower.includes('deudor')) {
-      const topDeudores = await db.allAsync(`
-        SELECT cliente_nombre, monto_pendiente, dias_atraso
-        FROM cuentas_cobrar
-        WHERE empresa_id = ? AND estado != 'cobrada'
-        ORDER BY monto_pendiente DESC
-        LIMIT 5
-      `, [empresaId]);
+      const deudoresQuery = isPostgres
+        ? `SELECT cliente_nombre as cliente, monto_pendiente as monto, dias_atraso FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada' ORDER BY monto_pendiente DESC LIMIT 5`
+        : `SELECT cliente, monto, dias_atraso FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada' ORDER BY monto DESC LIMIT 5`;
+        
+      const topDeudores = await db.allAsync(deudoresQuery, [empresaId]);
       
-      let response = `👥 **Top Deudores**\\n\\n`;
+      let response = `👥 **Top Deudores**\n\n`;
       
       if (topDeudores && topDeudores.length > 0) {
         topDeudores.forEach((d, i) => {
           const alerta = d.dias_atraso > 60 ? '🔴' : d.dias_atraso > 30 ? '🟡' : '🟢';
-          response += `${i+1}. **${d.cliente_nombre}**\\n`;
-          response += `   ${alerta} Q${parseFloat(d.monto_pendiente).toLocaleString()} - ${d.dias_atraso} días\\n\\n`;
+          response += `${i+1}. **${d.cliente}**\n`;
+          response += `   ${alerta} Q${parseFloat(d.monto).toLocaleString()} - ${d.dias_atraso} días\n\n`;
         });
       } else {
         response += `No hay cuentas por cobrar pendientes. ✅`;
@@ -491,23 +490,19 @@ router.post('/chat', async (req, res) => {
     
     // 6. Consulta de CxP / proveedores
     if (messageLower.includes('cxp') || messageLower.includes('proveedor') || messageLower.includes('pago')) {
-      const proximosPagos = await db.allAsync(`
-        SELECT proveedor, monto_total, fecha_vencimiento,
-          CAST((julianday(fecha_vencimiento) - julianday('now')) AS INTEGER) as dias_restantes
-        FROM cuentas_pagar
-        WHERE empresa_id = ? AND estado = 'pendiente'
-          AND fecha_vencimiento <= date('now', '+14 days')
-        ORDER BY fecha_vencimiento
-        LIMIT 5
-      `, [empresaId]);
+      const pagosQuery = isPostgres
+        ? `SELECT proveedor, monto_total as monto, fecha_vencimiento, CAST((julianday(fecha_vencimiento) - julianday('now')) AS INTEGER) as dias_restantes FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento <= date('now', '+14 days') ORDER BY fecha_vencimiento LIMIT 5`
+        : `SELECT proveedor, monto, fecha_vencimiento, CAST((julianday(fecha_vencimiento) - julianday('now')) AS INTEGER) as dias_restantes FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento <= date('now', '+14 days') ORDER BY fecha_vencimiento LIMIT 5`;
+        
+      const proximosPagos = await db.allAsync(pagosQuery, [empresaId]);
       
-      let response = `💳 **Próximos Pagos**\\n\\n`;
+      let response = `💳 **Próximos Pagos**\n\n`;
       
       if (proximosPagos && proximosPagos.length > 0) {
         proximosPagos.forEach(p => {
           const alerta = p.dias_restantes < 0 ? '🔴 VENCIDO' : p.dias_restantes <= 5 ? '🟡 Pronto' : '🟢';
-          response += `• **${p.proveedor}**\\n`;
-          response += `  ${alerta} Q${parseFloat(p.monto_total).toLocaleString()} - ${p.dias_restantes} días\\n\\n`;
+          response += `• **${p.proveedor}**\n`;
+          response += `  ${alerta} Q${parseFloat(p.monto).toLocaleString()} - ${p.dias_restantes} días\n\n`;
         });
       } else {
         response += `No hay pagos pendientes en los próximos 14 días. ✅`;
@@ -534,13 +529,13 @@ router.post('/chat', async (req, res) => {
         WHERE empresa_id = ? AND activa = TRUE
       `, [empresaId]);
       
-      let response = `🏦 **Estado de Conciliación**\\n\\n`;
+      let response = `🏦 **Estado de Conciliación**\n\n`;
       
       cuentas.forEach(c => {
         const alerta = c.dias_sin_conciliar.includes('Nunca') || parseInt(c.dias_sin_conciliar) > 2 ? '🔴' : '🟢';
-        response += `• **${c.banco}** (${c.moneda})\\n`;
-        response += `  ${alerta} Sin conciliar: ${c.dias_sin_conciliar}\\n`;
-        response += `  Saldo: ${c.moneda === 'USD' ? '$' : 'Q'}${parseFloat(c.saldo).toLocaleString()}\\n\\n`;
+        response += `• **${c.banco}** (${c.moneda})\n`;
+        response += `  ${alerta} Sin conciliar: ${c.dias_sin_conciliar}\n`;
+        response += `  Saldo: ${c.moneda === 'USD' ? '$' : 'Q'}${parseFloat(c.saldo).toLocaleString()}\n\n`;
       });
       
       return res.json({
@@ -554,17 +549,32 @@ router.post('/chat', async (req, res) => {
     
     // 8. Consulta de CCC (Cash Conversion Cycle)
     if (messageLower.includes('ccc') || messageLower.includes('cash conversion') || messageLower.includes('ciclo')) {
+      // Calcular DSO y DPO dinámicamente para la respuesta
+      const cxcData = await db.getAsync(`
+        SELECT AVG(dias_atraso) as promedio_dias_cobro FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada'
+      `, [empresaId]);
+      
+      const cxpData = await db.getAsync(`
+        SELECT AVG(CAST((julianday(fecha_vencimiento) - julianday(fecha_emision)) AS INTEGER)) as promedio_dias_pago 
+        FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'
+      `, [empresaId]);
+      
+      const dso = Math.round(parseFloat(cxcData?.promedio_dias_cobro) || 45);
+      const dpo = Math.round(parseFloat(cxpData?.promedio_dias_pago) || 30);
+      const dio = 45; // Placeholder
+      const ccc = dio + dso - dpo;
+      
       return res.json({
         status: 'success',
         agent: 'AnalistaFinanciero',
-        response: `🔄 **Cash Conversion Cycle**\\n\\n` +
-          `• **DIO** (Inventario): 45 días\\n` +
-          `• **DSO** (Cobro): ${cxcData?.promedio_dias_cobro || 45} días\\n` +
-          `• **DPO** (Pago): ${cxpData?.promedio_dias_pago || 30} días\\n\\n` +
-          `**Total CCC:** ${45 + (cxcData?.promedio_dias_cobro || 45) - (cxpData?.promedio_dias_pago || 30)} días\\n\\n` +
+        response: `🔄 **Cash Conversion Cycle**\n\n` +
+          `• **DIO** (Inventario): ${dio} días\n` +
+          `• **DSO** (Cobro): ${dso} días\n` +
+          `• **DPO** (Pago): ${dpo} días\n\n` +
+          `**Total CCC:** ${ccc} días\n\n` +
           `💡 *Objetivo: Mantener CCC < 60 días*`,
         context: 'ccc',
-        data: { dio: 45, dso: cxcData?.promedio_dias_cobro || 45, dpo: cxpData?.promedio_dias_pago || 30 }
+        data: { dio, dso, dpo, ccc }
       });
     }
     
@@ -573,14 +583,14 @@ router.post('/chat', async (req, res) => {
     return res.json({
       status: 'success',
       agent: 'CFO AI Assistant',
-      response: `🤔 Entiendo tu pregunta. Puedo ayudarte con:\\n\\n` +
-        `• 💰 **Runway** - Días de efectivo disponible\\n` +
-        `• 📈 **KPIs** - Indicadores financieros clave\\n` +
-        `• 📅 **SAT** - Obligaciones fiscales próximas\\n` +
-        `• 👥 **CxC** - Cuentas por cobrar y deudores\\n` +
-        `• 💳 **CxP** - Pagos a proveedores\\n` +
-        `• 🏦 **Conciliación** - Estado bancario\\n` +
-        `• 🔄 **CCC** - Cash Conversion Cycle\\n\\n` +
+      response: `🤔 Entiendo tu pregunta. Puedo ayudarte con:\n\n` +
+        `• 💰 **Runway** - Días de efectivo disponible\n` +
+        `• 📈 **KPIs** - Indicadores financieros clave\n` +
+        `• 📅 **SAT** - Obligaciones fiscales próximas\n` +
+        `• 👥 **CxC** - Cuentas por cobrar y deudores\n` +
+        `• 💳 **CxP** - Pagos a proveedores\n` +
+        `• 🏦 **Conciliación** - Estado bancario\n` +
+        `• 🔄 **CCC** - Cash Conversion Cycle\n\n` +
         `¿Qué te gustaría consultar?`,
       context: 'general',
       suggestions: ['¿Cuál es mi runway?', 'KPIs financieros', 'Obligaciones SAT']

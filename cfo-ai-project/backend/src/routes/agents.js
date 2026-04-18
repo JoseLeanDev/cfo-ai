@@ -618,50 +618,6 @@ router.post('/chat', async (req, res) => {
 // ENDPOINTS PARA TAREAS PROGRAMADAS (SCHEDULER)
 // ============================================
 
-// POST /api/agents/auditor
-router.post('/auditor', async (req, res) => {
-  try {
-    const { empresa_id, task, params = {} } = req.body;
-    
-    if (!empresa_id || !task) {
-      return res.status(400).json({ error: 'Se requiere empresa_id y task' });
-    }
-
-    const db = req.app.get('db');
-    const result = await auditorAgent.process(
-      { task, empresa_id, params },
-      { db }
-    );
-
-    res.json(result);
-  } catch (error) {
-    console.error('[POST /api/agents/auditor] Error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// POST /api/agents/analista
-router.post('/analista', async (req, res) => {
-  try {
-    const { empresa_id, task, params = {} } = req.body;
-    
-    if (!empresa_id || !task) {
-      return res.status(400).json({ error: 'Se requiere empresa_id y task' });
-    }
-
-    const db = req.app.get('db');
-    const result = await analistaAgent.process(
-      { task, empresa_id, params },
-      { db }
-    );
-
-    res.json(result);
-  } catch (error) {
-    console.error('[POST /api/agents/analista] Error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
 /**
  * GET /api/agents/ia/status
  * Obtiene el estado actual de los agentes de IA

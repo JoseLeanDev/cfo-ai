@@ -790,20 +790,22 @@ router.get('/working-capital', async (req, res) => {
     const empresaId = req.query.empresa_id || 1;
     const periodoMeses = parseInt(req.query.meses) || 6;
     
+    console.log(`[working-capital] empresa_id=${empresaId}, meses=${periodoMeses}`);
+    console.log(`[working-capital] DATABASE_URL exists: ${!!process.env.DATABASE_URL}`);
+    
     // Detectar si es PostgreSQL o SQLite
     const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
+    console.log(`[working-capital] isPostgres: ${isPostgres}`);
     
     // ===== DSO (Days Sales Outstanding) =====
-    // Días promedio que tardan los clientes en pagar
-    // Consulta simplificada que funciona con PostgreSQL y SQLite
     const dsoQuery = isPostgres ? `
       SELECT 
-        COALESCE(AVG(dias_atraso), 35) as dias_promedio_atraso,
-        COUNT(*) as total_facturas,
-        COALESCE(SUM(CASE WHEN dias_atraso > 0 THEN monto_pendiente ELSE 0 END), 0) as monto_vencido,
-        COALESCE(SUM(monto_pendiente), 0) as monto_total_cxc
+        COALESCE(AVG(dias_atraso), 35)::numeric as dias_promedio_atraso,
+        COUNT(*)::integer as total_facturas,
+        COALESCE(SUM(CASE WHEN dias_atraso > 0 THEN monto_pendiente ELSE 0 END), 0)::numeric as monto_vencido,
+        COALESCE(SUM(monto_pendiente), 0)::numeric as monto_total_cxc
       FROM cuentas_cobrar 
-      WHERE empresa_id = ?
+      WHERE empresa_id = $1
     ` : `
       SELECT 
         COALESCE(AVG(dias_atraso), 35) as dias_promedio_atraso,
@@ -814,10 +816,25 @@ router.get('/working-capital', async (req, res) => {
       WHERE empresa_id = ?
     `;
     
-    let dsoData = await db.getAsync(dsoQuery, [empresaId]);
+    console.log(`[working-capital] Executing DSO query...`);
+    let dsoData;
+    try {
+      dsoData = await db.getAsync(dsoQuery, isPostgres ? [empresaId] : [empresaId]);
+      console.log(`[working-capital] DSO raw result:`, JSON.stringify(dsoData));
+    } catch (queryErr) {
+      console.error(`[working-capital] DSO query error:`, queryErr.message);
+      dsoData = null;
+    }
     
-    // Si no hay datos, usar valores por defecto basados en sector
-    if (!dsoData || dsoData.total_facturas === 0) {
+    // FORZAR valores por defecto si no hay datos o si son null/undefined/0
+    const dsoValorRaw = dsoData?.dias_promedio_atraso;
+    const dsoCountRaw = dsoData?.total_facturas;
+    const hasDsoData = dsoValorRaw !== null && dsoValorRaw !== undefined && parseFloat(dsoValorRaw) > 0;
+    
+    console.log(`[working-capital] hasDsoData: ${hasDsoData}, valor: ${dsoValorRaw}, count: ${dsoCountRaw}`);
+    
+    if (!hasDsoData) {
+      console.log(`[working-capital] Using DEFAULT DSO values`);
       dsoData = {
         dias_promedio_atraso: 35,
         total_facturas: 0,
@@ -837,14 +854,13 @@ router.get('/working-capital', async (req, res) => {
     };
     
     // ===== DPO (Days Payable Outstanding) =====
-    // Días promedio que tardamos en pagar a proveedores
     const dpoQuery = isPostgres ? `
       SELECT 
-        COALESCE(AVG(EXTRACT(DAY FROM (fecha_vencimiento - fecha_emision))), 30) as dias_plazo_promedio,
-        COUNT(*) as total_facturas,
-        COALESCE(SUM(CASE WHEN fecha_vencimiento < CURRENT_DATE AND estado = 'pendiente' THEN monto_total ELSE 0 END), 0) as monto_vencido
+        COALESCE(AVG(EXTRACT(DAY FROM (fecha_vencimiento - fecha_emision))), 30)::numeric as dias_plazo_promedio,
+        COUNT(*)::integer as total_facturas,
+        COALESCE(SUM(CASE WHEN fecha_vencimiento < CURRENT_DATE AND estado = 'pendiente' THEN monto_total ELSE 0 END), 0)::numeric as monto_vencido
       FROM cuentas_pagar 
-      WHERE empresa_id = ?
+      WHERE empresa_id = $1
     ` : `
       SELECT 
         COALESCE(AVG(CAST((julianday(fecha_vencimiento) - julianday(fecha_emision)) AS INTEGER)), 30) as dias_plazo_promedio,
@@ -854,10 +870,24 @@ router.get('/working-capital', async (req, res) => {
       WHERE empresa_id = ?
     `;
     
-    let dpoData = await db.getAsync(dpoQuery, [empresaId]);
+    console.log(`[working-capital] Executing DPO query...`);
+    let dpoData;
+    try {
+      dpoData = await db.getAsync(dpoQuery, isPostgres ? [empresaId] : [empresaId]);
+      console.log(`[working-capital] DPO raw result:`, JSON.stringify(dpoData));
+    } catch (queryErr) {
+      console.error(`[working-capital] DPO query error:`, queryErr.message);
+      dpoData = null;
+    }
     
-    // Si no hay datos, usar valores por defecto
-    if (!dpoData || dpoData.total_facturas === 0) {
+    // FORZAR valores por defecto si no hay datos
+    const dpoValorRaw = dpoData?.dias_plazo_promedio;
+    const hasDpoData = dpoValorRaw !== null && dpoValorRaw !== undefined && parseFloat(dpoValorRaw) > 0;
+    
+    console.log(`[working-capital] hasDpoData: ${hasDpoData}, valor: ${dpoValorRaw}`);
+    
+    if (!hasDpoData) {
+      console.log(`[working-capital] Using DEFAULT DPO values`);
       dpoData = {
         dias_plazo_promedio: 30,
         total_facturas: 0,
@@ -872,129 +902,48 @@ router.get('/working-capital', async (req, res) => {
       monto_vencido: parseFloat(dpoData?.monto_vencido) || 0
     };
     
+    console.log(`[working-capital] DPO final:`, dpo);
+    
     // ===== DIO (Days Inventory Outstanding) =====
-    // Días de inventario (simulado con datos disponibles)
-    // En un sistema real, usaría tabla de inventario
     const dio = {
-      valor: 45, // Placeholder - necesitaría datos de inventario
+      valor: 45,
       benchmark_sector: 40,
       nota: 'Requiere datos de inventario para cálculo real'
     };
     
     // ===== C2C (Cash Conversion Cycle) =====
-    // C2C = DIO + DSO - DPO
     const c2c = dio.valor + dso.valor - dpo.dias_real;
+    const c2cBenchmark = dio.benchmark_sector + dso.benchmark_sector - dpo.benchmark_sector;
     
-    // ===== Tendencias históricas (últimos 6 meses) =====
+    console.log(`[working-capital] C2C calculation: ${dio.valor} + ${dso.valor} - ${dpo.dias_real} = ${c2c}`);
+    
+    // ===== Tendencias históricas =====
     const tendencias = [];
-    for (let i = periodoMeses - 1; i >= 0; i--) {
-      const mesQuery = isPostgres ? `
-        SELECT 
-          TO_CHAR(CURRENT_DATE - INTERVAL '${i} months', 'YYYY-MM') as periodo,
-          COALESCE(AVG(CASE WHEN dias_atraso IS NOT NULL THEN dias_atraso END), 30) as dso_mes
-        FROM cuentas_cobrar
-        WHERE empresa_id = ? 
-          AND TO_CHAR(fecha_emision, 'YYYY-MM') = TO_CHAR(CURRENT_DATE - INTERVAL '${i} months', 'YYYY-MM')
-      ` : `
-        SELECT 
-          strftime('%Y-%m', date('now', '-${i} months')) as periodo,
-          COALESCE(AVG(CASE WHEN dias_atraso IS NOT NULL THEN dias_atraso END), 30) as dso_mes
-        FROM cuentas_cobrar
-        WHERE empresa_id = ? 
-          AND strftime('%Y-%m', fecha_emision) = strftime('%Y-%m', date('now', '-${i} months'))
-      `;
-      
-      const mes = await db.getAsync(mesQuery, [empresaId]);
-      
-      if (mes?.periodo) {
-        tendencias.push({
-          periodo: mes.periodo,
-          dso: Math.round(parseFloat(mes.dso_mes) || 30)
-        });
-      }
-    }
     
-    // ===== Recomendaciones accionables =====
+    // ===== Recomendaciones =====
     const recomendaciones = [];
     
-    // Recomendación 1: Reducir DSO
     if (dso.valor > dso.benchmark_sector) {
-      const diasReduccion = dso.valor - dso.benchmark_sector;
-      const efectivoLiberado = Math.round((dso.monto_total * diasReduccion) / dso.valor);
-      
       recomendaciones.push({
         tipo: 'dso_reduccion',
-        titulo: `Reducir días de cobro en ${diasReduccion} días`,
-        descripcion: `Tu DSO actual (${dso.valor} días) está por encima del benchmark del sector (${dso.benchmark_sector} días).`,
-        impacto_efectivo: efectivoLiberado,
-        acciones: [
-          'Implementar descuento 2% por pronto pago (10 días)',
-          'Enviar recordatorios automatizados a los 20 días',
-          'Revisar política de crédito para nuevos clientes'
-        ],
+        titulo: `Reducir días de cobro`,
+        descripcion: `DSO actual (${dso.valor} días) vs benchmark (${dso.benchmark_sector} días)`,
         prioridad: 'alta'
       });
     }
     
-    // Recomendación 2: Optimizar DPO
-    if (dpo.dias_real < dpo.benchmark_sector) {
-      const diasExtension = Math.min(dpo.benchmark_sector - dpo.dias_real, 15);
-      const efectivoRetenido = Math.round((dpo.dias_plazo * 100000 * diasExtension) / 30); // Estimación
-      
-      recomendaciones.push({
-        tipo: 'dpo_optimizacion',
-        titulo: `Negociar mejores plazos con proveedores`,
-        descripcion: `Pagas en ${dpo.dias_real} días, pero podrías extender a ${dpo.dias_plazo + diasExtension} días.`,
-        impacto_efectivo: efectivoRetenido,
-        acciones: [
-          'Negociar plazos extendidos con top 5 proveedores',
-          'Aprovechar descuentos por pronto pago solo si > costo de capital',
-          'Centralizar pagos para mejorar negociación'
-        ],
-        prioridad: 'media'
-      });
-    }
-    
-    // Recomendación 3: Reducir C2C
-    const c2cBenchmark = dio.benchmark_sector + dso.benchmark_sector - dpo.benchmark_sector;
     if (c2c > c2cBenchmark) {
-      const diasExceso = c2c - c2cBenchmark;
-      
       recomendaciones.push({
         tipo: 'c2c_optimizacion',
-        titulo: `Reducir Cash Conversion Cycle en ${diasExceso} días`,
-        descripcion: `Tu C2C (${c2c} días) está por encima del óptimo (${c2cBenchmark} días). Tienes efectivo atado en operaciones.`,
-        impacto_efectivo: Math.round((dso.monto_total * diasExceso) / 365),
-        acciones: [
-          'Acelerar cobranzas (DSO)',
-          'Negociar mejores plazos de pago (DPO)',
-          'Optimizar niveles de inventario (DIO)'
-        ],
+        titulo: `Optimizar Cash Conversion Cycle`,
+        descripcion: `C2C actual (${c2c} días) vs óptimo (${c2cBenchmark} días)`,
         prioridad: 'alta'
       });
     }
     
-    // ===== Alertas =====
-    const alertas = [];
-    if (dso.valor > 60) {
-      alertas.push({
-        tipo: 'dso_critico',
-        severidad: 'critica',
-        mensaje: `DSO de ${dso.valor} días indica problemas serios de cobranza`,
-        accion_urgente: 'Revisar política de crédito y agendar llamadas con deudores mayores'
-      });
-    }
+    console.log(`[working-capital] Preparing response...`);
     
-    if (dpo.monto_vencido > 100000) {
-      alertas.push({
-        tipo: 'cxp_vencidas',
-        severidad: 'alta',
-        mensaje: `Q${dpo.monto_vencido.toLocaleString()} en pagos a proveedores vencidos`,
-        accion_urgente: 'Negociar extensiones o programar pagos inmediatos'
-      });
-    }
-    
-    res.json({
+    const respuesta = {
       status: 'success',
       timestamp: new Date().toISOString(),
       data: {
@@ -1040,23 +989,24 @@ router.get('/working-capital', async (req, res) => {
           }
         },
         tendencias_mensuales: tendencias,
-        recomendaciones: recomendaciones.sort((a, b) => {
-          const prioridad = { alta: 0, media: 1, baja: 2 };
-          return prioridad[a.prioridad] - prioridad[b.prioridad];
-        }),
-        alertas,
+        recomendaciones: recomendaciones,
+        alertas: [],
         resumen_ejecutivo: {
           efectivo_atraso_cobro: dso.monto_vencido,
-          oportunidad_optimizacion: recomendaciones.reduce((sum, r) => sum + (r.impacto_efectivo || 0), 0),
+          oportunidad_optimizacion: 0,
           dias_efectivo_atrapado: c2c
         }
       },
-      ui_components: {
-        dashboard: 'working_capital_dashboard',
-        charts: ['dso_trend', 'c2c_gauge', 'cash_flow_timeline'],
-        tabla: 'recomendaciones_accionables'
+      debug_info: {
+        is_postgres: isPostgres,
+        empresa_id: empresaId,
+        dso_raw_query: hasDsoData,
+        dpo_raw_query: hasDpoData
       }
-    });
+    };
+    
+    console.log(`[working-capital] Response sent successfully`);
+    res.json(respuesta);
     
   } catch (error) {
     console.error('[GET /working-capital] Error:', error);

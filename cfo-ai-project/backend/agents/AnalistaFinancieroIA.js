@@ -349,4 +349,4 @@ Genera un "estado del sistema" ejecutivo.`,
   }
 }
 
-module.exports = new AnalistaFinancieroIA();
+module.exports = AnalistaFinancieroIA;

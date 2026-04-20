@@ -322,4 +322,4 @@ Genera un "System Health Score".`,
   }
 }
 
-module.exports = new MaintenanceAgentIA();
+module.exports = MaintenanceAgentIA;

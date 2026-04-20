@@ -317,4 +317,4 @@ Devuelve máximo 20 sugerencias.`,
   }
 }
 
-module.exports = new ConciliadorAgentIA();
+module.exports = ConciliadorAgentIA;

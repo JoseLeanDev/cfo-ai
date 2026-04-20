@@ -311,4 +311,4 @@ Genera una alerta ejecutiva y recomendaciones urgentes.`,
   }
 }
 
-module.exports = new AuditorAgentIA();
+module.exports = AuditorAgentIA;

@@ -10,6 +10,12 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: OPENROUTER_API_KEY
+        value: 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
+      - key: LLM_PROVIDER
+        value: openrouter
+      - key: APP_URL
+        value: https://cfo-ai-backend-4n29.onrender.com
     disk:
       name: sqlite-data
       mountPath: /opt/render/project/src/database

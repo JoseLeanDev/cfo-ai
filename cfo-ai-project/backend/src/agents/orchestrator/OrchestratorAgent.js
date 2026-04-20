@@ -221,6 +221,20 @@ class OrchestratorAgent extends BaseAgent {
       agent.clearMemory();
     }
   }
+
+  /**
+   * Obtiene el estado del sistema (compatible con API)
+   * Alias de getSystemStatus para compatibilidad con rutas
+   */
+  getStatus() {
+    const systemStatus = this.getSystemStatus();
+    return {
+      isRunning: true,
+      agentes: systemStatus.agents.map(a => a.name),
+      totalAgentes: systemStatus.agents.length,
+      ...systemStatus
+    };
+  }
 }
 
 module.exports = OrchestratorAgent;

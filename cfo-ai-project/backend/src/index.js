@@ -4,7 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
-const AgentOrchestrator = require('../agents');
+const { getOrchestrator, initializeOrchestrator } = require('./agents');
 const agentsOrchestratorIA = require('../agents/index');
 const db = require('../database/connection');
 
@@ -17,9 +17,7 @@ let agentsOrchestrator = null;
 async function initializeAgents() {
   try {
     // 1. Inicializar agentes tradicionales (legacy)
-    agentsOrchestrator = new AgentOrchestrator(db);
-    await agentsOrchestrator.initialize();
-    agentsOrchestrator.start();
+    agentsOrchestrator = initializeOrchestrator();
     app.set('agentsOrchestrator', agentsOrchestrator);
     console.log('🤖 Agentes tradicionales iniciados exitosamente');
   } catch (error) {

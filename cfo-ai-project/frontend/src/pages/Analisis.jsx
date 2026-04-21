@@ -1,5 +1,6 @@
 import { ChartBarIcon, ArrowTrendingUpIcon, ArrowTrendingDownIcon } from '@heroicons/react/24/outline'
 import PageInsights from '../components/agents/PageInsights'
+import AnalisisVentas from '../components/dashboard/AnalisisVentas'
 
 export default function Analisis() {
   return (
@@ -17,6 +18,9 @@ export default function Analisis() {
 
       {/* AI Insights */}
       <PageInsights context="analisis" maxInsights={3} />
+
+      {/* Subsección: Análisis de Ventas (Productos, Tiendas, Clientes) */}
+      <AnalisisVentas />
 
       {/* KPIs */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

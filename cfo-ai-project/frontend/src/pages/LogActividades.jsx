@@ -13,7 +13,8 @@ import {
   WalletIcon,
   PresentationChartBarIcon,
   DocumentTextIcon,
-  BookOpenIcon
+  BookOpenIcon,
+  ChartBarIcon
 } from '@heroicons/react/24/outline'
 
 // NUEVO: 4 Agentes Especializados v2.0

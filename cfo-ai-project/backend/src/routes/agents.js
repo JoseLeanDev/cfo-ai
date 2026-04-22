@@ -5,17 +5,17 @@ const { ejecutarTareasPendientesWakeUp } = require('../services/wakeUpScheduler'
 // GET /api/agents/status - Estado del sistema de agentes programados
 router.get('/status', async (req, res) => {
   try {
-    const orchestrator = req.app.get('agentsOrchestrator');
+    const core = req.app.get('CFOAICore');
     
-    if (!orchestrator) {
+    if (!core) {
       return res.json({
         success: true,
         isRunning: false,
-        message: 'Agentes no inicializados aún'
+        message: 'CFO AI Core no inicializado aún'
       });
     }
     
-    const status = await orchestrator.getStatus();
+    const status = core.getEstado();
     
     res.json({
       success: true,
@@ -43,15 +43,15 @@ router.post('/execute', async (req, res) => {
       });
     }
 
-    const orchestrator = req.app.get('agentsOrchestrator');
+    const core = req.app.get('CFOAICore');
     
-    if (!orchestrator) {
+    if (!core) {
       return res.status(503).json({
-        error: 'Sistema de agentes no inicializado'
+        error: 'CFO AI Core no inicializado'
       });
     }
 
-    const result = await orchestrator.ejecutarTarea(agente, tarea);
+    const result = await core.ejecutarTarea(agente, tarea);
     
     res.json({
       success: true,
@@ -624,19 +624,19 @@ router.post('/chat', async (req, res) => {
  */
 router.get('/ia/status', async (req, res) => {
   try {
-    const orchestrator = req.app.get('agentsOrchestratorIA');
+    const core = req.app.get('CFOAICore');
     
-    if (!orchestrator) {
+    if (!core) {
       return res.json({
         success: true,
         estado: 'no_inicializado',
-        mensaje: 'Agentes de IA no iniciados',
+        mensaje: 'CFO AI Core no iniciado',
         agentes: [],
         timestamp: new Date().toISOString()
       });
     }
     
-    const estado = orchestrator.getEstado();
+    const estado = core.getEstado();
     
     res.json({
       success: true,
@@ -668,16 +668,16 @@ router.post('/ia/execute', async (req, res) => {
       });
     }
 
-    const orchestrator = req.app.get('agentsOrchestratorIA');
+    const core = req.app.get('CFOAICore');
     
-    if (!orchestrator) {
+    if (!core) {
       return res.status(503).json({
         success: false,
-        error: 'Sistema de agentes de IA no inicializado'
+        error: 'CFO AI Core no inicializado'
       });
     }
 
-    const resultado = await orchestrator.ejecutarTarea(agente, tarea);
+    const resultado = await core.ejecutarTarea(agente, tarea);
     
     res.json({
       success: true,

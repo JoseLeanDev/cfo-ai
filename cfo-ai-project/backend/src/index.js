@@ -34,7 +34,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Database setup
 app.set('db', db); // Make db available to routes
-app.set('agentsOrchestrator', agentsOrchestrator);
+app.set('CFOAICore', CFOAICore);
 
 // Routes
 app.use('/api/dashboard', require('./routes/dashboard'));
@@ -96,30 +96,25 @@ app.use((req, res) => {
 app.listen(PORT, async () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════╗
-║              CFO AI - Backend API                        ║
+║              CFO AI - Backend API v2.0                 ║
 ╠══════════════════════════════════════════════════════════╣
 ║  🚀 Servidor corriendo en puerto ${PORT}                   ║
-║  📊 Base de datos: SQLite                                ║
-║  🤖 Multi-Agent System: ACTIVO                           ║
-║  ⏰ Scheduler System: ACTIVO                             ║
-║  🌍 Environment: ${process.env.NODE_ENV || 'development'}                           ║
+║  📊 CFO AI Core v2.0: ACTIVO                             ║
+║  🤖 Agentes: 💰 Caja • 📊 Análisis • 📋 Cobranza • 📅 Contabilidad
 ╠══════════════════════════════════════════════════════════╣
-║  Agentes de IA Programados:                              ║
-║    • Auditor Automático     • Analista Financiero       ║
-║    • Conciliador Bancario   • Maintenance Agent         ║
-╠══════════════════════════════════════════════════════════╣
-║  Tareas Programadas Activas:                             ║
-║    Auditor:    45min • 06:00 • Lun 08:00 • Día 1/5      ║
-║    Analista:   07:00/18:00 • Vie 17:00 • Día 1 • Trim   ║
-║    Conciliador: 08:00 • Día 1 06:00 • Día 3 09:00       ║
-║    Maintenance: 02:00 • Dom 03:00 • Día 15 04:00        ║
+║  Tareas Programadas:                                     ║
+║    Caja:        Cada hora 7AM-6PM • 6AM proyección      ║
+║    Análisis:    5AM diario • Lun 5AM • Día 1 6AM        ║
+║    Cobranza:    Cada hora 7AM-6PM • 6AM • Lun 5:30AM   ║
+║    Contabilidad: 5AM diario • Vie 6PM • Día 1 4AM       ║
+║    Briefing:    7:00 AM diario                           ║
 ╚══════════════════════════════════════════════════════════╝
   `);
   console.log(`API disponible en: http://localhost:${PORT}/api`);
   console.log(`Agentes API: http://localhost:${PORT}/api/agents`);
   console.log(`Health check: http://localhost:${PORT}/api/health`);
   
-  // Inicializar agentes después de que el servidor esté listo
+  // Initialize CFO AI Core v2.0
   await initializeAgents();
 });
 

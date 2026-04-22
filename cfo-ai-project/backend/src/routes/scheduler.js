@@ -1,5 +1,5 @@
 /**
- * Routes para Scheduler
+ * Routes para Scheduler v2.0
  * Endpoints para gestionar las tareas programadas
  */
 const express = require('express');
@@ -8,18 +8,19 @@ const router = express.Router();
 // GET /api/scheduler/status
 router.get('/status', async (req, res) => {
   try {
-    const orchestrator = req.app.get('agentsOrchestrator');
+    const core = req.app.get('CFOAICore');
     
     res.json({
       success: true,
-      running: orchestrator ? orchestrator.isRunning : false,
+      running: core ? true : false,
       timestamp: new Date().toISOString(),
-      message: 'Sistema de agentes programados',
+      message: 'CFO AI Core v2.0',
       tareas: [
-        { agente: 'Auditor', frecuencia: '45min, 06:00, Lun 08:00, Día 1/5' },
-        { agente: 'Analista', frecuencia: '07:00/18:00, Vie 17:00, Día 1, Trimestral' },
-        { agente: 'Conciliador', frecuencia: '08:00, Día 1 06:00, Día 3 09:00' },
-        { agente: 'Maintenance', frecuencia: '02:00, Dom 03:00, Día 15 04:00' }
+        { agente: '💰 Caja', frecuencia: 'Cada hora 7AM-6PM, 6AM proyección' },
+        { agente: '📊 Análisis', frecuencia: '5AM diario, Lun 5AM, Día 1 6AM' },
+        { agente: '📋 Cobranza', frecuencia: 'Cada hora 7AM-6PM, 6AM, Lun 5:30AM' },
+        { agente: '📅 Contabilidad', frecuencia: '5AM diario, Vie 6PM, Día 1 4AM' },
+        { agente: '🤖 CFO AI Core', frecuencia: 'Briefing 7:00 AM diario' }
       ]
     });
   } catch (error) {
@@ -38,13 +39,13 @@ router.post('/trigger', async (req, res) => {
       return res.status(400).json({ error: 'Se requiere agente y tarea' });
     }
 
-    const orchestrator = req.app.get('agentsOrchestrator');
+    const core = req.app.get('CFOAICore');
     
-    if (!orchestrator) {
-      return res.status(503).json({ error: 'Sistema de agentes no inicializado' });
+    if (!core) {
+      return res.status(503).json({ error: 'CFO AI Core no inicializado' });
     }
 
-    const result = await orchestrator.ejecutarTarea(agente, tarea);
+    const result = await core.ejecutarTarea(agente, tarea);
 
     res.json({
       success: true,
@@ -52,33 +53,6 @@ router.post('/trigger', async (req, res) => {
       tarea,
       result,
       timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    console.error('[Routes/Scheduler] Error:', error);
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// GET /api/scheduler/logs
-router.get('/logs', async (req, res) => {
-  try {
-    const db = req.app.get('db');
-    const dias = parseInt(req.query.dias) || 7;
-    
-    const logs = await db.allAsync(`
-      SELECT * FROM agentes_logs 
-      WHERE created_at >= datetime('now', '-${dias} days')
-      ORDER BY created_at DESC 
-      LIMIT 100
-    `);
-    
-    res.json({
-      success: true,
-      count: logs.length,
-      logs: logs.map(log => ({
-        ...log,
-        detalles: log.detalles_json ? JSON.parse(log.detalles_json) : null
-      }))
     });
   } catch (error) {
     console.error('[Routes/Scheduler] Error:', error);

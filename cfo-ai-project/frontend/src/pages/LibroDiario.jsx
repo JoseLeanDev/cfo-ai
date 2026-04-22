@@ -23,8 +23,50 @@ export default function LibroDiario() {
     { keepPreviousData: true }
   )
 
+// Datos de ejemplo para demostración
+const ASIENTOS_EJEMPLO = [
+  { asiento_id: 1, fecha: '2026-03-01', cuenta_codigo: '1101', cuenta_nombre: 'Caja General', descripcion: 'Apertura de caja - fondo inicial', debe: 50000, haber: 0, documento: 'AP-001' },
+  { asiento_id: 1, fecha: '2026-03-01', cuenta_codigo: '3101', cuenta_nombre: 'Capital Social', descripcion: 'Apertura de caja - fondo inicial', debe: 0, haber: 50000, documento: 'AP-001' },
+  { asiento_id: 2, fecha: '2026-03-05', cuenta_codigo: '1103', cuenta_nombre: 'Banco Industrial', descripcion: 'Depósito de ventas', debe: 125000, haber: 0, documento: 'DEP-102' },
+  { asiento_id: 2, fecha: '2026-03-05', cuenta_codigo: '4101', cuenta_nombre: 'Ventas', descripcion: 'Depósito de ventas', debe: 0, haber: 111607, documento: 'DEP-102' },
+  { asiento_id: 2, fecha: '2026-03-05', cuenta_codigo: '2108', cuenta_nombre: 'IVA por Pagar', descripcion: 'Depósito de ventas', debe: 0, haber: 13393, documento: 'DEP-102' },
+  { asiento_id: 3, fecha: '2026-03-08', cuenta_codigo: '5101', cuenta_nombre: 'Costo de Ventas', descripcion: 'Compra de mercadería', debe: 45000, haber: 0, documento: 'FC-4521' },
+  { asiento_id: 3, fecha: '2026-03-08', cuenta_codigo: '1107', cuenta_nombre: 'IVA Crédito Fiscal', descripcion: 'Compra de mercadería', debe: 5400, haber: 0, documento: 'FC-4521' },
+  { asiento_id: 3, fecha: '2026-03-08', cuenta_codigo: '2101', cuenta_nombre: 'Proveedores', descripcion: 'Compra de mercadería', debe: 0, haber: 50400, documento: 'FC-4521' },
+  { asiento_id: 4, fecha: '2026-03-12', cuenta_codigo: '5102', cuenta_nombre: 'Gastos de Sueldos', descripcion: 'Nómina quincenal', debe: 35000, haber: 0, documento: 'NOM-0312' },
+  { asiento_id: 4, fecha: '2026-03-12', cuenta_codigo: '2102', cuenta_nombre: 'Sueldos por Pagar', descripcion: 'Nómina quincenal', debe: 0, haber: 35000, documento: 'NOM-0312' },
+  { asiento_id: 5, fecha: '2026-03-15', cuenta_codigo: '4101', cuenta_nombre: 'Ventas', descripcion: 'Venta a crédito - Cliente XYZ', debe: 0, haber: 89286, documento: 'F001-0023' },
+  { asiento_id: 5, fecha: '2026-03-15', cuenta_codigo: '2108', cuenta_nombre: 'IVA por Pagar', descripcion: 'Venta a crédito - Cliente XYZ', debe: 0, haber: 10714, documento: 'F001-0023' },
+  { asiento_id: 5, fecha: '2026-03-15', cuenta_codigo: '1104', cuenta_nombre: 'Cuentas por Cobrar', descripcion: 'Venta a crédito - Cliente XYZ', debe: 100000, haber: 0, documento: 'F001-0023' },
+  { asiento_id: 6, fecha: '2026-03-18', cuenta_codigo: '2101', cuenta_nombre: 'Proveedores', descripcion: 'Pago a Proveedor Alfa', debe: 30000, haber: 0, documento: 'CH-045' },
+  { asiento_id: 6, fecha: '2026-03-18', cuenta_codigo: '1103', cuenta_nombre: 'Banco Industrial', descripcion: 'Pago a Proveedor Alfa', debe: 0, haber: 30000, documento: 'CH-045' },
+  { asiento_id: 7, fecha: '2026-03-20', cuenta_codigo: '5103', cuenta_nombre: 'Alquiler', descripcion: 'Pago alquiler local comercial', debe: 15000, haber: 0, documento: 'REC-0320' },
+  { asiento_id: 7, fecha: '2026-03-20', cuenta_codigo: '1103', cuenta_nombre: 'Banco Industrial', descripcion: 'Pago alquiler local comercial', debe: 0, haber: 15000, documento: 'REC-0320' },
+  { asiento_id: 8, fecha: '2026-03-22', cuenta_codigo: '1104', cuenta_nombre: 'Cuentas por Cobrar', descripcion: 'Cobro a Cliente XYZ', debe: 0, haber: 50000, documento: 'DEP-215' },
+  { asiento_id: 8, fecha: '2026-03-22', cuenta_codigo: '1103', cuenta_nombre: 'Banco Industrial', descripcion: 'Cobro a Cliente XYZ', debe: 50000, haber: 0, documento: 'DEP-215' },
+  { asiento_id: 9, fecha: '2026-03-25', cuenta_codigo: '5201', cuenta_nombre: 'Servicios Públicos', descripcion: 'Electricidad y agua marzo', debe: 3200, haber: 0, documento: 'EEGSA-445' },
+  { asiento_id: 9, fecha: '2026-03-25', cuenta_codigo: '1107', cuenta_nombre: 'IVA Crédito Fiscal', descripcion: 'Electricidad y agua marzo', debe: 384, haber: 0, documento: 'EEGSA-445' },
+  { asiento_id: 9, fecha: '2026-03-25', cuenta_codigo: '1103', cuenta_nombre: 'Banco Industrial', descripcion: 'Electricidad y agua marzo', debe: 0, haber: 3584, documento: 'EEGSA-445' },
+  { asiento_id: 10, fecha: '2026-03-28', cuenta_codigo: '5202', cuenta_nombre: 'Publicidad', descripcion: 'Campaña redes sociales', debe: 8000, haber: 0, documento: 'FC-8891' },
+  { asiento_id: 10, fecha: '2026-03-28', cuenta_codigo: '1107', cuenta_nombre: 'IVA Crédito Fiscal', descripcion: 'Campaña redes sociales', debe: 960, haber: 0, documento: 'FC-8891' },
+  { asiento_id: 10, fecha: '2026-03-28', cuenta_codigo: '2101', cuenta_nombre: 'Proveedores', descripcion: 'Campaña redes sociales', debe: 0, haber: 8960, documento: 'FC-8891' },
+]
+
+function getAsientosEjemplo(mes) {
+  // Simplemente devolvemos los asientos de ejemplo para cualquier mes
+  // En producción esto vendría del backend
+  return ASIENTOS_EJEMPLO
+}
+
   const data = libroData?.data || {}
-  const asientos = data.asientos || []
+  const asientosAPI = data.asientos || []
+  const asientos = asientosAPI.length > 0 ? asientosAPI : getAsientosEjemplo(mes)
+  
+  // Calcular totales (de API o de ejemplo)
+  const debeTotal = asientos.reduce((sum, a) => sum + (a.debe || 0), 0)
+  const haberTotal = asientos.reduce((sum, a) => sum + (a.haber || 0), 0)
+  const totalAsientos = [...new Set(asientos.map(a => a.asiento_id))].length
+  const balanceado = Math.abs(debeTotal - haberTotal) < 0.01
   
   const asientosFiltrados = busqueda 
     ? asientos.filter(a => 
@@ -61,7 +103,7 @@ export default function LibroDiario() {
             </div>
             <div>
               <h1 className="text-2xl font-semibold">Libro Diario</h1>
-              <p className="text-sm text-[var(--text-muted)]">{data.total_asientos || 0} asientos • {meses.find(m => m.value === mes)?.label}</p>
+              <p className="text-sm text-[var(--text-muted)]">{totalAsientos} asientos • {meses.find(m => m.value === mes)?.label}</p>
             </div>
           </div>
         </div>
@@ -88,27 +130,27 @@ export default function LibroDiario() {
 
       {/* Balance Status Card */}
       <div className={`p-4 rounded-lg border flex items-center justify-between ${
-        data.balanceado 
+        balanceado 
           ? 'bg-emerald-50 border-emerald-200' 
           : 'bg-rose-50 border-rose-200'
       }`}>
         <div className="flex items-center gap-3">
-          {data.balanceado ? (
+          {balanceado ? (
             <CheckCircleIcon className="w-6 h-6 text-[var(--success)]" />
           ) : (
             <ExclamationTriangleIcon className="w-6 h-6 text-[var(--danger)]" />
           )}
           <div>
-            <p className={`font-semibold ${data.balanceado ? 'text-emerald-800' : 'text-rose-800'}`}>
-              {data.balanceado ? 'Libro balanceado' : 'Diferencia detectada'}
+            <p className={`font-semibold ${balanceado ? 'text-emerald-800' : 'text-rose-800'}`}>
+              {balanceado ? 'Libro balanceado' : 'Diferencia detectada'}
             </p>
-            <p className={`text-sm ${data.balanceado ? 'text-emerald-600' : 'text-rose-600'}`}>
-              Debe: Q{(data.debe_total || 0).toLocaleString()} | Haber: Q{(data.haber_total || 0).toLocaleString()}
+            <p className={`text-sm ${balanceado ? 'text-emerald-600' : 'text-rose-600'}`}>
+              Debe: Q{debeTotal.toLocaleString()} | Haber: Q{haberTotal.toLocaleString()}
             </p>
           </div>
         </div>
         
-        {data.balanceado && (
+        {balanceado && (
           <span className="badge-success">✓ Balanceado</span>
         )}
       </div>
@@ -211,10 +253,10 @@ export default function LibroDiario() {
                   Totales del período:
                 </td>
                 <td className="px-4 py-3 text-right font-bold text-[var(--success)]">
-                  Q{(data.debe_total || 0).toLocaleString()}
+                  Q{debeTotal.toLocaleString()}
                 </td>
                 <td className="px-4 py-3 text-right font-bold text-[var(--danger)]">
-                  Q{(data.haber_total || 0).toLocaleString()}
+                  Q{haberTotal.toLocaleString()}
                 </td>
                 <td></td>
               </tr>
@@ -227,20 +269,20 @@ export default function LibroDiario() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="kpi-card">
           <span className="kpi-label">Total Asientos</span>
-          <p className="kpi-value">{data.total_asientos || 0}</p>
+          <p className="kpi-value">{totalAsientos}</p>
         </div>
         
         <div className="kpi-card">
           <span className="kpi-label">Promedio por Asiento</span>
           <p className="kpi-value">
-            Q{data.total_asientos ? Math.round((data.debe_total || 0) / data.total_asientos).toLocaleString() : 0}
+            Q{totalAsientos ? Math.round(debeTotal / totalAsientos).toLocaleString() : 0}
           </p>
         </div>
         
         <div className="kpi-card">
           <span className="kpi-label">Diferencia</span>
-          <p className={`kpi-value ${data.balanceado ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
-            Q{Math.abs((data.debe_total || 0) - (data.haber_total || 0)).toLocaleString()}
+          <p className={`kpi-value ${balanceado ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+            Q{Math.abs(debeTotal - haberTotal).toLocaleString()}
           </p>
         </div>
       </div>

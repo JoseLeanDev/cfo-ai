@@ -391,7 +391,7 @@ router.get('/insights', async (req, res) => {
         .slice(0, 5)
         .map(i => i.action),
       _meta: {
-        agentes_utilizados: ['Análisis', 'PredictorCashFlow'],
+        agentes_utilizados: ['Análisis', 'Caja'],
         cache_ttl_minutos: 5,
         parametros: { umbral, context }
       }

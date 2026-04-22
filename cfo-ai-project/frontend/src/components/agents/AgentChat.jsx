@@ -7,7 +7,7 @@ export default function AgentChat() {
     {
       role: 'assistant',
       content: '¡Hola! Soy CFO AI. ¿En qué puedo ayudarte hoy?',
-      agent: 'ChatbotCFO'
+      agent: 'CFO AI Core'
     }
   ]);
   const [input, setInput] = useState('');
@@ -65,7 +65,7 @@ export default function AgentChat() {
       'Análisis': '📊',
       'Cobranza': '📋',
       'Contabilidad': '📅',
-      'ChatbotCFO': '🤖',
+      'CFO AI Core': '🤖',
       'Orchestrator': '🎛️'
     };
     return emojis[agentName] || '🤖';

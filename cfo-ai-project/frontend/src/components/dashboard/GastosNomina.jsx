@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import {
-  ReceiptIcon,
+  ReceiptPercentIcon,
   UsersIcon,
   BanknotesIcon,
   ExclamationTriangleIcon,
@@ -14,7 +14,7 @@ import {
   LightBulbIcon,
   ArrowPathIcon,
   ChartBarIcon,
-  PercentIcon,
+  PercentBadgeIcon,
   CalculatorIcon
 } from '@heroicons/react/24/outline'
 
@@ -146,7 +146,7 @@ export default function GastosNomina() {
   }
 
   const tabs = [
-    { id: 'gastos', label: 'Gastos Operativos', icon: ReceiptIcon },
+    { id: 'gastos', label: 'Gastos Operativos', icon: ReceiptPercentIcon },
     { id: 'nomina', label: 'Nómina y Personal', icon: UsersIcon },
   ]
 
@@ -157,7 +157,7 @@ export default function GastosNomina() {
         <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Gastos del Mes</span>
-            <ReceiptIcon className="w-4 h-4 text-[var(--text-muted)]" />
+            <ReceiptPercentIcon className="w-4 h-4 text-[var(--text-muted)]" />
           </div>
           <div className="kpi-value">{formatGTQ(totalGastosMes)}</div>
           <span className={`text-xs ${Number(variacionGastos) > 5 ? 'text-[var(--danger)]' : Number(variacionGastos) > 0 ? 'text-[var(--warning)]' : 'text-[var(--success)]'}`}>
@@ -168,7 +168,7 @@ export default function GastosNomina() {
         <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Desv. Presupuesto</span>
-            <PercentIcon className="w-4 h-4 text-[var(--text-muted)]" />
+            <PercentBadgeIcon className="w-4 h-4 text-[var(--text-muted)]" />
           </div>
           <div className={`kpi-value ${Number(desviacionPresupuesto) > 5 ? 'text-[var(--danger)]' : Number(desviacionPresupuesto) > 0 ? 'text-[var(--warning)]' : 'text-[var(--success)]'}`}>
             {desviacionPresupuesto > 0 ? '+' : ''}{desviacionPresupuesto}%

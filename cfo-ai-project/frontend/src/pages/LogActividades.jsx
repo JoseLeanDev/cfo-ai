@@ -10,85 +10,133 @@ import {
   ArrowPathIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  SparklesIcon,
-  CommandLineIcon,
-  ChartBarIcon,
-  BoltIcon,
-  ShieldCheckIcon
+  WalletIcon,
+  PresentationChartBarIcon,
+  DocumentTextIcon,
+  BookOpenIcon
 } from '@heroicons/react/24/outline'
 
-// Configuración de agentes
+// NUEVO: 4 Agentes Especializados v2.0
 const agenteConfig = {
-  'auditor_ia': { 
-    nombre: 'Auditor IA', 
-    color: 'text-rose-600',
-    bg: 'bg-rose-50',
-    border: 'border-rose-200',
-    icon: ShieldCheckIcon,
-    desc: 'Detección de anomalías'
-  },
-  'analista_ia': { 
-    nombre: 'Analista IA', 
-    color: 'text-blue-600',
-    bg: 'bg-blue-50',
-    border: 'border-blue-200',
-    icon: SparklesIcon,
-    desc: 'Insights financieros'
-  },
-  'conciliador_ia': { 
-    nombre: 'Conciliador IA', 
-    color: 'text-violet-600',
-    bg: 'bg-violet-50',
-    border: 'border-violet-200',
-    icon: ChartBarIcon,
-    desc: 'Conciliaciones bancarias'
-  },
-  'maintenance_ia': { 
-    nombre: 'Maintenance IA', 
-    color: 'text-emerald-600',
-    bg: 'bg-emerald-50',
-    border: 'border-emerald-200',
-    icon: CommandLineIcon,
-    desc: 'Health checks'
-  },
-  'orchestrator': { 
-    nombre: 'Orchestrator', 
+  'caja': { 
+    nombre: 'Caja', 
     color: 'text-amber-600',
     bg: 'bg-amber-50',
     border: 'border-amber-200',
+    icon: WalletIcon,
+    desc: 'Proyección cash flow, runway, posición'
+  },
+  'analisis': { 
+    nombre: 'Análisis', 
+    color: 'text-blue-600',
+    bg: 'bg-blue-50',
+    border: 'border-blue-200',
+    icon: PresentationChartBarIcon,
+    desc: 'KPIs, rentabilidad, RFM, anomalías'
+  },
+  'cobranza': { 
+    nombre: 'Cobranza', 
+    color: 'text-violet-600',
+    bg: 'bg-violet-50',
+    border: 'border-violet-200',
+    icon: DocumentTextIcon,
+    desc: 'CxC aging, DSO, CCC, cobro'
+  },
+  'contabilidad': { 
+    nombre: 'Contabilidad', 
+    color: 'text-emerald-600',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200',
+    icon: BookOpenIcon,
+    desc: 'Cierre mensual, fiscal, conciliación'
+  },
+  'orchestrator': { 
+    nombre: 'CFO AI Core', 
+    color: 'text-slate-600',
+    bg: 'bg-slate-50',
+    border: 'border-slate-200',
     icon: CpuChipIcon,
-    desc: 'Coordinación'
+    desc: 'Orquestador y briefing diario'
   },
 }
 
 const categoriaConfig = {
-  alerta_detectada: { 
-    label: 'Alerta', 
-    color: 'text-rose-600',
-    bg: 'bg-rose-50',
-    border: 'border-rose-200',
-    icon: ExclamationTriangleIcon 
+  posicion_caja: { 
+    label: 'Caja', 
+    color: 'text-amber-600',
+    bg: 'bg-amber-50',
+    border: 'border-amber-200',
+    icon: WalletIcon 
   },
-  analisis_ejecutado: { 
-    label: 'Análisis', 
+  proyeccion_cashflow: { 
+    label: 'Cash Flow', 
     color: 'text-blue-600',
     bg: 'bg-blue-50',
     border: 'border-blue-200',
-    icon: ChartBarIcon 
+    icon: PresentationChartBarIcon 
   },
-  reporte_generado: { 
-    label: 'Reporte', 
+  kpis_diarios: { 
+    label: 'KPIs', 
+    color: 'text-blue-600',
+    bg: 'bg-blue-50',
+    border: 'border-blue-200',
+    icon: PresentationChartBarIcon 
+  },
+  analisis_semanal: { 
+    label: 'Análisis Sem', 
+    color: 'text-blue-600',
+    bg: 'bg-blue-50',
+    border: 'border-blue-200',
+    icon: PresentationChartBarIcon 
+  },
+  analisis_mensual: { 
+    label: 'Análisis Mes', 
+    color: 'text-blue-600',
+    bg: 'bg-blue-50',
+    border: 'border-blue-200',
+    icon: PresentationChartBarIcon 
+  },
+  aging_cartera: { 
+    label: 'Aging', 
     color: 'text-violet-600',
     bg: 'bg-violet-50',
     border: 'border-violet-200',
-    icon: SparklesIcon 
+    icon: DocumentTextIcon 
   },
-  sincronizacion_datos: { 
-    label: 'Sync', 
+  metricas_cobranza: { 
+    label: 'Cobranza', 
+    color: 'text-violet-600',
+    bg: 'bg-violet-50',
+    border: 'border-violet-200',
+    icon: DocumentTextIcon 
+  },
+  importacion_transacciones: { 
+    label: 'Importar', 
     color: 'text-emerald-600',
     bg: 'bg-emerald-50',
     border: 'border-emerald-200',
-    icon: ArrowPathIcon 
+    icon: BookOpenIcon 
+  },
+  conciliacion_bancaria: { 
+    label: 'Conciliación', 
+    color: 'text-emerald-600',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200',
+    icon: BookOpenIcon 
+  },
+  cierre_mensual: { 
+    label: 'Cierre', 
+    color: 'text-emerald-600',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200',
+    icon: BookOpenIcon 
+  },
+  calculos_fiscales: { 
+    label: 'Fiscal', 
+    color: 'text-emerald-600',
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-200',
+    icon: BookOpenIcon 
   },
   error_sistema: { 
     label: 'Error', 
@@ -97,12 +145,12 @@ const categoriaConfig = {
     border: 'border-rose-200',
     icon: XCircleIcon 
   },
-  insight_generado: { 
-    label: 'Insight', 
-    color: 'text-amber-600',
-    bg: 'bg-amber-50',
-    border: 'border-amber-200',
-    icon: BoltIcon 
+  briefing_diario: { 
+    label: 'Briefing', 
+    color: 'text-slate-600',
+    bg: 'bg-slate-50',
+    border: 'border-slate-200',
+    icon: CpuChipIcon 
   }
 }
 
@@ -274,10 +322,11 @@ export default function LogActividades() {
             <label className="block text-xs text-[var(--text-muted)] mb-1.5">Agente</label>
             <select value={filtroAgente} onChange={(e) => setFiltroAgente(e.target.value)} className="input">
               <option value="">Todos</option>
-              <option value="auditor_ia">Auditor IA</option>
-              <option value="analista_ia">Analista IA</option>
-              <option value="conciliador_ia">Conciliador IA</option>
-              <option value="maintenance_ia">Maintenance IA</option>
+              <option value="caja">💰 Caja</option>
+              <option value="analisis">📊 Análisis</option>
+              <option value="cobranza">📋 Cobranza</option>
+              <option value="contabilidad">📅 Contabilidad</option>
+              <option value="orchestrator">🤖 CFO AI Core</option>
             </select>
           </div>
 
@@ -285,11 +334,17 @@ export default function LogActividades() {
             <label className="block text-xs text-[var(--text-muted)] mb-1.5">Categoría</label>
             <select value={filtroCategoria} onChange={(e) => setFiltroCategoria(e.target.value)} className="input">
               <option value="">Todas</option>
-              <option value="alerta_detectada">Alertas</option>
-              <option value="analisis_ejecutado">Análisis</option>
-              <option value="reporte_generado">Reportes</option>
-              <option value="sincronizacion_datos">Sync</option>
-              <option value="error_sistema">Errores</option>
+              <option value="posicion_caja">💰 Posición Caja</option>
+              <option value="proyeccion_cashflow">📊 Proyección Cash Flow</option>
+              <option value="kpis_diarios">📈 KPIs Diarios</option>
+              <option value="analisis_semanal">📉 Análisis Semanal</option>
+              <option value="aging_cartera">📋 Aging Cartera</option>
+              <option value="metricas_cobranza">📊 Métricas Cobranza</option>
+              <option value="conciliacion_bancaria">🏦 Conciliación</option>
+              <option value="cierre_mensual">📅 Cierre Mensual</option>
+              <option value="calculos_fiscales">📋 Cálculos Fiscales</option>
+              <option value="briefing_diario">🌅 Briefing Diario</option>
+              <option value="error_sistema">❌ Errores</option>
             </select>
           </div>
 

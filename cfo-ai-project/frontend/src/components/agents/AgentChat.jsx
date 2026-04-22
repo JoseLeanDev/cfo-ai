@@ -60,12 +60,13 @@ export default function AgentChat() {
 
   const getAgentEmoji = (agentName) => {
     const emojis = {
-      'Orchestrator': '🎛️',
-      'AnalistaFinanciero': '📊',
-      'AsistenteSAT': '🏛️',
-      'PredictorCashFlow': '🛫',
-      'AuditorAutomatico': '🔍',
-      'ChatbotCFO': '🤖'
+      'CFO AI Core': '🤖',
+      'Caja': '💰',
+      'Análisis': '📊',
+      'Cobranza': '📋',
+      'Contabilidad': '📅',
+      'ChatbotCFO': '🤖',
+      'Orchestrator': '🎛️'
     };
     return emojis[agentName] || '🤖';
   };
@@ -156,7 +157,7 @@ export default function AgentChat() {
 
           {/* Quick Actions */}
           <div className="px-4 py-2 bg-white border-t border-gray-100 flex gap-2 overflow-x-auto">
-            {['¿Cuál es mi runway?', 'KPIs financieros', 'Obligaciones SAT', 'Auditar'].map((quick) => (
+            {['¿Cuál es mi runway?', 'KPIs financieros', 'Obligaciones SAT', 'CxC por cobrar'].map((quick) => (
               <button
                 key={quick}
                 onClick={() => {

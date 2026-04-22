@@ -379,7 +379,7 @@ router.post('/chat', async (req, res) => {
             `• Disponible USD: $${(parseFloat(posicion?.disponible_usd) || 0).toLocaleString()}\n\n` +
             `📊 **Días de Operación:** ${diasOperacion} días\n` +
             `(Basado en gastos promedio diarios estimados)`,
-          agent: 'AnalistaFinanciero',
+          agent: 'Análisis',
           type: 'analysis'
         }
       });
@@ -409,7 +409,7 @@ router.post('/chat', async (req, res) => {
             `**CxP:**\n` +
             `• Total pendiente: Q${(parseFloat(cxp?.total) || 0).toLocaleString()}\n` +
             `• Facturas: ${cxp?.count || 0}`,
-          agent: 'AnalistaFinanciero',
+          agent: 'Análisis',
           type: 'analysis'
         }
       });
@@ -441,7 +441,7 @@ router.post('/chat', async (req, res) => {
         success: true,
         response: {
           content: respText,
-          agent: 'AuditorSAT',
+          agent: 'Contabilidad',
           type: 'alert'
         }
       });
@@ -457,7 +457,7 @@ router.post('/chat', async (req, res) => {
             `• Ventas: Q450,000\n` +
             `• Unidades: 1,800\n\n` +
             `💡 **Recomendación:** Evaluar aumentar precio 10% o negociar costos con proveedor.`,
-          agent: 'AnalistaFinanciero',
+          agent: 'Análisis',
           type: 'analysis'
         }
       });
@@ -487,7 +487,7 @@ router.post('/chat', async (req, res) => {
         success: true,
         response: {
           content: respText,
-          agent: 'Auditor',
+          agent: 'Cobranza',
           type: 'alert'
         }
       });
@@ -517,7 +517,7 @@ router.post('/chat', async (req, res) => {
         success: true,
         response: {
           content: respText,
-          agent: 'Auditor',
+          agent: 'Cobranza',
           type: 'alert'
         }
       });
@@ -548,7 +548,7 @@ router.post('/chat', async (req, res) => {
         success: true,
         response: {
           content: respText,
-          agent: 'ConciliadorBancario',
+          agent: 'Contabilidad',
           type: 'analysis'
         }
       });
@@ -580,7 +580,7 @@ router.post('/chat', async (req, res) => {
             `• **DPO** (Pago): ${dpo} días\n\n` +
             `**Total CCC:** ${ccc} días\n\n` +
             `💡 *Objetivo: Mantener CCC < 60 días*`,
-          agent: 'AnalistaFinanciero',
+          agent: 'Análisis',
           type: 'analysis'
         }
       });
@@ -600,7 +600,7 @@ router.post('/chat', async (req, res) => {
           `• 🏦 **Conciliación** - Estado bancario\n` +
           `• 🔄 **CCC** - Cash Conversion Cycle\n\n` +
           `¿Qué te gustaría consultar?`,
-        agent: 'CFO AI Assistant',
+        agent: 'CFO AI Core',
         type: 'welcome'
       }
     });

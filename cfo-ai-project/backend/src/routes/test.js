@@ -11,7 +11,7 @@ router.post('/log', async (req, res) => {
       agente_nombre: 'Test Manual',
       agente_tipo: 'test',
       agente_version: '1.0.0',
-      categoria: 'sincronizacion_datos',
+      categoria: 'briefing_diario',
       descripcion: 'Log de prueba manual desde endpoint de test',
       resultado_status: 'exitoso',
       duracion_ms: 100,

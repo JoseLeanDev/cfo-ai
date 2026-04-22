@@ -1,142 +1,110 @@
 /**
- * Sistema de ejecución forzada de agentes al "despertar"
+ * Sistema de ejecución forzada de agentes al "despertar" (WakeUp Scheduler v2.0)
  * Cuando Render free tier despierta el servidor, ejecutamos las tareas pendientes
  */
 
-const { orchestrator } = require('../agents/index');
+const CFOAICore = require('../agents/index');
 
 // Última ejecución por agente (persistir en memoria simple)
 const ultimaEjecucion = {};
 
 /**
- * Ejecutar tareas pendientes de un agente específico
+ * Ejecutar tareas pendientes de los agentes v2.0
  * Se llama cuando el servidor "despierta" o recibe tráfico
  */
 async function ejecutarTareasPendientesWakeUp(db) {
   const ahora = new Date();
   const horaActual = ahora.getHours();
   const minutoActual = ahora.getMinutes();
-  
+
   console.log(`[WakeUp Scheduler] ⏰ Ejecutando tareas pendientes a las ${horaActual}:${minutoActual}`);
-  
+
   const resultados = [];
-  
+
   try {
-    // === AUDITOR IA ===
-    // Ejecutar cada 45 minutos o si nunca se ha ejecutado
-    const lastAuditor = ultimaEjecucion['auditor_ia'] || 0;
-    const minutosDesdeAuditor = (Date.now() - lastAuditor) / 1000 / 60;
-    
-    if (minutosDesdeAuditor >= 45 || lastAuditor === 0) {
-      console.log('[WakeUp Scheduler] 🔍 Ejecutando Auditor IA...');
-      const auditor = orchestrator.agentes.get('auditor_ia');
-      if (auditor && auditor.detectarAnomaliasConIA) {
-        try {
-          const resultado = await auditor.detectarAnomaliasConIA();
-          resultados.push({ agente: 'auditor_ia', tarea: 'detectarAnomalias', exito: true });
-          ultimaEjecucion['auditor_ia'] = Date.now();
-        } catch (err) {
-          resultados.push({ agente: 'auditor_ia', tarea: 'detectarAnomalias', exito: false, error: err.message });
-        }
+    // === CAJA ===
+    // Posición de caja cada 4 horas
+    const lastCaja = ultimaEjecucion['caja'] || 0;
+    const horasDesdeCaja = (Date.now() - lastCaja) / 1000 / 60 / 60;
+
+    if (horasDesdeCaja >= 4 || lastCaja === 0) {
+      console.log('[WakeUp Scheduler] 💰 Ejecutando Caja...');
+      try {
+        await CFOAICore.ejecutarTarea('caja', 'actualizarPosicionCaja');
+        resultados.push({ agente: 'caja', tarea: 'actualizarPosicionCaja', exito: true });
+        ultimaEjecucion['caja'] = Date.now();
+      } catch (err) {
+        resultados.push({ agente: 'caja', tarea: 'actualizarPosicionCaja', exito: false, error: err.message });
       }
     }
-    
-    // === ANALISTA FINANCIERO ===
-    // Ejecutar si es hora de briefing (7:00) o snapshot (18:00) o nunca ejecutado
-    const lastAnalista = ultimaEjecucion['analista_ia'] || 0;
-    const horaUltimaAnalista = new Date(lastAnalista).getHours();
-    
-    if ((horaActual === 7 && horaUltimaAnalista !== 7) || 
-        (horaActual === 18 && horaUltimaAnalista !== 18) ||
-        lastAnalista === 0) {
-      
-      const analista = orchestrator.agentes.get('analista_ia');
-      if (analista) {
-        // Briefing matutino
-        if (horaActual >= 7 && horaUltimaAnalista !== 7) {
-          console.log('[WakeUp Scheduler] 🌅 Ejecutando Briefing Matutino...');
-          try {
-            await analista.generarBriefingMatutino();
-            resultados.push({ agente: 'analista_ia', tarea: 'briefingMatutino', exito: true });
-          } catch (err) {
-            resultados.push({ agente: 'analista_ia', tarea: 'briefingMatutino', exito: false, error: err.message });
-          }
-        }
-        
-        // Snapshot diario
-        if (horaActual >= 18 && horaUltimaAnalista !== 18) {
-          console.log('[WakeUp Scheduler] 📸 Ejecutando Snapshot Diario...');
-          try {
-            await analista.generarSnapshotDiario();
-            resultados.push({ agente: 'analista_ia', tarea: 'snapshotDiario', exito: true });
-          } catch (err) {
-            resultados.push({ agente: 'analista_ia', tarea: 'snapshotDiario', exito: false, error: err.message });
-          }
-        }
-        
-        ultimaEjecucion['analista_ia'] = Date.now();
+
+    // === ANÁLISIS ===
+    // KPIs diarios si es entre 5-6 AM
+    const lastAnalisis = ultimaEjecucion['analisis'] || 0;
+    const horaUltimaAnalisis = new Date(lastAnalisis).getHours();
+
+    if ((horaActual === 5 && horaUltimaAnalisis !== 5) || lastAnalisis === 0) {
+      console.log('[WakeUp Scheduler] 📊 Ejecutando Análisis (KPIs)...');
+      try {
+        await CFOAICore.ejecutarTarea('analisis', 'calcularKPIsDiarios');
+        resultados.push({ agente: 'analisis', tarea: 'calcularKPIsDiarios', exito: true });
+        ultimaEjecucion['analisis'] = Date.now();
+      } catch (err) {
+        resultados.push({ agente: 'analisis', tarea: 'calcularKPIsDiarios', exito: false, error: err.message });
       }
     }
-    
-    // === CONCILIADOR BANCARIO ===
-    // Ejecutar a las 8:00 o 10:00 o nunca
-    const lastConciliador = ultimaEjecucion['conciliador_ia'] || 0;
-    const horaUltimaConciliador = new Date(lastConciliador).getHours();
-    
-    if ((horaActual === 8 && horaUltimaConciliador !== 8) ||
-        (horaActual === 10 && horaUltimaConciliador !== 10) ||
-        lastConciliador === 0) {
-      
-      const conciliador = orchestrator.agentes.get('conciliador_ia');
-      if (conciliador) {
-        // Análisis de conciliaciones (8:00)
-        if (horaActual >= 8 && horaUltimaConciliador !== 8) {
-          console.log('[WakeUp Scheduler] 🏦 Ejecutando Análisis de Conciliaciones...');
-          try {
-            await conciliador.analizarConciliacionesPendientes();
-            resultados.push({ agente: 'conciliador_ia', tarea: 'analizarConciliaciones', exito: true });
-          } catch (err) {
-            resultados.push({ agente: 'conciliador_ia', tarea: 'analizarConciliaciones', exito: false, error: err.message });
-          }
-        }
-        
-        // Sugerir emparejamientos (10:00)
-        if (horaActual >= 10 && horaUltimaConciliador !== 10) {
-          console.log('[WakeUp Scheduler] 🔗 Ejecutando Sugerencias de Emparejamientos...');
-          try {
-            await conciliador.sugerirEmparejamientos();
-            resultados.push({ agente: 'conciliador_ia', tarea: 'sugerirEmparejamientos', exito: true });
-          } catch (err) {
-            resultados.push({ agente: 'conciliador_ia', tarea: 'sugerirEmparejamientos', exito: false, error: err.message });
-          }
-        }
-        
-        ultimaEjecucion['conciliador_ia'] = Date.now();
+
+    // === COBRANZA ===
+    // Aging cada 4 horas
+    const lastCobranza = ultimaEjecucion['cobranza'] || 0;
+    const horasDesdeCobranza = (Date.now() - lastCobranza) / 1000 / 60 / 60;
+
+    if (horasDesdeCobranza >= 4 || lastCobranza === 0) {
+      console.log('[WakeUp Scheduler] 📋 Ejecutando Cobranza (Aging)...');
+      try {
+        await CFOAICore.ejecutarTarea('cobranza', 'actualizarAging');
+        resultados.push({ agente: 'cobranza', tarea: 'actualizarAging', exito: true });
+        ultimaEjecucion['cobranza'] = Date.now();
+      } catch (err) {
+        resultados.push({ agente: 'cobranza', tarea: 'actualizarAging', exito: false, error: err.message });
       }
     }
-    
-    // === MAINTENANCE ===
-    // Ejecutar a las 2:00 o cada 4 horas
-    const lastMaintenance = ultimaEjecucion['maintenance_ia'] || 0;
-    const horasDesdeMaintenance = (Date.now() - lastMaintenance) / 1000 / 60 / 60;
-    
-    if (horaActual === 2 || horasDesdeMaintenance >= 4 || lastMaintenance === 0) {
-      console.log('[WakeUp Scheduler] 🧹 Ejecutando Maintenance...');
-      const maintenance = orchestrator.agentes.get('maintenance_ia');
-      if (maintenance && maintenance.healthCheckSistema) {
-        try {
-          await maintenance.healthCheckSistema();
-          resultados.push({ agente: 'maintenance_ia', tarea: 'healthCheck', exito: true });
-          ultimaEjecucion['maintenance_ia'] = Date.now();
-        } catch (err) {
-          resultados.push({ agente: 'maintenance_ia', tarea: 'healthCheck', exito: false, error: err.message });
-        }
+
+    // === CONTABILIDAD ===
+    // Importar transacciones cada 4 horas
+    const lastContabilidad = ultimaEjecucion['contabilidad'] || 0;
+    const horasDesdeContabilidad = (Date.now() - lastContabilidad) / 1000 / 60 / 60;
+
+    if (horasDesdeContabilidad >= 4 || lastContabilidad === 0) {
+      console.log('[WakeUp Scheduler] 📅 Ejecutando Contabilidad...');
+      try {
+        await CFOAICore.ejecutarTarea('contabilidad', 'importarTransacciones');
+        resultados.push({ agente: 'contabilidad', tarea: 'importarTransacciones', exito: true });
+        ultimaEjecucion['contabilidad'] = Date.now();
+      } catch (err) {
+        resultados.push({ agente: 'contabilidad', tarea: 'importarTransacciones', exito: false, error: err.message });
       }
     }
-    
+
+    // === BRIEFING DIARIO ===
+    // 7:00 AM
+    const lastBriefing = ultimaEjecucion['briefing'] || 0;
+    const horaUltimaBriefing = new Date(lastBriefing).getHours();
+
+    if ((horaActual === 7 && horaUltimaBriefing !== 7) || lastBriefing === 0) {
+      console.log('[WakeUp Scheduler] 🌅 Ejecutando Briefing Diario...');
+      try {
+        await CFOAICore.generarBriefingDiario();
+        resultados.push({ agente: 'orchestrator', tarea: 'briefingDiario', exito: true });
+        ultimaEjecucion['briefing'] = Date.now();
+      } catch (err) {
+        resultados.push({ agente: 'orchestrator', tarea: 'briefingDiario', exito: false, error: err.message });
+      }
+    }
+
     console.log(`[WakeUp Scheduler] ✅ Completado. ${resultados.filter(r => r.exito).length}/${resultados.length} tareas ejecutadas.`);
     return { ejecutadas: resultados.filter(r => r.exito).length, total: resultados.length, detalles: resultados };
-    
+
   } catch (error) {
     console.error('[WakeUp Scheduler] ❌ Error:', error);
     return { error: error.message, resultados };

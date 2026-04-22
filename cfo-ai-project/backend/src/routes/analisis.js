@@ -1,28 +1,10 @@
 const express = require('express');
 const router = express.Router();
 
-// Importar agentes con fallback
-let AnalistaFinancieroAgent, PredictorCashFlowInstance;
+// NUEVO: Importar CFO AI Core v2.0
+const CFOAICore = require('../../agents');
+
 const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
-
-try {
-  AnalistaFinancieroAgent = require('../../agents/AnalistaFinancieroAgent');
-} catch (e) {
-  console.warn('[Analisis] AnalistaFinancieroAgent no encontrado:', e.message);
-  AnalistaFinancieroAgent = class {
-    async generateInsights() { return { insights: [] }; }
-  };
-}
-
-try {
-  // AnalistaFinancieroIA se exporta como instancia (new AnalistaFinancieroIA())
-  PredictorCashFlowInstance = require('../../agents/AnalistaFinancieroIA');
-} catch (e) {
-  console.warn('[Analisis] PredictorCashFlow no encontrado:', e.message);
-  PredictorCashFlowInstance = {
-    async detectAnomalies() { return { anomalias: [], alertas: [] }; }
-  };
-}
 
 // Cache simple en memoria para insights (TTL: 5 minutos)
 const insightsCache = new Map();
@@ -242,9 +224,10 @@ router.get('/insights', async (req, res) => {
     }
 
     // Instanciar agentes (o usar wrappers si no tienen los métodos esperados)
-    // Nota: PredictorCashFlowInstance ya es una instancia (no usar 'new')
-    const analista = new AnalistaFinancieroAgent();
-    const predictor = PredictorCashFlowInstance;
+    // Nota: Agentes v1.0 eliminados. Usando CFO AI Core v2.0
+    // Datos se obtienen directamente de DB o vía CFOAICore
+    const analista = CFOAICore;
+    const predictor = CFOAICore;
 
     // Ejecutar análisis en paralelo (con wrappers para compatibilidad)
     let insightsResult, anomaliesResult;
@@ -408,7 +391,7 @@ router.get('/insights', async (req, res) => {
         .slice(0, 5)
         .map(i => i.action),
       _meta: {
-        agentes_utilizados: ['AnalistaFinanciero', 'PredictorCashFlow'],
+        agentes_utilizados: ['Análisis', 'PredictorCashFlow'],
         cache_ttl_minutos: 5,
         parametros: { umbral, context }
       }
@@ -446,7 +429,7 @@ router.get('/insights', async (req, res) => {
               insight.description, insight.impact || 0, insight.currency || 'GTQ',
               insight.category, insight.action, insight.actionLabel, insight.change || 0,
               responseData.periodo_analisis.desde, responseData.periodo_analisis.hasta,
-              'AnalistaFinanciero/PredictorCashFlow', '1.0'
+              'CFO AI Core', '1.0'
             ]);
           } else {
             // SQLite: INSERT OR REPLACE
@@ -461,7 +444,7 @@ router.get('/insights', async (req, res) => {
               insight.description, insight.impact || 0, insight.currency || 'GTQ',
               insight.category, insight.action, insight.actionLabel, insight.change || 0,
               responseData.periodo_analisis.desde, responseData.periodo_analisis.hasta,
-              'AnalistaFinanciero/PredictorCashFlow', '1.0'
+              'CFO AI Core', '1.0'
             ]);
           }
         }

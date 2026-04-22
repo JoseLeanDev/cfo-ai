@@ -4,39 +4,21 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
-const { getOrchestrator, initializeOrchestrator } = require('./agents');
-const agentsOrchestratorIA = require('../agents/index');
+const CFOAICore = require('../agents/index');
 const db = require('../database/connection');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialize Multi-Agent Systems
-let agentsOrchestrator = null;
-
+// Initialize CFO AI Core v2.0
 async function initializeAgents() {
   try {
-    // 1. Inicializar agentes tradicionales (legacy)
-    agentsOrchestrator = initializeOrchestrator();
-    app.set('agentsOrchestrator', agentsOrchestrator);
-    console.log('🤖 Agentes tradicionales iniciados exitosamente');
+    await CFOAICore.iniciar();
+    app.set('CFOAICore', CFOAICore);
+    console.log('🤖 CFO AI Core v2.0 iniciado exitosamente');
+    console.log('   Agentes: Caja, Análisis, Cobranza, Contabilidad');
   } catch (error) {
-    console.error('❌ Error inicializando agentes tradicionales:', error.message);
-  }
-
-  try {
-    // 2. Inicializar Agentes de IA (nuevo sistema)
-    // Solo si hay API key configurada
-    if (process.env.OPENROUTER_API_KEY || process.env.KIMI_API_KEY) {
-      await agentsOrchestratorIA.iniciar();
-      app.set('agentsOrchestratorIA', agentsOrchestratorIA);
-      console.log('🧠 Agentes de IA iniciados exitosamente');
-    } else {
-      console.log('⚠️  Agentes de IA no iniciados: falta API key (OPENROUTER_API_KEY o KIMI_API_KEY)');
-      console.log('   Para activar: configura la variable de entorno y reinicia');
-    }
-  } catch (error) {
-    console.error('❌ Error inicializando agentes de IA:', error.message);
+    console.error('❌ Error inicializando CFO AI Core:', error.message);
   }
 }
 

@@ -116,12 +116,16 @@ function sqliteToPostgres(sql) {
     .replace(/datetime\s*\(\s*['"]now['"]\s*,\s*['"]([+-]\d+)\s+days?['"]\s*\)/gi, "NOW() - INTERVAL '$1 days'")
     // 4b. datetime('now', '-${dias} days') → NOW() - INTERVAL '${dias} days' (para template literals)
     .replace(/datetime\s*\(\s*['"]now['"]\s*,\s*['"]-\$(\{[^}]+\})\s+days?['"]\s*\)/gi, "NOW() - INTERVAL '$1 days'")
-    // 5. strftime('%Y-%m', ...) → TO_CHAR(..., 'YYYY-MM')
-    .replace(/strftime\s*\(\s*['"]%Y-%m['"]\s*,\s*([^)]+)\)/gi, "TO_CHAR($1, 'YYYY-MM')")
+    // 5. strftime('%Y-%m', ...) → TO_CHAR(...::timestamp, 'YYYY-MM')
+    .replace(/strftime\s*\(\s*['"]%Y-%m['"]\s*,\s*([^)]+)\)/gi, "TO_CHAR($1::timestamp, 'YYYY-MM')")
+    // 5b. strftime('%w', ...) → EXTRACT(DOW FROM ...)
+    .replace(/strftime\s*\(\s*['"]%w['"]\s*,\s*([^)]+)\)/gi, "EXTRACT(DOW FROM $1::timestamp)")
     // 6. julianday(...) - julianday(...) → (... - ...) en días
     .replace(/julianday\s*\(([^)]+)\)\s*-\s*julianday\s*\(([^)]+)\)/gi, '($1 - $2)')
     // 7. != 'string' → <> 'string' (solo para strings)
-    .replace(/!=\s*('[^']*')/g, '<> $1');
+    .replace(/!=\s*('[^']*')/g, '<> $1')
+    // 7b. CAST(strftime('%w', ...) AS INTEGER) → CAST(EXTRACT(DOW FROM ...::timestamp) AS INTEGER)
+    .replace(/CAST\s*\(\s*strftime\s*\(\s*['"]%w['"]\s*,\s*([^)]+)\)\s*AS\s*INTEGER\s*\)/gi, "CAST(EXTRACT(DOW FROM $1::timestamp) AS INTEGER)");
   
   // 8. Convertir ? → $1, $2, etc. (contar ocurrencias)
   let paramCount = 0;

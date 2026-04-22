@@ -456,18 +456,18 @@ const seedData = async () => {
   console.log('\n🤖 Creando logs de actividades de Agentes IA...');
   
   const agentesLogs = [
-    { agente: 'AnalistaFinanciero', tipo: 'AnalistaFinanciero', categoria: 'insight_generado', descripcion: 'Detectado aumento del 23% en gastos de Gasolina vs promedio 3 meses', status: 'exito', impacto: 18500 },
-    { agente: 'PredictorCashFlow', tipo: 'PredictorCashFlow', categoria: 'prediccion_realizada', descripcion: 'Proyección de cash flow completada: 13 semanas analizadas', status: 'exito', duracion: 145 },
-    { agente: 'AuditorAutomatico', tipo: 'AuditorAutomatico', categoria: 'auditoria_completada', descripcion: 'Auditoría de transacciones: 3 anomalías detectadas en CxC', status: 'advertencia', impacto: 45000 },
-    { agente: 'AsistenteSAT', tipo: 'AsistenteSAT', categoria: 'calculo_fiscal', descripcion: 'Cálculo de IVA Marzo 2026 completado: Q45,230 pendiente', status: 'exito', impacto: 45230 },
-    { agente: 'OrchestratorAgent', tipo: 'OrchestratorAgent', categoria: 'sincronizacion_datos', descripcion: 'Sincronización de datos contables completada exitosamente', status: 'exito', duracion: 890 },
-    { agente: 'AnalistaFinanciero', tipo: 'AnalistaFinanciero', categoria: 'analisis_ejecutado', descripcion: 'Análisis de rentabilidad por producto: Producto A lidera con 35%', status: 'exito' },
-    { agente: 'ChatbotCFO', tipo: 'ChatbotCFO', categoria: 'chat_interaccion', descripcion: 'Consulta de usuario procesada: "Cuál es mi runway?"', status: 'exito' },
-    { agente: 'PredictorCashFlow', tipo: 'PredictorCashFlow', categoria: 'alerta_detectada', descripcion: 'Alerta: Posible déficit de liquidez en semana 8', status: 'advertencia', impacto: -125000 },
-    { agente: 'AuditorAutomatico', tipo: 'AuditorAutomatico', categoria: 'conciliacion', descripcion: 'Conciliación bancaria: Cuenta Monetaria USD tiene diferencia de Q1,250', status: 'advertencia', impacto: 1250 },
-    { agente: 'AsistenteSAT', tipo: 'AsistenteSAT', categoria: 'configuracion', descripcion: 'Actualización de calendario fiscal SAT 2026 completada', status: 'exito' },
-    { agente: 'AnalistaFinanciero', tipo: 'AnalistaFinanciero', categoria: 'insight_generado', descripcion: 'Cliente "Industrias del Sur" redujo compras 40% este mes', status: 'warning', impacto: -85000 },
-    { agente: 'OrchestratorAgent', tipo: 'OrchestratorAgent', categoria: 'analisis_ejecutado', descripcion: 'Análisis multi-agente ejecutado: Dashboard actualizado', status: 'exito', duracion: 2340 },
+    { agente: 'Caja', tipo: 'caja', categoria: 'proyeccion_cashflow', descripcion: 'Proyección 13 semanas: runway 4.2 meses, burn rate Q45,800/semana', status: 'exito', duracion: 145 },
+    { agente: 'Análisis', tipo: 'analisis', categoria: 'kpis_diarios', descripcion: 'KPIs diarios: Margen bruto 34.2%, Rotación inventario 12 días, DSO 28 días', status: 'exito' },
+    { agente: 'Cobranza', tipo: 'cobranza', categoria: 'aging_cartera', descripcion: 'Aging CxC: 68% current, 15% 31-60 días, 12% 61-90 días, 5% >90 días', status: 'advertencia', impacto: 125000 },
+    { agente: 'Contabilidad', tipo: 'contabilidad', categoria: 'conciliacion_bancaria', descripcion: 'Conciliación bancaria completada: 3 cuentas, 1 discrepancia Q1,250', status: 'advertencia', impacto: 1250 },
+    { agente: 'CFO AI Core', tipo: 'orchestrator', categoria: 'briefing_diario', descripcion: 'Briefing diario generado: 4 insights, 2 alertas, 1 acción recomendada', status: 'exito', duracion: 890 },
+    { agente: 'Caja', tipo: 'caja', categoria: 'posicion_caja', descripcion: 'Posición caja actual: Q2.4M disponible, Q890K comprometido, Q1.51M libre', status: 'exito' },
+    { agente: 'Análisis', tipo: 'analisis', categoria: 'analisis_semanal', descripcion: 'Análisis semanal: Cliente "Industrias del Sur" redujo compras 40% este mes', status: 'warning', impacto: -85000 },
+    { agente: 'Contabilidad', tipo: 'contabilidad', categoria: 'calculos_fiscales', descripcion: 'Cálculo IVA mensual: Débito Q124,500 - Crédito Q89,200 = Q35,300 a pagar', status: 'exito', impacto: 45230 },
+    { agente: 'Cobranza', tipo: 'cobranza', categoria: 'metricas_cobranza', descripcion: 'DSO subió a 31 días (+3 vs mes anterior). CCC: 42 días', status: 'advertencia' },
+    { agente: 'Caja', tipo: 'caja', categoria: 'alerta_runway', descripcion: 'ALERTA: Runway bajó a 2.8 meses. Burn rate aumentó 15% esta semana.', status: 'error', impacto: -450000 },
+    { agente: 'Análisis', tipo: 'analisis', categoria: 'analisis_mensual', descripcion: 'Análisis mensual: Rentabilidad por línea de producto actualizada', status: 'exito', duracion: 2340 },
+    { agente: 'Contabilidad', tipo: 'contabilidad', categoria: 'cierre_mensual', descripcion: 'Cierre mensual automatizado: Asientos de depreciación y provisiones generados', status: 'exito' },
   ];
   
   const logsColumns = isPostgres

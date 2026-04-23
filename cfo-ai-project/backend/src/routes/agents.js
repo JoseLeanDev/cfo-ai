@@ -334,68 +334,81 @@ router.post('/logs', async (req, res) => {
  * @returns {Promise<Object>} - Contexto financiero
  */
 async function obtenerContextoFinanciero(db, empresaId, isPostgres) {
+  const contexto = {
+    cxc: { total: 0, count: 0, avg_dias: 0 },
+    cxp: { total: 0, count: 0 },
+    bancos: { disponible_gtq: 0, disponible_usd: 0, cuentas_activas: 0 },
+    deudores: [],
+    proximos_pagos: [],
+    obligaciones_sat: [],
+    cuentas_bancarias: [],
+    fecha_actual: new Date().toISOString().split('T')[0]
+  };
+
   try {
     // CxC resumen
     const cxcQuery = isPostgres
       ? `SELECT COUNT(*) as count, SUM(monto_pendiente) as total, AVG(dias_atraso) as avg_dias FROM cuentas_cobrar WHERE empresa_id = $1 AND estado != 'cobrada'`
       : `SELECT COUNT(*) as count, SUM(monto) as total, AVG(dias_atraso) as avg_dias FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada'`;
     const cxc = await db.getAsync(cxcQuery, [empresaId]);
+    contexto.cxc = { total: cxc?.total || 0, count: cxc?.count || 0, avg_dias: Math.round(cxc?.avg_dias || 0) };
+  } catch (e) { console.error('[Context] CxC error:', e.message); }
 
+  try {
     // CxP resumen
     const cxpQuery = isPostgres
       ? `SELECT COUNT(*) as count, SUM(monto_total) as total FROM cuentas_pagar WHERE empresa_id = $1 AND estado = 'pendiente'`
       : `SELECT COUNT(*) as count, SUM(monto) as total FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'`;
     const cxp = await db.getAsync(cxpQuery, [empresaId]);
+    contexto.cxp = { total: cxp?.total || 0, count: cxp?.count || 0 };
+  } catch (e) { console.error('[Context] CxP error:', e.message); }
 
+  try {
     // Efectivo bancario
-    const bancos = await db.getAsync(`
-      SELECT SUM(CASE WHEN moneda = 'GTQ' THEN saldo ELSE 0 END) as disponible_gtq,
-             SUM(CASE WHEN moneda = 'USD' THEN saldo ELSE 0 END) as disponible_usd,
-             COUNT(*) as cuentas_activas
-      FROM cuentas_bancarias WHERE empresa_id = ? AND activa = TRUE
-    `, [empresaId]);
+    const bancoQuery = isPostgres
+      ? `SELECT SUM(CASE WHEN moneda = 'GTQ' THEN saldo ELSE 0 END) as disponible_gtq, SUM(CASE WHEN moneda = 'USD' THEN saldo ELSE 0 END) as disponible_usd, COUNT(*) as cuentas_activas FROM cuentas_bancarias WHERE empresa_id = $1 AND activa = TRUE`
+      : `SELECT SUM(CASE WHEN moneda = 'GTQ' THEN saldo ELSE 0 END) as disponible_gtq, SUM(CASE WHEN moneda = 'USD' THEN saldo ELSE 0 END) as disponible_usd, COUNT(*) as cuentas_activas FROM cuentas_bancarias WHERE empresa_id = ? AND activa = TRUE`;
+    const bancos = await db.getAsync(bancoQuery, [empresaId]);
+    contexto.bancos = { 
+      disponible_gtq: bancos?.disponible_gtq || 0, 
+      disponible_usd: bancos?.disponible_usd || 0,
+      cuentas_activas: bancos?.cuentas_activas || 0
+    };
+  } catch (e) { console.error('[Context] Bancos error:', e.message); }
 
-    // Top deudores (máx 3 para no saturar tokens)
+  try {
+    // Top deudores (máx 3)
     const deudoresQuery = isPostgres
       ? `SELECT cliente_nombre as cliente, monto_pendiente as monto, dias_atraso FROM cuentas_cobrar WHERE empresa_id = $1 AND estado != 'cobrada' ORDER BY monto_pendiente DESC LIMIT 3`
       : `SELECT cliente, monto, dias_atraso FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada' ORDER BY monto DESC LIMIT 3`;
-    const deudores = await db.allAsync(deudoresQuery, [empresaId]);
+    contexto.deudores = await db.allAsync(deudoresQuery, [empresaId]) || [];
+  } catch (e) { console.error('[Context] Deudores error:', e.message); }
 
+  try {
     // Próximos pagos (máx 3)
     const pagosQuery = isPostgres
       ? `SELECT proveedor_nombre as proveedor, monto_pendiente as monto, fecha_vencimiento, EXTRACT(DAY FROM (fecha_vencimiento - CURRENT_DATE)) as dias_restantes FROM cuentas_pagar WHERE empresa_id = $1 AND estado = 'pendiente' AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '14 days' ORDER BY fecha_vencimiento LIMIT 3`
       : `SELECT proveedor, monto, fecha_vencimiento, CAST((julianday(fecha_vencimiento) - julianday('now')) AS INTEGER) as dias_restantes FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento <= date('now', '+14 days') ORDER BY fecha_vencimiento LIMIT 3`;
-    const pagos = await db.allAsync(pagosQuery, [empresaId]);
+    contexto.proximos_pagos = await db.allAsync(pagosQuery, [empresaId]) || [];
+  } catch (e) { console.error('[Context] Pagos error:', e.message); }
 
+  try {
     // Obligaciones SAT próximas
     const satQuery = isPostgres
       ? `SELECT tipo, periodo, fecha_vencimiento FROM sat_calendario WHERE fecha_vencimiento >= CURRENT_DATE AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '30 days' ORDER BY fecha_vencimiento LIMIT 2`
       : `SELECT tipo, periodo, fecha_vencimiento FROM sat_calendario WHERE fecha_vencimiento >= date('now') AND fecha_vencimiento <= date('now', '+30 days') ORDER BY fecha_vencimiento LIMIT 2`;
-    const sat = await db.allAsync(satQuery);
+    contexto.obligaciones_sat = await db.allAsync(satQuery) || [];
+  } catch (e) { console.error('[Context] SAT error:', e.message); }
 
+  try {
     // Cuentas bancarias
-    const cuentas = await db.allAsync(`
-      SELECT banco, saldo, moneda FROM cuentas_bancarias WHERE empresa_id = ? AND activa = TRUE LIMIT 3
-    `, [empresaId]);
+    const cuentasQuery = isPostgres
+      ? `SELECT banco, saldo, moneda FROM cuentas_bancarias WHERE empresa_id = $1 AND activa = TRUE LIMIT 3`
+      : `SELECT banco, saldo, moneda FROM cuentas_bancarias WHERE empresa_id = ? AND activa = TRUE LIMIT 3`;
+    contexto.cuentas_bancarias = await db.allAsync(cuentasQuery, [empresaId]) || [];
+  } catch (e) { console.error('[Context] Cuentas error:', e.message); }
 
-    return {
-      cxc: { total: cxc?.total || 0, count: cxc?.count || 0, avg_dias: Math.round(cxc?.avg_dias || 0) },
-      cxp: { total: cxp?.total || 0, count: cxp?.count || 0 },
-      bancos: { 
-        disponible_gtq: bancos?.disponible_gtq || 0, 
-        disponible_usd: bancos?.disponible_usd || 0,
-        cuentas_activas: bancos?.cuentas_activas || 0
-      },
-      deudores: deudores || [],
-      proximos_pagos: pagos || [],
-      obligaciones_sat: sat || [],
-      cuentas_bancarias: cuentas || [],
-      fecha_actual: new Date().toISOString().split('T')[0]
-    };
-  } catch (error) {
-    console.error('[Chat Context] Error obteniendo contexto:', error);
-    return { error: 'No se pudo obtener contexto financiero', fecha_actual: new Date().toISOString().split('T')[0] };
-  }
+  return contexto;
 }
 
 /**

@@ -529,13 +529,13 @@ router.get('/insights/historico', async (req, res) => {
         currency,
         category,
         action,
-        action_label as actionLabel,
+        action_label as "actionLabel",
         change_percent as change,
         status,
-        created_at as createdAt,
-        periodo_desde as periodoDesde,
-        periodo_hasta as periodoHasta,
-        agent_source as agentSource
+        created_at as "createdAt",
+        periodo_desde as "periodoDesde",
+        periodo_hasta as "periodoHasta",
+        agent_source as "agentSource"
       FROM insights_historico
       WHERE empresa_id = ? 
         AND status = ?

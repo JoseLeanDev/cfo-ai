@@ -201,14 +201,16 @@ Responde en formato JSON:
     const systemPrompt = `Eres un CFO AI Agent llamado "Finn". Eres un asistente financiero experto, profesional pero cercano. 
 Tienes acceso a datos financieros reales de la empresa.
 Responde de forma concisa y accionable. Si no tienes datos específicos, indícalo claramente.
+Usa emojis cuando sea apropiado. Responde en español.
 
-Contexto actual: ${JSON.stringify(contexto, null, 2)}`;
+Contexto actual de la empresa:
+${JSON.stringify(contexto, null, 2)}`;
 
     try {
       const response = await this.llamarLLM([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: mensaje }
-      ]);
+      ], { jsonMode: false });
       
       return response.choices[0].message.content;
     } catch (error) {
@@ -229,22 +231,30 @@ ${JSON.stringify(data, null, 2)}
 Responde únicamente en formato JSON válido.`;
   }
 
-  async llamarLLM(messages) {
+  async llamarLLM(messages, options = {}) {
     this.requestCount++;
+    
+    const { jsonMode = true } = options;
     
     // Formato unificado para mensajes
     const msgs = Array.isArray(messages) ? messages : [{ role: 'user', content: messages }];
     
     if (this.provider === 'openrouter') {
+      const payload = {
+        model: this.config.model,
+        messages: msgs,
+        temperature: 0.3,
+        max_tokens: 4000
+      };
+      
+      // Solo forzar JSON mode cuando se solicita explícitamente
+      if (jsonMode) {
+        payload.response_format = { type: "json_object" };
+      }
+      
       const response = await axios.post(
         `${this.config.baseUrl}/chat/completions`,
-        {
-          model: this.config.model,
-          messages: msgs,
-          temperature: 0.3,
-          max_tokens: 4000,
-          response_format: { type: "json_object" }
-        },
+        payload,
         {
           headers: {
             'Authorization': `Bearer ${this.config.apiKey}`,

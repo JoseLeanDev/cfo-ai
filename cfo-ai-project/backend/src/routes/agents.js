@@ -144,7 +144,14 @@ router.get('/logs', async (req, res) => {
       categoria: log.categoria,
       descripcion: log.descripcion,
       detallesJson: log.detalles_json,
-      detalles: log.detalles_json ? JSON.parse(log.detalles_json) : null,
+      detalles: (() => {
+        try {
+          return log.detalles_json ? JSON.parse(log.detalles_json) : null;
+        } catch (e) {
+          console.warn('[Agents Logs] Error parseando detalles_json:', e.message);
+          return null;
+        }
+      })(),
       entidadTipo: log.entidad_tipo,
       entidadId: log.entidad_id,
       impactoValor: log.impacto_valor,
@@ -242,11 +249,13 @@ router.get('/logs', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[GET /api/agents/logs] Error:', error);
+    console.error('[GET /api/agents/logs] Error completo:', error);
+    console.error('[GET /api/agents/logs] Stack:', error.stack);
     res.status(500).json({
       status: 'error',
       message: 'Error al obtener logs de agentes',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });

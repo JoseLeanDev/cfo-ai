@@ -592,10 +592,13 @@ router.post('/chat', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('[POST /api/agents/chat] Error:', error);
+    console.error('[POST /api/agents/chat] Error completo:', error);
+    console.error('[POST /api/agents/chat] Stack:', error.stack);
     res.status(500).json({
       success: false,
-      error: 'Error al procesar el mensaje'
+      error: 'Error al procesar el mensaje',
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });

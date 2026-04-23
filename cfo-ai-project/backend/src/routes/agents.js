@@ -95,19 +95,19 @@ router.get('/logs', async (req, res) => {
     let query = `
       SELECT 
         id,
-        agente_nombre as agenteNombre,
-        agente_tipo as agenteTipo,
-        agente_version as agenteVersion,
+        agente_nombre as "agenteNombre",
+        agente_tipo as "agenteTipo",
+        agente_version as "agenteVersion",
         categoria,
         descripcion,
-        detalles_json as detallesJson,
-        entidad_tipo as entidadTipo,
-        entidad_id as entidadId,
-        impacto_valor as impactoValor,
-        impacto_moneda as impactoMoneda,
-        resultado_status as resultadoStatus,
-        created_at as fecha,
-        duracion_ms as duracionMs
+        detalles_json as "detallesJson",
+        entidad_tipo as "entidadTipo",
+        entidad_id as "entidadId",
+        impacto_valor as "impactoValor",
+        impacto_moneda as "impactoMoneda",
+        resultado_status as "resultadoStatus",
+        created_at as "fecha",
+        duracion_ms as "duracionMs"
       FROM agentes_logs
       WHERE empresa_id = ? 
         AND ${dateFilter}
@@ -144,20 +144,20 @@ router.get('/logs', async (req, res) => {
     // Obtener estadísticas
     const statsQuery = isPostgres
       ? `SELECT 
-          COUNT(*) as total,
-          COUNT(DISTINCT agente_tipo) as agentesActivos,
-          SUM(CASE WHEN resultado_status = 'exitoso' THEN 1 ELSE 0 END) as exitosos,
-          SUM(CASE WHEN resultado_status = 'error' THEN 1 ELSE 0 END) as errores,
-          SUM(CASE WHEN resultado_status = 'advertencia' THEN 1 ELSE 0 END) as advertencias
+          COUNT(*) as "total",
+          COUNT(DISTINCT agente_tipo) as "agentesActivos",
+          SUM(CASE WHEN resultado_status = 'exitoso' THEN 1 ELSE 0 END) as "exitosos",
+          SUM(CASE WHEN resultado_status = 'error' THEN 1 ELSE 0 END) as "errores",
+          SUM(CASE WHEN resultado_status = 'advertencia' THEN 1 ELSE 0 END) as "advertencias"
         FROM agentes_logs
         WHERE empresa_id = ? 
           AND created_at >= NOW() - INTERVAL '${dias} days'`
       : `SELECT 
-          COUNT(*) as total,
-          COUNT(DISTINCT agente_tipo) as agentesActivos,
-          SUM(CASE WHEN resultado_status = 'exitoso' THEN 1 ELSE 0 END) as exitosos,
-          SUM(CASE WHEN resultado_status = 'error' THEN 1 ELSE 0 END) as errores,
-          SUM(CASE WHEN resultado_status = 'advertencia' THEN 1 ELSE 0 END) as advertencias
+          COUNT(*) as "total",
+          COUNT(DISTINCT agente_tipo) as "agentesActivos",
+          SUM(CASE WHEN resultado_status = 'exitoso' THEN 1 ELSE 0 END) as "exitosos",
+          SUM(CASE WHEN resultado_status = 'error' THEN 1 ELSE 0 END) as "errores",
+          SUM(CASE WHEN resultado_status = 'advertencia' THEN 1 ELSE 0 END) as "advertencias"
         FROM agentes_logs
         WHERE empresa_id = ? 
           AND created_at >= datetime('now', '-${dias} days')`;
@@ -188,18 +188,18 @@ router.get('/logs', async (req, res) => {
     // Agrupar por agente
     const porAgenteQuery = isPostgres
       ? `SELECT 
-          agente_tipo as agente,
-          agente_nombre as nombre,
-          COUNT(*) as count
+          agente_tipo as "agente",
+          agente_nombre as "nombre",
+          COUNT(*) as "count"
         FROM agentes_logs
         WHERE empresa_id = ? 
           AND created_at >= NOW() - INTERVAL '${dias} days'
         GROUP BY agente_tipo, agente_nombre
         ORDER BY count DESC`
       : `SELECT 
-          agente_tipo as agente,
-          agente_nombre as nombre,
-          COUNT(*) as count
+          agente_tipo as "agente",
+          agente_nombre as "nombre",
+          COUNT(*) as "count"
         FROM agentes_logs
         WHERE empresa_id = ? 
           AND created_at >= datetime('now', '-${dias} days')

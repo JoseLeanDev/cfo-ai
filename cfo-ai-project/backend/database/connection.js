@@ -111,9 +111,15 @@ function sqliteToPostgres(sql) {
     // 2. date('now') → CURRENT_DATE  
     .replace(/date\s*\(\s*['"]now['"]\s*\)/gi, 'CURRENT_DATE')
     // 3. date('now', '-X days') → CURRENT_DATE - INTERVAL 'X days'
-    .replace(/date\s*\(\s*['"]now['"]\s*,\s*['"]([+-]\d+)\s+days?['"]\s*\)/gi, "CURRENT_DATE - INTERVAL '$1 days'")
+    .replace(/date\s*\(\s*['"]now['"]\s*,\s*['"]([+-]?)(\d+)\s+days?['"]\s*\)/gi, (match, sign, days) => {
+      const operator = sign === '+' ? '+' : '-';
+      return `CURRENT_DATE ${operator} INTERVAL '${days} days'`;
+    })
     // 4. datetime('now', '-X days') → NOW() - INTERVAL 'X days'
-    .replace(/datetime\s*\(\s*['"]now['"]\s*,\s*['"]([+-]\d+)\s+days?['"]\s*\)/gi, "NOW() - INTERVAL '$1 days'")
+    .replace(/datetime\s*\(\s*['"]now['"]\s*,\s*['"]([+-]?)(\d+)\s+days?['"]\s*\)/gi, (match, sign, days) => {
+      const operator = sign === '+' ? '+' : '-';
+      return `NOW() ${operator} INTERVAL '${days} days'`;
+    })
     // 4b. datetime('now', '-${dias} days') → NOW() - INTERVAL '${dias} days' (para template literals)
     .replace(/datetime\s*\(\s*['"]now['"]\s*,\s*['"]-\$(\{[^}]+\})\s+days?['"]\s*\)/gi, "NOW() - INTERVAL '$1 days'")
     // 5. strftime('%Y-%m', ...) → TO_CHAR(...::timestamp, 'YYYY-MM')

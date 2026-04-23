@@ -529,13 +529,13 @@ router.get('/insights/historico', async (req, res) => {
         currency,
         category,
         action,
-        action_label as "actionLabel",
+        action_label,
         change_percent as change,
         status,
-        created_at as "createdAt",
-        periodo_desde as "periodoDesde",
-        periodo_hasta as "periodoHasta",
-        agent_source as "agentSource"
+        created_at,
+        periodo_desde,
+        periodo_hasta,
+        agent_source
       FROM insights_historico
       WHERE empresa_id = ? 
         AND status = ?
@@ -559,6 +559,27 @@ router.get('/insights/historico', async (req, res) => {
     
     const insights = await db.allAsync(query, params);
     
+    // Mapear snake_case a camelCase
+    const insightsMapped = insights.map(i => ({
+      id: i.id,
+      type: i.type,
+      severity: i.severity,
+      title: i.title,
+      description: i.description,
+      impact: i.impact,
+      currency: i.currency,
+      category: i.category,
+      action: i.action,
+      actionLabel: i.action_label,
+      change: i.change,
+      status: i.status,
+      createdAt: i.created_at,
+      periodoDesde: i.periodo_desde,
+      periodoHasta: i.periodo_hasta,
+      agentSource: i.agent_source,
+      isNew: false
+    }));
+    
     // Obtener conteos
     const counts = await db.getAsync(`
       SELECT 
@@ -575,7 +596,7 @@ router.get('/insights/historico', async (req, res) => {
       status: 'success',
       timestamp: new Date().toISOString(),
       data: {
-        insights: insights.map(i => ({ ...i, isNew: false })),
+        insights: insightsMapped,
         pagination: {
           total: counts?.total || 0,
           limit,

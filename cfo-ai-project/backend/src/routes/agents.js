@@ -409,13 +409,11 @@ router.post('/chat', async (req, res) => {
     
     // 3. Consulta de obligaciones SAT
     if (messageLower.includes('sat') || messageLower.includes('iva') || messageLower.includes('isr') || messageLower.includes('declara') || messageLower.includes('impuesto')) {
-      const calendario = await db.allAsync(`
-        SELECT * FROM sat_calendario 
-        WHERE fecha_vencimiento >= date('now') 
-        AND fecha_vencimiento <= date('now', '+30 days')
-        ORDER BY fecha_vencimiento
-        LIMIT 3
-      `);
+      const calendarioQuery = isPostgres
+        ? `SELECT * FROM sat_calendario WHERE fecha_vencimiento >= CURRENT_DATE AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '30 days' ORDER BY fecha_vencimiento LIMIT 3`
+        : `SELECT * FROM sat_calendario WHERE fecha_vencimiento >= date('now') AND fecha_vencimiento <= date('now', '+30 days') ORDER BY fecha_vencimiento LIMIT 3`;
+      
+      const calendario = await db.allAsync(calendarioQuery);
       
       let respText = `📅 **Obligaciones SAT Próximas**\n\n`;
       
@@ -488,7 +486,7 @@ router.post('/chat', async (req, res) => {
     // 6. Consulta de CxP / proveedores
     if (messageLower.includes('cxp') || messageLower.includes('proveedor') || messageLower.includes('pago')) {
       const pagosQuery = isPostgres
-        ? `SELECT proveedor, monto_total as monto, fecha_vencimiento, CAST((julianday(fecha_vencimiento) - julianday('now')) AS INTEGER) as dias_restantes FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento <= date('now', '+14 days') ORDER BY fecha_vencimiento LIMIT 5`
+        ? `SELECT proveedor, monto_total as monto, fecha_vencimiento, EXTRACT(DAY FROM (fecha_vencimiento - CURRENT_DATE)) as dias_restantes FROM cuentas_pagar WHERE empresa_id = $1 AND estado = 'pendiente' AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '14 days' ORDER BY fecha_vencimiento LIMIT 5`
         : `SELECT proveedor, monto, fecha_vencimiento, CAST((julianday(fecha_vencimiento) - julianday('now')) AS INTEGER) as dias_restantes FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento <= date('now', '+14 days') ORDER BY fecha_vencimiento LIMIT 5`;
         
       const proximosPagos = await db.allAsync(pagosQuery, [empresaId]);
@@ -517,15 +515,11 @@ router.post('/chat', async (req, res) => {
     
     // 7. Consulta de conciliación
     if (messageLower.includes('concilia') || messageLower.includes('banco')) {
-      const cuentas = await db.allAsync(`
-        SELECT banco, saldo, moneda,
-          CASE 
-            WHEN ultima_conciliacion IS NULL THEN 'Nunca'
-            ELSE CAST((julianday('now') - julianday(ultima_conciliacion)) AS INTEGER) || ' días'
-          END as dias_sin_conciliar
-        FROM cuentas_bancarias
-        WHERE empresa_id = ? AND activa = TRUE
-      `, [empresaId]);
+      const cuentasQuery = isPostgres
+        ? `SELECT banco, saldo, moneda, CASE WHEN ultima_conciliacion IS NULL THEN 'Nunca' ELSE EXTRACT(DAY FROM (CURRENT_DATE - ultima_conciliacion::date)) || ' días' END as dias_sin_conciliar FROM cuentas_bancarias WHERE empresa_id = $1 AND activa = TRUE`
+        : `SELECT banco, saldo, moneda, CASE WHEN ultima_conciliacion IS NULL THEN 'Nunca' ELSE CAST((julianday('now') - julianday(ultima_conciliacion)) AS INTEGER) || ' días' END as dias_sin_conciliar FROM cuentas_bancarias WHERE empresa_id = ? AND activa = TRUE`;
+      
+      const cuentas = await db.allAsync(cuentasQuery, [empresaId]);
       
       let respText = `🏦 **Estado de Conciliación**\n\n`;
       
@@ -548,15 +542,15 @@ router.post('/chat', async (req, res) => {
     
     // 8. Consulta de CCC (Cash Conversion Cycle)
     if (messageLower.includes('ccc') || messageLower.includes('cash conversion') || messageLower.includes('ciclo')) {
-      // Calcular DSO y DPO dinámicamente para la respuesta
       const cxcData = await db.getAsync(`
         SELECT AVG(dias_atraso) as promedio_dias_cobro FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada'
       `, [empresaId]);
       
-      const cxpData = await db.getAsync(`
-        SELECT AVG(CAST((julianday(fecha_vencimiento) - julianday(fecha_emision)) AS INTEGER)) as promedio_dias_pago 
-        FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'
-      `, [empresaId]);
+      const cxpDataQuery = isPostgres
+        ? `SELECT AVG(EXTRACT(DAY FROM (fecha_vencimiento::date - fecha_emision::date))) as promedio_dias_pago FROM cuentas_pagar WHERE empresa_id = $1 AND estado = 'pendiente'`
+        : `SELECT AVG(CAST((julianday(fecha_vencimiento) - julianday(fecha_emision)) AS INTEGER)) as promedio_dias_pago FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'`;
+      
+      const cxpData = await db.getAsync(cxpDataQuery, [empresaId]);
       
       const dso = Math.round(parseFloat(cxcData?.promedio_dias_cobro) || 45);
       const dpo = Math.round(parseFloat(cxpData?.promedio_dias_pago) || 30);

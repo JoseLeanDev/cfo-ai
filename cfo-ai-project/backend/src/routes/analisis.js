@@ -215,11 +215,10 @@ router.get('/insights', async (req, res) => {
     
     if (!skipCache && cached && (Date.now() - cached.timestamp) < CACHE_TTL_MS) {
       return res.json({
-        status: 'success',
+        ...cached.data,
         source: 'cache',
         cached_at: new Date(cached.timestamp).toISOString(),
-        expires_at: new Date(cached.timestamp + CACHE_TTL_MS).toISOString(),
-        data: cached.data
+        expires_at: new Date(cached.timestamp + CACHE_TTL_MS).toISOString()
       });
     }
 

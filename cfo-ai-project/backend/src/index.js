@@ -6,6 +6,7 @@ const morgan = require('morgan');
 const path = require('path');
 const CFOAICore = require('../agents/index');
 const db = require('../database/connection');
+const { wakeUpMiddleware, ejecutarTareasPendientesWakeUp } = require('./services/wakeUpScheduler');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,6 +32,11 @@ app.use(cors({
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// WakeUp Scheduler Middleware v3.0
+// Ejecuta tareas pendientes en cada request (con cooldown de 5 min)
+// Necesario para Render free tier donde el servidor duerme
+app.use(wakeUpMiddleware());
 
 // Database setup
 app.set('db', db); // Make db available to routes
@@ -58,6 +64,29 @@ app.get('/api/health', (req, res) => {
     version: '1.0.0',
     environment: process.env.NODE_ENV || 'development'
   });
+});
+
+// Keep-Alive endpoint para cron-job.org o similar
+// Fuerza ejecución de tareas pendientes y responde con el resultado
+app.get('/api/keep-alive', async (req, res) => {
+  try {
+    console.log('[Keep-Alive] 🔥 Recibido ping de wake-up');
+    const resultado = await ejecutarTareasPendientesWakeUp();
+    
+    res.json({
+      status: 'ok',
+      message: 'Wake-up ejecutado',
+      timestamp: new Date().toISOString(),
+      tareas: resultado
+    });
+  } catch (error) {
+    console.error('[Keep-Alive] Error:', error);
+    res.status(500).json({
+      status: 'error',
+      message: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Static files - only serve if frontend dist exists (development only)

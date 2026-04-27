@@ -87,6 +87,21 @@ No solo mostrar datos. **Revelar oportunidades, riesgos y acciones concretas.**
 
 ---
 
+### ⚫ PRIORIDAD 7: Sección de Gastos y Nómina
+**Pregunta:** ¿En qué gastamos y cuánto cuesta nuestro equipo?
+
+**Implementar:**
+- [ ] Dashboard de gastos por categoría (operativos, administrativos, ventas)
+- [ ] Evolución mensual de gastos con detección de anomalías
+- [ ] Sección de nómina: salarios, beneficios, cargas sociales
+- [ ] Comparación presupuesto vs. real en gastos
+- [ ] Métricas: % de gastos sobre ingresos, gasto por empleado, etc.
+- [ ] Alertas cuando gastos superen umbrales definidos
+
+**Valor:** Control de costos y eficiencia operativa
+
+---
+
 ## 📊 Valor Agregado por Eje Financiero
 
 ### 1. LIQUIDEZ Y TESORERÍA ✅ (Runway Calculator - DONE)
@@ -192,12 +207,23 @@ negociar línea de crédito por Q300,000
 | ✅ | Fix cuentas duplicadas | DONE | fc0d5d8 |
 | ✅ | Fix CCC mostrando 0 | FIXED | ead49d8 |
 | ✅ | Fix Chatbot error estructura respuesta | FIXED | 2f53658 |
-| 🟡 | Cash Conversion Cycle (CCC) - Mejoras | NEXT | - |
-| 🟡 | Chatbot/AI Assistant (burbuja) - Testing | TODO | - |
-| 🟢 | Working Capital Optimization | TODO | - |
-| 🔵 | Profitability Matrix | TODO | - |
-| 🟣 | Scenario Simulator | TODO | - |
-| 🟤 | Weekly CFO Briefing | TODO | - |
+| ✅ | Cash Conversion Cycle (CCC) - Mejoras | DONE | 7477bae |
+| ✅ | Fix Agentes de IA no inicializados | DONE | 7477bae |
+| ✅ | Fix Agentes tradicionales no inicializados | DONE | 94ddec4 |
+| ✅ | Fix "AgenteClass is not a constructor" | DONE | 9d08f6a |
+| ✅ | Módulo SAT completo (FEL) | DONE | 41f3bc8 |
+| ✅ | Fix Libro Diario vacío | DONE | 37fde7b |
+| ✅ | OpenRouter API key rotada | DONE | Apr 22 |
+| ✅ | **Nuevo sistema de agentes v2.0** | DONE | ed4f523 |
+| ✅ | **Eliminar agentes viejos de TODO el proyecto** | DONE | 6988b0c |
+| 🟡 | Chatbot/AI Assistant (burbuja) - Testing | IN PROGRESS | - |
+| 🟡 | Chatbot/AI Assistant (burbuja) - Testing | IN PROGRESS | - |
+| 🟢 | Análisis de Ventas (Productos/Tiendas/Clientes) | DONE | 0e47c7e |
+| 🔵 | Working Capital Optimization | TODO | - |
+| 🟣 | Profitability Matrix | TODO | - |
+| 🟤 | Scenario Simulator | TODO | - |
+| ⚫ | Weekly CFO Briefing | TODO | - |
+| ⚪ | Sección de Gastos y Nómina | DONE | 54e6084 |
 
 ---
 

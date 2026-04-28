@@ -28,17 +28,6 @@ router.get('/version', (req, res) => {
     res.json({ commit: 'unknown', error: e.message });
   }
 });
-    
-    res.json({
-      commit,
-      branch,
-      date,
-      timestamp: new Date().toISOString()
-    });
-  } catch (e) {
-    res.json({ commit: 'unknown', error: e.message });
-  }
-});
 
 // GET /api/agents/status - Estado del sistema de agentes programados
 router.get('/status', async (req, res) => {

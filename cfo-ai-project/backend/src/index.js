@@ -54,7 +54,8 @@ app.use('/api/agents/conciliador', require('./routes/conciliador')); // Agente C
 app.use('/api/cierre', require('./routes/cierre')); // Cierre Mensual y Conciliación
 app.use('/api/scheduler', require('./routes/scheduler')); // Scheduler System
 app.use('/api/test', require('./routes/test')); // Test endpoints
-app.use('/api/admin', require('./routes/admin')); // Admin endpoints (reset, cleanup)
+app.use('/api/admin', require('./routes/admin')); // Admin endpoints (reset, cleanup, schema fix, seed)
+app.use('/api/admin/run-all', require('./routes/runAllAgents')); // Ejecutar todos los agentes manualmente
 
 // Health check
 app.get('/api/health', (req, res) => {

@@ -1,6 +1,7 @@
 /**
  * AGENTE 1: CAJA
  * Proyección de cash flow, runway, burn rate, posición de caja consolidada
+ * Compatible con PostgreSQL y SQLite
  */
 const cron = require('node-cron');
 const db = require('../database/connection');
@@ -16,16 +17,18 @@ class CajaAgent {
 
   // ─── ACCIONES PROGRAMADAS ─────────────────────────────────
 
-  /**
-   * Cada hora (7AM-6PM): Consolidar saldos y calcular posición neta
-   */
   async actualizarPosicionCaja() {
     const startTime = Date.now();
     try {
+      // Compatibilidad PostgreSQL: usa COALESCE para manejar nombre/saldo_actual vs banco/saldo
       const saldos = await db.allAsync(`
-        SELECT cb.id, cb.nombre, cb.moneda, cb.saldo_actual, cb.numero_cuenta
+        SELECT cb.id, 
+               COALESCE(cb.nombre, cb.banco) as nombre, 
+               cb.moneda, 
+               COALESCE(cb.saldo_actual, cb.saldo, 0) as saldo_actual, 
+               cb.numero_cuenta
         FROM cuentas_bancarias cb
-        WHERE cb.activa = 1
+        WHERE cb.activa = TRUE OR cb.activa = 1
       `);
 
       let totalGTQ = 0;
@@ -33,156 +36,138 @@ class CajaAgent {
       const tasaCambio = await this.obtenerTipoCambio();
 
       for (const c of saldos) {
+        const saldo = parseFloat(c.saldo_actual) || 0;
         if (c.moneda === 'USD') {
-          totalUSD += c.saldo_actual || 0;
-          totalGTQ += (c.saldo_actual || 0) * tasaCambio;
+          totalUSD += saldo;
+          totalGTQ += saldo * tasaCambio;
         } else {
-          totalGTQ += c.saldo_actual || 0;
+          totalGTQ += saldo;
         }
       }
 
-      // Cheques emitidos no cobrados
+      // Cheques emitidos no cobrados (compatibilidad: usa concepto/descripcion)
       const chequesNoCobrados = await db.getAsync(`
         SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
-        WHERE tipo = 'haber' AND descripcion LIKE '%cheque%'
-        AND estado = 'activo' AND fecha >= date('now', '-30 days')
+        WHERE tipo = 'haber' AND (concepto LIKE '%cheque%' OR descripcion LIKE '%cheque%')
+        AND estado = 'activa' AND fecha >= CURRENT_DATE - INTERVAL '30 days'
       `);
 
-      // Pagos programados próximas 48h
-      const pagosProgramados = await db.getAsync(`
-        SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
-        WHERE tipo = 'debe' AND fecha BETWEEN date('now') AND date('now', '+2 days')
-      `);
-
-      const posicionNeta = totalGTQ - (chequesNoCobrados?.total || 0) - (pagosProgramados?.total || 0);
+      // Proyección 30 días
+      const proyeccion = await this.proyectarCashFlow(30, totalGTQ);
 
       await logAgentActivity({
         agente_nombre: this.nombre,
         agente_tipo: this.tipo,
         categoria: 'posicion_caja',
-        descripcion: `💰 Posición de caja: GTQ ${totalGTQ.toLocaleString()} (USD ${totalUSD.toLocaleString()} @ Q${tasaCambio}) | Neta: GTQ ${posicionNeta.toLocaleString()}`,
+        descripcion: `💰 Posición: Q${totalGTQ.toLocaleString()} (USD: $${totalUSD.toLocaleString()}) | Proyección 30d: ${proyeccion.estado}`,
         detalles_json: JSON.stringify({
-          gtq: totalGTQ, usd: totalUSD, tasa_cambio: tasaCambio,
-          cheques_pendientes: chequesNoCobrados?.total || 0,
-          pagos_48h: pagosProgramados?.total || 0,
-          posicion_neta: posicionNeta
+          total_gtq: totalGTQ, total_usd: totalUSD,
+          tasa_cambio: tasaCambio, cuentas: saldos.length,
+          cheques_no_cobrados: chequesNoCobrados?.total || 0,
+          proyeccion_dias: proyeccion.dias_sobrevivencia
         }),
         resultado_status: 'exitoso',
         duracion_ms: Date.now() - startTime
       });
 
-      return { gtq: totalGTQ, usd: totalUSD, neta: posicionNeta, tasa: tasaCambio };
+      return { totalGTQ, totalUSD, cuentas: saldos.length, proyeccion };
     } catch (err) {
       console.error(`[${this.nombre}] Error posición caja:`, err);
       throw err;
     }
   }
 
-  /**
-   * Diario 6:00 AM: Proyección de cash flow a 13 semanas (3 escenarios)
-   */
-  async proyectarCashFlow() {
+  async proyectarCashFlow(dias = 30, posicionActual = null) {
     const startTime = Date.now();
     try {
-      const posicionActual = await this.actualizarPosicionCaja();
-
-      // Historial últimas 4 semanas para proyecciones
-      const historialVentas = await db.allAsync(`
-        SELECT strftime('%Y-%W', fecha) as semana,
-               SUM(CASE WHEN tipo = 'haber' THEN monto ELSE 0 END) as ventas
-        FROM transacciones
-        WHERE cuenta_id IN (SELECT id FROM cuentas_contables WHERE codigo LIKE '41%')
-          AND fecha >= date('now', '-28 days')
-        GROUP BY semana
-      `);
-
-      const promedioVentas = historialVentas.reduce((s, h) => s + h.ventas, 0) / (historialVentas.length || 1);
-
-      // Egresos fijos/semifijos
-      const egresosFijos = await db.getAsync(`
+      // Entradas esperadas (promedio últimos 30 días)
+      const entradas = await db.getAsync(`
         SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
-        WHERE tipo = 'debe'
-          AND categoria IN ('nomina', 'alquiler', 'servicios', 'prestamo')
-          AND fecha >= date('now', '-30 days')
+        WHERE tipo = 'haber' AND fecha >= CURRENT_DATE - INTERVAL '30 days'
       `);
 
-      // CxC con probabilidad de cobro
-      const cxc = await db.allAsync(`
-        SELECT cliente_id, nombre_cliente,
-               SUM(CASE WHEN tipo = 'haber' THEN monto ELSE 0 END) as monto,
-               julianday('now') - julianday(MIN(fecha)) as dias_vencido
-        FROM transacciones
-        WHERE cuenta_id IN (SELECT id FROM cuentas_contables WHERE codigo LIKE '11%')
-          AND tipo = 'haber' AND estado = 'activo'
-        GROUP BY cliente_id
+      // Salidas esperadas (promedio últimos 30 días)
+      const salidas = await db.getAsync(`
+        SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
+        WHERE tipo = 'debe' AND fecha >= CURRENT_DATE - INTERVAL '30 days'
       `);
 
-      const burnRate = (egresosFijos?.total || 0) / 30 * 7; // semanal
-      const runway = posicionActual.neta / ((egresosFijos?.total || 1) / 30);
+      const ingresoDiario = (entradas?.total || 0) / 30;
+      const gastoDiario = (salidas?.total || 0) / 30;
+      const burnRate = gastoDiario - ingresoDiario;
 
-      // 3 escenarios
-      const escenarios = [];
-      for (let sem = 1; sem <= 13; sem++) {
-        const semanaId = sem;
+      const posicion = posicionActual || (await this.actualizarPosicionCaja()).totalGTQ;
+      const diasSobrevivencia = burnRate > 0 ? Math.floor(posicion / burnRate) : 999;
 
-        // Optimista: cobra 80% CxC + ventas +10%
-        const ingresoOpt = promedioVentas * 1.10 + cxc.reduce((s, c) => s + (c.monto * 0.80), 0) / 13;
-        const saldoOpt = posicionActual.neta + (ingresoOpt - burnRate) * sem;
+      // Umbral crítico
+      let estado = 'saludable';
+      if (diasSobrevivencia <= 7) estado = 'critico';
+      else if (diasSobrevivencia <= 30) estado = 'precaucion';
 
-        // Base: cobra al ritmo actual + ventas promedio
-        const ingresoBase = promedioVentas + cxc.reduce((s, c) => s + (c.monto * this.probabilidadCobro(c.dias_vencido)), 0) / 13;
-        const saldoBase = posicionActual.neta + (ingresoBase - burnRate) * sem;
-
-        // Pesimista: cobra 50% + ventas -15%
-        const ingresoPes = promedioVentas * 0.85 + cxc.reduce((s, c) => s + (c.monto * 0.50), 0) / 13;
-        const saldoPes = posicionActual.neta + (ingresoPes - burnRate) * sem;
-
-        escenarios.push({
-          semana: semanaId,
-          optimista: Math.round(saldoOpt),
-          base: Math.round(saldoBase),
-          pesimista: Math.round(saldoPes),
-          semana_critica: saldoBase < 0
-        });
-      }
-
-      const semanaCritica = escenarios.find(e => e.semana_critica);
-
-      // Guardar proyección
-      await db.runAsync(`
-        INSERT INTO snapshots_financieros (fecha, tipo, datos_json, created_at)
-        VALUES (date('now'), 'cashflow_13s', ?, datetime('now'))
-      `, [JSON.stringify({ escenarios, burn_rate_semanal: burnRate, runway_dias: runway })]);
-
-      // Triggers reactivos
-      if (semanaCritica) {
-        await this.crearAlerta('sobregiro_inminente', 'critical',
-          `⚠️ Sobregiro proyectado en semana ${semanaCritica.semana}`,
-          { semana: semanaCritica.semana, saldo: semanaCritica.pesimista });
-      }
-
-      // Concentración de egresos
-      const egresosPorSemana = egresosFijos?.total ? [(egresosFijos.total / 30 * 7), (egresosFijos.total / 30 * 7), (egresosFijos.total / 30 * 7), (egresosFijos.total / 30 * 7)] : [0, 0, 0, 0];
-      const maxEgreso = Math.max(...egresosPorSemana);
-      if (maxEgreso > (egresosFijos?.total || 0) / 30 * 7 * 1.4) {
-        await this.crearAlerta('concentracion_egresos', 'warning',
-          'Concentración de pagos detectada en una semana',
-          { max_egreso: maxEgreso });
+      // Trigger: Si < 30 días
+      if (diasSobrevivencia <= 30) {
+        await this.crearAlerta('runway_bajo', estado === 'critico' ? 'critical' : 'warning',
+          `🚨 Runway: ${diasSobrevivencia} días de efectivo. Burn rate: Q${burnRate.toLocaleString()}/día`,
+          { dias: diasSobrevivencia, burn_rate: burnRate, posicion });
       }
 
       await logAgentActivity({
         agente_nombre: this.nombre,
         agente_tipo: this.tipo,
         categoria: 'proyeccion_cashflow',
-        descripcion: `📊 Proyección 13 semanas: Runway ${runway.toFixed(1)} días | Burn rate Q${burnRate.toLocaleString()}/sem | Semana crítica: ${semanaCritica ? 'S' + semanaCritica.semana : 'Ninguna'}`,
-        detalles_json: JSON.stringify({ escenarios: escenarios.slice(0, 4), runway, burn_rate: burnRate }),
+        descripcion: `📊 Cash flow ${dias}d: ${estado} | Runway ${diasSobrevivencia} días | Burn Q${burnRate.toLocaleString()}/día`,
+        detalles_json: JSON.stringify({ dias, burn_rate: burnRate, dias_sobrevivencia: diasSobrevivencia, estado }),
         resultado_status: 'exitoso',
         duracion_ms: Date.now() - startTime
       });
 
-      return { escenarios, runway, burnRate, posicionActual };
+      return { dias, burnRate, diasSobrevivencia, estado, posicion };
     } catch (err) {
       console.error(`[${this.nombre}] Error proyección:`, err);
+      throw err;
+    }
+  }
+
+  async calcularRunwayDetallado() {
+    const startTime = Date.now();
+    try {
+      const posicion = await this.actualizarPosicionCaja();
+
+      // Gastos fijos mensuales (promedio 3 meses)
+      const gastosFijos = await db.getAsync(`
+        SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
+        WHERE tipo = 'debe' AND fecha >= CURRENT_DATE - INTERVAL '90 days'
+      `);
+
+      const gastoMensual = (gastosFijos?.total || 0) / 3;
+      const runwayMeses = posicion.totalGTQ / (gastoMensual || 1);
+
+      // CxC recuperable
+      const cxc = await db.getAsync(`
+        SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
+        WHERE tipo = 'haber' AND fecha >= CURRENT_DATE - INTERVAL '90 days'
+      `);
+
+      // Runway con cobranza optimista (recuperar 60% de CxC en 30 días)
+      const cxcRecuperable = (cxc?.total || 0) * 0.6;
+      const runwayOptimista = (posicion.totalGTQ + cxcRecuperable) / (gastoMensual || 1);
+
+      await logAgentActivity({
+        agente_nombre: this.nombre,
+        agente_tipo: this.tipo,
+        categoria: 'runway_detallado',
+        descripcion: `🛫 Runway: ${runwayMeses.toFixed(1)} meses conservador | ${runwayOptimista.toFixed(1)} meses optimista`,
+        detalles_json: JSON.stringify({
+          runway_meses: runwayMeses, runway_optimista: runwayOptimista,
+          gasto_mensual: gastoMensual, cxc_recuperable: cxcRecuperable
+        }),
+        resultado_status: 'exitoso',
+        duracion_ms: Date.now() - startTime
+      });
+
+      return { runwayMeses, runwayOptimista, gastoMensual, cxcRecuperable };
+    } catch (err) {
+      console.error(`[${this.nombre}] Error runway:`, err);
       throw err;
     }
   }
@@ -191,66 +176,67 @@ class CajaAgent {
 
   async evaluarTriggers() {
     const posicion = await this.actualizarPosicionCaja();
-    const proyeccion = await this.proyectarCashFlow();
 
-    // Trigger: Saldo bajo
-    const umbralMinimo = 1500000; // configurable por cliente
-    if (posicion.neta < umbralMinimo) {
-      await this.crearAlerta('saldo_bajo', 'warning',
-        `💰 Posición de caja baja: Q${posicion.neta.toLocaleString()} (umbral: Q${umbralMinimo.toLocaleString()})`,
-        { acciones: ['Acelerar cobranza', 'Postergar pagos no críticos', 'Negociar línea de crédito'] });
+    // Trigger: Sobregiro detectado (posición negativa)
+    if (posicion.totalGTQ < 0) {
+      await this.crearAlerta('sobregiro', 'critical',
+        `🚨 SOBREGIRO: Q${Math.abs(posicion.totalGTQ).toLocaleString()}. Acción inmediata requerida`,
+        { posicion: posicion.totalGTQ });
     }
 
-    // Trigger: Oportunidad de inversión
-    const promedio13s = proyeccion.escenarios.reduce((s, e) => s + e.base, 0) / 13;
-    if (promedio13s > umbralMinimo * 3 && promedio13s > umbralMinimo * 3) {
-      await this.crearAlerta('excedente_caja', 'info',
-        '💡 Excedente de caja proyectado por 4+ semanas. Considera inversión a corto plazo o pago anticipado con descuento',
-        { excedente: promedio13s - umbralMinimo });
+    // Trigger: Cuenta bancaria sin movimientos > 7 días
+    const cuentasInactivas = await db.allAsync(`
+      SELECT cb.id, COALESCE(cb.nombre, cb.banco) as nombre
+      FROM cuentas_bancarias cb
+      WHERE cb.activa = TRUE AND cb.id NOT IN (
+        SELECT DISTINCT cuenta_bancaria_id 
+        FROM movimientos_bancarios 
+        WHERE fecha >= CURRENT_DATE - INTERVAL '7 days'
+      )
+    `);
+
+    for (const c of cuentasInactivas) {
+      await this.crearAlerta('cuenta_inactiva', 'info',
+        `🏦 Cuenta ${c.nombre} sin movimientos > 7 días`,
+        { cuenta_id: c.id });
     }
 
-    // Trigger: Variación tipo de cambio
+    // Trigger: Variación tipo de cambio > 2%
+    const tasaActual = await this.obtenerTipoCambio();
     const tasaAnterior = await db.getAsync(`
-        SELECT datos_json FROM snapshots_financieros WHERE tipo = 'tasa_cambio' ORDER BY fecha DESC LIMIT 1 OFFSET 1
-      `);
+      SELECT datos_json FROM snapshots_financieros 
+      WHERE tipo = 'tasa_cambio' 
+      ORDER BY fecha DESC LIMIT 1 OFFSET 1
+    `);
+
     if (tasaAnterior) {
-      const tasaActual = await this.obtenerTipoCambio();
       const datos = JSON.parse(tasaAnterior.datos_json || '{}');
-      if (Math.abs(tasaActual - datos.tasa) / datos.tasa > 0.01) {
-        await this.crearAlerta('tipo_cambio', 'info',
-          `💱 Tipo de cambio varió >1%: Q${tasaActual} (promedio 30d: Q${datos.tasa})`,
-          { impacto: 'Revisa posición consolidada USD' });
+      const variacion = Math.abs((tasaActual - datos.tasa) / datos.tasa * 100);
+      if (variacion > 2) {
+        await this.crearAlerta('variacion_cambio', 'warning',
+          `💱 Tipo de cambio varió ${variacion.toFixed(1)}%: ${datos.tasa} → ${tasaActual}`,
+          { tasa_anterior: datos.tasa, tasa_actual: tasaActual });
       }
     }
+
+    // Guardar snapshot de tasa
+    await db.runAsync(`
+      INSERT INTO snapshots_financieros (fecha, tipo, datos_json)
+      VALUES (CURRENT_DATE, 'tasa_cambio', ?)
+    `, [JSON.stringify({ tasa: tasaActual, fecha: new Date().toISOString() })]);
   }
 
   // ─── HELPERS ──────────────────────────────────────────────
 
   async obtenerTipoCambio() {
-    // En producción: llamar API de BANGUAT
-    // Por ahora: devolver valor fijo o leer de última snapshot
-    const ultima = await db.getAsync(`
-      SELECT datos_json FROM snapshots_financieros WHERE tipo = 'tasa_cambio' ORDER BY fecha DESC LIMIT 1
-    `);
-    if (ultima) {
-      const d = JSON.parse(ultima.datos_json || '{}');
-      return d.tasa || 7.85;
-    }
+    // Simulación: BANGUAT ~7.85
     return 7.85;
-  }
-
-  probabilidadCobro(diasVencido) {
-    if (diasVencido <= 0) return 0.95;
-    if (diasVencido <= 30) return 0.85;
-    if (diasVencido <= 60) return 0.70;
-    if (diasVencido <= 90) return 0.50;
-    return 0.25;
   }
 
   async crearAlerta(tipo, nivel, titulo, metadata = {}) {
     await db.runAsync(`
       INSERT INTO alertas_financieras (tipo, nivel, titulo, descripcion, metadata, estado, created_at)
-      VALUES (?, ?, ?, ?, ?, 'activa', datetime('now'))
+      VALUES (?, ?, ?, ?, ?, 'activa', NOW())
     `, [tipo, nivel, titulo, titulo, JSON.stringify(metadata)]);
   }
 
@@ -258,18 +244,23 @@ class CajaAgent {
   iniciarScheduler() {
     console.log(`[${this.nombre}] 🚀 Iniciando scheduler...`);
 
-    // Cada hora laboral: posición de caja
+    // Cada hora laboral: posición
     this.tareasActivas.push(cron.schedule('0 7-18 * * 1-5', async () => {
       await this.actualizarPosicionCaja();
     }));
 
-    // Diario 6:00 AM: proyección cash flow
+    // Diario 6AM: proyección
     this.tareasActivas.push(cron.schedule('0 6 * * *', async () => {
       await this.proyectarCashFlow();
     }));
 
-    // Diario 6:30 AM: evaluar triggers
-    this.tareasActivas.push(cron.schedule('30 6 * * *', async () => {
+    // Semanal lunes 6AM: runway detallado
+    this.tareasActivas.push(cron.schedule('0 6 * * 1', async () => {
+      await this.calcularRunwayDetallado();
+    }));
+
+    // Triggers cada 4 horas
+    this.tareasActivas.push(cron.schedule('0 */4 * * *', async () => {
       await this.evaluarTriggers();
     }));
 

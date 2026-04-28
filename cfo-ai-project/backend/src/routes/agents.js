@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const { execSync } = require('child_process');
 const { ejecutarTareasPendientesWakeUp } = require('../services/wakeUpScheduler');
 const aiService = require('../services/aiService');
 
@@ -10,24 +11,23 @@ router.get('/version', (req, res) => {
     const branch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
     const date = execSync('git log -1 --format=%cd').toString().trim();
     
+    // Verificar contenido de CajaAgent.js
+    const cajaAgentContent = require('fs').readFileSync(
+      require('path').join(__dirname, '../../agents/CajaAgent.js'), 
+      'utf8'
+    ).substring(0, 300);
+    
     res.json({
       commit,
       branch,
       date,
+      cajaAgentSnippet: cajaAgentContent,
       timestamp: new Date().toISOString()
     });
   } catch (e) {
     res.json({ commit: 'unknown', error: e.message });
   }
 });
-const { execSync } = require('child_process');
-
-// GET /api/agents/version - Versión del código desplegado
-router.get('/version', (req, res) => {
-  try {
-    const commit = execSync('git rev-parse --short HEAD').toString().trim();
-    const branch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
-    const date = execSync('git log -1 --format=%cd').toString().trim();
     
     res.json({
       commit,

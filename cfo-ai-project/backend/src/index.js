@@ -56,6 +56,7 @@ app.use('/api/scheduler', require('./routes/scheduler')); // Scheduler System
 app.use('/api/test', require('./routes/test')); // Test endpoints
 app.use('/api/admin', require('./routes/admin')); // Admin endpoints (reset, cleanup, schema fix, seed)
 app.use('/api/admin/run-all', require('./routes/runAllAgents')); // Ejecutar todos los agentes manualmente
+app.use('/api/debug', require('./routes/debug')); // Debug endpoints
 
 // Health check
 app.get('/api/health', (req, res) => {

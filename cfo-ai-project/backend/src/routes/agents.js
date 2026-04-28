@@ -3,6 +3,43 @@ const router = express.Router();
 const { ejecutarTareasPendientesWakeUp } = require('../services/wakeUpScheduler');
 const aiService = require('../services/aiService');
 
+// GET /api/agents/version - Versión del código desplegado
+router.get('/version', (req, res) => {
+  try {
+    const commit = execSync('git rev-parse --short HEAD').toString().trim();
+    const branch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
+    const date = execSync('git log -1 --format=%cd').toString().trim();
+    
+    res.json({
+      commit,
+      branch,
+      date,
+      timestamp: new Date().toISOString()
+    });
+  } catch (e) {
+    res.json({ commit: 'unknown', error: e.message });
+  }
+});
+const { execSync } = require('child_process');
+
+// GET /api/agents/version - Versión del código desplegado
+router.get('/version', (req, res) => {
+  try {
+    const commit = execSync('git rev-parse --short HEAD').toString().trim();
+    const branch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
+    const date = execSync('git log -1 --format=%cd').toString().trim();
+    
+    res.json({
+      commit,
+      branch,
+      date,
+      timestamp: new Date().toISOString()
+    });
+  } catch (e) {
+    res.json({ commit: 'unknown', error: e.message });
+  }
+});
+
 // GET /api/agents/status - Estado del sistema de agentes programados
 router.get('/status', async (req, res) => {
   try {

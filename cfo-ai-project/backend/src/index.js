@@ -57,6 +57,7 @@ app.use('/api/test', require('./routes/test')); // Test endpoints
 app.use('/api/admin', require('./routes/admin')); // Admin endpoints (reset, cleanup, schema fix, seed)
 app.use('/api/admin/run-all', require('./routes/runAllAgents')); // Ejecutar todos los agentes manualmente
 app.use('/api/debug', require('./routes/debug')); // Debug endpoints
+app.use('/api/debug-schema', require('./routes/debug-schema')); // Schema inspection
 
 // Health check
 app.get('/api/health', (req, res) => {

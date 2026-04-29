@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 // NUEVO: Importar CFO AI Core v2.0
-const CFOAICore = require('../../agents');
+const CFOAICore = require('../agents');
 
 const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
 

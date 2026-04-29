@@ -115,6 +115,11 @@ function sqliteToPostgres(sql) {
       const operator = sign === '+' ? '+' : '-';
       return `CURRENT_DATE ${operator} INTERVAL '${days} days'`;
     })
+    // 3b. date(?, '+X days') → ?::date + INTERVAL 'X days'
+    .replace(/date\s*\(\s*\?\s*,\s*['"]([+-]?)(\d+)\s+days?['"]\s*\)/gi, (match, sign, days) => {
+      const operator = sign === '+' ? '+' : '-';
+      return `?::date ${operator} INTERVAL '${days} days'`;
+    })
     // 4. datetime('now', '-X days') → NOW() - INTERVAL 'X days'
     .replace(/datetime\s*\(\s*['"]now['"]\s*,\s*['"]([+-]?)(\d+)\s+days?['"]\s*\)/gi, (match, sign, days) => {
       const operator = sign === '+' ? '+' : '-';
@@ -126,14 +131,18 @@ function sqliteToPostgres(sql) {
     .replace(/strftime\s*\(\s*['"]%Y-%m['"]\s*,\s*([^)]+)\)/gi, "TO_CHAR($1::timestamp, 'YYYY-MM')")
     // 5b. strftime('%w', ...) → EXTRACT(DOW FROM ...)
     .replace(/strftime\s*\(\s*['"]%w['"]\s*,\s*([^)]+)\)/gi, "EXTRACT(DOW FROM $1::timestamp)")
-    // 6. julianday(...) - julianday(...) → (... - ...) en días
-    .replace(/julianday\s*\(([^)]+)\)\s*-\s*julianday\s*\(([^)]+)\)/gi, '($1 - $2)')
-    // 7. != 'string' → <> 'string' (solo para strings)
+    // 6. julianday(...) - julianday(...) → EXTRACT(DAY FROM (... - ...))
+    .replace(/julianday\s*\(([^)]+)\)\s*-\s*julianday\s*\(([^)]+)\)/gi, 'EXTRACT(DAY FROM ($1 - $2))')
+    // 6b. julianday(fecha) → fecha::date
+    .replace(/julianday\s*\(([^)]+)\)/gi, '$1::date')
+    // 7. MAX(0, ...) → GREATEST(0, ...)
+    .replace(/MAX\s*\(\s*0\s*,\s*/gi, 'GREATEST(0, ')
+    // 8. != 'string' → <> 'string' (solo para strings)
     .replace(/!=\s*('[^']*')/g, '<> $1')
-    // 7b. CAST(strftime('%w', ...) AS INTEGER) → CAST(EXTRACT(DOW FROM ...::timestamp) AS INTEGER)
+    // 8b. CAST(strftime('%w', ...) AS INTEGER) → CAST(EXTRACT(DOW FROM ...::timestamp) AS INTEGER)
     .replace(/CAST\s*\(\s*strftime\s*\(\s*['"]%w['"]\s*,\s*([^)]+)\)\s*AS\s*INTEGER\s*\)/gi, "CAST(EXTRACT(DOW FROM $1::timestamp) AS INTEGER)");
   
-  // 8. Convertir ? → $1, $2, etc. (contar ocurrencias)
+  // 9. Convertir ? → $1, $2, etc. (contar ocurrencias)
   let paramCount = 0;
   result = result.replace(/\?/g, () => {
     paramCount++;

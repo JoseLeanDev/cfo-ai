@@ -51,13 +51,22 @@ class AgenteCobranza extends BaseAgent {
     
     try {
       const hoy = new Date().toISOString().split('T')[0];
+      const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
 
       // Actualizar días de atraso
-      await db.runAsync(`
-        UPDATE cuentas_cobrar 
-        SET dias_atraso = MAX(0, julianday(?) - julianday(fecha_vencimiento))
-        WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento < ?
-      `, [hoy, empresaId, hoy]);
+      if (isPostgres) {
+        await db.runAsync(`
+          UPDATE cuentas_cobrar 
+          SET dias_atraso = GREATEST(0, EXTRACT(DAY FROM ($1::date - fecha_vencimiento)))
+          WHERE empresa_id = $2 AND estado = 'pendiente' AND fecha_vencimiento < $3::date
+        `, [hoy, empresaId, hoy]);
+      } else {
+        await db.runAsync(`
+          UPDATE cuentas_cobrar 
+          SET dias_atraso = MAX(0, julianday(?) - julianday(fecha_vencimiento))
+          WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento < ?
+        `, [hoy, empresaId, hoy]);
+      }
 
       // Calcular aging buckets
       const aging = await db.allAsync(`
@@ -81,10 +90,18 @@ class AgenteCobranza extends BaseAgent {
       const totalCartera = aging.reduce((sum, a) => sum + a.total, 0);
 
       // Guardar snapshot
-      await db.runAsync(`
-        INSERT INTO snapshots_financieros (empresa_id, tipo, datos_json, created_at)
-        VALUES (?, 'aging_cartera', ?, datetime('now'))
-      `, [empresaId, JSON.stringify({ aging, totalCartera, fecha: hoy })]);
+      const isPostgresAging = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
+      if (isPostgresAging) {
+        await db.runAsync(`
+          INSERT INTO snapshots_financieros (empresa_id, tipo, datos_json, created_at)
+          VALUES ($1, 'aging_cartera', $2, NOW())
+        `, [empresaId, JSON.stringify({ aging, totalCartera, fecha: hoy })]);
+      } else {
+        await db.runAsync(`
+          INSERT INTO snapshots_financieros (empresa_id, tipo, datos_json, created_at)
+          VALUES (?, 'aging_cartera', ?, datetime('now'))
+        `, [empresaId, JSON.stringify({ aging, totalCartera, fecha: hoy })]);
+      }
 
       await this.logActividad('aging_cartera',
         `Aging actualizado: Q${totalCartera.toLocaleString()} en ${aging.length} buckets`,

@@ -12,7 +12,7 @@ router.get('/calendario', async (req, res) => {
         obligacion,
         formulario,
         fecha_vencimiento,
-        julianday(fecha_vencimiento) - julianday('now') as dias_restantes,
+        (fecha_vencimiento::date - CURRENT_DATE) as dias_restantes,
         monto_estimado,
         estado
       FROM obligaciones_sat 
@@ -26,7 +26,7 @@ router.get('/calendario', async (req, res) => {
         SUM(CASE WHEN estado = 'presentada' THEN 1 ELSE 0 END) as presentadas,
         SUM(CASE WHEN estado = 'atrasada' THEN 1 ELSE 0 END) as con_retraso
       FROM obligaciones_sat 
-      WHERE empresa_id = ? AND fecha_vencimiento >= date('now', '-1 year')
+      WHERE empresa_id = ? AND fecha_vencimiento >= CURRENT_DATE - INTERVAL '1 year'
     `, [empresaId]);
 
     res.json({

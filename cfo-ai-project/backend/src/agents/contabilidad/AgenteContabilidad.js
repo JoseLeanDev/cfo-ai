@@ -142,12 +142,12 @@ class AgenteContabilidad extends BaseAgent {
         
         await db.runAsync(`
           INSERT INTO asientos (empresa_id, asiento_id, fecha, cuenta_codigo, cuenta_nombre, descripcion, debe, haber, documento, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
         `, [empresaId, asientoId, t.fecha, cuentaDebe, 'Cuenta por defecto', t.descripcion || 'Sin descripción', t.monto, 0, String(t.id)]);
 
         await db.runAsync(`
           INSERT INTO asientos (empresa_id, asiento_id, fecha, cuenta_codigo, cuenta_nombre, descripcion, debe, haber, documento, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
         `, [empresaId, asientoId, t.fecha, cuentaHaber, 'Cuenta por defecto', t.descripcion || 'Sin descripción', 0, t.monto, String(t.id)]);
 
         asientosGenerados.push({ transaccionId: t.id, asientoId });
@@ -205,7 +205,7 @@ class AgenteContabilidad extends BaseAgent {
           FROM transacciones t
           WHERE t.empresa_id = ? 
           AND t.monto = ?
-          AND ABS(julianday(t.fecha) - julianday(?)) <= 2
+          AND ABS((t.fecha::date - ?::date)) <= 2
           LIMIT 1
         `, [empresaId, Math.abs(mov.monto), mov.fecha]);
 
@@ -229,7 +229,7 @@ class AgenteContabilidad extends BaseAgent {
       if (totalNoConciliado > 10000) {
         await db.runAsync(`
           INSERT INTO alertas_financieras (tipo, nivel, titulo, descripcion, created_at)
-          VALUES (?, ?, ?, ?, datetime('now'))
+          VALUES (?, ?, ?, ?, NOW())
         `, ['conciliacion', 'media',
           `${noConciliados.length} movimientos no conciliados`,
           `Total no conciliado: Q${totalNoConciliado.toLocaleString()}. Revisar diferencias bancarias.`
@@ -274,7 +274,7 @@ class AgenteContabilidad extends BaseAgent {
       const sinAsiento = await db.getAsync(`
         SELECT COUNT(*) as count FROM transacciones t
         LEFT JOIN asientos a ON a.documento = CAST(t.id AS TEXT)
-        WHERE t.empresa_id = ? AND a.id IS NULL AND strftime('%Y-%m', t.fecha) = ?
+        WHERE t.empresa_id = ? AND a.id IS NULL AND TO_CHAR(t.fecha, 'YYYY-MM') = ?
       `, [empresaId, periodo]);
 
       // 2. Verificar balance
@@ -283,7 +283,7 @@ class AgenteContabilidad extends BaseAgent {
           SUM(debe) as total_debe,
           SUM(haber) as total_haber
         FROM asientos
-        WHERE empresa_id = ? AND strftime('%Y-%m', fecha) = ?
+        WHERE empresa_id = ? AND TO_CHAR(fecha, 'YYYY-MM') = ?
       `, [empresaId, periodo]);
 
       const diferencia = Math.abs((balance?.total_debe || 0) - (balance?.total_haber || 0));
@@ -295,7 +295,7 @@ class AgenteContabilidad extends BaseAgent {
           tipo,
           SUM(monto) as total
         FROM transacciones
-        WHERE empresa_id = ? AND strftime('%Y-%m', fecha) = ?
+        WHERE empresa_id = ? AND TO_CHAR(fecha, 'YYYY-MM') = ?
         GROUP BY tipo
       `, [empresaId, periodo]);
 
@@ -311,7 +311,7 @@ class AgenteContabilidad extends BaseAgent {
       // Guardar en cierres_mensuales (compatibilidad con schema existente)
       await db.runAsync(`
         INSERT INTO cierres_mensuales (mes, estado, notas, created_at)
-        VALUES (?, ?, ?, datetime('now'))
+        VALUES (?, ?, ?, NOW())
       `, [periodo, resumen.listoParaCierre ? 'listo' : 'revision', JSON.stringify(resumen)]);
 
       await this.logActividad('cierre_mensual',
@@ -374,7 +374,7 @@ class AgenteContabilidad extends BaseAgent {
         
         await db.runAsync(`
           INSERT INTO alertas_financieras (tipo, nivel, titulo, descripcion, created_at)
-          VALUES (?, ?, ?, ?, datetime('now'))
+          VALUES (?, ?, ?, ?, NOW())
         `, ['sat', dias <= 2 ? 'alta' : 'media',
           `${o.obligacion} vence en ${dias} días`,
           `Formulario ${o.formulario} - Fecha: ${o.fecha_vencimiento}. Preparar declaración y pago.`
@@ -384,7 +384,7 @@ class AgenteContabilidad extends BaseAgent {
       for (const o of vencidas) {
         await db.runAsync(`
           INSERT INTO alertas_financieras (tipo, nivel, titulo, descripcion, created_at)
-          VALUES (?, 'alta', ?, ?, datetime('now'))
+          VALUES (?, 'alta', ?, ?, NOW())
         `, ['sat',
           `URGENTE: ${o.obligacion} venció`,
           `Formulario ${o.formulario} venció el ${o.fecha_vencimiento}. Regularizar inmediatamente.`
@@ -426,7 +426,7 @@ class AgenteContabilidad extends BaseAgent {
         INSERT INTO agentes_logs 
         (empresa_id, agente_nombre, agente_tipo, agente_version, categoria, descripcion, 
          detalles_json, impacto_valor, impacto_moneda, resultado_status, duracion_ms, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
       `, [
         1, this.name, this.role, this.version, categoria, descripcion,
         JSON.stringify(detalles), impactoValor, 'GTQ', status, duracionMs

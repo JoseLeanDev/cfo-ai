@@ -103,7 +103,7 @@ router.post('/iniciar', async (req, res) => {
       INSERT INTO cierres_mensuales (
         empresa_id, anio, mes, estado, fecha_inicio, usuario_inicio, 
         progreso, checklist_completado, total_tareas, tareas_completadas
-      ) VALUES (?, ?, ?, 'en_progreso', datetime('now'), ?, 0, 0, 10, 0)
+      ) VALUES (?, ?, ?, 'en_progreso', NOW(), ?, 0, 0, 10, 0)
     `, [empresa_id, anio, mes, usuario_id]);
 
     const cierreId = result.lastID;
@@ -286,7 +286,7 @@ router.post('/:anio/:mes/checklist', async (req, res) => {
         await db.runAsync(`
           UPDATE cierre_checklist 
           SET completado = 1, 
-              fecha_completado = datetime('now'),
+              fecha_completado = NOW(),
               usuario_completado = ?,
               observaciones = COALESCE(?, observaciones)
           WHERE id = ? AND cierre_id = ?
@@ -315,7 +315,7 @@ router.post('/:anio/:mes/checklist', async (req, res) => {
       SET progreso = ?, 
           tareas_completadas = ?,
           checklist_completado = CASE WHEN ? = 100 THEN 1 ELSE 0 END,
-          updated_at = datetime('now')
+          updated_at = NOW()
       WHERE id = ?
     `, [progreso, tareasCompletadas.count, progreso, cierre.id]);
 
@@ -398,10 +398,10 @@ router.post('/:anio/:mes/cerrar', async (req, res) => {
     await db.runAsync(`
       UPDATE cierres_mensuales 
       SET estado = 'cerrado',
-          fecha_cierre = datetime('now'),
+          fecha_cierre = NOW(),
           usuario_cierre = ?,
           observaciones = ?,
-          updated_at = datetime('now')
+          updated_at = NOW()
       WHERE id = ?
     `, [usuario_id, observaciones, cierre.id]);
 
@@ -411,7 +411,7 @@ router.post('/:anio/:mes/cerrar', async (req, res) => {
     // Marcar alertas como resueltas
     await db.runAsync(`
       UPDATE alertas_cierre 
-      SET resuelta = 1, fecha_resolucion = datetime('now')
+      SET resuelta = 1, fecha_resolucion = NOW()
       WHERE cierre_id = ?
     `, [cierre.id]);
 
@@ -451,7 +451,7 @@ router.get('/conciliacion/pendientes', async (req, res) => {
         cb.moneda,
         cb.saldo as saldo_contable,
         cb.ultima_conciliacion,
-        julianday('now') - julianday(cb.ultima_conciliacion) as dias_sin_conciliar,
+        (CURRENT_DATE - cb.ultima_conciliacion::date) as dias_sin_conciliar,
         c.id as conciliacion_id,
         c.estado as estado_conciliacion,
         c.fecha_inicio as fecha_inicio_conciliacion,
@@ -463,7 +463,7 @@ router.get('/conciliacion/pendientes', async (req, res) => {
       WHERE cb.empresa_id = ? 
         AND cb.activa = 1
         AND (cb.ultima_conciliacion IS NULL 
-          OR julianday('now') - julianday(cb.ultima_conciliacion) >= ?)
+          OR (CURRENT_DATE - cb.ultima_conciliacion::date) >= ?)
       ORDER BY dias_sin_conciliar DESC
     `, [empresa_id, dias_atraso]);
 
@@ -568,7 +568,7 @@ router.post('/conciliacion/iniciar', async (req, res) => {
         saldo_contable, saldo_bancario, diferencia,
         estado, usuario_inicio, transacciones_pendientes,
         transacciones_encontradas, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'en_progreso', ?, ?, 0, datetime('now'))
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'en_progreso', ?, ?, 0, NOW())
     `, [
       cuenta_id, empresa_id, fecha_inicio, fecha_fin,
       saldoContable, saldoBancarioInput, diferenciaInicial,
@@ -657,10 +657,10 @@ router.post('/conciliacion/:id/completar', async (req, res) => {
     await db.runAsync(`
       UPDATE conciliaciones_bancarias 
       SET estado = 'completada',
-          fecha_completado = datetime('now'),
+          fecha_completado = NOW(),
           usuario_completado = ?,
           observaciones = ?,
-          updated_at = datetime('now')
+          updated_at = NOW()
       WHERE id = ?
     `, [usuario_id, observaciones, id]);
 
@@ -668,7 +668,7 @@ router.post('/conciliacion/:id/completar', async (req, res) => {
     await db.runAsync(`
       UPDATE cuentas_bancarias 
       SET ultima_conciliacion = ?,
-          updated_at = datetime('now')
+          updated_at = NOW()
       WHERE id = ?
     `, [conciliacion.fecha_fin, conciliacion.cuenta_id]);
 
@@ -676,7 +676,7 @@ router.post('/conciliacion/:id/completar', async (req, res) => {
     await db.runAsync(`
       UPDATE transacciones_bancarias 
       SET conciliada = 1,
-          fecha_conciliacion = datetime('now'),
+          fecha_conciliacion = NOW(),
           conciliacion_id = ?
       WHERE cuenta_id = ? 
         AND fecha BETWEEN ? AND ?
@@ -821,13 +821,13 @@ async function obtenerEstadisticasPeriodo(anio, mes, empresaId) {
         SUM(debe) as total_debe,
         SUM(haber) as total_haber
       FROM asientos 
-      WHERE empresa_id = ? AND strftime('%Y-%m', fecha) = ?
+      WHERE empresa_id = ? AND TO_CHAR(fecha, 'YYYY-MM') = ?
     `, [empresaId, `${anio}-${mes.toString().padStart(2, '0')}`]);
 
     const transacciones = await db.getAsync(`
       SELECT COUNT(*) as count 
       FROM transacciones_bancarias 
-      WHERE empresa_id = ? AND strftime('%Y-%m', fecha) = ?
+      WHERE empresa_id = ? AND TO_CHAR(fecha, 'YYYY-MM') = ?
     `, [empresaId, `${anio}-${mes.toString().padStart(2, '0')}`]);
 
     return {
@@ -872,7 +872,7 @@ async function crearAlertasIniciales(cierreId, anio, mes, empresaId) {
   for (const alerta of alertasIniciales) {
     await db.runAsync(`
       INSERT INTO alertas_cierre (cierre_id, empresa_id, tipo, mensaje, nivel, fecha_creacion, resuelta)
-      VALUES (?, ?, ?, ?, ?, datetime('now'), 0)
+      VALUES (?, ?, ?, ?, ?, NOW(), 0)
     `, [cierreId, empresaId, alerta.tipo, alerta.mensaje, alerta.nivel]);
   }
 }
@@ -911,7 +911,7 @@ async function intentarMatchAutomatico(conciliacionId, cuentaId, fechaInicio, fe
       if (Math.random() > 0.3) {
         await db.runAsync(`
           INSERT INTO conciliacion_matches (conciliacion_id, transaccion_id, estado, fecha_match)
-          VALUES (?, ?, 'automatico', datetime('now'))
+          VALUES (?, ?, 'automatico', NOW())
         `, [conciliacionId, trans.id]);
         matches++;
       }

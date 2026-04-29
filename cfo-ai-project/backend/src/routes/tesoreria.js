@@ -16,7 +16,7 @@ router.get('/posicion', async (req, res) => {
         tipo,
         saldo,
         moneda,
-        ${isPostgres ? 'NULL' : "julianday('now') - julianday(ultima_conciliacion)"} as dias_sin_conciliar
+        ${isPostgres ? 'NULL' : "(CURRENT_DATE - ultima_conciliacion::date)"} as dias_sin_conciliar
       FROM cuentas_bancarias 
       WHERE empresa_id = ? AND activa = TRUE
       ORDER BY saldo DESC
@@ -155,17 +155,17 @@ router.get('/cxp', async (req, res) => {
         proveedor_nombre as proveedor,
         monto_total as monto,
         fecha_vencimiento,
-        ${isPostgres ? '(fecha_vencimiento - CURRENT_DATE)::integer' : "CAST(julianday(fecha_vencimiento) - julianday('now') AS INTEGER)"} as dias_restantes
+        ${isPostgres ? '(fecha_vencimiento - CURRENT_DATE)::integer' : "CAST((fecha_vencimiento::date - CURRENT_DATE) AS INTEGER)"} as dias_restantes
       FROM cuentas_pagar 
       WHERE empresa_id = ? 
         AND estado = 'pendiente'
-        AND fecha_vencimiento <= ${isPostgres ? `CURRENT_DATE + INTERVAL '${dias} days'` : `date('now', '+${dias} days')`}
+        AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '${dias} days'
       ORDER BY fecha_vencimiento
     `, [empresaId]);
 
     const total = await db.getAsync(`
       SELECT SUM(monto_total) as total, 
-             AVG(${isPostgres ? '(fecha_vencimiento - CURRENT_DATE)::integer' : "CAST(julianday(fecha_vencimiento) - julianday('now') AS INTEGER)"}) as promedio_dias
+             AVG(${isPostgres ? '(fecha_vencimiento - CURRENT_DATE)::integer' : "CAST((fecha_vencimiento::date - CURRENT_DATE) AS INTEGER)"}) as promedio_dias
       FROM cuentas_pagar 
       WHERE empresa_id = ? AND estado = 'pendiente'
     `, [empresaId]);

@@ -67,7 +67,7 @@ class AgenteAnalisis extends BaseAgent {
       const ingresosMesAnterior = await db.getAsync(`
         SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
         WHERE empresa_id = ? AND tipo = 'ingreso' 
-        AND fecha >= date('now', '-2 months') AND fecha < date('now', '-1 month')
+        AND fecha >= CURRENT_DATE - INTERVAL '2 months' AND fecha < CURRENT_DATE - INTERVAL '1 month'
       `, [empresaId]);
 
       // 2. Gastos del día vs presupuesto
@@ -122,7 +122,7 @@ class AgenteAnalisis extends BaseAgent {
       `, [hoy]);
       await db.runAsync(`
         INSERT INTO snapshots_diarios (fecha, datos_json, created_at)
-        VALUES (?, ?, datetime('now'))
+        VALUES (?, ?, NOW())
       `, [hoy, JSON.stringify(kpis)]);
 
       await this.logActividad('kpis_diarios',
@@ -299,7 +299,7 @@ class AgenteAnalisis extends BaseAgent {
           AVG(monto) as promedio,
           (MAX(monto) - MIN(monto)) as rango
         FROM transacciones
-        WHERE empresa_id = ? AND fecha >= date('now', '-3 months')
+        WHERE empresa_id = ? AND fecha >= CURRENT_DATE - INTERVAL '3 months'
         GROUP BY categoria
       `, [empresaId]);
 
@@ -312,7 +312,7 @@ class AgenteAnalisis extends BaseAgent {
           FROM transacciones
           WHERE empresa_id = ? AND categoria = ? 
           AND (monto > ? * 3 OR monto < ? * 0.1)
-          AND fecha >= date('now', '-7 days')
+          AND fecha >= CURRENT_DATE - INTERVAL '7 days'
         `, [empresaId, cat.categoria, cat.promedio, cat.promedio]);
 
         anomalias.push(...atipicas.map(t => ({
@@ -327,7 +327,7 @@ class AgenteAnalisis extends BaseAgent {
         for (const a of anomalias.slice(0, 10)) {
           await db.runAsync(`
             INSERT INTO alertas_financieras (tipo, nivel, titulo, descripcion, metadata, created_at)
-            VALUES (?, ?, ?, ?, ?, datetime('now'))
+            VALUES (?, ?, ?, ?, ?, NOW())
           `, ['anomalia', 'media',
             `Anomalía: ${a.descripcion || 'Sin descripción'}`,
             `Monto: Q${(a.monto || 0).toLocaleString()}. Promedio categoría: Q${(a.promedio_categoria || 0).toLocaleString()}`,
@@ -372,11 +372,11 @@ class AgenteAnalisis extends BaseAgent {
       // Tendencia mensual últimos 6 meses
       const tendencia = await db.allAsync(`
         SELECT 
-          strftime('%Y-%m', fecha) as mes,
+          TO_CHAR(fecha, 'YYYY-MM') as mes,
           SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as ingresos,
           SUM(CASE WHEN tipo = 'gasto' THEN monto ELSE 0 END) as gastos
         FROM transacciones
-        WHERE empresa_id = ? AND fecha >= date('now', '-6 months')
+        WHERE empresa_id = ? AND fecha >= CURRENT_DATE - INTERVAL '6 months'
         GROUP BY mes
         ORDER BY mes
       `, [empresaId]);
@@ -429,7 +429,7 @@ class AgenteAnalisis extends BaseAgent {
         INSERT INTO agentes_logs 
         (empresa_id, agente_nombre, agente_tipo, agente_version, categoria, descripcion, 
          detalles_json, impacto_valor, impacto_moneda, resultado_status, duracion_ms, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
       `, [
         1, this.name, this.role, this.version, categoria, descripcion,
         JSON.stringify(detalles), impactoValor, 'GTQ', status, duracionMs

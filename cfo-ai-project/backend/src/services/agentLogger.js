@@ -42,7 +42,7 @@ async function logAgentActivity(params) {
       INSERT INTO agentes_logs 
       (empresa_id, agente_nombre, agente_tipo, agente_version, categoria, descripcion, 
        detalles_json, entidad_tipo, entidad_id, impacto_valor, impacto_moneda, resultado_status, duracion_ms, created_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
     `, [
       empresa_id,
       agente_nombre,
@@ -87,7 +87,7 @@ async function getRecentLogs(filters = {}) {
 
   let query = `
     SELECT * FROM agentes_logs 
-    WHERE created_at >= datetime('now', '-${dias} days')
+    WHERE created_at >= NOW() - INTERVAL '${dias} days'
   `;
   const params = [];
 
@@ -132,13 +132,13 @@ async function getStats(dias = 7) {
         SUM(CASE WHEN resultado_status = 'advertencia' THEN 1 ELSE 0 END) as advertencias,
         AVG(duracion_ms) as duracion_promedio_ms
       FROM agentes_logs
-      WHERE created_at >= datetime('now', '-${dias} days')
+      WHERE created_at >= NOW() - INTERVAL '${dias} days'
     `);
 
     const porCategoria = await db.allAsync(`
       SELECT categoria, COUNT(*) as count
       FROM agentes_logs
-      WHERE created_at >= datetime('now', '-${dias} days')
+      WHERE created_at >= NOW() - INTERVAL '${dias} days'
       GROUP BY categoria
       ORDER BY count DESC
     `);
@@ -146,7 +146,7 @@ async function getStats(dias = 7) {
     const porAgente = await db.allAsync(`
       SELECT agente_tipo, agente_nombre, COUNT(*) as count
       FROM agentes_logs
-      WHERE created_at >= datetime('now', '-${dias} days')
+      WHERE created_at >= NOW() - INTERVAL '${dias} days'
       GROUP BY agente_tipo, agente_nombre
       ORDER BY count DESC
     `);

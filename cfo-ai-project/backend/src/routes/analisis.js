@@ -39,8 +39,8 @@ async function generateInsightsFromDB(db, empresaId) {
       SELECT COUNT(*) as count, SUM(monto_total) as total
       FROM cuentas_pagar 
       WHERE empresa_id = ? AND estado = 'pendiente' 
-      AND fecha_vencimiento <= date('now', '+7 days')
-      AND fecha_vencimiento >= date('now')
+      AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '7 days'
+      AND fecha_vencimiento >= CURRENT_DATE
     `, [empresaId]);
     
     if (cxpProximas && parseInt(cxpProximas.count) > 0) {
@@ -60,7 +60,7 @@ async function generateInsightsFromDB(db, empresaId) {
       SELECT COUNT(*) as count, SUM(monto_total) as total
       FROM cuentas_pagar 
       WHERE empresa_id = ? AND estado = 'pendiente' 
-      AND fecha_vencimiento < date('now')
+      AND fecha_vencimiento < CURRENT_DATE
     `, [empresaId]);
     
     if (cxpVencidas && parseInt(cxpVencidas.count) > 0) {
@@ -99,8 +99,8 @@ async function generateInsightsFromDB(db, empresaId) {
     // Insight 5: Comparativa de gastos vs mes anterior (simplificado)
     const gastosMes = await db.getAsync(`
       SELECT 
-        COALESCE(SUM(CASE WHEN strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now') THEN monto ELSE 0 END), 0) as mes_actual,
-        COALESCE(SUM(CASE WHEN strftime('%Y-%m', fecha) = strftime('%Y-%m', 'now', '-1 month') THEN monto ELSE 0 END), 0) as mes_anterior
+        COALESCE(SUM(CASE WHEN TO_CHAR(fecha, 'YYYY-MM') = TO_CHAR(CURRENT_DATE, 'YYYY-MM') THEN monto ELSE 0 END), 0) as mes_actual,
+        COALESCE(SUM(CASE WHEN TO_CHAR(fecha, 'YYYY-MM') = TO_CHAR(CURRENT_DATE - INTERVAL '1 month', 'YYYY-MM') THEN monto ELSE 0 END), 0) as mes_anterior
       FROM transacciones t
       JOIN cuentas_contables c ON t.cuenta_id = c.id
       WHERE t.tipo = 'debe' AND c.codigo LIKE '51%'
@@ -140,11 +140,11 @@ async function detectAnomaliesFromDB(db, empresaId, umbral) {
       SELECT t.*, c.nombre as cuenta_nombre
       FROM transacciones t
       JOIN cuentas_contables c ON t.cuenta_id = c.id
-      WHERE t.fecha >= date('now', '-30 days')
+      WHERE t.fecha >= CURRENT_DATE - INTERVAL '30 days'
       AND ABS(t.monto) > (
         SELECT AVG(ABS(monto)) * 3 
         FROM transacciones 
-        WHERE fecha >= date('now', '-90 days')
+        WHERE fecha >= CURRENT_DATE - INTERVAL '90 days'
       )
       ORDER BY ABS(t.monto) DESC
       LIMIT 5
@@ -166,8 +166,8 @@ async function detectAnomaliesFromDB(db, empresaId, umbral) {
     const clienteCaida = await db.allAsync(`
       SELECT 
         cc.cliente_nombre,
-        SUM(CASE WHEN cc.fecha_emision >= date('now', '-30 days') THEN cc.monto_total ELSE 0 END) as mes_actual,
-        SUM(CASE WHEN cc.fecha_emision >= date('now', '-60 days') AND cc.fecha_emision < date('now', '-30 days') THEN cc.monto_total ELSE 0 END) as mes_anterior
+        SUM(CASE WHEN cc.fecha_emision >= CURRENT_DATE - INTERVAL '30 days' THEN cc.monto_total ELSE 0 END) as mes_actual,
+        SUM(CASE WHEN cc.fecha_emision >= CURRENT_DATE - INTERVAL '60 days' AND cc.fecha_emision < CURRENT_DATE - INTERVAL '30 days' THEN cc.monto_total ELSE 0 END) as mes_anterior
       FROM cuentas_cobrar cc
       WHERE cc.empresa_id = ? AND cc.estado != 'cobrada'
       GROUP BY cc.cliente_nombre
@@ -403,49 +403,30 @@ router.get('/insights', async (req, res) => {
     });
 
     // Guardar insights en histórico (async, no bloquea response)
-    const isPostgresSave = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
     const saveToHistory = async () => {
       try {
         const db = req.app.get('db');
         for (const insight of combinedInsights) {
-          if (isPostgresSave) {
-            // PostgreSQL: INSERT ... ON CONFLICT
-            await db.runAsync(`
-              INSERT INTO insights_historico 
-              (insight_id, empresa_id, type, severity, title, description, impact, currency, 
-               category, action, action_label, change_percent, periodo_desde, periodo_hasta,
-               agent_source, agent_version)
-              VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
-              ON CONFLICT (insight_id) DO UPDATE SET
-                type = EXCLUDED.type,
-                severity = EXCLUDED.severity,
-                title = EXCLUDED.title,
-                description = EXCLUDED.description,
-                impact = EXCLUDED.impact,
-                updated_at = CURRENT_TIMESTAMP
-            `, [
-              insight.id, empresaId, insight.type, insight.severity, insight.title,
-              insight.description, insight.impact || 0, insight.currency || 'GTQ',
-              insight.category, insight.action, insight.actionLabel, insight.change || 0,
-              responseData.periodo_analisis.desde, responseData.periodo_analisis.hasta,
-              'CFO AI Core', '1.0'
-            ]);
-          } else {
-            // SQLite: INSERT OR REPLACE
-            await db.runAsync(`
-              INSERT OR REPLACE INTO insights_historico 
-              (insight_id, empresa_id, type, severity, title, description, impact, currency, 
-               category, action, action_label, change_percent, periodo_desde, periodo_hasta,
-               agent_source, agent_version)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            `, [
-              insight.id, empresaId, insight.type, insight.severity, insight.title,
-              insight.description, insight.impact || 0, insight.currency || 'GTQ',
-              insight.category, insight.action, insight.actionLabel, insight.change || 0,
-              responseData.periodo_analisis.desde, responseData.periodo_analisis.hasta,
-              'CFO AI Core', '1.0'
-            ]);
-          }
+          await db.runAsync(`
+            INSERT INTO insights_historico 
+            (insight_id, empresa_id, type, severity, title, description, impact, currency, 
+             category, action, action_label, change_percent, periodo_desde, periodo_hasta,
+             agent_source, agent_version)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16)
+            ON CONFLICT (insight_id) DO UPDATE SET
+              type = EXCLUDED.type,
+              severity = EXCLUDED.severity,
+              title = EXCLUDED.title,
+              description = EXCLUDED.description,
+              impact = EXCLUDED.impact,
+              updated_at = CURRENT_TIMESTAMP
+          `, [
+            insight.id, empresaId, insight.type, insight.severity, insight.title,
+            insight.description, insight.impact || 0, insight.currency || 'GTQ',
+            insight.category, insight.action, insight.actionLabel, insight.change || 0,
+            responseData.periodo_analisis.desde, responseData.periodo_analisis.hasta,
+            'CFO AI Core', '1.0'
+          ]);
         }
       } catch (err) {
         console.error('[Insights] Error guardando en histórico:', err.message);
@@ -538,7 +519,7 @@ router.get('/insights/historico', async (req, res) => {
       FROM insights_historico
       WHERE empresa_id = ? 
         AND status = ?
-        AND created_at >= ${isPostgres ? `CURRENT_DATE - INTERVAL '${days} days'` : `date('now', '-${days} days')`}
+        AND created_at >= CURRENT_DATE - INTERVAL '${days} days'
     `;
     
     const params = [empresaId, status];
@@ -588,7 +569,7 @@ router.get('/insights/historico', async (req, res) => {
         SUM(CASE WHEN severity = 'info' THEN 1 ELSE 0 END) as info
       FROM insights_historico
       WHERE empresa_id = ? AND status = 'active'
-        AND created_at >= ${isPostgres ? `CURRENT_DATE - INTERVAL '${days} days'` : `date('now', '-${days} days')`}
+        AND created_at >= CURRENT_DATE - INTERVAL '${days} days'
     `, [empresaId]);
     
     res.json({
@@ -866,9 +847,9 @@ router.get('/working-capital', async (req, res) => {
       WHERE empresa_id = $1
     ` : `
       SELECT 
-        COALESCE(AVG(CAST((julianday(fecha_vencimiento) - julianday(fecha_emision)) AS INTEGER)), 30) as dias_plazo_promedio,
+        COALESCE(AVG(CAST((fecha_vencimiento::date - fecha_emision::date) AS INTEGER)), 30) as dias_plazo_promedio,
         COUNT(*) as total_facturas,
-        COALESCE(SUM(CASE WHEN fecha_vencimiento < date('now') AND estado = 'pendiente' THEN monto ELSE 0 END), 0) as monto_vencido
+        COALESCE(SUM(CASE WHEN fecha_vencimiento < CURRENT_DATE AND estado = 'pendiente' THEN monto ELSE 0 END), 0) as monto_vencido
       FROM cuentas_pagar 
       WHERE empresa_id = ?
     `;

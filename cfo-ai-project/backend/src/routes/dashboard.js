@@ -45,19 +45,19 @@ router.get('/', async (req, res) => {
       FROM transacciones 
       WHERE empresa_id = ? 
         AND tipo = 'entrada' 
-        AND ${isPostgres ? "TO_CHAR(fecha, 'YYYY-MM')" : "strftime('%Y-%m', fecha)"} = ${isPostgres ? "TO_CHAR(CURRENT_DATE, 'YYYY-MM')" : "strftime('%Y-%m', 'now')"}
+        AND TO_CHAR(fecha, 'YYYY-MM') = TO_CHAR(CURRENT_DATE, 'YYYY-MM')
     `, [empresaId]);
 
     // Promedios de los últimos 6 meses para runway calculator
     const mesesHistoricos = await db.allAsync(`
       SELECT 
-        ${isPostgres ? "TO_CHAR(fecha, 'YYYY-MM')" : "strftime('%Y-%m', fecha)"} as mes,
+        TO_CHAR(fecha, 'YYYY-MM') as mes,
         SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as ingresos,
         SUM(CASE WHEN tipo = 'salida' THEN monto ELSE 0 END) as gastos
       FROM transacciones 
       WHERE empresa_id = ? 
-        AND fecha >= ${isPostgres ? "CURRENT_DATE - INTERVAL '6 months'" : "date('now', '-6 months')"}
-      GROUP BY ${isPostgres ? "TO_CHAR(fecha, 'YYYY-MM')" : "strftime('%Y-%m', fecha)"}
+        AND fecha >= CURRENT_DATE - INTERVAL '6 months'
+      GROUP BY TO_CHAR(fecha, 'YYYY-MM')
     `, [empresaId]);
     
     const avgIngresos = mesesHistoricos.length > 0 
@@ -116,7 +116,7 @@ router.get('/', async (req, res) => {
       FROM cuentas_pagar
       WHERE empresa_id = ? 
         AND estado = 'pendiente'
-        AND fecha_vencimiento <= ${isPostgres ? "CURRENT_DATE + INTERVAL '15 days'" : "date('now', '+15 days')"}
+        AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '15 days'
       ORDER BY fecha_vencimiento
       LIMIT 5
     `, [empresaId]);

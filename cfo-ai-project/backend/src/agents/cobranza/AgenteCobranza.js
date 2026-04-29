@@ -56,7 +56,7 @@ class AgenteCobranza extends BaseAgent {
       // Actualizar días de atraso
       await db.runAsync(`
         UPDATE cuentas_cobrar 
-        SET dias_atraso = MAX(0, julianday(?) - julianday(fecha_vencimiento))
+        SET dias_atraso = GREATEST(0, (?::date - fecha_vencimiento::date))
         WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento < ?
       `, [hoy, empresaId, hoy]);
 
@@ -84,7 +84,7 @@ class AgenteCobranza extends BaseAgent {
       // Guardar snapshot
       await db.runAsync(`
         INSERT INTO snapshots_financieros (empresa_id, tipo, datos_json, created_at)
-        VALUES (?, 'aging_cartera', ?, datetime('now'))
+        VALUES (?, 'aging_cartera', ?, NOW())
       `, [empresaId, JSON.stringify({ aging, totalCartera, fecha: hoy })]);
 
       await this.logActividad('aging_cartera',
@@ -123,7 +123,7 @@ class AgenteCobranza extends BaseAgent {
       // Usar últimos 30 días
       const ventas30d = await db.getAsync(`
         SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
-        WHERE empresa_id = ? AND tipo = 'ingreso' AND fecha >= date('now', '-30 days')
+        WHERE empresa_id = ? AND tipo = 'ingreso' AND fecha >= CURRENT_DATE - INTERVAL '30 days'
       `, [empresaId]);
 
       const cxcPromedio = await db.getAsync(`
@@ -181,7 +181,7 @@ class AgenteCobranza extends BaseAgent {
       // 1. DSO (Days Sales Outstanding)
       const ventas30d = await db.getAsync(`
         SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
-        WHERE empresa_id = ? AND tipo = 'ingreso' AND fecha >= date('now', '-30 days')
+        WHERE empresa_id = ? AND tipo = 'ingreso' AND fecha >= CURRENT_DATE - INTERVAL '30 days'
       `, [empresaId]);
 
       const cxcActual = await db.getAsync(`
@@ -194,7 +194,7 @@ class AgenteCobranza extends BaseAgent {
       // 2. DIO (Days Inventory Outstanding) - simulado con transacciones de compra
       const costoVentas30d = await db.getAsync(`
         SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
-        WHERE empresa_id = ? AND tipo = 'gasto' AND categoria LIKE '%compra%' AND fecha >= date('now', '-30 days')
+        WHERE empresa_id = ? AND tipo = 'gasto' AND categoria LIKE '%compra%' AND fecha >= CURRENT_DATE - INTERVAL '30 days'
       `, [empresaId]);
 
       // Usamos un estimado de inventario si no hay datos específicos
@@ -209,7 +209,7 @@ class AgenteCobranza extends BaseAgent {
 
       const compras30d = await db.getAsync(`
         SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
-        WHERE empresa_id = ? AND tipo = 'gasto' AND fecha >= date('now', '-30 days')
+        WHERE empresa_id = ? AND tipo = 'gasto' AND fecha >= CURRENT_DATE - INTERVAL '30 days'
       `, [empresaId]);
 
       const dpo = compras30d.total > 0 ? (cxpActual.total / compras30d.total) * 30 : 0;
@@ -220,7 +220,7 @@ class AgenteCobranza extends BaseAgent {
       // Guardar snapshot
       await db.runAsync(`
         INSERT INTO snapshots_financieros (fecha, metricas_json, created_at)
-        VALUES (?, ?, datetime('now'))
+        VALUES (?, ?, NOW())
       `, [new Date().toISOString(), JSON.stringify({ dso, dio, dpo, ccc, fecha: new Date().toISOString() })]);
 
       await this.logActividad('ccc',
@@ -347,7 +347,7 @@ class AgenteCobranza extends BaseAgent {
       for (const m of morosos) {
         await db.runAsync(`
           INSERT INTO alertas_financieras (tipo, nivel, titulo, descripcion, created_at)
-          VALUES (?, ?, ?, ?, datetime('now'))
+          VALUES (?, ?, ?, ?, NOW())
         `, ['morosidad', 'alta',
           `Cliente ${m.cliente}: ${m.max_atraso} días de atraso`,
           `Saldo: Q${m.total.toLocaleString()}. Contactar inmediatamente para cobro.`
@@ -391,7 +391,7 @@ class AgenteCobranza extends BaseAgent {
         INSERT INTO agentes_logs 
         (empresa_id, agente_nombre, agente_tipo, agente_version, categoria, descripcion, 
          detalles_json, impacto_valor, impacto_moneda, resultado_status, duracion_ms, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
       `, [
         1, this.name, this.role, this.version, categoria, descripcion,
         JSON.stringify(detalles), impactoValor, 'GTQ', status, duracionMs

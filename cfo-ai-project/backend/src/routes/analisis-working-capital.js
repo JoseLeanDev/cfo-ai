@@ -83,9 +83,9 @@ router.get('/working-capital', async (req, res) => {
       WHERE empresa_id = $1
     ` : `
       SELECT 
-        COALESCE(AVG(CAST((julianday(fecha_vencimiento) - julianday(fecha_emision)) AS INTEGER)), 30) as dias_plazo_promedio,
+        COALESCE(AVG(CAST(((fecha_vencimiento::date - fecha_emision::date)) AS INTEGER)), 30) as dias_plazo_promedio,
         COUNT(*) as total_facturas,
-        COALESCE(SUM(CASE WHEN fecha_vencimiento < date('now') AND estado = 'pendiente' THEN monto ELSE 0 END), 0) as monto_vencido
+        COALESCE(SUM(CASE WHEN fecha_vencimiento < CURRENT_DATE AND estado = 'pendiente' THEN monto ELSE 0 END), 0) as monto_vencido
       FROM cuentas_pagar 
       WHERE empresa_id = ?
     `;

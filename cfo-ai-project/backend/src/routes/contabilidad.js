@@ -20,7 +20,7 @@ router.get('/libro_diario', async (req, res) => {
         haber,
         documento
       FROM asientos 
-      WHERE empresa_id = ? AND strftime('%Y-%m', fecha) = ?
+      WHERE empresa_id = ? AND TO_CHAR(fecha, 'YYYY-MM') = ?
       ORDER BY fecha DESC, asiento_id DESC
       LIMIT ?
     `, [empresaId, mes, limit]);
@@ -28,7 +28,7 @@ router.get('/libro_diario', async (req, res) => {
     const totales = await db.getAsync(`
       SELECT SUM(debe) as debe_total, SUM(haber) as haber_total, COUNT(*) as total_asientos
       FROM asientos 
-      WHERE empresa_id = ? AND strftime('%Y-%m', fecha) = ?
+      WHERE empresa_id = ? AND TO_CHAR(fecha, 'YYYY-MM') = ?
     `, [empresaId, mes]);
 
     res.json({
@@ -63,7 +63,7 @@ router.get('/conciliacion', async (req, res) => {
         banco,
         saldo as saldo_contable,
         ultima_conciliacion,
-        julianday('now') - julianday(ultima_conciliacion) as dias_sin_conciliar
+        CURRENT_DATE - ultima_conciliacion::date as dias_sin_conciliar
       FROM cuentas_bancarias 
       WHERE empresa_id = ? AND activa = 1
     `;

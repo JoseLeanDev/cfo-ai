@@ -347,17 +347,9 @@ class AgenteContabilidad extends BaseAgent {
     
     try {
       const hoy = new Date().toISOString().split('T')[0];
-      
-      const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
-      
+
       // Obligaciones próximas (7 días)
-      const proximas = isPostgres ? await db.allAsync(`
-        SELECT *
-        FROM obligaciones_sat
-        WHERE empresa_id = $1 AND estado = 'pendiente'
-        AND fecha_vencimiento BETWEEN $2::date AND $2::date + INTERVAL '7 days'
-        ORDER BY fecha_vencimiento
-      `, [empresaId, hoy]) : await db.allAsync(`
+      const proximas = await db.allAsync(`
         SELECT *
         FROM obligaciones_sat
         WHERE empresa_id = ? AND estado = 'pendiente'

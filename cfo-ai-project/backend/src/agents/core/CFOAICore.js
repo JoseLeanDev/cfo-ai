@@ -140,18 +140,10 @@ class CFOAICore extends BaseAgent {
         }))
       };
 
-      const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
-      if (isPostgres) {
-        await db.runAsync(`
-          INSERT INTO briefings_diarios (fecha, resumen, insights_json, alertas_count, created_at)
-          VALUES ($1, $2, $3, $4, NOW())
-        `, [new Date().toISOString().split('T')[0], JSON.stringify(briefing.detalles), JSON.stringify(briefing.insights), insights.length]);
-      } else {
-        await db.runAsync(`
-          INSERT INTO briefings_diarios (fecha, resumen, insights_json, alertas_count, created_at)
-          VALUES (?, ?, ?, ?, datetime('now'))
-        `, [new Date().toISOString().split('T')[0], JSON.stringify(briefing.detalles), JSON.stringify(briefing.insights), insights.length]);
-      }
+      await db.runAsync(`
+        INSERT INTO briefings_diarios (fecha, resumen, insights_json, alertas_count, created_at)
+        VALUES (?, ?, ?, ?, datetime('now'))
+      `, [new Date().toISOString().split('T')[0], JSON.stringify(briefing.detalles), JSON.stringify(briefing.insights), insights.length]);
 
       await this.logActividad('briefing_diario',
         `Briefing generado: ${exitosos.length} agentes, ${insights.length} insights`,
@@ -188,15 +180,7 @@ class CFOAICore extends BaseAgent {
     
     try {
       // Logs últimas 24h
-      const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
-      
-      const logs24h = await db.allAsync(isPostgres ? `
-        SELECT agente_tipo, COUNT(*) as count, 
-          SUM(CASE WHEN resultado_status = 'error' THEN 1 ELSE 0 END) as errores
-        FROM agentes_logs
-        WHERE created_at >= NOW() - INTERVAL '1 day'
-        GROUP BY agente_tipo
-      ` : `
+      const logs24h = await db.allAsync(`
         SELECT agente_tipo, COUNT(*) as count, 
           SUM(CASE WHEN resultado_status = 'error' THEN 1 ELSE 0 END) as errores
         FROM agentes_logs
@@ -205,12 +189,7 @@ class CFOAICore extends BaseAgent {
       `);
 
       // Alertas activas
-      const alertas = await db.allAsync(isPostgres ? `
-        SELECT nivel, COUNT(*) as count
-        FROM alertas_financieras
-        WHERE created_at >= NOW() - INTERVAL '7 days'
-        GROUP BY nivel
-      ` : `
+      const alertas = await db.allAsync(`
         SELECT nivel, COUNT(*) as count
         FROM alertas_financieras
         WHERE created_at >= datetime('now', '-7 days')
@@ -305,13 +284,7 @@ class CFOAICore extends BaseAgent {
    */
   async logActividad(categoria, descripcion, detalles, impactoValor, duracionMs, status = 'exitoso') {
     try {
-      const isPostgresLog = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
-      await db.runAsync(isPostgresLog ? `
-        INSERT INTO agentes_logs 
-        (empresa_id, agente_nombre, agente_tipo, agente_version, categoria, descripcion, 
-         detalles_json, impacto_valor, impacto_moneda, resultado_status, duracion_ms, created_at)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, NOW())
-      ` : `
+      await db.runAsync(`
         INSERT INTO agentes_logs 
         (empresa_id, agente_nombre, agente_tipo, agente_version, categoria, descripcion, 
          detalles_json, impacto_valor, impacto_moneda, resultado_status, duracion_ms, created_at)

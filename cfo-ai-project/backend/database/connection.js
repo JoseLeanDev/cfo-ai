@@ -174,8 +174,8 @@ function sqliteToPostgres(sql) {
     .replace(/strftime\s*\(\s*['"]%Y-%m-%d['"]\s*,\s*([^)]+)\)/gi, "TO_CHAR($1::timestamp, 'YYYY-MM-DD')")
     // 6c. julianday('now') → CURRENT_DATE (ESPECÍFICO PRIMERO)
     .replace(/julianday\s*\(\s*['"]now['"]\s*\)/gi, 'CURRENT_DATE')
-    // 6. julianday(a) - julianday(b) → EXTRACT(DAY FROM (a - b))
-    .replace(/julianday\s*\(([^)]+)\)\s*-\s*julianday\s*\(([^)]+)\)/gi, 'EXTRACT(DAY FROM ($1 - $2))')
+    // 6. julianday(a) - julianday(b) → (a::date - b::date) → integer días en PG
+    .replace(/julianday\s*\(([^)]+)\)\s*-\s*julianday\s*\(([^)]+)\)/gi, '($1::date - $2::date)')
     // 6b. julianday(cualquier_otro) → ::date (GENÉRICO AL FINAL)
     .replace(/julianday\s*\(([^)]+)\)/gi, '$1::date')
     // 7. MAX(0, ...) → GREATEST(0, ...) (solo cuando MAX tiene 2 args)

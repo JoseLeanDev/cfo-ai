@@ -1,53 +1,61 @@
 /**
- * Agents Index - Exporta todos los agentes y el sistema
+ * Agents Index v2.0 - Nuevo Sistema de Agentes CFO AI
+ * 
+ * Agentes especializados:
+ * - 💰 Caja: Tesorería, cash flow, runway
+ * - 📊 Análisis: KPIs, rentabilidad, RFM, anomalías
+ * - 💵 Cobranza: CxC, DSO, CCC, cobro
+ * - 📗 Contabilidad: Asientos, cierre, SAT
+ * - 🤖 CFO AI Core: Orquestador central
  */
+
 const BaseAgent = require('./BaseAgent');
-const OrchestratorAgent = require('./orchestrator/OrchestratorAgent');
-const AnalistaFinanciero = require('./analista/AnalistaFinanciero');
-const AsistenteSAT = require('./asistente-sat/AsistenteSAT');
-const PredictorCashFlow = require('./predictor/PredictorCashFlow');
-const AuditorAutomatico = require('./auditor/AuditorAutomatico');
-const ChatbotCFO = require('./chatbot/ChatbotCFO');
-const ConciliadorBancario = require('./conciliador/ConciliadorBancario');
+const { CFOAICore, getInstance } = require('./core/CFOAICore');
+const AgenteCaja = require('./caja/AgenteCaja');
+const AgenteAnalisis = require('./analisis/AgenteAnalisis');
+const AgenteCobranza = require('./cobranza/AgenteCobranza');
+const AgenteContabilidad = require('./contabilidad/AgenteContabilidad');
 
-// Crear instancia singleton del orchestrator
-let orchestratorInstance = null;
+// Crear instancia singleton
+let coreInstance = null;
 
-function initializeOrchestrator() {
-  if (orchestratorInstance) return orchestratorInstance;
+function initializeCFOAICore() {
+  if (coreInstance) return coreInstance;
 
-  orchestratorInstance = new OrchestratorAgent();
+  coreInstance = getInstance();
   
-  // Registrar todos los agentes
-  orchestratorInstance.registerAgent(new AnalistaFinanciero());
-  orchestratorInstance.registerAgent(new AsistenteSAT());
-  orchestratorInstance.registerAgent(new PredictorCashFlow());
-  orchestratorInstance.registerAgent(new AuditorAutomatico());
-  orchestratorInstance.registerAgent(new ChatbotCFO());
-  orchestratorInstance.registerAgent(new ConciliadorBancario());
-
-  console.log('[Agents] Sistema multi-agente inicializado');
-  console.log(`[Agents] Agentes registrados: ${orchestratorInstance.agents.size}`);
+  console.log('[Agents v2.0] 🚀 Sistema multi-agente inicializado');
+  console.log('[Agents v2.0] Agentes registrados:');
+  console.log('  - 💰 Caja (tesorería)');
+  console.log('  - 📊 Análisis (KPIs, rentabilidad)');
+  console.log('  - 💵 Cobranza (CxC, DSO, CCC)');
+  console.log('  - 📗 Contabilidad (asientos, cierre, SAT)');
+  console.log('  - 🤖 CFO AI Core (orquestador)');
   
-  return orchestratorInstance;
+  return coreInstance;
 }
 
-function getOrchestrator() {
-  if (!orchestratorInstance) {
-    return initializeOrchestrator();
+function getCFOAICore() {
+  if (!coreInstance) {
+    return initializeCFOAICore();
   }
-  return orchestratorInstance;
+  return coreInstance;
 }
 
 module.exports = {
+  // Core
+  CFOAICore,
+  getInstance,
+  initializeCFOAICore,
+  getCFOAICore,
+  
+  // Agentes especializados
+  AgenteCaja,
+  AgenteAnalisis,
+  AgenteCobranza,
+  AgenteContabilidad,
   BaseAgent,
-  OrchestratorAgent,
-  AnalistaFinanciero,
-  AsistenteSAT,
-  PredictorCashFlow,
-  AuditorAutomatico,
-  ChatbotCFO,
-  ConciliadorBancario,
-  initializeOrchestrator,
-  getOrchestrator
+  
+  // Alias para compatibilidad con schedulers existentes
+  default: getCFOAICore
 };

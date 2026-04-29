@@ -4,7 +4,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
-const CFOAICore = require('../agents/index');
+const { getCFOAICore, initializeCFOAICore } = require('./agents');
 const db = require('../database/connection');
 const { wakeUpMiddleware, ejecutarTareasPendientesWakeUp } = require('./services/wakeUpScheduler');
 
@@ -14,10 +14,10 @@ const PORT = process.env.PORT || 3000;
 // Initialize CFO AI Core v2.0
 async function initializeAgents() {
   try {
-    await CFOAICore.iniciar();
-    app.set('CFOAICore', CFOAICore);
+    const core = initializeCFOAICore();
+    app.set('CFOAICore', core);
     console.log('🤖 CFO AI Core v2.0 iniciado exitosamente');
-    console.log('   Agentes: Caja, Análisis, Cobranza, Contabilidad');
+    console.log('   Agentes: 💰 Caja • 📊 Análisis • 💵 Cobranza • 📗 Contabilidad');
   } catch (error) {
     console.error('❌ Error inicializando CFO AI Core:', error.message);
   }
@@ -40,7 +40,7 @@ app.use(wakeUpMiddleware());
 
 // Database setup
 app.set('db', db); // Make db available to routes
-app.set('CFOAICore', CFOAICore);
+app.set('CFOAICore', getCFOAICore());
 
 // Routes
 app.use('/api/dashboard', require('./routes/dashboard'));

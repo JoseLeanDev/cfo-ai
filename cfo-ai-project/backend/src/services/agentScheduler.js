@@ -4,11 +4,11 @@
  */
 
 const cron = require('node-cron');
-const CFOAICore = require('../agents');
+const { getCFOAICore } = require('../agents');
 
 class AgentScheduler {
   constructor() {
-    this.core = CFOAICore;
+    this.core = getCFOAICore();
     this.tareas = [];
     this.inicializado = false;
   }

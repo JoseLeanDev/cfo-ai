@@ -3,7 +3,7 @@
  * Persiste últimas ejecuciones en BD y ejecuta tareas pendientes en cada request
  */
 
-const CFOAICore = require('../agents/index');
+const { getCFOAICore } = require('../agents');
 const db = require('../../database/connection');
 
 // Cache en memoria para evitar ejecuciones duplicadas en la misma hora
@@ -78,7 +78,7 @@ async function ejecutarTareasPendientesWakeUp() {
     if (horasDesdeCaja >= 4 || lastCajaBD === 0) {
       console.log('[WakeUp Scheduler] 💰 Ejecutando Caja (posición)...');
       try {
-        await CFOAICore.ejecutarTarea('caja', 'actualizarPosicionCaja');
+        await getCFOAICore().ejecutarTarea('caja', 'actualizarPosicionCaja');
         resultados.push({ agente: 'caja', tarea: 'actualizarPosicionCaja', exito: true });
       } catch (err) {
         resultados.push({ agente: 'caja', tarea: 'actualizarPosicionCaja', exito: false, error: err.message });
@@ -90,7 +90,7 @@ async function ejecutarTareasPendientesWakeUp() {
     if (debeEjecutar(horaActual, 6, lastCashFlowBD, 4)) {
       console.log('[WakeUp Scheduler] 📊 Ejecutando Caja (cash flow)...');
       try {
-        await CFOAICore.ejecutarTarea('caja', 'proyectarCashFlow');
+        await getCFOAICore().ejecutarTarea('caja', 'proyectarCashFlow');
         resultados.push({ agente: 'caja', tarea: 'proyectarCashFlow', exito: true });
       } catch (err) {
         resultados.push({ agente: 'caja', tarea: 'proyectarCashFlow', exito: false, error: err.message });
@@ -102,7 +102,7 @@ async function ejecutarTareasPendientesWakeUp() {
     if (debeEjecutar(horaActual, 5, lastAnalisisBD, 4)) {
       console.log('[WakeUp Scheduler] 📈 Ejecutando Análisis (KPIs)...');
       try {
-        await CFOAICore.ejecutarTarea('analisis', 'calcularKPIsDiarios');
+        await getCFOAICore().ejecutarTarea('analisis', 'calcularKPIsDiarios');
         resultados.push({ agente: 'analisis', tarea: 'calcularKPIsDiarios', exito: true });
       } catch (err) {
         resultados.push({ agente: 'analisis', tarea: 'calcularKPIsDiarios', exito: false, error: err.message });
@@ -116,7 +116,7 @@ async function ejecutarTareasPendientesWakeUp() {
     if (horasDesdeCobranza >= 4 || lastCobranzaBD === 0) {
       console.log('[WakeUp Scheduler] 📋 Ejecutando Cobranza (aging)...');
       try {
-        await CFOAICore.ejecutarTarea('cobranza', 'actualizarAging');
+        await getCFOAICore().ejecutarTarea('cobranza', 'actualizarAging');
         resultados.push({ agente: 'cobranza', tarea: 'actualizarAging', exito: true });
       } catch (err) {
         resultados.push({ agente: 'cobranza', tarea: 'actualizarAging', exito: false, error: err.message });
@@ -128,7 +128,7 @@ async function ejecutarTareasPendientesWakeUp() {
     if (debeEjecutar(horaActual, 6, lastMetricasBD, 4)) {
       console.log('[WakeUp Scheduler] 📊 Ejecutando Cobranza (métricas)...');
       try {
-        await CFOAICore.ejecutarTarea('cobranza', 'calcularMetricasCobranza');
+        await getCFOAICore().ejecutarTarea('cobranza', 'calcularMetricasCobranza');
         resultados.push({ agente: 'cobranza', tarea: 'calcularMetricasCobranza', exito: true });
       } catch (err) {
         resultados.push({ agente: 'cobranza', tarea: 'calcularMetricasCobranza', exito: false, error: err.message });
@@ -140,7 +140,7 @@ async function ejecutarTareasPendientesWakeUp() {
     if (debeEjecutar(horaActual, 5, lastContabilidadBD, 4)) {
       console.log('[WakeUp Scheduler] 📅 Ejecutando Contabilidad (importar)...');
       try {
-        await CFOAICore.ejecutarTarea('contabilidad', 'importarTransacciones');
+        await getCFOAICore().ejecutarTarea('contabilidad', 'importarTransacciones');
         resultados.push({ agente: 'contabilidad', tarea: 'importarTransacciones', exito: true });
       } catch (err) {
         resultados.push({ agente: 'contabilidad', tarea: 'importarTransacciones', exito: false, error: err.message });
@@ -153,7 +153,7 @@ async function ejecutarTareasPendientesWakeUp() {
     if (diaSemana === 5 && horaActual >= 18 && debeEjecutar(horaActual, 18, lastConciliacionBD, 4)) {
       console.log('[WakeUp Scheduler] 🏦 Ejecutando Contabilidad (conciliación)...');
       try {
-        await CFOAICore.ejecutarTarea('contabilidad', 'preConciliacionBancaria');
+        await getCFOAICore().ejecutarTarea('contabilidad', 'preConciliacionBancaria');
         resultados.push({ agente: 'contabilidad', tarea: 'preConciliacionBancaria', exito: true });
       } catch (err) {
         resultados.push({ agente: 'contabilidad', tarea: 'preConciliacionBancaria', exito: false, error: err.message });
@@ -165,7 +165,7 @@ async function ejecutarTareasPendientesWakeUp() {
     if (debeEjecutar(horaActual, 7, lastBriefingBD, 4)) {
       console.log('[WakeUp Scheduler] 🌅 Ejecutando Briefing Diario...');
       try {
-        await CFOAICore.generarBriefingDiario();
+        await getCFOAICore().generarBriefingDiario();
         resultados.push({ agente: 'orchestrator', tarea: 'briefingDiario', exito: true });
       } catch (err) {
         resultados.push({ agente: 'orchestrator', tarea: 'briefingDiario', exito: false, error: err.message });

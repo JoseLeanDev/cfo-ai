@@ -117,10 +117,19 @@ class AgenteAnalisis extends BaseAgent {
       };
 
       // Guardar en snapshots (compatibilidad con schema existente - reemplaza si existe)
-      await db.runAsync(`
-        INSERT OR REPLACE INTO snapshots_diarios (fecha, datos_json, created_at)
-        VALUES (?, ?, datetime('now'))
-      `, [hoy, JSON.stringify(kpis)]);
+      const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
+      if (isPostgres) {
+        await db.runAsync(`
+          INSERT INTO snapshots_diarios (fecha, datos_json, created_at)
+          VALUES ($1, $2, NOW())
+          ON CONFLICT (fecha) DO UPDATE SET datos_json = EXCLUDED.datos_json, created_at = NOW()
+        `, [hoy, JSON.stringify(kpis)]);
+      } else {
+        await db.runAsync(`
+          INSERT OR REPLACE INTO snapshots_diarios (fecha, datos_json, created_at)
+          VALUES (?, ?, datetime('now'))
+        `, [hoy, JSON.stringify(kpis)]);
+      }
 
       await this.logActividad('kpis_diarios',
         `KPIs calculados. Ingresos mes: Q${ingresosMes.total.toLocaleString()}, Variación: ${variacionIngresos}%`,

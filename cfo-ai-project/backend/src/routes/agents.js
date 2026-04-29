@@ -382,7 +382,7 @@ async function obtenerContextoFinanciero(db, empresaId, isPostgres) {
     // CxP resumen
     const cxpQuery = isPostgres
       ? `SELECT COUNT(*) as count, SUM(monto_total) as total FROM cuentas_pagar WHERE empresa_id = $1 AND estado = 'pendiente'`
-      : `SELECT COUNT(*) as count, SUM(monto) as total FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'`;
+      : `SELECT COUNT(*) as count, SUM(monto_pendiente) as total FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'`;
     const cxp = await db.getAsync(cxpQuery, [empresaId]);
     contexto.cxp = { total: cxp?.total || 0, count: cxp?.count || 0 };
   } catch (e) { console.error('[Context] CxP error:', e.message); }
@@ -404,7 +404,7 @@ async function obtenerContextoFinanciero(db, empresaId, isPostgres) {
     // Top deudores (máx 3)
     const deudoresQuery = isPostgres
       ? `SELECT cliente_nombre as cliente, monto_pendiente as monto, dias_atraso FROM cuentas_cobrar WHERE empresa_id = $1 AND estado != 'cobrada' ORDER BY monto_pendiente DESC LIMIT 3`
-      : `SELECT cliente, monto, dias_atraso FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada' ORDER BY monto DESC LIMIT 3`;
+      : `SELECT cliente_nombre as cliente, monto_pendiente as monto, dias_atraso FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada' ORDER BY monto DESC LIMIT 3`;
     contexto.deudores = await db.allAsync(deudoresQuery, [empresaId]) || [];
   } catch (e) { console.error('[Context] Deudores error:', e.message); }
 
@@ -495,7 +495,7 @@ router.post('/chat', async (req, res) => {
         
       const cxpQuery = isPostgres
         ? `SELECT COUNT(*) as count, SUM(monto_total) as total FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'`
-        : `SELECT COUNT(*) as count, SUM(monto) as total FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'`;
+        : `SELECT COUNT(*) as count, SUM(monto_pendiente) as total FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'`;
       
       const cxc = await db.getAsync(cxcQuery, [empresaId]);
       const cxp = await db.getAsync(cxpQuery, [empresaId]);
@@ -567,7 +567,7 @@ router.post('/chat', async (req, res) => {
     if (messageLower.includes('cxc') || messageLower.includes('cobranza') || messageLower.includes('cliente') || messageLower.includes('deudor')) {
       const deudoresQuery = isPostgres
         ? `SELECT cliente_nombre as cliente, monto_pendiente as monto, dias_atraso FROM cuentas_cobrar WHERE empresa_id = $1 AND estado != 'cobrada' ORDER BY monto_pendiente DESC LIMIT 5`
-        : `SELECT cliente, monto, dias_atraso FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada' ORDER BY monto DESC LIMIT 5`;
+        : `SELECT cliente_nombre as cliente, monto_pendiente as monto, dias_atraso FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada' ORDER BY monto DESC LIMIT 5`;
         
       const topDeudores = await db.allAsync(deudoresQuery, [empresaId]);
       

@@ -295,7 +295,7 @@ class AgenteCaja extends BaseAgent {
 
       // Alerta 3: CxC vencidas significativas
       const cxcVencidas = await db.getAsync(`
-        SELECT SUM(monto) as total FROM cuentas_cobrar
+        SELECT SUM(monto_pendiente) as total FROM cuentas_cobrar
         WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento < CURRENT_DATE
       `, [empresaId]);
 

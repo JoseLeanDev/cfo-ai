@@ -71,7 +71,7 @@ class AgenteCobranza extends BaseAgent {
             ELSE 'Más de 90 días'
           END as bucket,
           COUNT(*) as cantidad,
-          SUM(monto) as total,
+          SUM(monto_pendiente) as total,
           AVG(dias_atraso) as promedio_atraso
         FROM cuentas_cobrar
         WHERE empresa_id = ? AND estado = 'pendiente'
@@ -128,7 +128,7 @@ class AgenteCobranza extends BaseAgent {
 
       const cxcPromedio = await db.getAsync(`
         SELECT COALESCE(AVG(saldo_dia), 0) as promedio FROM (
-          SELECT fecha_vencimiento, SUM(monto) as saldo_dia
+          SELECT fecha_vencimiento, SUM(monto_pendiente) as saldo_dia
           FROM cuentas_cobrar
           WHERE empresa_id = ? AND estado = 'pendiente'
           GROUP BY fecha_vencimiento
@@ -185,7 +185,7 @@ class AgenteCobranza extends BaseAgent {
       `, [empresaId]);
 
       const cxcActual = await db.getAsync(`
-        SELECT COALESCE(SUM(monto), 0) as total FROM cuentas_cobrar
+        SELECT COALESCE(SUM(monto_pendiente), 0) as total FROM cuentas_cobrar
         WHERE empresa_id = ? AND estado = 'pendiente'
       `, [empresaId]);
 
@@ -259,7 +259,7 @@ class AgenteCobranza extends BaseAgent {
       const prioritarios = await db.allAsync(`
         SELECT 
           cliente,
-          SUM(monto) as total,
+          SUM(monto_pendiente) as total,
           MAX(dias_atraso) as max_atraso,
           COUNT(*) as facturas
         FROM cuentas_cobrar
@@ -333,7 +333,7 @@ class AgenteCobranza extends BaseAgent {
       const morosos = await db.allAsync(`
         SELECT 
           cliente,
-          SUM(monto) as total,
+          SUM(monto_pendiente) as total,
           MAX(dias_atraso) as max_atraso
         FROM cuentas_cobrar
         WHERE empresa_id = ? AND estado = 'pendiente' AND dias_atraso > 90

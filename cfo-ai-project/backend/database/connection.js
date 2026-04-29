@@ -113,16 +113,4 @@ function sqliteToPostgres(sql) {
   });
 }
 
-// Test del traductor en desarrollo
-if (process.env.NODE_ENV === 'development' || process.env.DEBUG_SQL) {
-  const testQueries = [
-    "SELECT strftime('%Y-%m', fecha) FROM t WHERE fecha >= date('now', '-6 months')",
-    "UPDATE t SET dias = julianday('now') - julianday(fecha)",
-    "INSERT OR REPLACE INTO t (a, b) VALUES (1, 2)",
-    "SELECT * FROM t WHERE fecha >= datetime('now', '-1 day')"
-  ];
-  console.log('[DB Translator] Testing sqliteToPostgres...');
-  testQueries.forEach(q => console.log('  ', q, '→', sqliteToPostgres(q)));
-}
-
 module.exports = db;

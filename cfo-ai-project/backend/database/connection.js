@@ -115,6 +115,11 @@ function sqliteToPostgres(sql) {
       const operator = sign === '+' ? '+' : '-';
       return `CURRENT_DATE ${operator} INTERVAL '${days} days'`;
     })
+    // 3a. date('now', '-X months') → CURRENT_DATE - INTERVAL 'X months'
+    .replace(/date\s*\(\s*['"]now['"]\s*,\s*['"]([+-]?)(\d+)\s+months?['"]\s*\)/gi, (match, sign, months) => {
+      const operator = sign === '+' ? '+' : '-';
+      return `CURRENT_DATE ${operator} INTERVAL '${months} months'`;
+    })
     // 3b. date(?, '+X days') → ?::date + INTERVAL 'X days'
     .replace(/date\s*\(\s*\?\s*,\s*['"]([+-]?)(\d+)\s+days?['"]\s*\)/gi, (match, sign, days) => {
       const operator = sign === '+' ? '+' : '-';

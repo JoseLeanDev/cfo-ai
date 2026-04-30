@@ -115,7 +115,9 @@ router.get('/logs', async (req, res) => {
     // Detectar si es PostgreSQL
     const isPostgres = !!db.pool;
     
-    const dateFilter = `created_at >= NOW() - INTERVAL '${dias} days'`
+    const dateFilter = isPostgres 
+      ? `created_at >= NOW() - INTERVAL '${dias} days'`
+      : `created_at >= datetime('now', '-${dias} days')`
     
     let query = `
       SELECT 
@@ -187,7 +189,8 @@ router.get('/logs', async (req, res) => {
     }));
     
     // Obtener estadísticas
-    const statsQuery = `
+    const statsQuery = isPostgres
+      ? `
       SELECT 
         COUNT(*) as total,
         COUNT(DISTINCT agente_tipo) as agentes_activos,
@@ -196,19 +199,41 @@ router.get('/logs', async (req, res) => {
         SUM(CASE WHEN resultado_status = 'advertencia' THEN 1 ELSE 0 END) as advertencias
       FROM agentes_logs
       WHERE empresa_id = ? 
-        AND ${dateFilter}
+        AND created_at >= NOW() - INTERVAL '${dias} days'
+    `
+      : `
+      SELECT 
+        COUNT(*) as total,
+        COUNT(DISTINCT agente_tipo) as agentes_activos,
+        SUM(CASE WHEN resultado_status = 'exitoso' THEN 1 ELSE 0 END) as exitosos,
+        SUM(CASE WHEN resultado_status = 'error' THEN 1 ELSE 0 END) as errores,
+        SUM(CASE WHEN resultado_status = 'advertencia' THEN 1 ELSE 0 END) as advertencias
+      FROM agentes_logs
+      WHERE empresa_id = ? 
+        AND created_at >= datetime('now', '-${dias} days')
     `;
     
     const stats = await db.getAsync(statsQuery, [empresaId]);
     
     // Agrupar por categoría
-    const porCategoriaQuery = `
+    const porCategoriaQuery = isPostgres
+      ? `
       SELECT 
         categoria,
         COUNT(*) as count
       FROM agentes_logs
       WHERE empresa_id = ? 
-        AND ${dateFilter}
+        AND created_at >= NOW() - INTERVAL '${dias} days'
+      GROUP BY categoria
+      ORDER BY count DESC
+    `
+      : `
+      SELECT 
+        categoria,
+        COUNT(*) as count
+      FROM agentes_logs
+      WHERE empresa_id = ? 
+        AND created_at >= datetime('now', '-${dias} days')
       GROUP BY categoria
       ORDER BY count DESC
     `;
@@ -216,14 +241,26 @@ router.get('/logs', async (req, res) => {
     const porCategoria = await db.allAsync(porCategoriaQuery, [empresaId]);
     
     // Agrupar por agente
-    const porAgenteQuery = `
+    const porAgenteQuery = isPostgres
+      ? `
       SELECT 
         agente_tipo as agente,
         agente_nombre as nombre,
         COUNT(*) as count
       FROM agentes_logs
       WHERE empresa_id = ? 
-        AND ${dateFilter}
+        AND created_at >= NOW() - INTERVAL '${dias} days'
+      GROUP BY agente_tipo, agente_nombre
+      ORDER BY count DESC
+    `
+      : `
+      SELECT 
+        agente_tipo as agente,
+        agente_nombre as nombre,
+        COUNT(*) as count
+      FROM agentes_logs
+      WHERE empresa_id = ? 
+        AND created_at >= datetime('now', '-${dias} days')
       GROUP BY agente_tipo, agente_nombre
       ORDER BY count DESC
     `;
@@ -231,13 +268,24 @@ router.get('/logs', async (req, res) => {
     const porAgente = await db.allAsync(porAgenteQuery, [empresaId]);
     
     // Agrupar por status
-    const porStatusQuery = `
+    const porStatusQuery = isPostgres
+      ? `
       SELECT 
         resultado_status as status,
         COUNT(*) as count
       FROM agentes_logs
       WHERE empresa_id = ? 
-        AND ${dateFilter}
+        AND created_at >= NOW() - INTERVAL '${dias} days'
+      GROUP BY resultado_status
+      ORDER BY count DESC
+    `
+      : `
+      SELECT 
+        resultado_status as status,
+        COUNT(*) as count
+      FROM agentes_logs
+      WHERE empresa_id = ? 
+        AND created_at >= datetime('now', '-${dias} days')
       GROUP BY resultado_status
       ORDER BY count DESC
     `;

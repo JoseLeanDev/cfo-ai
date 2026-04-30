@@ -62,7 +62,7 @@ class AgenteCaja extends BaseAgent {
       const entradasFuturas = await db.allAsync(`
         SELECT 
           fecha_vencimiento,
-          SUM(monto) as monto
+          SUM(monto_pendiente) as monto
         FROM cuentas_cobrar
         WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento >= CURRENT_DATE
         GROUP BY fecha_vencimiento
@@ -73,7 +73,7 @@ class AgenteCaja extends BaseAgent {
       const salidasFuturas = await db.allAsync(`
         SELECT 
           fecha_vencimiento,
-          SUM(monto) as monto
+          SUM(monto_pendiente) as monto
         FROM cuentas_pagar
         WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento >= CURRENT_DATE
         GROUP BY fecha_vencimiento
@@ -179,8 +179,8 @@ class AgenteCaja extends BaseAgent {
         GROUP BY tipo
       `, [empresaId]);
 
-      const ingresos24h = movimientos24h.find(m => m.tipo === 'ingreso')?.total || 0;
-      const gastos24h = movimientos24h.find(m => m.tipo === 'gasto')?.total || 0;
+      const ingresos24h = movimientos24h.find(m => m.tipo === 'entrada')?.total || 0;
+      const gastos24h = movimientos24h.find(m => m.tipo === 'salida')?.total || 0;
 
       await this.logActividad('posicion_caja',
         `Posición caja actualizada: Q${posicion.total.toLocaleString()}`,
@@ -221,7 +221,7 @@ class AgenteCaja extends BaseAgent {
         SELECT AVG(mensual) as promedio FROM (
           SELECT TO_CHAR(fecha, 'YYYY-MM') as mes, SUM(monto) as mensual
           FROM transacciones
-          WHERE empresa_id = ? AND tipo = 'gasto' AND fecha >= CURRENT_DATE - INTERVAL '3 months'
+          WHERE empresa_id = ? AND tipo = 'salida' AND fecha >= CURRENT_DATE - INTERVAL '3 months'
           GROUP BY mes
         )
       `, [empresaId]);
@@ -349,9 +349,9 @@ class AgenteCaja extends BaseAgent {
    */
   async obtenerPosicionCaja(empresaId) {
     const cuentas = await db.allAsync(`
-      SELECT id, nombre, banco, saldo, moneda
+      SELECT id, banco, numero_cuenta, tipo, saldo, moneda
       FROM cuentas_bancarias
-      WHERE empresa_id = ? AND activa = 1
+      WHERE empresa_id = ? AND activa = true
     `, [empresaId]);
 
     const total = cuentas.reduce((sum, c) => sum + (c.saldo || 0), 0);
@@ -360,7 +360,7 @@ class AgenteCaja extends BaseAgent {
       total: Math.round(total * 100) / 100,
       cuentas: cuentas.map(c => ({
         id: c.id,
-        nombre: c.nombre || c.banco,
+        nombre: c.banco + (c.numero_cuenta ? ' (' + c.numero_cuenta + ')' : ''),
         saldo: c.saldo,
         moneda: c.moneda
       }))

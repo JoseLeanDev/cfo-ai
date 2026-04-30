@@ -77,8 +77,8 @@ class PredictorCashFlow extends BaseAgent {
 
     // CxC esperados
     const cxc = await db.getAsync(`
-      SELECT SUM(monto) as total,
-             SUM(CASE WHEN fecha_vencimiento <= CURRENT_DATE + INTERVAL '30 days' THEN monto ELSE 0 END) as proximo_mes
+      SELECT SUM(monto_pendiente) as total,
+             SUM(CASE WHEN fecha_vencimiento <= CURRENT_DATE + INTERVAL '30 days' THEN monto_pendiente ELSE 0 END) as proximo_mes
       FROM cuentas_cobrar 
       WHERE empresa_id = ? AND estado = 'pendiente'
     `, [empresaId]);
@@ -331,7 +331,6 @@ class PredictorCashFlow extends BaseAgent {
         SELECT 
           TO_CHAR(fecha, 'YYYY-MM') as mes,
           SUM(monto) as total,
-          COUNT(DISTINCT cliente_id) as clientes_activos,
           COUNT(*) as transacciones
         FROM transacciones 
         WHERE empresa_id = ? 
@@ -364,7 +363,6 @@ class PredictorCashFlow extends BaseAgent {
                 monto_actual: totales[i],
                 monto_anterior: totales[i-1],
                 variacion_porcentaje: variacion,
-                clientes_activos: ingresosMensuales[i].clientes_activos,
                 transacciones: ingresosMensuales[i].transacciones
               },
               accion_recomendada: esCaida
@@ -421,7 +419,7 @@ class PredictorCashFlow extends BaseAgent {
 
       // Detectar transacciones en días atípicos (fines de semana)
       const transaccionesFinSemana = transaccionesPorDiaSemana.filter(
-        t => (t.dia_semana === 'Sábado' || t.dia_semana === 'Domingo') && t.tipo === 'egreso'
+        t => (t.dia_semana === 'Sábado' || t.dia_semana === 'Domingo') && t.tipo === 'salida'
       );
 
       for (const t of transaccionesFinSemana) {

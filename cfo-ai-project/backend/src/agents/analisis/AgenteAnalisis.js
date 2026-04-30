@@ -56,24 +56,24 @@ class AgenteAnalisis extends BaseAgent {
       // 1. Ingresos del día vs mes anterior
       const ingresosHoy = await db.getAsync(`
         SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
-        WHERE empresa_id = ? AND tipo = 'ingreso' AND fecha = ?
+        WHERE empresa_id = ? AND tipo = 'entrada' AND fecha = ?
       `, [empresaId, hoy]);
 
       const ingresosMes = await db.getAsync(`
         SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
-        WHERE empresa_id = ? AND tipo = 'ingreso' AND fecha >= ?
+        WHERE empresa_id = ? AND tipo = 'entrada' AND fecha >= ?
       `, [empresaId, inicioMes]);
 
       const ingresosMesAnterior = await db.getAsync(`
         SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
-        WHERE empresa_id = ? AND tipo = 'ingreso' 
+        WHERE empresa_id = ? AND tipo = 'entrada' 
         AND fecha >= CURRENT_DATE - INTERVAL '2 months' AND fecha < CURRENT_DATE - INTERVAL '1 month'
       `, [empresaId]);
 
       // 2. Gastos del día vs presupuesto
       const gastosHoy = await db.getAsync(`
         SELECT COALESCE(SUM(monto), 0) as total FROM transacciones
-        WHERE empresa_id = ? AND tipo = 'gasto' AND fecha = ?
+        WHERE empresa_id = ? AND tipo = 'salida' AND fecha = ?
       `, [empresaId, hoy]);
 
       // 3. Margen bruto
@@ -92,7 +92,7 @@ class AgenteAnalisis extends BaseAgent {
 
       // 5. Facturas pendientes
       const facturasPendientes = await db.getAsync(`
-        SELECT COUNT(*) as count, COALESCE(SUM(monto), 0) as total
+        SELECT COUNT(*) as count, COALESCE(SUM(monto_pendiente), 0) as total
         FROM cuentas_cobrar
         WHERE empresa_id = ? AND estado = 'pendiente'
       `, [empresaId]);
@@ -157,15 +157,15 @@ class AgenteAnalisis extends BaseAgent {
     const startTime = Date.now();
     
     try {
-      // Rentabilidad por cliente (top 10)
+      // Rentabilidad por cliente (top 10) - usando cuentas_cobrar como fuente de clientes
       const rentabilidadClientes = await db.allAsync(`
         SELECT 
-          nombre_cliente,
-          SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as ingresos,
-          SUM(CASE WHEN tipo = 'gasto' THEN monto ELSE 0 END) as gastos
-        FROM transacciones
-        WHERE empresa_id = ? AND nombre_cliente IS NOT NULL
-        GROUP BY nombre_cliente
+          cliente_nombre as nombre_cliente,
+          SUM(monto_total) as ingresos,
+          0 as gastos
+        FROM cuentas_cobrar
+        WHERE empresa_id = ? AND cliente_nombre IS NOT NULL
+        GROUP BY cliente_nombre
         ORDER BY ingresos DESC
         LIMIT 10
       `, [empresaId]);
@@ -178,15 +178,15 @@ class AgenteAnalisis extends BaseAgent {
         margen_pct: c.ingresos > 0 ? ((c.ingresos - c.gastos) / c.ingresos * 100).toFixed(1) : 0
       }));
 
-      // Rentabilidad por categoría
+      // Rentabilidad por categoría - usando concepto como proxy de categoría
       const rentabilidadCategoria = await db.allAsync(`
         SELECT 
-          categoria,
-          SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as ingresos,
-          SUM(CASE WHEN tipo = 'gasto' THEN monto ELSE 0 END) as gastos
+          COALESCE(concepto, 'Sin categoría') as categoria,
+          SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as ingresos,
+          SUM(CASE WHEN tipo = 'salida' THEN monto ELSE 0 END) as gastos
         FROM transacciones
         WHERE empresa_id = ?
-        GROUP BY categoria
+        GROUP BY concepto
         ORDER BY ingresos DESC
       `, [empresaId]);
 
@@ -222,16 +222,16 @@ class AgenteAnalisis extends BaseAgent {
     const startTime = Date.now();
     
     try {
-      // Obtener transacciones por cliente
+      // Obtener transacciones por cliente desde cuentas_cobrar
       const transacciones = await db.allAsync(`
         SELECT 
-          nombre_cliente,
-          MAX(fecha) as ultima_compra,
+          cliente_nombre as nombre_cliente,
+          MAX(fecha_emision) as ultima_compra,
           COUNT(*) as frecuencia,
-          SUM(monto) as monto_total
-        FROM transacciones
-        WHERE empresa_id = ? AND tipo = 'ingreso' AND nombre_cliente IS NOT NULL
-        GROUP BY nombre_cliente
+          SUM(monto_total) as monto_total
+        FROM cuentas_cobrar
+        WHERE empresa_id = ? AND cliente_nombre IS NOT NULL
+        GROUP BY cliente_nombre
       `, [empresaId]);
 
       const hoy = new Date();
@@ -295,12 +295,12 @@ class AgenteAnalisis extends BaseAgent {
       // Obtener promedios históricos
       const promedios = await db.allAsync(`
         SELECT 
-          categoria,
+          COALESCE(concepto, 'Sin categoría') as categoria,
           AVG(monto) as promedio,
           (MAX(monto) - MIN(monto)) as rango
         FROM transacciones
         WHERE empresa_id = ? AND fecha >= CURRENT_DATE - INTERVAL '3 months'
-        GROUP BY categoria
+        GROUP BY concepto
       `, [empresaId]);
 
       // Buscar transacciones atípicas (monto > 3x promedio o < 0.1x)
@@ -310,7 +310,7 @@ class AgenteAnalisis extends BaseAgent {
         const atipicas = await db.allAsync(`
           SELECT *
           FROM transacciones
-          WHERE empresa_id = ? AND categoria = ? 
+          WHERE empresa_id = ? AND concepto = ? 
           AND (monto > ? * 3 OR monto < ? * 0.1)
           AND fecha >= CURRENT_DATE - INTERVAL '7 days'
         `, [empresaId, cat.categoria, cat.promedio, cat.promedio]);
@@ -326,10 +326,10 @@ class AgenteAnalisis extends BaseAgent {
       if (anomalias.length > 0) {
         for (const a of anomalias.slice(0, 10)) {
           await db.runAsync(`
-            INSERT INTO alertas_financieras (tipo, nivel, titulo, descripcion, metadata, created_at)
+            INSERT INTO alertas_financieras (tipo, nivel, titulo, descripcion, datos_json, created_at)
             VALUES (?, ?, ?, ?, ?, NOW())
           `, ['anomalia', 'media',
-            `Anomalía: ${a.descripcion || 'Sin descripción'}`,
+            `Anomalía: ${a.concepto || 'Sin descripción'}`,
             `Monto: Q${(a.monto || 0).toLocaleString()}. Promedio categoría: Q${(a.promedio_categoria || 0).toLocaleString()}`,
             JSON.stringify(a)
           ]);
@@ -373,8 +373,8 @@ class AgenteAnalisis extends BaseAgent {
       const tendencia = await db.allAsync(`
         SELECT 
           TO_CHAR(fecha, 'YYYY-MM') as mes,
-          SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as ingresos,
-          SUM(CASE WHEN tipo = 'gasto' THEN monto ELSE 0 END) as gastos
+          SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as ingresos,
+          SUM(CASE WHEN tipo = 'salida' THEN monto ELSE 0 END) as gastos
         FROM transacciones
         WHERE empresa_id = ? AND fecha >= CURRENT_DATE - INTERVAL '6 months'
         GROUP BY mes

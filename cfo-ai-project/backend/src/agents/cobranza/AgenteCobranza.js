@@ -203,7 +203,7 @@ class AgenteCobranza extends BaseAgent {
 
       // 3. DPO (Days Payable Outstanding)
       const cxpActual = await db.getAsync(`
-        SELECT COALESCE(SUM(monto), 0) as total FROM cuentas_pagar
+        SELECT COALESCE(SUM(monto_pendiente), 0) as total FROM cuentas_pagar
         WHERE empresa_id = ? AND estado = 'pendiente'
       `, [empresaId]);
 
@@ -219,9 +219,9 @@ class AgenteCobranza extends BaseAgent {
 
       // Guardar snapshot
       await db.runAsync(`
-        INSERT INTO snapshots_financieros (fecha, metricas_json, created_at)
-        VALUES (?, ?, NOW())
-      `, [new Date().toISOString(), JSON.stringify({ dso, dio, dpo, ccc, fecha: new Date().toISOString() })]);
+        INSERT INTO snapshots_financieros (empresa_id, tipo, fecha, datos_json, created_at)
+        VALUES (?, 'ccc', ?, ?, NOW())
+      `, [empresaId, new Date().toISOString().split('T')[0], JSON.stringify({ dso, dio, dpo, ccc })]);
 
       await this.logActividad('ccc',
         `CCC calculado: ${ccc.toFixed(1)} días (DSO:${dso.toFixed(0)} DIO:${dio.toFixed(0)} DPO:${dpo.toFixed(0)})`,

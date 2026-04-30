@@ -50,12 +50,12 @@ class AgenteContabilidad extends BaseAgent {
     const startTime = Date.now();
     
     try {
-      // Verificar transacciones sin asiento
+      // Verificar transacciones sin asiento (asientos table usa concepto en vez de documento)
       const sinAsiento = await db.allAsync(`
         SELECT t.*
         FROM transacciones t
-        LEFT JOIN asientos a ON a.documento = CAST(t.id AS TEXT)
-        WHERE t.empresa_id = ? AND a.id IS NULL
+        WHERE t.empresa_id = ? AND t.estado = 'activo'
+          AND NOT EXISTS (SELECT 1 FROM asientos a WHERE a.concepto LIKE '%' || t.id || '%')
         LIMIT 50
       `, [empresaId]);
 
@@ -114,12 +114,12 @@ class AgenteContabilidad extends BaseAgent {
         SELECT * FROM cuentas_contables WHERE empresa_id = ?
       `, [empresaId]);
 
-      // Transacciones sin asiento
+      // Transacciones sin asiento (asientos usa concepto en vez de documento)
       const transacciones = await db.allAsync(`
         SELECT t.*
         FROM transacciones t
-        LEFT JOIN asientos a ON a.documento = CAST(t.id AS TEXT)
-        WHERE t.empresa_id = ? AND a.id IS NULL
+        WHERE t.empresa_id = ? AND t.estado = 'activo'
+          AND NOT EXISTS (SELECT 1 FROM asientos a WHERE a.concepto LIKE '%' || t.id || '%')
         LIMIT 50
       `, [empresaId]);
 
@@ -137,20 +137,15 @@ class AgenteContabilidad extends BaseAgent {
           cuentaHaber = '1.01.01'; // Caja/Bancos
         }
 
-        // Crear asiento
-        const asientoId = `AST-${Date.now()}-${t.id}`;
+        // Crear asiento resumen (PostgreSQL schema: empresa_id, fecha, concepto, total_debe, total_haber, estado)
+        const concepto = `Asiento ${t.tipo} - Transacción #${t.id} - ${t.concepto || 'Sin descripción'}`;
         
         await db.runAsync(`
-          INSERT INTO asientos (empresa_id, asiento_id, fecha, cuenta_codigo, cuenta_nombre, descripcion, debe, haber, documento, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-        `, [empresaId, asientoId, t.fecha, cuentaDebe, 'Cuenta por defecto', t.descripcion || 'Sin descripción', t.monto, 0, String(t.id)]);
+          INSERT INTO asientos (empresa_id, fecha, concepto, total_debe, total_haber, estado, created_at)
+          VALUES (?, ?, ?, ?, ?, 'completado', NOW())
+        `, [empresaId, t.fecha, concepto, t.tipo === 'gasto' ? t.monto : 0, t.tipo === 'ingreso' ? t.monto : 0]);
 
-        await db.runAsync(`
-          INSERT INTO asientos (empresa_id, asiento_id, fecha, cuenta_codigo, cuenta_nombre, descripcion, debe, haber, documento, created_at)
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
-        `, [empresaId, asientoId, t.fecha, cuentaHaber, 'Cuenta por defecto', t.descripcion || 'Sin descripción', 0, t.monto, String(t.id)]);
-
-        asientosGenerados.push({ transaccionId: t.id, asientoId });
+        asientosGenerados.push({ transaccionId: t.id, concepto });
       }
 
       await this.logActividad('asientos_generados',
@@ -273,15 +268,16 @@ class AgenteContabilidad extends BaseAgent {
       // 1. Verificar asientos pendientes
       const sinAsiento = await db.getAsync(`
         SELECT COUNT(*) as count FROM transacciones t
-        LEFT JOIN asientos a ON a.documento = CAST(t.id AS TEXT)
-        WHERE t.empresa_id = ? AND a.id IS NULL AND TO_CHAR(t.fecha, 'YYYY-MM') = ?
+        WHERE t.empresa_id = ? AND t.estado = 'activo'
+          AND NOT EXISTS (SELECT 1 FROM asientos a WHERE a.concepto LIKE '%' || t.id || '%')
+          AND TO_CHAR(t.fecha, 'YYYY-MM') = ?
       `, [empresaId, periodo]);
 
       // 2. Verificar balance
       const balance = await db.getAsync(`
         SELECT 
-          SUM(debe) as total_debe,
-          SUM(haber) as total_haber
+          SUM(total_debe) as total_debe,
+          SUM(total_haber) as total_haber
         FROM asientos
         WHERE empresa_id = ? AND TO_CHAR(fecha, 'YYYY-MM') = ?
       `, [empresaId, periodo]);

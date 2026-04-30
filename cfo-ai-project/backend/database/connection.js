@@ -101,16 +101,57 @@ if (isProduction && process.env.DATABASE_URL) {
 }
 
 /**
- * Convierte parámetros SQLite (?) a PostgreSQL ($1, $2...)
- * IMPORTANTE: El código ya debe ser PostgreSQL nativo. Solo convertimos placeholders.
+ * Convierte sintaxis SQLite a PostgreSQL
+ * IMPORTANTE: Esto permite escribir SQL compatible con SQLite que funcione en ambos motores.
  */
 function sqliteToPostgres(sql) {
-  // Solo convertir ? → $1, $2, etc.
+  let result = sql;
+
+  // date('now', '+X days') → CURRENT_DATE + INTERVAL 'X days'
+  result = result.replace(/date\('now',\s*'\+(\d+)\s*days'\)/g, "CURRENT_DATE + INTERVAL '$1 days'");
+  // date('now', '-X days') → CURRENT_DATE - INTERVAL 'X days'
+  result = result.replace(/date\('now',\s*'-(\d+)\s*days'\)/g, "CURRENT_DATE - INTERVAL '$1 days'");
+  // date('now', '+X months') → CURRENT_DATE + INTERVAL 'X months'
+  result = result.replace(/date\('now',\s*'\+(\d+)\s*months'\)/g, "CURRENT_DATE + INTERVAL '$1 months'");
+  // date('now', '-X months') → CURRENT_DATE - INTERVAL 'X months'
+  result = result.replace(/date\('now',\s*'-(\d+)\s*months'\)/g, "CURRENT_DATE - INTERVAL '$1 months'");
+  // date('now', 'start of month') → DATE_TRUNC('month', CURRENT_DATE)
+  result = result.replace(/date\('now',\s*'start of month'\)/g, "DATE_TRUNC('month', CURRENT_DATE)");
+  // date('now') → CURRENT_DATE
+  result = result.replace(/date\('now'\)/g, "CURRENT_DATE");
+
+  // datetime('now') → NOW()
+  result = result.replace(/datetime\('now'\)/g, "NOW()");
+  // datetime('now', '-X days') → NOW() - INTERVAL 'X days'
+  result = result.replace(/datetime\('now',\s*'-(\d+)\s*days'\)/g, "NOW() - INTERVAL '$1 days'");
+  result = result.replace(/datetime\('now',\s*'-(\d+)\s*months'\)/g, "NOW() - INTERVAL '$1 months'");
+
+  // strftime('%Y-%m', col) → TO_CHAR(col::timestamp, 'YYYY-MM')
+  result = result.replace(/strftime\('%Y-%m',\s*([^)]+)\)/g, "TO_CHAR($1::timestamp, 'YYYY-MM')");
+  result = result.replace(/strftime\('%Y',\s*([^)]+)\)/g, "EXTRACT(YEAR FROM $1::timestamp)");
+  result = result.replace(/strftime\('%m',\s*([^)]+)\)/g, "EXTRACT(MONTH FROM $1::timestamp)");
+
+  // julianday(a) - julianday(b) → (a::date - b::date)
+  result = result.replace(/julianday\(([^)]+)\)\s*-\s*julianday\(([^)]+)\)/g, "($1::date - $2::date)");
+
+  // MAX(0, x) → GREATEST(0, x)
+  result = result.replace(/MAX\(0,\s*([^)]+)\)/g, "GREATEST(0, $1)");
+
+  // IFNULL → COALESCE
+  result = result.replace(/IFNULL\(/g, "COALESCE(");
+
+  // INTERVAL SQLite: date(?, '+X days') → (?::date + INTERVAL 'X days')
+  result = result.replace(/date\((\?),\s*'\+(\d+)\s*days'\)/g, "($1::date + INTERVAL '$2 days')");
+  result = result.replace(/date\((\?),\s*'-(\d+)\s*days'\)/g, "($1::date - INTERVAL '$2 days')");
+
+  // ? → $1, $2, etc.
   let paramCount = 0;
-  return sql.replace(/\?/g, () => {
+  result = result.replace(/\?/g, () => {
     paramCount++;
     return `$${paramCount}`;
   });
+
+  return result;
 }
 
 module.exports = db;

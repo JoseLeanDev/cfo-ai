@@ -141,9 +141,9 @@ class CFOAICore extends BaseAgent {
       };
 
       await db.runAsync(`
-        INSERT INTO briefings_diarios (fecha, resumen, insights_json, alertas_count, created_at)
-        VALUES (?, ?, ?, ?, NOW())
-      `, [new Date().toISOString().split('T')[0], JSON.stringify(briefing.detalles), JSON.stringify(briefing.insights), insights.length]);
+        INSERT INTO briefings_diarios (fecha, contenido, datos_json, enviado, created_at)
+        VALUES (?, ?, ?, FALSE, NOW())
+      `, [new Date().toISOString().split('T')[0], JSON.stringify(briefing.detalles), JSON.stringify({ insights: briefing.insights, count: insights.length })]);
 
       await this.logActividad('briefing_diario',
         `Briefing generado: ${exitosos.length} agentes, ${insights.length} insights`,

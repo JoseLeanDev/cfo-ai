@@ -81,12 +81,12 @@ class AgenteAnalisis extends BaseAgent {
 
       // 4. CxC y CxP pendientes
       const cxc = await db.getAsync(`
-        SELECT COALESCE(SUM(monto), 0) as total FROM cuentas_cobrar
+        SELECT COALESCE(SUM(monto_pendiente), 0) as total FROM cuentas_cobrar
         WHERE empresa_id = ? AND estado = 'pendiente'
       `, [empresaId]);
 
       const cxp = await db.getAsync(`
-        SELECT COALESCE(SUM(monto), 0) as total FROM cuentas_pagar
+        SELECT COALESCE(SUM(monto_pendiente), 0) as total FROM cuentas_pagar
         WHERE empresa_id = ? AND estado = 'pendiente'
       `, [empresaId]);
 

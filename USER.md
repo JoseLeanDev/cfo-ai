@@ -14,7 +14,9 @@ _(What do they care about? What projects are they working on? What annoys them? 
 
 - **Infraestructura:** Todo (frontend + backend) está en **Render**.
   - ⚠️ **NO es free tier.** Usa plan pago en Render. El servidor no "duerme".
-  - Base de datos: PostgreSQL en Render (producción).
+  - Base de datos: **PostgreSQL en Render (producción) — NUNCA SQLite. NUNCA.**
+  - Connection string: `postgresql://cfo_ai_db_user:LpZcIQtaIUu3sGpAZLmdCSxcgF6L0hYh@dpg-d7fbdrcvikkc739npr4g-a.ohio-postgres.render.com/cfo_ai_db`
+  - **REGLA ABSOLUTA:** Si veo SQLite (`cfo_ai.db`, `DATABASE_URL=./database/...`, etc.), debo cambiarlo a PostgreSQL INMEDIATAMENTE. No preguntar. No dudar. Solo cambiarlo.
 
 ---
 

@@ -153,7 +153,7 @@ class ConciliadorBancario extends BaseAgent {
           INSERT INTO conciliaciones_bancarias (
             empresa_id, cuenta_bancaria_id, anio, mes,
             saldo_contable_inicial, estado, created_at
-          ) VALUES (?, ?, ?, ?, ?, 'pendiente', datetime('now'))
+          ) VALUES (?, ?, ?, ?, ?, 'pendiente', NOW())
         `, [empresaId, cuenta.id, anio, mes, saldoContableInicial]);
 
         resultados.push({
@@ -254,7 +254,7 @@ class ConciliadorBancario extends BaseAgent {
     const diferenciasViejas = await db.allAsync(`
       SELECT * FROM conciliacion_detalle
       WHERE conciliacion_id = ? AND estado = 'pendiente'
-        AND fecha_transaccion < date('now', '-45 days')
+        AND fecha_transaccion < CURRENT_DATE - INTERVAL '45 days'
     `, [conciliacion_id]);
 
     const esValida = diferenciaValida && diferenciasViejas.length === 0;
@@ -280,7 +280,7 @@ class ConciliadorBancario extends BaseAgent {
         INSERT INTO agentes_logs (
           empresa_id, agente_nombre, agente_tipo, categoria,
           descripcion, detalles_json, resultado_status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
       `, [
         empresaId,
         'ConciliadorBancario',

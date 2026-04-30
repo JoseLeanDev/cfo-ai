@@ -126,13 +126,13 @@ class AnalistaFinanciero extends BaseAgent {
     const ventas = await db.getAsync(`
       SELECT SUM(monto) as total FROM transacciones 
       WHERE empresa_id = ? AND tipo = 'entrada' 
-      AND fecha >= date('now', 'start of month')
+      AND fecha >= DATE_TRUNC('month', CURRENT_DATE)
     `, [empresaId]);
 
     const gastos = await db.getAsync(`
       SELECT SUM(monto) as total FROM transacciones 
       WHERE empresa_id = ? AND tipo = 'salida'
-      AND fecha >= date('now', 'start of month')
+      AND fecha >= DATE_TRUNC('month', CURRENT_DATE)
     `, [empresaId]);
 
     const totalVentas = ventas?.total || 0;
@@ -237,13 +237,13 @@ class AnalistaFinanciero extends BaseAgent {
       const gastosPorCategoria = await db.allAsync(`
         SELECT 
           categoria,
-          strftime('%Y-%m', fecha) as mes,
+          TO_CHAR(fecha, 'YYYY-MM') as mes,
           SUM(monto) as total_mes
         FROM transacciones 
         WHERE empresa_id = ? 
           AND tipo = 'salida'
           AND fecha >= ?
-        GROUP BY categoria, strftime('%Y-%m', fecha)
+        GROUP BY categoria, TO_CHAR(fecha, 'YYYY-MM')
         ORDER BY categoria, mes DESC
       `, [empresaId, tresMesesAtras]);
 
@@ -304,7 +304,7 @@ class AnalistaFinanciero extends BaseAgent {
         SELECT 
           cliente_id,
           nombre_cliente,
-          strftime('%Y-%m', fecha) as mes,
+          TO_CHAR(fecha, 'YYYY-MM') as mes,
           SUM(monto) as total_mes,
           COUNT(*) as transacciones
         FROM transacciones 
@@ -312,7 +312,7 @@ class AnalistaFinanciero extends BaseAgent {
           AND tipo = 'entrada'
           AND fecha >= ?
           AND cliente_id IS NOT NULL
-        GROUP BY cliente_id, strftime('%Y-%m', fecha)
+        GROUP BY cliente_id, TO_CHAR(fecha, 'YYYY-MM')
         ORDER BY cliente_id, mes DESC
       `, [empresaId, seisMesesAtras]);
 
@@ -397,7 +397,7 @@ class AnalistaFinanciero extends BaseAgent {
       const transaccionesRecientes = await db.allAsync(`
         SELECT * FROM transacciones 
         WHERE empresa_id = ? 
-          AND fecha >= date('now', '-30 days')
+          AND fecha >= CURRENT_DATE - INTERVAL '30 days'
         ORDER BY monto DESC
       `, [empresaId]);
 
@@ -436,13 +436,13 @@ class AnalistaFinanciero extends BaseAgent {
       // 4. PROYECCIONES DE VARIACIÓN
       const datos6Meses = await db.allAsync(`
         SELECT 
-          strftime('%Y-%m', fecha) as mes,
+          TO_CHAR(fecha, 'YYYY-MM') as mes,
           SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as ingresos,
           SUM(CASE WHEN tipo = 'salida' THEN monto ELSE 0 END) as egresos
         FROM transacciones 
         WHERE empresa_id = ? 
           AND fecha >= ?
-        GROUP BY strftime('%Y-%m', fecha)
+        GROUP BY TO_CHAR(fecha, 'YYYY-MM')
         ORDER BY mes ASC
       `, [empresaId, seisMesesAtras]);
 
@@ -518,7 +518,7 @@ class AnalistaFinanciero extends BaseAgent {
         FROM cuentas_pagar 
         WHERE empresa_id = ? 
           AND estado = 'pendiente'
-          AND fecha_vencimiento < date('now')
+          AND fecha_vencimiento < CURRENT_DATE
       `, [empresaId]);
 
       if (cxpVencidas && cxpVencidas.total > 0) {
@@ -537,16 +537,16 @@ class AnalistaFinanciero extends BaseAgent {
         FROM cuentas_cobrar 
         WHERE empresa_id = ? 
           AND estado = 'pendiente'
-          AND fecha_vencimiento < date('now')
+          AND fecha_vencimiento < CURRENT_DATE
       `, [empresaId]);
 
       if (cxcVencidas && cxcVencidas.total > 0) {
         const diasPromedio = await db.getAsync(`
-          SELECT AVG(julianday('now') - julianday(fecha_vencimiento)) as dias_promedio
+          SELECT AVG(EXTRACT(EPOCH FROM (CURRENT_DATE - fecha_vencimiento))/(60*60*24)) as dias_promedio
           FROM cuentas_cobrar 
           WHERE empresa_id = ? 
             AND estado = 'pendiente'
-            AND fecha_vencimiento < date('now')
+            AND fecha_vencimiento < CURRENT_DATE
         `, [empresaId]);
 
         insights.push({

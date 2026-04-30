@@ -49,12 +49,12 @@ class AgenteCaja extends BaseAgent {
       // Obtener datos históricos de los últimos 6 meses
       const historico = await db.allAsync(`
         SELECT 
-          strftime('%Y-%m', fecha) as mes,
+          TO_CHAR(fecha, 'YYYY-MM') as mes,
           SUM(CASE WHEN tipo = 'ingreso' THEN monto ELSE 0 END) as ingresos,
           SUM(CASE WHEN tipo = 'gasto' THEN monto ELSE 0 END) as gastos
         FROM transacciones
-        WHERE empresa_id = ? AND fecha >= date('now', '-6 months')
-        GROUP BY strftime('%Y-%m', fecha)
+        WHERE empresa_id = ? AND fecha >= CURRENT_DATE - INTERVAL '6 months'
+        GROUP BY TO_CHAR(fecha, 'YYYY-MM')
         ORDER BY mes DESC
       `, [empresaId]);
 
@@ -64,7 +64,7 @@ class AgenteCaja extends BaseAgent {
           fecha_vencimiento,
           SUM(monto) as monto
         FROM cuentas_cobrar
-        WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento >= date('now')
+        WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento >= CURRENT_DATE
         GROUP BY fecha_vencimiento
         ORDER BY fecha_vencimiento
       `, [empresaId]);
@@ -75,7 +75,7 @@ class AgenteCaja extends BaseAgent {
           fecha_vencimiento,
           SUM(monto) as monto
         FROM cuentas_pagar
-        WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento >= date('now')
+        WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento >= CURRENT_DATE
         GROUP BY fecha_vencimiento
         ORDER BY fecha_vencimiento
       `, [empresaId]);
@@ -133,7 +133,7 @@ class AgenteCaja extends BaseAgent {
       // Guardar snapshot (compatibilidad con schema existente)
       await db.runAsync(`
         INSERT INTO snapshots_financieros (fecha, metricas_json, created_at)
-        VALUES (?, ?, datetime('now'))
+        VALUES (?, ?, NOW())
       `, [new Date().toISOString(), JSON.stringify({ proyeccion, runwayDias, posicionActual: posicionCaja })]);
 
       // Log del agente
@@ -175,7 +175,7 @@ class AgenteCaja extends BaseAgent {
       const movimientos24h = await db.allAsync(`
         SELECT tipo, SUM(monto) as total
         FROM transacciones
-        WHERE empresa_id = ? AND fecha >= date('now', '-1 day')
+        WHERE empresa_id = ? AND fecha >= CURRENT_DATE - INTERVAL '1 day'
         GROUP BY tipo
       `, [empresaId]);
 
@@ -219,9 +219,9 @@ class AgenteCaja extends BaseAgent {
       // Gasto promedio mensual últimos 3 meses
       const gastosPromedio = await db.getAsync(`
         SELECT AVG(mensual) as promedio FROM (
-          SELECT strftime('%Y-%m', fecha) as mes, SUM(monto) as mensual
+          SELECT TO_CHAR(fecha, 'YYYY-MM') as mes, SUM(monto) as mensual
           FROM transacciones
-          WHERE empresa_id = ? AND tipo = 'gasto' AND fecha >= date('now', '-3 months')
+          WHERE empresa_id = ? AND tipo = 'gasto' AND fecha >= CURRENT_DATE - INTERVAL '3 months'
           GROUP BY mes
         )
       `, [empresaId]);
@@ -296,7 +296,7 @@ class AgenteCaja extends BaseAgent {
       // Alerta 3: CxC vencidas significativas
       const cxcVencidas = await db.getAsync(`
         SELECT SUM(monto_pendiente) as total FROM cuentas_cobrar
-        WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento < date('now')
+        WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento < CURRENT_DATE
       `, [empresaId]);
 
       if (cxcVencidas?.total > posicion.total * 0.5) {
@@ -312,7 +312,7 @@ class AgenteCaja extends BaseAgent {
       for (const alerta of alertas) {
         await db.runAsync(`
           INSERT INTO alertas_financieras (tipo, nivel, titulo, descripcion, created_at)
-          VALUES (?, ?, ?, ?, datetime('now'))
+          VALUES (?, ?, ?, ?, NOW())
         `, [alerta.tipo, alerta.nivel === 'critico' ? 'alta' : alerta.nivel === 'alto' ? 'alta' : 'media', alerta.mensaje, alerta.accion]);
       }
 
@@ -376,7 +376,7 @@ class AgenteCaja extends BaseAgent {
         INSERT INTO agentes_logs 
         (empresa_id, agente_nombre, agente_tipo, agente_version, categoria, descripcion, 
          detalles_json, impacto_valor, impacto_moneda, resultado_status, duracion_ms, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
       `, [
         1, // empresa_id
         this.name,

@@ -91,7 +91,7 @@ class AuditorAutomatico extends BaseAgent {
     if (checkMontosAtipicos) {
       const stats = await db.getAsync(`
         SELECT AVG(monto) as avg_monto, 
-               (SELECT AVG(monto) FROM transacciones WHERE empresa_id = ? AND fecha >= datetime('now', '-${horasAtras} hours')) as avg_reciente
+               (SELECT AVG(monto) FROM transacciones WHERE empresa_id = ? AND fecha >= NOW() - INTERVAL '${horasAtras} hours') as avg_reciente
         FROM transacciones 
         WHERE empresa_id = ? AND tipo = 'egreso'
       `, [empresaId, empresaId]);
@@ -101,7 +101,7 @@ class AuditorAutomatico extends BaseAgent {
         FROM transacciones 
         WHERE empresa_id = ? 
           AND tipo = 'egreso'
-          AND fecha >= datetime('now', '-${horasAtras} hours')
+          AND fecha >= NOW() - INTERVAL '${horasAtras} hours'
           AND monto > ? * 3
         ORDER BY monto DESC
         LIMIT 5
@@ -141,7 +141,7 @@ class AuditorAutomatico extends BaseAgent {
         SELECT fecha, monto, descripcion, COUNT(*) as cantidad
         FROM transacciones 
         WHERE empresa_id = ? 
-          AND fecha >= datetime('now', '-${horasAtras} hours')
+          AND fecha >= NOW() - INTERVAL '${horasAtras} hours'
         GROUP BY fecha, monto, descripcion
         HAVING cantidad > 1
       `, [empresaId]);
@@ -182,7 +182,7 @@ class AuditorAutomatico extends BaseAgent {
              (SELECT SUM(haber) FROM asientos_detalle WHERE asiento_id = a.id) as total_haber
       FROM asientos a
       WHERE empresa_id = ? 
-        AND fecha = date('now', '-1 day')
+        AND fecha = CURRENT_DATE - INTERVAL '1 day'
       HAVING ABS(total_debe - total_haber) > 0.01
     `, [empresaId]);
 
@@ -200,7 +200,7 @@ class AuditorAutomatico extends BaseAgent {
       SELECT id, fecha, descripcion, monto
       FROM transacciones 
       WHERE empresa_id = ? 
-        AND fecha >= date('now', '-7 days')
+        AND fecha >= CURRENT_DATE - INTERVAL '7 days'
         AND (documento_url IS NULL OR documento_url = '')
         AND monto > 5000
       LIMIT 10
@@ -286,7 +286,7 @@ class AuditorAutomatico extends BaseAgent {
       // Crear registro de cierre
       await db.runAsync(`
         INSERT INTO cierres_mensuales (empresa_id, anio, mes, estado, created_at)
-        VALUES (?, ?, ?, 'en_proceso', datetime('now'))
+        VALUES (?, ?, ?, 'en_proceso', NOW())
       `, [empresaId, anio, mes]);
     }
 
@@ -371,7 +371,7 @@ class AuditorAutomatico extends BaseAgent {
         INSERT INTO agentes_logs (
           empresa_id, agente_nombre, agente_tipo, categoria,
           descripcion, detalles_json, resultado_status, created_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
       `, [
         empresaId,
         'AuditorAutomatico',
@@ -425,7 +425,7 @@ class AuditorAutomatico extends BaseAgent {
       SELECT id, fecha, descripcion, monto
       FROM transacciones 
       WHERE empresa_id = ? 
-        AND CAST(strftime('%w', fecha) AS INTEGER) IN (0, 6)
+        AND EXTRACT(DOW FROM fecha) IN (0, 6)
       ORDER BY fecha DESC
       LIMIT 5
     `, [empresaId]);
@@ -491,7 +491,7 @@ class AuditorAutomatico extends BaseAgent {
       WHERE t.empresa_id = ?
         AND t.tipo = 'egreso'
         AND t.monto > 50000
-        AND t.fecha >= date('now', '-30 days')
+        AND t.fecha >= CURRENT_DATE - INTERVAL '30 days'
       ORDER BY t.monto DESC
       LIMIT 3
     `, [empresaId]);

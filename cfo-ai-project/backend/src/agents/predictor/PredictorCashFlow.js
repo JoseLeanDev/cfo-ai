@@ -62,13 +62,13 @@ class PredictorCashFlow extends BaseAgent {
       SELECT AVG(monto) as promedio_mensual
       FROM (
         SELECT 
-          strftime('%Y-%m', fecha) as mes,
+          TO_CHAR(fecha, 'YYYY-MM') as mes,
           SUM(monto) as monto
         FROM transacciones 
         WHERE empresa_id = ? 
           AND tipo = 'salida'
-          AND fecha >= date('now', '-3 months')
-        GROUP BY strftime('%Y-%m', fecha)
+          AND fecha >= CURRENT_DATE - INTERVAL '3 months'
+        GROUP BY TO_CHAR(fecha, 'YYYY-MM')
       )
     `, [empresaId]);
 
@@ -78,7 +78,7 @@ class PredictorCashFlow extends BaseAgent {
     // CxC esperados
     const cxc = await db.getAsync(`
       SELECT SUM(monto) as total,
-             SUM(CASE WHEN fecha_vencimiento <= date('now', '+30 days') THEN monto ELSE 0 END) as proximo_mes
+             SUM(CASE WHEN fecha_vencimiento <= CURRENT_DATE + INTERVAL '30 days' THEN monto ELSE 0 END) as proximo_mes
       FROM cuentas_cobrar 
       WHERE empresa_id = ? AND estado = 'pendiente'
     `, [empresaId]);
@@ -126,13 +126,13 @@ class PredictorCashFlow extends BaseAgent {
     // Obtener datos de los últimos 6 meses
     const historial = await db.allAsync(`
       SELECT 
-        strftime('%Y-%m', fecha) as mes,
+        TO_CHAR(fecha, 'YYYY-MM') as mes,
         SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as ingresos,
         SUM(CASE WHEN tipo = 'salida' THEN monto ELSE 0 END) as egresos
       FROM transacciones 
       WHERE empresa_id = ? 
-        AND fecha >= date('now', '-6 months')
-      GROUP BY strftime('%Y-%m', fecha)
+        AND fecha >= CURRENT_DATE - INTERVAL '6 months'
+      GROUP BY TO_CHAR(fecha, 'YYYY-MM')
       ORDER BY mes DESC
       LIMIT 6
     `, [empresaId]);
@@ -242,7 +242,7 @@ class PredictorCashFlow extends BaseAgent {
       const gastosPorCategoriaMes = await db.allAsync(`
         SELECT 
           categoria,
-          strftime('%Y-%m', fecha) as mes,
+          TO_CHAR(fecha, 'YYYY-MM') as mes,
           SUM(monto) as total,
           COUNT(*) as cantidad_transacciones,
           AVG(monto) as promedio_transaccion
@@ -250,7 +250,7 @@ class PredictorCashFlow extends BaseAgent {
         WHERE empresa_id = ? 
           AND tipo = 'salida'
           AND fecha >= ?
-        GROUP BY categoria, strftime('%Y-%m', fecha)
+        GROUP BY categoria, TO_CHAR(fecha, 'YYYY-MM')
         ORDER BY categoria, mes DESC
       `, [empresaId, seisMesesAtras]);
 
@@ -329,7 +329,7 @@ class PredictorCashFlow extends BaseAgent {
       // 2. DETECTAR CAMBIOS BRUSCOS EN PATRONES DE INGRESO
       const ingresosMensuales = await db.allAsync(`
         SELECT 
-          strftime('%Y-%m', fecha) as mes,
+          TO_CHAR(fecha, 'YYYY-MM') as mes,
           SUM(monto) as total,
           COUNT(DISTINCT cliente_id) as clientes_activos,
           COUNT(*) as transacciones
@@ -337,7 +337,7 @@ class PredictorCashFlow extends BaseAgent {
         WHERE empresa_id = ? 
           AND tipo = 'entrada'
           AND fecha >= ?
-        GROUP BY strftime('%Y-%m', fecha)
+        GROUP BY TO_CHAR(fecha, 'YYYY-MM')
         ORDER BY mes ASC
       `, [empresaId, seisMesesAtras]);
 
@@ -401,7 +401,7 @@ class PredictorCashFlow extends BaseAgent {
       // 3. DETECTAR PATRONES INUSUALES EN TRANSACCIONES
       const transaccionesPorDiaSemana = await db.allAsync(`
         SELECT 
-          CASE strftime('%w', fecha)
+          CASE EXTRACT(DOW FROM fecha)
             WHEN '0' THEN 'Domingo'
             WHEN '1' THEN 'Lunes'
             WHEN '2' THEN 'Martes'
@@ -415,8 +415,8 @@ class PredictorCashFlow extends BaseAgent {
           SUM(monto) as total
         FROM transacciones 
         WHERE empresa_id = ? 
-          AND fecha >= date('now', '-30 days')
-        GROUP BY strftime('%w', fecha), tipo
+          AND fecha >= CURRENT_DATE - INTERVAL '30 days'
+        GROUP BY EXTRACT(DOW FROM fecha), tipo
       `, [empresaId]);
 
       // Detectar transacciones en días atípicos (fines de semana)
@@ -452,10 +452,10 @@ class PredictorCashFlow extends BaseAgent {
       const gastosPromedio = await db.getAsync(`
         SELECT AVG(monto_mensual) as promedio
         FROM (
-          SELECT strftime('%Y-%m', fecha) as mes, SUM(monto) as monto_mensual
+          SELECT TO_CHAR(fecha, 'YYYY-MM') as mes, SUM(monto) as monto_mensual
           FROM transacciones 
           WHERE empresa_id = ? AND tipo = 'salida' AND fecha >= ?
-          GROUP BY strftime('%Y-%m', fecha)
+          GROUP BY TO_CHAR(fecha, 'YYYY-MM')
         )
       `, [empresaId, tresMesesAtras]);
 
@@ -465,11 +465,11 @@ class PredictorCashFlow extends BaseAgent {
       // Comparar con runway histórico
       const runwayHistorico = await db.allAsync(`
         SELECT 
-          strftime('%Y-%m', fecha) as mes,
+          TO_CHAR(fecha, 'YYYY-MM') as mes,
           SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE -monto END) as flujo_neto
         FROM transacciones 
         WHERE empresa_id = ? AND fecha >= ?
-        GROUP BY strftime('%Y-%m', fecha)
+        GROUP BY TO_CHAR(fecha, 'YYYY-MM')
         ORDER BY mes ASC
       `, [empresaId, seisMesesAtras]);
 

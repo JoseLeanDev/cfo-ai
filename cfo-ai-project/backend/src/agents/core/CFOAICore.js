@@ -142,7 +142,7 @@ class CFOAICore extends BaseAgent {
 
       await db.runAsync(`
         INSERT INTO briefings_diarios (fecha, resumen, insights_json, alertas_count, created_at)
-        VALUES (?, ?, ?, ?, datetime('now'))
+        VALUES (?, ?, ?, ?, NOW())
       `, [new Date().toISOString().split('T')[0], JSON.stringify(briefing.detalles), JSON.stringify(briefing.insights), insights.length]);
 
       await this.logActividad('briefing_diario',
@@ -180,15 +180,11 @@ class CFOAICore extends BaseAgent {
     
     try {
       // Logs últimas 24h
-      const isPostgres = !!db.pool;
-      const dateFilter1 = isPostgres ? "created_at >= NOW() - INTERVAL '1 day'" : "created_at >= datetime('now', '-1 days')";
-      const dateFilter7 = isPostgres ? "created_at >= NOW() - INTERVAL '7 days'" : "created_at >= datetime('now', '-7 days')";
-      
       const logs24h = await db.allAsync(`
         SELECT agente_tipo, COUNT(*) as count, 
           SUM(CASE WHEN resultado_status = 'error' THEN 1 ELSE 0 END) as errores
         FROM agentes_logs
-        WHERE ${dateFilter1}
+        WHERE created_at >= NOW() - INTERVAL '1 day'
         GROUP BY agente_tipo
       `);
 
@@ -196,7 +192,7 @@ class CFOAICore extends BaseAgent {
       const alertas = await db.allAsync(`
         SELECT nivel, COUNT(*) as count
         FROM alertas_financieras
-        WHERE ${dateFilter7}
+        WHERE created_at >= NOW() - INTERVAL '7 days'
         GROUP BY nivel
       `);
 
@@ -292,7 +288,7 @@ class CFOAICore extends BaseAgent {
         INSERT INTO agentes_logs 
         (empresa_id, agente_nombre, agente_tipo, agente_version, categoria, descripcion, 
          detalles_json, impacto_valor, impacto_moneda, resultado_status, duracion_ms, created_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())
       `, [
         1, this.name, this.role, this.version, categoria, descripcion,
         JSON.stringify(detalles), impactoValor, 'GTQ', status, duracionMs

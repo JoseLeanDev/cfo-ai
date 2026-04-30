@@ -14,16 +14,11 @@ const ultimaEjecucionMemoria = {};
  */
 async function obtenerUltimaEjecucion(agente, tarea) {
   try {
-    const isPostgres = !!db.pool;
-    const dateFilter = isPostgres
-      ? "created_at >= NOW() - INTERVAL '7 days'"
-      : "created_at >= datetime('now', '-7 days')";
-    
     const row = await db.getAsync(
       `SELECT MAX(created_at) as last_run FROM agentes_logs 
        WHERE agente_tipo = ? AND categoria = ? 
        AND resultado_status = 'exitoso' 
-       AND ${dateFilter}`,
+       AND created_at >= NOW() - INTERVAL '7 days'`,
       [agente, tarea]
     );
     return row?.last_run ? new Date(row.last_run).getTime() : 0;

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useDashboard, useInsights } from '../hooks/useCfoData'
+import { useDashboard, useInsights, useWorkingCapital } from '../hooks/useCfoData'
 import RunwayCalculator from '../components/dashboard/RunwayCalculator'
 import CustomerConcentrationRisk from '../components/dashboard/CustomerConcentrationRisk'
 import { 
@@ -16,7 +16,8 @@ import {
   ArrowTrendingUpIcon,
   ArrowPathIcon,
   CpuChipIcon,
-  ArrowTrendingDownIcon
+  ArrowTrendingDownIcon,
+  ClockIcon
 } from '@heroicons/react/24/outline'
 import { demoClientesConcentracion } from '../data/demoData'
 
@@ -40,6 +41,7 @@ const Variacion = ({ value }) => {
 export default function Dashboard() {
   const { data: dashboardData, isLoading } = useDashboard()
   const { data: insightsData, isLoading: isLoadingInsights } = useInsights('dashboard')
+  const { data: wcData, isLoading: isLoadingWC } = useWorkingCapital()
   const [animatedValues, setAnimatedValues] = useState({})
 
   // La estructura del backend es: data.tesoreria, data.cxc, data.cxp, data.operacion, data.alertas, data.resumen
@@ -76,8 +78,12 @@ export default function Dashboard() {
 
   // Calculated data
   const workingCapital = (cxc.total || 0) - (cxp.total || 0)
-  const runway = operacion.runway_meses || Math.round((tesoreria.total_gtq || 0) / (operacion.avg_gastos_mes || 1)) || 0
   const liquidezRatio = ((tesoreria.total_gtq || 0) + (cxc.total || 0)) / (cxp.total || 1)
+  
+  // CCC data from working capital API
+  const ccc = wcData?.data?.metricas_principales?.c2c || {}
+  const cccValor = ccc.valor || 0
+  const cccBenchmark = ccc.benchmark || 33
 
   // Insight styles
   const getInsightStyles = (tipo) => {
@@ -140,12 +146,12 @@ export default function Dashboard() {
 
         <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
-            <span className="kpi-label">Runway</span>
-            <CalendarIcon className="w-4 h-4 text-[var(--text-muted)]" />
+            <span className="kpi-label">Cash Conversion Cycle</span>
+            <ClockIcon className="w-4 h-4 text-[var(--text-muted)]" />
           </div>
-          <div className="kpi-value">{isLoading ? '---' : `${runway} meses`}</div>
-          <span className={`text-xs ${runway < 3 ? 'text-[var(--danger)]' : runway < 6 ? 'text-[var(--warning)]' : 'text-[var(--success)]'}`}>
-            {runway < 3 ? 'Crítico' : runway < 6 ? 'Atención' : 'Saludable'}
+          <div className="kpi-value">{isLoading || isLoadingWC ? '---' : `${cccValor} días`}</div>
+          <span className={`text-xs ${cccValor > cccBenchmark * 1.5 ? 'text-[var(--danger)]' : cccValor > cccBenchmark ? 'text-[var(--warning)]' : 'text-[var(--success)]'}`}>
+            {cccValor > cccBenchmark * 1.5 ? 'Crítico' : cccValor > cccBenchmark ? 'Atención' : 'Óptimo'} (vs {cccBenchmark}d)
           </span>
         </div>
 

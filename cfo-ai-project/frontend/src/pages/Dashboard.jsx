@@ -75,7 +75,7 @@ export default function Dashboard() {
 
   // Calculated data
   const workingCapital = (cxc.total || 0) - (cxp.total || 0)
-  const runway = Math.floor((tesoreria.total_gtq || 0) / 450000) || operacion.runway_meses || 0
+  const runway = operacion.runway_meses || Math.round((tesoreria.total_gtq || 0) / (operacion.avg_gastos_mes || 1)) || 0
   const liquidezRatio = ((tesoreria.total_gtq || 0) + (cxc.total || 0)) / (cxp.total || 1)
 
   // Insight styles

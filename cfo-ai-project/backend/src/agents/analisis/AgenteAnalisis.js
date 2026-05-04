@@ -1,3 +1,4 @@
+const config = require('../../config/financiera');
 /**
  * Agente Análisis 📊
  * Responsabilidades:
@@ -25,7 +26,7 @@ class AgenteAnalisis extends BaseAgent {
   }
 
   async process(input, context) {
-    const { tarea, empresaId = 1 } = input;
+    const { tarea, empresaId = config.default_empresa_id } = input;
     
     switch(tarea) {
       case 'calcularKPIsDiarios':

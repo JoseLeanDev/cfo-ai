@@ -316,7 +316,7 @@ class CFOScheduler {
       }
     }, {
       scheduled: false, // No iniciar automáticamente
-      timezone: 'America/Guatemala' // Zona horaria de Guatemala
+      timezone: process.env.TZ || 'America/Guatemala'
     });
 
     this.jobs.push({

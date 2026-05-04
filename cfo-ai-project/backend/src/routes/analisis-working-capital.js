@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const config = require('../config/financiera');
 
 // GET /api/analisis/working-capital
 // Calcula métricas de capital de trabajo: DSO, DPO, DIO, C2C
@@ -165,7 +166,7 @@ router.get('/working-capital', async (req, res) => {
     // Recomendación 2: Optimizar DPO
     if (dpo.dias_real < dpo.benchmark_sector) {
       const diasExtension = Math.min(dpo.benchmark_sector - dpo.dias_real, 15);
-      const efectivoRetenido = Math.round((dpo.dias_plazo * 100000 * diasExtension) / 30);
+      const efectivoRetenido = Math.round((dpo.dias_plazo * config.workingCapital.efectivo_retenido_factor * diasExtension) / 30);
       
       recomendaciones.push({
         tipo: 'dpo_optimizacion',
@@ -187,7 +188,7 @@ router.get('/working-capital', async (req, res) => {
       const diasExceso = c2c - c2cBenchmark;
       const impactoEfectivo = dso.monto_total > 0 
         ? Math.round((dso.monto_total * diasExceso) / 365)
-        : 50000; // Valor por defecto si no hay datos
+        : config.workingCapital.efectivo_retenido_factor; // Valor por defecto si no hay datos
       
       recomendaciones.push({
         tipo: 'c2c_optimizacion',
@@ -214,7 +215,7 @@ router.get('/working-capital', async (req, res) => {
       });
     }
     
-    if (dpo.monto_vencido > 100000) {
+    if (dpo.monto_vencido > config.cxp.monto_proximo_critico) {
       alertas.push({
         tipo: 'cxp_vencidas',
         severidad: 'alta',

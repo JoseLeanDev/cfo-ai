@@ -4,6 +4,7 @@
  */
 
 const db = require('../../database/connection');
+const config = require('../config/financiera');
 
 /**
  * Log an agent activity to the database
@@ -31,10 +32,10 @@ async function logAgentActivity(params) {
     entidad_tipo = null,
     entidad_id = null,
     impacto_valor = null,
-    impacto_moneda = 'GTQ',
+    impacto_moneda = config.moneda_default,
     resultado_status = 'exitoso',
     duracion_ms = null,
-    empresa_id = 1
+    empresa_id = config.default_empresa_id
   } = params;
 
   try {

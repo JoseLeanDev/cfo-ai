@@ -18,6 +18,7 @@ import {
   CpuChipIcon,
   ArrowTrendingDownIcon
 } from '@heroicons/react/24/outline'
+import { demoClientesConcentracion } from '../data/demoData'
 
 // Format currency GTQ
 const formatGTQ = (value) => {
@@ -170,23 +171,12 @@ export default function Dashboard() {
 
       {/* Customer Concentration Risk - Insight #1 */}
       <CustomerConcentrationRisk 
-        clientes={[
-          { id: 1, nombre: 'Constructora Metropolitana', ingresos: 8500000 },
-          { id: 2, nombre: 'Grupo Industrial Centroamericano', ingresos: 6200000 },
-          { id: 3, nombre: 'Inversiones del Norte', ingresos: 4100000 },
-          { id: 4, nombre: 'Distribuidora del Sur', ingresos: 2800000 },
-          { id: 5, nombre: 'Comercializadora Maya', ingresos: 1900000 },
-          { id: 6, nombre: 'Importadora del Pacífico', ingresos: 1500000 },
-          { id: 7, nombre: 'Suministros Industriales', ingresos: 1200000 },
-          { id: 8, nombre: 'Ferretería La Unión', ingresos: 800000 },
-          { id: 9, nombre: 'Materiales de Construcción XYZ', ingresos: 650000 },
-          { id: 10, nombre: 'Otros clientes', ingresos: 1200000 }
-        ]}
+        clientes={demoClientesConcentracion}
         umbralAlerta={20}
         umbralCritico={30}
       />
 
-      {/* Main Grid */}
+import { demoClientesConcentracion } from '../data/demoData'
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {/* Insights */}

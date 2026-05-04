@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../../database/connection');
+const config = require('../config/financiera');
 
 const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
 
@@ -34,7 +35,7 @@ router.get('/posicion', async (req, res) => {
     const totalGTQ = parseFloat(totales.total_gtq) || 0;
     const totalUSD = parseFloat(totales.total_usd) || 0;
     const totalConsolidado = totalGTQ + totalUSD * tipoCambio;
-    const diasOperacion = Math.floor(totalGTQ / 50000);
+    const diasOperacion = Math.floor(totalGTQ / config.liquidez.dias_operacion_default);
 
     res.json({
       status: 'success',
@@ -196,13 +197,13 @@ router.get('/cxp', async (req, res) => {
 // GET /api/tesoreria/proyeccion
 router.get('/proyeccion', async (req, res) => {
   try {
-    const semanas = parseInt(req.query.semanas) || 13;
+    const semanas = parseInt(req.query.semanas) || config.proyecciones.semanas_proyeccion;
     const proyeccion = [];
     
     // Datos históricos para proyección
-    const promedioEntrada = 420000;
-    const promedioSalida = 380000;
-    let saldoAcumulado = 1900000;
+    const promedioEntrada = config.proyecciones.promedio_entrada_default;
+    const promedioSalida = config.proyecciones.promedio_salida_default;
+    let saldoAcumulado = config.proyecciones.saldo_inicial_default;
 
     for (let i = 1; i <= semanas; i++) {
       const fecha = new Date();
@@ -222,7 +223,7 @@ router.get('/proyeccion', async (req, res) => {
         neto,
         saldo_acumulado: saldoAcumulado,
         certeza: i <= 4 ? 'alta' : i <= 8 ? 'media' : 'baja',
-        alerta: saldoAcumulado < 1000000 ? 'Saldo crítico proyectado' : null
+        alerta: saldoAcumulado < config.proyecciones.umbral_saldo_minimo ? 'Saldo crítico proyectado' : null
       });
     }
 
@@ -239,7 +240,7 @@ router.get('/proyeccion', async (req, res) => {
           saldo_minimo_proyectado: saldoMinimo,
           saldo_maximo_proyectado: saldoMaximo,
           semana_critica: semanaCritica,
-          riesgo_quiebra_tecnica: saldoMinimo < 500000
+          riesgo_quiebra_tecnica: saldoMinimo < config.proyecciones.umbral_riesgo_quiebra
         }
       },
       ui_components: {

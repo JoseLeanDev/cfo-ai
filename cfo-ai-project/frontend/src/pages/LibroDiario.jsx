@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from 'react-query'
 import { Link } from 'react-router-dom'
 import { endpoints } from '../services/cfoApi'
+import { demoLibroDiario } from '../data/demoData'
 import { 
   BookOpenIcon, 
   ArrowLeftIcon,
@@ -24,33 +25,7 @@ export default function LibroDiario() {
   )
 
 // Datos de ejemplo para demostración
-const ASIENTOS_EJEMPLO = [
-  { asiento_id: 1, fecha: '2026-03-01', cuenta_codigo: '1101', cuenta_nombre: 'Caja General', descripcion: 'Apertura de caja - fondo inicial', debe: 50000, haber: 0, documento: 'AP-001' },
-  { asiento_id: 1, fecha: '2026-03-01', cuenta_codigo: '3101', cuenta_nombre: 'Capital Social', descripcion: 'Apertura de caja - fondo inicial', debe: 0, haber: 50000, documento: 'AP-001' },
-  { asiento_id: 2, fecha: '2026-03-05', cuenta_codigo: '1103', cuenta_nombre: 'Banco Industrial', descripcion: 'Depósito de ventas', debe: 125000, haber: 0, documento: 'DEP-102' },
-  { asiento_id: 2, fecha: '2026-03-05', cuenta_codigo: '4101', cuenta_nombre: 'Ventas', descripcion: 'Depósito de ventas', debe: 0, haber: 111607, documento: 'DEP-102' },
-  { asiento_id: 2, fecha: '2026-03-05', cuenta_codigo: '2108', cuenta_nombre: 'IVA por Pagar', descripcion: 'Depósito de ventas', debe: 0, haber: 13393, documento: 'DEP-102' },
-  { asiento_id: 3, fecha: '2026-03-08', cuenta_codigo: '5101', cuenta_nombre: 'Costo de Ventas', descripcion: 'Compra de mercadería', debe: 45000, haber: 0, documento: 'FC-4521' },
-  { asiento_id: 3, fecha: '2026-03-08', cuenta_codigo: '1107', cuenta_nombre: 'IVA Crédito Fiscal', descripcion: 'Compra de mercadería', debe: 5400, haber: 0, documento: 'FC-4521' },
-  { asiento_id: 3, fecha: '2026-03-08', cuenta_codigo: '2101', cuenta_nombre: 'Proveedores', descripcion: 'Compra de mercadería', debe: 0, haber: 50400, documento: 'FC-4521' },
-  { asiento_id: 4, fecha: '2026-03-12', cuenta_codigo: '5102', cuenta_nombre: 'Gastos de Sueldos', descripcion: 'Nómina quincenal', debe: 35000, haber: 0, documento: 'NOM-0312' },
-  { asiento_id: 4, fecha: '2026-03-12', cuenta_codigo: '2102', cuenta_nombre: 'Sueldos por Pagar', descripcion: 'Nómina quincenal', debe: 0, haber: 35000, documento: 'NOM-0312' },
-  { asiento_id: 5, fecha: '2026-03-15', cuenta_codigo: '4101', cuenta_nombre: 'Ventas', descripcion: 'Venta a crédito - Cliente XYZ', debe: 0, haber: 89286, documento: 'F001-0023' },
-  { asiento_id: 5, fecha: '2026-03-15', cuenta_codigo: '2108', cuenta_nombre: 'IVA por Pagar', descripcion: 'Venta a crédito - Cliente XYZ', debe: 0, haber: 10714, documento: 'F001-0023' },
-  { asiento_id: 5, fecha: '2026-03-15', cuenta_codigo: '1104', cuenta_nombre: 'Cuentas por Cobrar', descripcion: 'Venta a crédito - Cliente XYZ', debe: 100000, haber: 0, documento: 'F001-0023' },
-  { asiento_id: 6, fecha: '2026-03-18', cuenta_codigo: '2101', cuenta_nombre: 'Proveedores', descripcion: 'Pago a Proveedor Alfa', debe: 30000, haber: 0, documento: 'CH-045' },
-  { asiento_id: 6, fecha: '2026-03-18', cuenta_codigo: '1103', cuenta_nombre: 'Banco Industrial', descripcion: 'Pago a Proveedor Alfa', debe: 0, haber: 30000, documento: 'CH-045' },
-  { asiento_id: 7, fecha: '2026-03-20', cuenta_codigo: '5103', cuenta_nombre: 'Alquiler', descripcion: 'Pago alquiler local comercial', debe: 15000, haber: 0, documento: 'REC-0320' },
-  { asiento_id: 7, fecha: '2026-03-20', cuenta_codigo: '1103', cuenta_nombre: 'Banco Industrial', descripcion: 'Pago alquiler local comercial', debe: 0, haber: 15000, documento: 'REC-0320' },
-  { asiento_id: 8, fecha: '2026-03-22', cuenta_codigo: '1104', cuenta_nombre: 'Cuentas por Cobrar', descripcion: 'Cobro a Cliente XYZ', debe: 0, haber: 50000, documento: 'DEP-215' },
-  { asiento_id: 8, fecha: '2026-03-22', cuenta_codigo: '1103', cuenta_nombre: 'Banco Industrial', descripcion: 'Cobro a Cliente XYZ', debe: 50000, haber: 0, documento: 'DEP-215' },
-  { asiento_id: 9, fecha: '2026-03-25', cuenta_codigo: '5201', cuenta_nombre: 'Servicios Públicos', descripcion: 'Electricidad y agua marzo', debe: 3200, haber: 0, documento: 'EEGSA-445' },
-  { asiento_id: 9, fecha: '2026-03-25', cuenta_codigo: '1107', cuenta_nombre: 'IVA Crédito Fiscal', descripcion: 'Electricidad y agua marzo', debe: 384, haber: 0, documento: 'EEGSA-445' },
-  { asiento_id: 9, fecha: '2026-03-25', cuenta_codigo: '1103', cuenta_nombre: 'Banco Industrial', descripcion: 'Electricidad y agua marzo', debe: 0, haber: 3584, documento: 'EEGSA-445' },
-  { asiento_id: 10, fecha: '2026-03-28', cuenta_codigo: '5202', cuenta_nombre: 'Publicidad', descripcion: 'Campaña redes sociales', debe: 8000, haber: 0, documento: 'FC-8891' },
-  { asiento_id: 10, fecha: '2026-03-28', cuenta_codigo: '1107', cuenta_nombre: 'IVA Crédito Fiscal', descripcion: 'Campaña redes sociales', debe: 960, haber: 0, documento: 'FC-8891' },
-  { asiento_id: 10, fecha: '2026-03-28', cuenta_codigo: '2101', cuenta_nombre: 'Proveedores', descripcion: 'Campaña redes sociales', debe: 0, haber: 8960, documento: 'FC-8891' },
-]
+const ASIENTOS_EJEMPLO = demoLibroDiario
 
 function getAsientosEjemplo(mes) {
   // Simplemente devolvemos los asientos de ejemplo para cualquier mes

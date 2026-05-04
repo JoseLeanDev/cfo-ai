@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../../database/connection');
+const config = require('../config/financiera');
 
 // ============================================
 // ENDPOINTS DE CIERRE MENSUAL
@@ -9,7 +10,7 @@ const db = require('../../database/connection');
 // GET /api/cierre/lista - Listar cierres por año
 router.get('/lista', async (req, res) => {
   try {
-    const { anio = new Date().getFullYear(), empresa_id = 1 } = req.query;
+    const { anio = new Date().getFullYear(), empresa_id = config.default_empresa_id } = req.query;
     
     const cierres = await db.allAsync(`
       SELECT 
@@ -67,7 +68,7 @@ router.get('/lista', async (req, res) => {
 // POST /api/cierre/iniciar - Iniciar cierre de un mes
 router.post('/iniciar', async (req, res) => {
   try {
-    const { anio, mes, usuario_id = 1, empresa_id = 1 } = req.body;
+    const { anio, mes, usuario_id = config.default_usuario_id, empresa_id = config.default_empresa_id } = req.body;
     
     if (!anio || !mes) {
       return res.status(400).json({ 
@@ -164,7 +165,7 @@ router.post('/iniciar', async (req, res) => {
 router.get('/:anio/:mes', async (req, res) => {
   try {
     const { anio, mes } = req.params;
-    const { empresa_id = 1 } = req.query;
+    const { empresa_id = config.default_empresa_id } = req.query;
 
     const cierre = await db.getAsync(`
       SELECT 
@@ -249,7 +250,7 @@ router.get('/:anio/:mes', async (req, res) => {
 router.post('/:anio/:mes/checklist', async (req, res) => {
   try {
     const { anio, mes } = req.params;
-    const { items, usuario_id = 1, empresa_id = 1 } = req.body;
+    const { items, usuario_id = config.default_usuario_id, empresa_id = config.default_empresa_id } = req.body;
 
     if (!items || !Array.isArray(items)) {
       return res.status(400).json({
@@ -351,7 +352,7 @@ router.post('/:anio/:mes/checklist', async (req, res) => {
 router.post('/:anio/:mes/cerrar', async (req, res) => {
   try {
     const { anio, mes } = req.params;
-    const { usuario_id = 1, observaciones = '', empresa_id = 1 } = req.body;
+    const { usuario_id = config.default_usuario_id, observaciones = '', empresa_id = config.default_empresa_id } = req.body;
 
     const cierre = await db.getAsync(`
       SELECT id, estado, progreso FROM cierres_mensuales 
@@ -441,7 +442,7 @@ router.post('/:anio/:mes/cerrar', async (req, res) => {
 // GET /api/conciliacion/pendientes - Conciliaciones pendientes
 router.get('/conciliacion/pendientes', async (req, res) => {
   try {
-    const { empresa_id = 1, dias_atraso = 7 } = req.query;
+    const { empresa_id = config.default_empresa_id, dias_atraso = 7 } = req.query;
 
     const pendientes = await db.allAsync(`
       SELECT 
@@ -507,8 +508,8 @@ router.post('/conciliacion/iniciar', async (req, res) => {
       fecha_inicio, 
       fecha_fin, 
       saldo_bancario, 
-      usuario_id = 1,
-      empresa_id = 1 
+      usuario_id = config.default_usuario_id,
+      empresa_id = config.default_empresa_id 
     } = req.body;
 
     if (!cuenta_id || !fecha_inicio || !fecha_fin) {
@@ -615,7 +616,7 @@ router.post('/conciliacion/iniciar', async (req, res) => {
 router.post('/conciliacion/:id/completar', async (req, res) => {
   try {
     const { id } = req.params;
-    const { usuario_id = 1, observaciones = '' } = req.body;
+    const { usuario_id = config.default_usuario_id, observaciones = '' } = req.body;
 
     const conciliacion = await db.getAsync(`
       SELECT 
@@ -718,7 +719,7 @@ router.post('/conciliacion/:id/completar', async (req, res) => {
 router.get('/api/alertas', async (req, res) => {
   try {
     const { 
-      empresa_id = 1, 
+      empresa_id = config.default_empresa_id, 
       nivel, 
       resuelta = '0',
       cierre_id,

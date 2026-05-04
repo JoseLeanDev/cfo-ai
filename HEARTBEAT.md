@@ -136,7 +136,7 @@ No solo mostrar datos. **Revelar oportunidades, riesgos y acciones concretas.**
 
 **Usuario Telegram:** josearias96 ✅ (Pairing aprobado - esperando primer mensaje)
 
-**Bot configurado:** `8645687152:AAGJ3hLfYVsvtgC7DqUl6tVJfL8eN63e8M4`
+**Bot configurado:** `[TOKEN EN .env]`
 **Tu Telegram ID:** `7148683500` ✅
 **Estado:** Configurado y aprobado. Para activar, envía mensaje a tu bot en Telegram.
 
@@ -218,6 +218,7 @@ negociar línea de crédito por Q300,000
 | ✅ | **Eliminar agentes viejos de TODO el proyecto** | DONE | 6988b0c |
 | 🟡 | Chatbot/AI Assistant (burbuja) - Testing | IN PROGRESS | - |
 | 🟡 | Chatbot/AI Assistant (burbuja) - Testing | IN PROGRESS | - |
+| ✅ | Fix Runway card superior (419 meses) | DONE | 7ce6a36 |
 | 🟢 | Análisis de Ventas (Productos/Tiendas/Clientes) | DONE | 0e47c7e |
 | 🔵 | Working Capital Optimization | TODO | - |
 | 🟣 | Profitability Matrix | TODO | - |

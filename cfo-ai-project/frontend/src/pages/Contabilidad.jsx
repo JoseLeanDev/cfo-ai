@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import PageInsights from '../components/agents/PageInsights'
+import { demoBancosConciliacion } from '../data/demoData'
 import { 
   BookOpenIcon, 
   ArrowPathIcon,
@@ -114,11 +115,7 @@ export default function Contabilidad() {
           </div>
           
           <div className="space-y-3 p-5 pt-0">
-            {[
-              { banco: 'Banco Industrial', cuenta: 'Cuenta Corriente', diferencia: 0, dias: 1 },
-              { banco: 'Banco G&T', cuenta: 'Cuenta de Ahorros', diferencia: 0, dias: 2 },
-              { banco: 'BAC', cuenta: 'Cuenta Corriente USD', diferencia: 1250, dias: 5 },
-            ].map((cuenta, idx) => (
+            {demoBancosConciliacion.map((cuenta, idx) => (
               <Link 
                 key={idx}
                 to={`/contabilidad/conciliacion/${idx + 1}/2026/3`}

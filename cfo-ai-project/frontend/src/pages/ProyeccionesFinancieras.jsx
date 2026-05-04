@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useTesoreriaProyeccion } from '../hooks/useCfoData'
+import { UMBRAL_SALDO_CRITICO } from '../config/constants'
 import { 
   ArrowLeftIcon,
   ChartBarIcon,
@@ -90,7 +91,7 @@ export default function ProyeccionesFinancieras() {
 
         <div className="kpi-card card-hover">
           <span className="kpi-label">Saldo Mínimo</span>
-          <p className={`kpi-value ${resumen.saldo_minimo_proyectado < 1000000 ? 'text-[var(--danger)]' : ''}`}>
+          <p className={`kpi-value ${resumen.saldo_minimo_proyectado < UMBRAL_SALDO_CRITICO ? 'text-[var(--danger)]' : ''}`}>
             Q{(resumen.saldo_minimo_proyectado || 0).toLocaleString()}
           </p>
           <p className="text-xs text-[var(--text-muted)] mt-1">Semana {resumen.semana_critica || '—'}</p>
@@ -131,7 +132,7 @@ export default function ProyeccionesFinancieras() {
               const min = Math.min(...datos.map(x => x.saldo_acumulado))
               const range = max - min || 1
               const height = ((d.saldo_acumulado - min) / range) * 80 + 10
-              const isCrit = d.saldo_acumulado < 1000000
+              const isCrit = d.saldo_acumulado < UMBRAL_SALDO_CRITICO
               
               return (
                 <div key={i} className="flex-1 flex flex-col items-center justify-end group relative h-full">
@@ -226,7 +227,7 @@ export default function ProyeccionesFinancieras() {
                 
                 <div className="text-right w-32">
                   <p className="text-xs text-[var(--text-muted)]">Saldo</p>
-                  <p className={`text-xl font-bold ${semana.saldo_acumulado < 1000000 ? 'text-[var(--danger)]' : ''}`}>
+                  <p className={`text-xl font-bold ${semana.saldo_acumulado < UMBRAL_SALDO_CRITICO ? 'text-[var(--danger)]' : ''}`}>
                     Q{semana.saldo_acumulado.toLocaleString()}
                   </p>
                 </div>

@@ -5,6 +5,7 @@
 
 const express = require('express');
 const router = express.Router();
+const config = require('../config/financiera');
 
 /**
  * POST /api/admin/fix-postgres-schema
@@ -183,7 +184,7 @@ router.post('/fix-postgres-schema', async (req, res) => {
 router.post('/seed-demo-data', async (req, res) => {
   try {
     const db = req.app.get('db');
-    const empresaId = req.body.empresa_id || 1;
+    const empresaId = req.body.empresa_id || config.default_empresa_id;
     
     const results = [];
 
@@ -192,8 +193,8 @@ router.post('/seed-demo-data', async (req, res) => {
       await db.runAsync(`
         INSERT INTO cuentas_bancarias (empresa_id, nombre, banco, numero_cuenta, tipo, moneda, saldo, saldo_actual, activa)
         VALUES 
-          ($1, 'Cuenta Principal GTQ', 'Banco Industrial', '1234567890', 'monetaria', 'GTQ', 250000, 250000, TRUE),
-          ($1, 'Cuenta USD', 'Banco G&T Continental', '0987654321', 'monetaria', 'USD', 15000, 15000, TRUE)
+          ($1, 'Cuenta Principal GTQ', 'Banco Industrial', 'DEMO-GTQ-001', 'monetaria', 'GTQ', 250000, 250000, TRUE),
+          ($1, 'Cuenta USD', 'Banco G&T Continental', 'DEMO-USD-001', 'monetaria', 'USD', 15000, 15000, TRUE)
         ON CONFLICT DO NOTHING
       `, [empresaId]);
       results.push({ tabla: 'cuentas_bancarias', accion: 'insert', status: 'ok' });

@@ -3,6 +3,7 @@ const router = express.Router();
 const { execSync } = require('child_process');
 const { ejecutarTareasPendientesWakeUp } = require('../services/wakeUpScheduler');
 const aiService = require('../services/aiService');
+const config = require('../config/financiera');
 
 // GET /api/agents/version - Versión del código desplegado
 router.get('/version', (req, res) => {
@@ -293,7 +294,7 @@ router.post('/logs', async (req, res) => {
   try {
     const db = req.app.get('db');
     const {
-      empresa_id = 1,
+      empresa_id = config.default_empresa_id,
       agente_nombre,
       agente_tipo,
       agente_version = '1.0',
@@ -688,7 +689,7 @@ router.post('/chat', async (req, res) => {
     try {
       const apiKey = process.env.OPENROUTER_API_KEY || process.env.KIMI_API_KEY;
       
-      if (apiKey && apiKey !== 'sk-or-v1-tu-api-key-aqui') {
+      if (apiKey && !apiKey.includes('tu-api-key') && !apiKey.includes('placeholder')) {
         console.log('[Chat] Usando LLM para responder:', message);
         
         const contexto = await obtenerContextoFinanciero(db, empresaId, isPostgres);

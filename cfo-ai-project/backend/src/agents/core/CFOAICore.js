@@ -1,3 +1,4 @@
+const config = require('../../config/financiera');
 /**
  * CFO AI Core 🤖
  * Orquestador central que coordina los 4 agentes especializados:
@@ -55,7 +56,7 @@ class CFOAICore extends BaseAgent {
   /**
    * Ejecutar una tarea específica de un agente
    */
-  async ejecutarTarea(agenteId, tareaId, empresaId = 1) {
+  async ejecutarTarea(agenteId, tareaId, empresaId = config.default_empresa_id) {
     if (!this.inicializado) {
       await this.iniciar();
     }
@@ -96,7 +97,7 @@ class CFOAICore extends BaseAgent {
   /**
    * Generar briefing diario ejecutivo
    */
-  async generarBriefingDiario(empresaId = 1) {
+  async generarBriefingDiario(empresaId = config.default_empresa_id) {
     const startTime = Date.now();
     
     console.log('[CFO AI Core] 🌅 Generando Briefing Diario...');
@@ -175,7 +176,7 @@ class CFOAICore extends BaseAgent {
   /**
    * Evaluar estado de todo el sistema
    */
-  async evaluarSistema(empresaId = 1) {
+  async evaluarSistema(empresaId = config.default_empresa_id) {
     const startTime = Date.now();
     
     try {
@@ -226,7 +227,7 @@ class CFOAICore extends BaseAgent {
    * Procesar consulta del usuario (ruteo inteligente)
    */
   async process(input, context) {
-    const { query, userId, empresaId = 1 } = input;
+    const { query, userId, empresaId = config.default_empresa_id } = input;
 
     if (!this.inicializado) {
       await this.iniciar();

@@ -2,7 +2,7 @@ services:
   - type: web
     name: cfo-ai-backend
     runtime: node
-    repo: https://github.com/tu-usuario/cfo-ai-backend
+    repo: https://github.com/josearias96/cfo-ai-backend
     buildCommand: npm install && npm run migrate && npm run seed
     startCommand: npm start
     envVars:
@@ -10,13 +10,29 @@ services:
         value: production
       - key: PORT
         value: 10000
+      - key: DATABASE_URL
+        sync: false
       - key: OPENROUTER_API_KEY
         sync: false
       - key: LLM_PROVIDER
         value: openrouter
       - key: APP_URL
-        value: https://cfo-ai-backend-4n29.onrender.com
-    disk:
-      name: sqlite-data
-      mountPath: /opt/render/project/src/database
-      sizeGB: 1
+        sync: false
+      - key: DEFAULT_EMPRESA_ID
+        value: 1
+      - key: DEFAULT_USUARIO_ID
+        value: 1
+      - key: MONEDA_DEFAULT
+        value: GTQ
+      - key: TZ
+        value: America/Guatemala
+      - key: UMBRAL_LIQUIDEZ_CRITICO
+        value: 100000
+      - key: UMBRAL_LIQUIDEZ_ADVERTENCIA
+        value: 500000
+      - key: PROYECCION_UMBRAL_MINIMO
+        value: 1000000
+      - key: PROYECCION_UMBRAL_QUIEBRA
+        value: 500000
+      - key: CXP_MONTO_CRITICO
+        value: 100000

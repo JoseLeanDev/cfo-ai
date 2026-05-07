@@ -148,6 +148,20 @@ app.listen(PORT, async () => {
   
   // Initialize CFO AI Core v2.0
   await initializeAgents();
+  
+  // Initialize CFO Scheduler - cron jobs activos en producción
+  try {
+    const CFOScheduler = require('./scheduler/CFOScheduler');
+    const scheduler = new CFOScheduler({
+      apiBaseUrl: `http://localhost:${PORT}/api`,
+      empresaId: process.env.DEFAULT_EMPRESA_ID || 1
+    });
+    await scheduler.init();
+    scheduler.start();
+    console.log(`\n⏰ CFO Scheduler iniciado: ${scheduler.tasks.length} tareas programadas activas`);
+  } catch (error) {
+    console.error('❌ Error iniciando CFO Scheduler:', error.message);
+  }
 });
 
 module.exports = app;

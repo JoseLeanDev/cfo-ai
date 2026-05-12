@@ -352,6 +352,25 @@ router.post('/logs', async (req, res) => {
 // ============================================
 
 /**
+ * GET /api/agents/llm-health
+ * Verifica conectividad con proveedores LLM
+ */
+router.get('/llm-health', async (req, res) => {
+  try {
+    const health = await aiService.healthcheck();
+    res.json({
+      success: true,
+      ...health
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
+/**
  * Obtiene contexto financiero COMPLETO de la empresa para el LLM
  * Incluye runway, CCC, KPIs, aging, proyecciones, obligaciones SAT, etc.
  * @param {Object} db - Database connection
@@ -537,13 +556,26 @@ router.post('/chat', async (req, res) => {
     // Obtener contexto financiero completo
     const contexto = await obtenerContextoFinancieroCompleto(db, empresaId, isPostgres);
     
-    // Verificar API key
-    const apiKey = process.env.OPENROUTER_API_KEY || process.env.KIMI_API_KEY;
+    // Verificar que hay al menos un proveedor LLM disponible
+    const health = await aiService.healthcheck();
+    const hasWorkingProvider = Object.values(health.providers).some(p => p.available);
     
-    if (!apiKey || apiKey.includes('tu-api-key') || apiKey.includes('placeholder')) {
-      return res.status(503).json({
-        success: false,
-        error: 'LLM no configurado. Verifica OPENROUTER_API_KEY en el servidor.'
+    if (!hasWorkingProvider) {
+      console.error('[Chat] No hay proveedores LLM disponibles:', health.providers);
+      
+      // Fallback: respuesta con datos locales
+      return res.json({
+        success: true,
+        response: {
+          content: `📊 **Datos financieros disponibles (modo offline):**\n\n• 💰 Efectivo GTQ: Q${(contexto.liquidez?.gtq || 0).toLocaleString()}\n• 👥 CxC pendiente: Q${(contexto.cxc?.total || 0).toLocaleString()} (${contexto.cxc?.facturas || 0} facturas)\n• 💳 CxP pendiente: Q${(contexto.cxp?.total || 0).toLocaleString()}\n• 🔄 CCC: ${contexto.ccc?.valor || 0} días\n• ⏱️ Runway: ${contexto.runway?.dias || 0} días\n• 📈 Ventas 30d: Q${(contexto.ventas_30d || 0).toLocaleString()}\n• 📉 Gastos 30d: Q${(contexto.gastos_30d || 0).toLocaleString()}\n\n⚠️ *El servicio de IA está temporalmente sin conexión. Los datos mostrados son reales de tu base de datos.*`,
+          agent: 'CFO AI Core',
+          type: 'offline',
+          meta: {
+            fecha_contexto: contexto.fecha_actual,
+            llm_status: health,
+            datos_disponibles: Object.keys(contexto).filter(k => k !== 'fecha_actual' && k !== 'empresa_id')
+          }
+        }
       });
     }
     
@@ -559,6 +591,7 @@ router.post('/chat', async (req, res) => {
           type: 'ai_response',
           meta: {
             fecha_contexto: contexto.fecha_actual,
+            provider_used: aiService.provider,
             datos_disponibles: Object.keys(contexto).filter(k => k !== 'fecha_actual' && k !== 'empresa_id')
           }
         }
@@ -570,7 +603,7 @@ router.post('/chat', async (req, res) => {
       return res.json({
         success: true,
         response: {
-          content: `Tengo los datos disponibles pero el asistente de IA está teniendo problemas técnicos momentáneamente.\n\n**Contexto actual:**\n• Efectivo GTQ: Q${contexto.liquidez.gtq.toLocaleString()}\n• CxC pendiente: Q${contexto.cxc.total.toLocaleString()} (${contexto.cxc.facturas} facturas)\n• CxP pendiente: Q${contexto.cxp.total.toLocaleString()}\n• CCC: ${contexto.ccc.valor} días\n• Runway: ${contexto.runway.dias} días\n\nPor favor intenta de nuevo en unos segundos.`,
+          content: `📊 **Datos financieros disponibles:**\n\n• 💰 Efectivo GTQ: Q${(contexto.liquidez?.gtq || 0).toLocaleString()}\n• 👥 CxC pendiente: Q${(contexto.cxc?.total || 0).toLocaleString()}\n• 💳 CxP pendiente: Q${(contexto.cxp?.total || 0).toLocaleString()}\n• 🔄 CCC: ${contexto.ccc?.valor || 0} días\n• ⏱️ Runway: ${contexto.runway?.dias || 0} días\n\n⚠️ *El asistente de IA está teniendo problemas técnicos. Los datos mostrados son reales de tu base de datos.*`,
           agent: 'CFO AI Core',
           type: 'error'
         }

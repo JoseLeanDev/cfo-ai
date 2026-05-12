@@ -10,7 +10,7 @@ const LLM_CONFIG = {
   // Usar OpenRouter como default (acceso a múltiples modelos)
   openrouter: {
     baseUrl: 'https://openrouter.ai/api/v1',
-    apiKey: process.env.OPENROUTER_API_KEY || process.env.KIMI_API_KEY,
+    apiKey: process.env.OPENROUTER_API_KEY,
     model: 'anthropic/claude-3.7-sonnet',
     fallbackModel: 'openai/gpt-4o'
   },
@@ -24,12 +24,123 @@ const LLM_CONFIG = {
 
 class AIService {
   constructor() {
-    // Usar Kimi como default si hay KIMI_API_KEY, sino openrouter
-    this.provider = process.env.LLM_PROVIDER || 
-      (process.env.KIMI_API_KEY ? 'kimi' : 'openrouter');
+    // Determinar proveedor activo basado en keys disponibles
+    this.availableProviders = [];
+    
+    if (process.env.OPENROUTER_API_KEY && !process.env.OPENROUTER_API_KEY.includes('placeholder')) {
+      this.availableProviders.push('openrouter');
+    }
+    if (process.env.KIMI_API_KEY && !process.env.KIMI_API_KEY.includes('placeholder')) {
+      this.availableProviders.push('kimi');
+    }
+    
+    // Usar el provider configurado o el primero disponible
+    this.provider = process.env.LLM_PROVIDER || this.availableProviders[0] || 'openrouter';
     this.config = LLM_CONFIG[this.provider];
     this.requestCount = 0;
     this.errorCount = 0;
+  }
+
+  /**
+   * Verifica conectividad con los proveedores LLM
+   * @returns {Promise<Object>} - Estado de cada proveedor
+   */
+  async healthcheck() {
+    const results = {};
+    
+    for (const providerName of ['openrouter', 'kimi']) {
+      const cfg = LLM_CONFIG[providerName];
+      if (!cfg.apiKey || cfg.apiKey.includes('placeholder')) {
+        results[providerName] = { available: false, reason: 'No API key configured' };
+        continue;
+      }
+      
+      try {
+        const response = await axios.post(
+          `${cfg.baseUrl}/chat/completions`,
+          {
+            model: cfg.model,
+            messages: [{ role: 'user', content: 'Hi' }],
+            max_tokens: 5
+          },
+          {
+            headers: {
+              'Authorization': `Bearer ${cfg.apiKey}`,
+              'Content-Type': 'application/json'
+            },
+            timeout: 15000
+          }
+        );
+        results[providerName] = { 
+          available: true, 
+          model: cfg.model,
+          status: response.status 
+        };
+      } catch (error) {
+        results[providerName] = { 
+          available: false, 
+          error: error.response?.data?.error?.message || error.message,
+          status: error.response?.status 
+        };
+      }
+    }
+    
+    return {
+      activeProvider: this.provider,
+      availableProviders: this.availableProviders,
+      providers: results,
+      timestamp: new Date().toISOString()
+    };
+  }
+
+  /**
+   * Intenta llamar al LLM con fallback automático entre proveedores
+   */
+  async llamarLLMConFallback(messages, options = {}) {
+    const errors = [];
+    
+    // Intentar proveedores en orden de preferencia
+    for (const providerName of this.availableProviders) {
+      try {
+        const cfg = LLM_CONFIG[providerName];
+        const payload = {
+          model: cfg.model,
+          messages: Array.isArray(messages) ? messages : [{ role: 'user', content: messages }],
+          temperature: 0.3,
+          max_tokens: 4000
+        };
+        
+        if (options.jsonMode) {
+          payload.response_format = { type: "json_object" };
+        }
+        
+        const response = await axios.post(
+          `${cfg.baseUrl}/chat/completions`,
+          payload,
+          {
+            headers: {
+              'Authorization': `Bearer ${cfg.apiKey}`,
+              'Content-Type': 'application/json',
+              ...(providerName === 'openrouter' ? {
+                'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
+                'X-Title': 'CFO AI Agents'
+              } : {})
+            },
+            timeout: 60000
+          }
+        );
+        
+        this.provider = providerName; // Actualizar provider activo
+        return response.data;
+      } catch (error) {
+        const errorMsg = error.response?.data?.error?.message || error.message;
+        errors.push(`${providerName}: ${errorMsg}`);
+        console.warn(`[AIService] ${providerName} failed: ${errorMsg}`);
+      }
+    }
+    
+    // Si llegamos aquí, todos los proveedores fallaron
+    throw new Error(`All LLM providers failed: ${errors.join('; ')}`);
   }
 
   /**
@@ -256,15 +367,15 @@ ${JSON.stringify(contexto.transacciones_recientes || []).slice(0, 600)}
 9. Para preguntas generales ("¿qué es CCC?"), explica el concepto Y da los números de la empresa.`;
 
     try {
-      const response = await this.llamarLLM([
+      const response = await this.llamarLLMConFallback([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: mensaje }
       ], { jsonMode: false });
       
       return response.choices[0].message.content;
     } catch (error) {
-      console.error('[AIService] Error en conversación:', error);
-      return "Lo siento, estoy teniendo problemas técnicos. ¿Podrías intentar de nuevo?";
+      console.error('[AIService] Error en conversación:', error.message);
+      return "Lo siento, estoy teniendo problemas técnicos con el servicio de IA. ¿Podrías intentar de nuevo en unos segundos?";
     }
   }
 
@@ -281,59 +392,66 @@ Responde únicamente en formato JSON válido.`;
   }
 
   async llamarLLM(messages, options = {}) {
+    // Delegar al método con fallback automático
+    return this.llamarLLMConFallback(messages, options);
+  }
+
+  async llamarLLMConFallback(messages, options = {}) {
     this.requestCount++;
     
     const { jsonMode = true } = options;
+    const errors = [];
     
     // Formato unificado para mensajes
     const msgs = Array.isArray(messages) ? messages : [{ role: 'user', content: messages }];
     
-    if (this.provider === 'openrouter') {
-      const payload = {
-        model: this.config.model,
-        messages: msgs,
-        temperature: 0.3,
-        max_tokens: 4000
-      };
+    // Intentar cada proveedor disponible
+    for (const providerName of this.availableProviders) {
+      const cfg = LLM_CONFIG[providerName];
       
-      // Solo forzar JSON mode cuando se solicita explícitamente
-      if (jsonMode) {
-        payload.response_format = { type: "json_object" };
-      }
-      
-      const response = await axios.post(
-        `${this.config.baseUrl}/chat/completions`,
-        payload,
-        {
-          headers: {
-            'Authorization': `Bearer ${this.config.apiKey}`,
-            'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
-            'X-Title': 'CFO AI Agents'
-          },
-          timeout: 60000
+      try {
+        const payload = {
+          model: cfg.model,
+          messages: msgs,
+          temperature: 0.3,
+          max_tokens: 4000
+        };
+        
+        if (jsonMode) {
+          payload.response_format = { type: "json_object" };
         }
-      );
-      return response.data;
+        
+        const response = await axios.post(
+          `${cfg.baseUrl}/chat/completions`,
+          payload,
+          {
+            headers: {
+              'Authorization': `Bearer ${cfg.apiKey}`,
+              'Content-Type': 'application/json',
+              ...(providerName === 'openrouter' ? {
+                'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
+                'X-Title': 'CFO AI Agents'
+              } : {})
+            },
+            timeout: 60000
+          }
+        );
+        
+        // Actualizar provider activo al que funcionó
+        this.provider = providerName;
+        this.config = cfg;
+        return response.data;
+        
+      } catch (error) {
+        const errorMsg = error.response?.data?.error?.message || error.message;
+        errors.push(`${providerName}: ${errorMsg}`);
+        console.warn(`[AIService] ${providerName} failed: ${errorMsg}`);
+      }
     }
     
-    // Fallback a Kimi API
-    const response = await axios.post(
-      `${this.config.baseUrl}/chat/completions`,
-      {
-        model: this.config.model,
-        messages: msgs,
-        temperature: 0.3,
-        max_tokens: 4000
-      },
-      {
-        headers: {
-          'Authorization': `Bearer ${this.config.apiKey}`,
-          'Content-Type': 'application/json'
-        },
-        timeout: 60000
-      }
-    );
-    return response.data;
+    // Si llegamos aquí, todos los proveedores fallaron
+    this.errorCount++;
+    throw new Error(`All LLM providers failed: ${errors.join('; ')}`);
   }
 
   parsearRespuesta(response) {
@@ -349,6 +467,7 @@ Responde únicamente en formato JSON válido.`;
   getStats() {
     return {
       provider: this.provider,
+      availableProviders: this.availableProviders,
       requests: this.requestCount,
       errors: this.errorCount,
       success_rate: this.requestCount > 0 

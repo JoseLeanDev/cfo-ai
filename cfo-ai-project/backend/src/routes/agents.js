@@ -352,94 +352,130 @@ router.post('/logs', async (req, res) => {
 // ============================================
 
 /**
- * Obtiene contexto financiero de la empresa para el LLM
+ * Obtiene contexto financiero COMPLETO de la empresa para el LLM
+ * Incluye runway, CCC, KPIs, aging, proyecciones, obligaciones SAT, etc.
  * @param {Object} db - Database connection
  * @param {number} empresaId - ID de la empresa
  * @param {boolean} isPostgres - Si es PostgreSQL
- * @returns {Promise<Object>} - Contexto financiero
+ * @returns {Promise<Object>} - Contexto financiero completo
  */
-async function obtenerContextoFinanciero(db, empresaId, isPostgres) {
-  const contexto = {
-    cxc: { total: 0, count: 0, avg_dias: 0 },
-    cxp: { total: 0, count: 0 },
-    bancos: { disponible_gtq: 0, disponible_usd: 0, cuentas_activas: 0 },
-    deudores: [],
-    proximos_pagos: [],
-    obligaciones_sat: [],
-    cuentas_bancarias: [],
-    fecha_actual: new Date().toISOString().split('T')[0]
+async function obtenerContextoFinancieroCompleto(db, empresaId, isPostgres) {
+  const ctx = {
+    fecha_actual: new Date().toISOString().split('T')[0],
+    empresa_id: empresaId
   };
 
-  try {
-    // CxC resumen
-    const cxcQuery = isPostgres
-      ? `SELECT COUNT(*) as count, SUM(monto_pendiente) as total, AVG(dias_atraso) as avg_dias FROM cuentas_cobrar WHERE empresa_id = $1 AND estado != 'cobrada'`
-      : `SELECT COUNT(*) as count, SUM(monto) as total, AVG(dias_atraso) as avg_dias FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada'`;
-    const cxc = await db.getAsync(cxcQuery, [empresaId]);
-    contexto.cxc = { total: cxc?.total || 0, count: cxc?.count || 0, avg_dias: Math.round(cxc?.avg_dias || 0) };
-  } catch (e) { console.error('[Context] CxC error:', e.message); }
+  const runQuery = async (label, query, params = [empresaId]) => {
+    try {
+      const isSelectAll = query.trim().toLowerCase().startsWith('select') && !query.includes(' LIMIT ');
+      const method = isSelectAll ? 'allAsync' : 'getAsync';
+      const result = await db[method](query, params);
+      return result;
+    } catch (e) {
+      console.error(`[Context] ${label} error:`, e.message);
+      return isSelectAll ? [] : null;
+    }
+  };
 
-  try {
-    // CxP resumen
-    const cxpQuery = isPostgres
-      ? `SELECT COUNT(*) as count, SUM(monto_total) as total FROM cuentas_pagar WHERE empresa_id = $1 AND estado = 'pendiente'`
-      : `SELECT COUNT(*) as count, SUM(monto_pendiente) as total FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'`;
-    const cxp = await db.getAsync(cxpQuery, [empresaId]);
-    contexto.cxp = { total: cxp?.total || 0, count: cxp?.count || 0 };
-  } catch (e) { console.error('[Context] CxP error:', e.message); }
+  // === BANCOS / LIQUIDEZ ===
+  const bancos = await runQuery('bancos', isPostgres
+    ? `SELECT banco, saldo, moneda, tipo FROM cuentas_bancarias WHERE empresa_id = $1 AND activa = TRUE`
+    : `SELECT banco, saldo, moneda, tipo FROM cuentas_bancarias WHERE empresa_id = ? AND activa = TRUE`
+  );
+  ctx.bancos = bancos || [];
+  ctx.liquidez = {
+    gtq: bancos?.reduce((s, c) => s + (c.moneda === 'GTQ' ? (parseFloat(c.saldo) || 0) : 0), 0) || 0,
+    usd: bancos?.reduce((s, c) => s + (c.moneda === 'USD' ? (parseFloat(c.saldo) || 0) : 0), 0) || 0,
+    total_cuentas: bancos?.length || 0
+  };
 
+  // === RUNWAY ===
   try {
-    // Efectivo bancario
-    const bancoQuery = isPostgres
-      ? `SELECT SUM(CASE WHEN moneda = 'GTQ' THEN saldo ELSE 0 END) as disponible_gtq, SUM(CASE WHEN moneda = 'USD' THEN saldo ELSE 0 END) as disponible_usd, COUNT(*) as cuentas_activas FROM cuentas_bancarias WHERE empresa_id = $1 AND activa = TRUE`
-      : `SELECT SUM(CASE WHEN moneda = 'GTQ' THEN saldo ELSE 0 END) as disponible_gtq, SUM(CASE WHEN moneda = 'USD' THEN saldo ELSE 0 END) as disponible_usd, COUNT(*) as cuentas_activas FROM cuentas_bancarias WHERE empresa_id = ? AND activa = TRUE`;
-    const bancos = await db.getAsync(bancoQuery, [empresaId]);
-    contexto.bancos = { 
-      disponible_gtq: bancos?.disponible_gtq || 0, 
-      disponible_usd: bancos?.disponible_usd || 0,
-      cuentas_activas: bancos?.cuentas_activas || 0
-    };
-  } catch (e) { console.error('[Context] Bancos error:', e.message); }
+    const gastoDiario = parseFloat(process.env.GASTO_DIARIO_DEFAULT) || 50000;
+    const diasOperacion = Math.floor(ctx.liquidez.gtq / gastoDiario);
+    ctx.runway = { dias: diasOperacion, gasto_diario_estimado: gastoDiario };
+  } catch (e) { ctx.runway = { dias: 0, gasto_diario_estimado: 50000 }; }
 
-  try {
-    // Top deudores (máx 3)
-    const deudoresQuery = isPostgres
-      ? `SELECT cliente_nombre as cliente, monto_pendiente as monto, dias_atraso FROM cuentas_cobrar WHERE empresa_id = $1 AND estado != 'cobrada' ORDER BY monto_pendiente DESC LIMIT 3`
-      : `SELECT cliente_nombre as cliente, monto_pendiente as monto, dias_atraso FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada' ORDER BY monto DESC LIMIT 3`;
-    contexto.deudores = await db.allAsync(deudoresQuery, [empresaId]) || [];
-  } catch (e) { console.error('[Context] Deudores error:', e.message); }
+  // === CxC ===
+  const cxcResumen = await runQuery('cxc_resumen', isPostgres
+    ? `SELECT COUNT(*) as count, SUM(monto_pendiente) as total, AVG(dias_atraso) as avg_dias FROM cuentas_cobrar WHERE empresa_id = $1 AND estado != 'cobrada'`
+    : `SELECT COUNT(*) as count, SUM(monto) as total, AVG(dias_atraso) as avg_dias FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada'`
+  );
+  ctx.cxc = {
+    total: parseFloat(cxcResumen?.total) || 0,
+    facturas: parseInt(cxcResumen?.count) || 0,
+    dias_promedio: Math.round(parseFloat(cxcResumen?.avg_dias) || 0)
+  };
 
-  try {
-    // Próximos pagos (máx 3)
-    const pagosQuery = isPostgres
-      ? `SELECT proveedor_nombre as proveedor, monto_pendiente as monto, fecha_vencimiento, EXTRACT(DAY FROM (fecha_vencimiento - CURRENT_DATE)) as dias_restantes FROM cuentas_pagar WHERE empresa_id = $1 AND estado = 'pendiente' AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '14 days' ORDER BY fecha_vencimiento LIMIT 3`
-      : `SELECT proveedor, monto, fecha_vencimiento, CAST(((fecha_vencimiento::date - CURRENT_DATE)) AS INTEGER) as dias_restantes FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '14 days' ORDER BY fecha_vencimiento LIMIT 3`;
-    contexto.proximos_pagos = await db.allAsync(pagosQuery, [empresaId]) || [];
-  } catch (e) { console.error('[Context] Pagos error:', e.message); }
+  const cxcAging = await runQuery('cxc_aging', isPostgres
+    ? `SELECT CASE WHEN dias_atraso <= 0 THEN 'al_corriente' WHEN dias_atraso <= 30 THEN '1_30' WHEN dias_atraso <= 60 THEN '31_60' WHEN dias_atraso <= 90 THEN '61_90' ELSE '90_mas' END as bucket, COUNT(*) as cantidad, SUM(monto_pendiente) as monto FROM cuentas_cobrar WHERE empresa_id = $1 AND estado != 'cobrada' GROUP BY bucket`
+    : `SELECT CASE WHEN dias_atraso <= 0 THEN 'al_corriente' WHEN dias_atraso <= 30 THEN '1_30' WHEN dias_atraso <= 60 THEN '31_60' WHEN dias_atraso <= 90 THEN '61_90' ELSE '90_mas' END as bucket, COUNT(*) as cantidad, SUM(monto) as monto FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada' GROUP BY bucket`
+  );
+  ctx.cxc.aging = cxcAging || [];
 
-  try {
-    // Obligaciones SAT próximas
-    const satQuery = isPostgres
-      ? `SELECT tipo, periodo, fecha_vencimiento FROM sat_calendario WHERE fecha_vencimiento >= CURRENT_DATE AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '30 days' ORDER BY fecha_vencimiento LIMIT 2`
-      : `SELECT tipo, periodo, fecha_vencimiento FROM sat_calendario WHERE fecha_vencimiento >= CURRENT_DATE AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '30 days' ORDER BY fecha_vencimiento LIMIT 2`;
-    contexto.obligaciones_sat = await db.allAsync(satQuery) || [];
-  } catch (e) { console.error('[Context] SAT error:', e.message); }
+  const topDeudores = await runQuery('top_deudores', isPostgres
+    ? `SELECT cliente_nombre as cliente, SUM(monto_pendiente) as monto, MAX(dias_atraso) as dias FROM cuentas_cobrar WHERE empresa_id = $1 AND estado != 'cobrada' GROUP BY cliente_nombre ORDER BY monto DESC LIMIT 5`
+    : `SELECT cliente_nombre as cliente, SUM(monto) as monto, MAX(dias_atraso) as dias FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada' GROUP BY cliente_nombre ORDER BY monto DESC LIMIT 5`
+  );
+  ctx.cxc.top_deudores = topDeudores || [];
 
-  try {
-    // Cuentas bancarias
-    const cuentasQuery = isPostgres
-      ? `SELECT banco, saldo, moneda FROM cuentas_bancarias WHERE empresa_id = $1 AND activa = TRUE LIMIT 3`
-      : `SELECT banco, saldo, moneda FROM cuentas_bancarias WHERE empresa_id = ? AND activa = TRUE LIMIT 3`;
-    contexto.cuentas_bancarias = await db.allAsync(cuentasQuery, [empresaId]) || [];
-  } catch (e) { console.error('[Context] Cuentas error:', e.message); }
+  // === CxP ===
+  const cxpResumen = await runQuery('cxp_resumen', isPostgres
+    ? `SELECT COUNT(*) as count, SUM(monto_total) as total FROM cuentas_pagar WHERE empresa_id = $1 AND estado = 'pendiente'`
+    : `SELECT COUNT(*) as count, SUM(monto_pendiente) as total FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'`
+  );
+  ctx.cxp = {
+    total: parseFloat(cxpResumen?.total) || 0,
+    facturas: parseInt(cxpResumen?.count) || 0
+  };
 
-  return contexto;
+  const cxpProximos = await runQuery('cxp_proximos', isPostgres
+    ? `SELECT proveedor_nombre as proveedor, monto_total as monto, fecha_vencimiento, (fecha_vencimiento::date - CURRENT_DATE)::integer as dias_restantes FROM cuentas_pagar WHERE empresa_id = $1 AND estado = 'pendiente' AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '14 days' ORDER BY fecha_vencimiento LIMIT 5`
+    : `SELECT proveedor as proveedor, monto, fecha_vencimiento, CAST(((fecha_vencimiento::date - CURRENT_DATE)) AS INTEGER) as dias_restantes FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '14 days' ORDER BY fecha_vencimiento LIMIT 5`
+  );
+  ctx.cxp.proximos_pagos = cxpProximos || [];
+
+  // === CCC (Working Capital) ===
+  const dsoData = await runQuery('dso', `SELECT COALESCE(AVG(dias_atraso), 35) as valor FROM cuentas_cobrar WHERE empresa_id = ?`);
+  const dpoData = await runQuery('dpo', isPostgres
+    ? `SELECT COALESCE(AVG(EXTRACT(DAY FROM (fecha_vencimiento - fecha_emision))), 30) as valor FROM cuentas_pagar WHERE empresa_id = $1`
+    : `SELECT COALESCE(AVG(CAST(((fecha_vencimiento::date - fecha_emision::date)) AS INTEGER)), 30) as valor FROM cuentas_pagar WHERE empresa_id = ?`
+  );
+  const dso = Math.round(parseFloat(dsoData?.valor) || 35);
+  const dpo = Math.round(parseFloat(dpoData?.valor) || 30);
+  const dio = 45; // Placeholder hasta tener inventario real
+  ctx.ccc = {
+    dso, dpo, dio,
+    valor: dio + dso - dpo,
+    formula: 'DIO + DSO - DPO',
+    interpretacion: (dio + dso - dpo) < 30 ? 'Excelente' : (dio + dso - dpo) < 60 ? 'Bueno' : (dio + dso - dpo) < 90 ? 'Regular' : 'Necesita atención'
+  };
+
+  // === VENTAS Y GASTOS (últimos 30 días) ===
+  const ventas30 = await runQuery('ventas30', `SELECT COALESCE(SUM(monto), 0) as total FROM transacciones WHERE empresa_id = ? AND tipo = 'ingreso' AND fecha >= CURRENT_DATE - INTERVAL '30 days'`);
+  const gastos30 = await runQuery('gastos30', `SELECT COALESCE(SUM(monto), 0) as total FROM transacciones WHERE empresa_id = ? AND tipo = 'gasto' AND fecha >= CURRENT_DATE - INTERVAL '30 days'`);
+  ctx.ventas_30d = parseFloat(ventas30?.total) || 0;
+  ctx.gastos_30d = parseFloat(gastos30?.total) || 0;
+  ctx.margen_30d = ctx.ventas_30d > 0 ? ((ctx.ventas_30d - ctx.gastos_30d) / ctx.ventas_30d * 100).toFixed(1) : 0;
+
+  // === OBLIGACIONES SAT ===
+  const satQuery = isPostgres
+    ? `SELECT tipo, periodo, fecha_vencimiento FROM sat_calendario WHERE fecha_vencimiento >= CURRENT_DATE AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '30 days' ORDER BY fecha_vencimiento LIMIT 3`
+    : `SELECT tipo, periodo, fecha_vencimiento FROM sat_calendario WHERE fecha_vencimiento >= CURRENT_DATE AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '30 days' ORDER BY fecha_vencimiento LIMIT 3`;
+  ctx.obligaciones_sat = await runQuery('sat', satQuery, []) || [];
+
+  // === TRANSACCIONES RECIENTES ===
+  const transRecientes = await runQuery('trans_recientes', `SELECT fecha, descripcion, monto, tipo, categoria FROM transacciones WHERE empresa_id = ? ORDER BY fecha DESC LIMIT 10`);
+  ctx.transacciones_recientes = transRecientes || [];
+
+  return ctx;
 }
 
 /**
  * POST /api/agents/chat
  * Endpoint principal para el chat del CFO AI Assistant
- * Procesa mensajes del usuario y retorna respuestas inteligentes
+ * Usa LLM (Claude 3.7 Sonnet via OpenRouter) como motor principal
+ * con contexto financiero completo de la base de datos.
  */
 router.post('/chat', async (req, res) => {
   try {
@@ -447,294 +483,106 @@ router.post('/chat', async (req, res) => {
     const empresaId = req.body.empresa_id || 1;
     const message = req.body.message;
     
-    // Detectar si es PostgreSQL o SQLite
+    if (!message) {
+      return res.status(400).json({ success: false, error: 'Se requiere un mensaje' });
+    }
+    
+    const messageLower = message.toLowerCase().trim();
+    
+    // ========== FAST PATH: Saludos y ayuda (no necesitan LLM) ==========
+    const greetings = ['hola', 'buenos días', 'buenas tardes', 'buenas noches', 'hey', 'hi', 'hello', 'qué tal', 'cómo estás'];
+    const isGreeting = greetings.some(g => messageLower.includes(g));
+    
+    if (isGreeting) {
+      const hour = new Date().getHours();
+      let saludo = hour < 12 ? '¡Buenos días' : hour < 18 ? '¡Buenas tardes' : '¡Buenas noches';
+      return res.json({
+        success: true,
+        response: {
+          content: `${saludo}! Soy **CFO AI**, tu asistente financiero inteligente. 🤖💼\n\nPuedo ayudarte con cualquier consulta sobre tus finanzas: runway, KPIs, CCC, cobranzas, pagos, obligaciones SAT, análisis de rentabilidad, y más.\n\n¿Qué necesitas saber hoy?`,
+          agent: 'CFO AI Core',
+          type: 'welcome'
+        }
+      });
+    }
+    
+    if (messageLower.includes('ayuda') || messageLower.includes('help') || messageLower.includes('qué puedes hacer') || messageLower.includes('menú') || messageLower.includes('opciones')) {
+      return res.json({
+        success: true,
+        response: {
+          content: `📚 **Puedo ayudarte con cualquier tema financiero:**\n\n• 💰 **Runway** — Días de efectivo disponible\n• 📈 **KPIs** — Indicadores financieros clave\n• 🔄 **CCC** — Cash Conversion Cycle\n• 👥 **CxC** — Cuentas por cobrar y deudores\n• 💳 **CxP** — Pagos a proveedores\n• 🏦 **Conciliación** — Estado bancario\n• 📅 **SAT** — Obligaciones fiscales\n• 📊 **Rentabilidad** — Margen, utilidad, análisis\n• 🔍 **Auditoría** — Detección de anomalías\n\nSolo pregúntame lo que necesites. Tengo acceso en tiempo real a tu base de datos.`,
+          agent: 'CFO AI Core',
+          type: 'help'
+        }
+      });
+    }
+    
+    const goodbyes = ['adiós', 'chao', 'hasta luego', 'bye', 'nos vemos', 'gracias por todo'];
+    if (goodbyes.some(g => messageLower.includes(g))) {
+      return res.json({
+        success: true,
+        response: {
+          content: `¡Hasta luego! Estaré aquí cuando necesites ayuda con tus finanzas. 📊`,
+          agent: 'CFO AI Core',
+          type: 'goodbye'
+        }
+      });
+    }
+    
+    // ========== MOTOR PRINCIPAL: LLM + Contexto Completo ==========
+    console.log('[Chat] Consulta:', message);
+    
     const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
     
-    if (!message) {
-      return res.status(400).json({
+    // Obtener contexto financiero completo
+    const contexto = await obtenerContextoFinancieroCompleto(db, empresaId, isPostgres);
+    
+    // Verificar API key
+    const apiKey = process.env.OPENROUTER_API_KEY || process.env.KIMI_API_KEY;
+    
+    if (!apiKey || apiKey.includes('tu-api-key') || apiKey.includes('placeholder')) {
+      return res.status(503).json({
         success: false,
-        error: 'Se requiere un mensaje'
+        error: 'LLM no configurado. Verifica OPENROUTER_API_KEY en el servidor.'
       });
     }
     
-    const messageLower = message.toLowerCase();
-    
-    // ========== ANÁLISIS DE INTENCIÓN ==========
-    
-    // 1. Consulta de runway / liquidez
-    if (messageLower.includes('runway') || messageLower.includes('liquidez') || messageLower.includes('efectivo') || messageLower.includes('cash')) {
-      const posicion = await db.getAsync(`
-        SELECT 
-          SUM(CASE WHEN moneda = 'GTQ' THEN saldo ELSE 0 END) as disponible_gtq,
-          SUM(CASE WHEN moneda = 'USD' THEN saldo ELSE 0 END) as disponible_usd
-        FROM cuentas_bancarias 
-        WHERE empresa_id = ? AND activa = TRUE
-      `, [empresaId]);
-      
-      const gastosPromedio = 50000; // Estimación
-      const diasOperacion = Math.floor((parseFloat(posicion?.disponible_gtq) || 0) / gastosPromedio);
-      
-      return res.json({
-        success: true,
-        response: {
-          content: `💰 **Runway de Efectivo**\n\n` +
-            `• Disponible GTQ: Q${(parseFloat(posicion?.disponible_gtq) || 0).toLocaleString()}\n` +
-            `• Disponible USD: $${(parseFloat(posicion?.disponible_usd) || 0).toLocaleString()}\n\n` +
-            `📊 **Días de Operación:** ${diasOperacion} días\n` +
-            `(Basado en gastos promedio diarios estimados)`,
-          agent: 'Análisis',
-          type: 'analysis'
-        }
-      });
-    }
-    
-    // 2. Consulta de KPIs
-    if (messageLower.includes('kpi') || messageLower.includes('metric') || messageLower.includes('indicador')) {
-      const cxcQuery = isPostgres 
-        ? `SELECT COUNT(*) as count, SUM(monto_pendiente) as total, AVG(dias_atraso) as avg_dias FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada'`
-        : `SELECT COUNT(*) as count, SUM(monto) as total, AVG(dias_atraso) as avg_dias FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada'`;
-        
-      const cxpQuery = isPostgres
-        ? `SELECT COUNT(*) as count, SUM(monto_total) as total FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'`
-        : `SELECT COUNT(*) as count, SUM(monto_pendiente) as total FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'`;
-      
-      const cxc = await db.getAsync(cxcQuery, [empresaId]);
-      const cxp = await db.getAsync(cxpQuery, [empresaId]);
-      
-      return res.json({
-        success: true,
-        response: {
-          content: `📈 **KPIs Financieros Clave**\n\n` +
-            `**CxC:**\n` +
-            `• Total pendiente: Q${(parseFloat(cxc?.total) || 0).toLocaleString()}\n` +
-            `• Facturas: ${cxc?.count || 0}\n` +
-            `• Días promedio: ${Math.round(parseFloat(cxc?.avg_dias) || 0)}\n\n` +
-            `**CxP:**\n` +
-            `• Total pendiente: Q${(parseFloat(cxp?.total) || 0).toLocaleString()}\n` +
-            `• Facturas: ${cxp?.count || 0}`,
-          agent: 'Análisis',
-          type: 'analysis'
-        }
-      });
-    }
-    
-    // 3. Consulta de obligaciones SAT
-    if (messageLower.includes('sat') || messageLower.includes('iva') || messageLower.includes('isr') || messageLower.includes('declara') || messageLower.includes('impuesto')) {
-      const calendarioQuery = isPostgres
-        ? `SELECT * FROM sat_calendario WHERE fecha_vencimiento >= CURRENT_DATE AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '30 days' ORDER BY fecha_vencimiento LIMIT 3`
-        : `SELECT * FROM sat_calendario WHERE fecha_vencimiento >= CURRENT_DATE AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '30 days' ORDER BY fecha_vencimiento LIMIT 3`;
-      
-      const calendario = await db.allAsync(calendarioQuery);
-      
-      let respText = `📅 **Obligaciones SAT Próximas**\n\n`;
-      
-      if (calendario && calendario.length > 0) {
-        calendario.forEach(obs => {
-          const diasRestantes = Math.ceil((new Date(obs.fecha_vencimiento) - new Date()) / (1000 * 60 * 60 * 24));
-          respText += `• **${obs.tipo}** - ${obs.periodo}\n`;
-          respText += `  Vence: ${obs.fecha_vencimiento} (${diasRestantes} días)\n\n`;
-        });
-      } else {
-        respText += `No hay obligaciones próximas a vencer en los próximos 30 días. ✅`;
-      }
-      
-      return res.json({
-        success: true,
-        response: {
-          content: respText,
-          agent: 'Contabilidad',
-          type: 'alert'
-        }
-      });
-    }
-    
-    // 4. Consulta de producto menos rentable
-    if (messageLower.includes('menos rentable') || messageLower.includes('peor producto') || messageLower.includes('bajo margen')) {
-      return res.json({
-        success: true,
-        response: {
-          content: `📉 **Producto Menos Rentable: Desinfectantes**\n\n` +
-            `• Margen bruto: **20%** (vs 35% promedio)\n` +
-            `• Ventas: Q450,000\n` +
-            `• Unidades: 1,800\n\n` +
-            `💡 **Recomendación:** Evaluar aumentar precio 10% o negociar costos con proveedor.`,
-          agent: 'Análisis',
-          type: 'analysis'
-        }
-      });
-    }
-    
-    // 5. Consulta de CxC / cobranza
-    if (messageLower.includes('cxc') || messageLower.includes('cobranza') || messageLower.includes('cliente') || messageLower.includes('deudor')) {
-      const deudoresQuery = isPostgres
-        ? `SELECT cliente_nombre as cliente, monto_pendiente as monto, dias_atraso FROM cuentas_cobrar WHERE empresa_id = $1 AND estado != 'cobrada' ORDER BY monto_pendiente DESC LIMIT 5`
-        : `SELECT cliente_nombre as cliente, monto_pendiente as monto, dias_atraso FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada' ORDER BY monto DESC LIMIT 5`;
-        
-      const topDeudores = await db.allAsync(deudoresQuery, [empresaId]);
-      
-      let respText = `👥 **Top Deudores**\n\n`;
-      
-      if (topDeudores && topDeudores.length > 0) {
-        topDeudores.forEach((d, i) => {
-          const alerta = d.dias_atraso > 60 ? '🔴' : d.dias_atraso > 30 ? '🟡' : '🟢';
-          respText += `${i+1}. **${d.cliente}**\n`;
-          respText += `   ${alerta} Q${parseFloat(d.monto).toLocaleString()} - ${d.dias_atraso} días\n\n`;
-        });
-      } else {
-        respText += `No hay cuentas por cobrar pendientes. ✅`;
-      }
-      
-      return res.json({
-        success: true,
-        response: {
-          content: respText,
-          agent: 'Cobranza',
-          type: 'alert'
-        }
-      });
-    }
-    
-    // 6. Consulta de CxP / proveedores
-    if (messageLower.includes('cxp') || messageLower.includes('proveedor') || messageLower.includes('pago')) {
-      const pagosQuery = isPostgres
-        ? `SELECT proveedor_nombre as proveedor, monto_pendiente as monto, fecha_vencimiento, EXTRACT(DAY FROM (fecha_vencimiento - CURRENT_DATE)) as dias_restantes FROM cuentas_pagar WHERE empresa_id = $1 AND estado = 'pendiente' AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '14 days' ORDER BY fecha_vencimiento LIMIT 5`
-        : `SELECT proveedor, monto, fecha_vencimiento, CAST(((fecha_vencimiento::date - CURRENT_DATE)) AS INTEGER) as dias_restantes FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente' AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '14 days' ORDER BY fecha_vencimiento LIMIT 5`;
-        
-      const proximosPagos = await db.allAsync(pagosQuery, [empresaId]);
-      
-      let respText = `💳 **Próximos Pagos**\n\n`;
-      
-      if (proximosPagos && proximosPagos.length > 0) {
-        proximosPagos.forEach(p => {
-          const alerta = p.dias_restantes < 0 ? '🔴 VENCIDO' : p.dias_restantes <= 5 ? '🟡 Pronto' : '🟢';
-          respText += `• **${p.proveedor}**\n`;
-          respText += `  ${alerta} Q${parseFloat(p.monto).toLocaleString()} - ${p.dias_restantes} días\n\n`;
-        });
-      } else {
-        respText += `No hay pagos pendientes en los próximos 14 días. ✅`;
-      }
-      
-      return res.json({
-        success: true,
-        response: {
-          content: respText,
-          agent: 'Cobranza',
-          type: 'alert'
-        }
-      });
-    }
-    
-    // 7. Consulta de conciliación
-    if (messageLower.includes('concilia') || messageLower.includes('banco')) {
-      const cuentasQuery = isPostgres
-        ? `SELECT banco, saldo, moneda, CASE WHEN ultima_conciliacion IS NULL THEN 'Nunca' ELSE EXTRACT(DAY FROM (CURRENT_DATE - ultima_conciliacion::date)) || ' días' END as dias_sin_conciliar FROM cuentas_bancarias WHERE empresa_id = $1 AND activa = TRUE`
-        : `SELECT banco, saldo, moneda, CASE WHEN ultima_conciliacion IS NULL THEN 'Nunca' ELSE CAST((CURRENT_DATE - ultima_conciliacion::date) AS INTEGER) || ' días' END as dias_sin_conciliar FROM cuentas_bancarias WHERE empresa_id = ? AND activa = TRUE`;
-      
-      const cuentas = await db.allAsync(cuentasQuery, [empresaId]);
-      
-      let respText = `🏦 **Estado de Conciliación**\n\n`;
-      
-      cuentas.forEach(c => {
-        const alerta = c.dias_sin_conciliar.includes('Nunca') || parseInt(c.dias_sin_conciliar) > 2 ? '🔴' : '🟢';
-        respText += `• **${c.banco}** (${c.moneda})\n`;
-        respText += `  ${alerta} Sin conciliar: ${c.dias_sin_conciliar}\n`;
-        respText += `  Saldo: ${c.moneda === 'USD' ? '$' : 'Q'}${parseFloat(c.saldo).toLocaleString()}\n\n`;
-      });
-      
-      return res.json({
-        success: true,
-        response: {
-          content: respText,
-          agent: 'Contabilidad',
-          type: 'analysis'
-        }
-      });
-    }
-    
-    // 8. Consulta de CCC (Cash Conversion Cycle)
-    if (messageLower.includes('ccc') || messageLower.includes('cash conversion') || messageLower.includes('ciclo')) {
-      const cxcData = await db.getAsync(`
-        SELECT AVG(dias_atraso) as promedio_dias_cobro FROM cuentas_cobrar WHERE empresa_id = ? AND estado != 'cobrada'
-      `, [empresaId]);
-      
-      const cxpDataQuery = isPostgres
-        ? `SELECT AVG(EXTRACT(DAY FROM (fecha_vencimiento::date - fecha_emision::date))) as promedio_dias_pago FROM cuentas_pagar WHERE empresa_id = $1 AND estado = 'pendiente'`
-        : `SELECT AVG(CAST((fecha_vencimiento::date - fecha_emision::date) AS INTEGER)) as promedio_dias_pago FROM cuentas_pagar WHERE empresa_id = ? AND estado = 'pendiente'`;
-      
-      const cxpData = await db.getAsync(cxpDataQuery, [empresaId]);
-      
-      const dso = Math.round(parseFloat(cxcData?.promedio_dias_cobro) || 45);
-      const dpo = Math.round(parseFloat(cxpData?.promedio_dias_pago) || 30);
-      const dio = 45; // Placeholder
-      const ccc = dio + dso - dpo;
-      
-      return res.json({
-        success: true,
-        response: {
-          content: `🔄 **Cash Conversion Cycle**\n\n` +
-            `• **DIO** (Inventario): ${dio} días\n` +
-            `• **DSO** (Cobro): ${dso} días\n` +
-            `• **DPO** (Pago): ${dpo} días\n\n` +
-            `**Total CCC:** ${ccc} días\n\n` +
-            `💡 *Objetivo: Mantener CCC < 60 días*`,
-          agent: 'Análisis',
-          type: 'analysis'
-        }
-      });
-    }
-    
-    // ========== RESPUESTA CON LLM ==========
-    // Para preguntas que no coinciden con keywords exactas, usar IA
-    
+    // Llamar al LLM con el contexto completo
     try {
-      const apiKey = process.env.OPENROUTER_API_KEY || process.env.KIMI_API_KEY;
+      const respuestaIA = await aiService.conversar(message, contexto);
       
-      if (apiKey && !apiKey.includes('tu-api-key') && !apiKey.includes('placeholder')) {
-        console.log('[Chat] Usando LLM para responder:', message);
-        
-        const contexto = await obtenerContextoFinanciero(db, empresaId, isPostgres);
-        const respuestaIA = await aiService.conversar(message, contexto);
-        
-        return res.json({
-          success: true,
-          response: {
-            content: respuestaIA,
-            agent: 'CFO AI Core',
-            type: 'ai_response'
+      return res.json({
+        success: true,
+        response: {
+          content: respuestaIA,
+          agent: 'CFO AI Core',
+          type: 'ai_response',
+          meta: {
+            fecha_contexto: contexto.fecha_actual,
+            datos_disponibles: Object.keys(contexto).filter(k => k !== 'fecha_actual' && k !== 'empresa_id')
           }
-        });
-      }
+        }
+      });
     } catch (llmError) {
       console.error('[Chat] Error LLM:', llmError.message);
+      
+      // Fallback: respuesta con datos locales
+      return res.json({
+        success: true,
+        response: {
+          content: `Tengo los datos disponibles pero el asistente de IA está teniendo problemas técnicos momentáneamente.\n\n**Contexto actual:**\n• Efectivo GTQ: Q${contexto.liquidez.gtq.toLocaleString()}\n• CxC pendiente: Q${contexto.cxc.total.toLocaleString()} (${contexto.cxc.facturas} facturas)\n• CxP pendiente: Q${contexto.cxp.total.toLocaleString()}\n• CCC: ${contexto.ccc.valor} días\n• Runway: ${contexto.runway.dias} días\n\nPor favor intenta de nuevo en unos segundos.`,
+          agent: 'CFO AI Core',
+          type: 'error'
+        }
+      });
     }
     
-    // ========== RESPUESTA POR DEFECTO ==========
-    
-    return res.json({
-      success: true,
-      response: {
-        content: `🤔 Entiendo tu pregunta. Puedo ayudarte con:\n\n` +
-          `• 💰 **Runway** - Días de efectivo disponible\n` +
-          `• 📈 **KPIs** - Indicadores financieros clave\n` +
-          `• 📅 **SAT** - Obligaciones fiscales próximas\n` +
-          `• 👥 **CxC** - Cuentas por cobrar y deudores\n` +
-          `• 💳 **CxP** - Pagos a proveedores\n` +
-          `• 🏦 **Conciliación** - Estado bancario\n` +
-          `• 🔄 **CCC** - Cash Conversion Cycle\n\n` +
-          `¿Qué te gustaría consultar?`,
-        agent: 'CFO AI Core',
-        type: 'welcome'
-      }
-    });
-    
   } catch (error) {
-    console.error('[POST /api/agents/chat] Error completo:', error);
-    console.error('[POST /api/agents/chat] Stack:', error.stack);
+    console.error('[POST /api/agents/chat] Error:', error);
     res.status(500).json({
       success: false,
       error: 'Error al procesar el mensaje',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });
   }
 });

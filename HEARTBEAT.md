@@ -207,6 +207,7 @@ negociar línea de crédito por Q300,000
 | ✅ | Fix cuentas duplicadas | DONE | fc0d5d8 |
 | ✅ | Fix CCC mostrando 0 | FIXED | ead49d8 |
 | ✅ | Fix Chatbot error estructura respuesta | FIXED | 2f53658 |
+| ✅ | Fix Chatbot error 500 (LLM fallback automático) | FIXED | b953ab5 |
 | ✅ | Cash Conversion Cycle (CCC) - Mejoras | DONE | 7477bae |
 | ✅ | Fix Agentes de IA no inicializados | DONE | 7477bae |
 | ✅ | Fix Agentes tradicionales no inicializados | DONE | 94ddec4 |

@@ -1,154 +1,23 @@
 /**
- * AI Service - Integración con LLM para Agentes de IA
- * Usa API de Kimi/OpenRouter para análisis inteligente
+ * AI Service - Integración con LLM via OpenRouter
+ * Usa Claude 3.7 Sonnet via OpenRouter
  */
 
 const axios = require('axios');
 
-// Configuración de proveedores LLM
-const LLM_CONFIG = {
-  // Usar OpenRouter como default (acceso a múltiples modelos)
-  openrouter: {
-    baseUrl: 'https://openrouter.ai/api/v1',
-    apiKey: process.env.OPENROUTER_API_KEY,
-    model: 'anthropic/claude-3.7-sonnet',
-    fallbackModel: 'openai/gpt-4o'
-  },
-  // Fallback directo a Kimi si está configurado
-  kimi: {
-    baseUrl: 'https://api.moonshot.cn/v1',
-    apiKey: process.env.KIMI_API_KEY,
-    model: 'kimi-k2.5'
-  }
-};
+const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
+const OPENROUTER_MODEL = 'anthropic/claude-3.7-sonnet';
+const OPENROUTER_FALLBACK_MODEL = 'openai/gpt-4o';
 
 class AIService {
   constructor() {
-    // Determinar proveedor activo basado en keys disponibles
-    this.availableProviders = [];
-    
-    if (process.env.OPENROUTER_API_KEY && !process.env.OPENROUTER_API_KEY.includes('placeholder')) {
-      this.availableProviders.push('openrouter');
-    }
-    if (process.env.KIMI_API_KEY && !process.env.KIMI_API_KEY.includes('placeholder')) {
-      this.availableProviders.push('kimi');
-    }
-    
-    // Usar el provider configurado o el primero disponible
-    this.provider = process.env.LLM_PROVIDER || this.availableProviders[0] || 'openrouter';
-    this.config = LLM_CONFIG[this.provider];
+    this.apiKey = process.env.OPENROUTER_API_KEY;
     this.requestCount = 0;
     this.errorCount = 0;
   }
 
   /**
-   * Verifica conectividad con los proveedores LLM
-   * @returns {Promise<Object>} - Estado de cada proveedor
-   */
-  async healthcheck() {
-    const results = {};
-    
-    for (const providerName of ['openrouter', 'kimi']) {
-      const cfg = LLM_CONFIG[providerName];
-      if (!cfg.apiKey || cfg.apiKey.includes('placeholder')) {
-        results[providerName] = { available: false, reason: 'No API key configured' };
-        continue;
-      }
-      
-      try {
-        const response = await axios.post(
-          `${cfg.baseUrl}/chat/completions`,
-          {
-            model: cfg.model,
-            messages: [{ role: 'user', content: 'Hi' }],
-            max_tokens: 5
-          },
-          {
-            headers: {
-              'Authorization': `Bearer ${cfg.apiKey}`,
-              'Content-Type': 'application/json'
-            },
-            timeout: 15000
-          }
-        );
-        results[providerName] = { 
-          available: true, 
-          model: cfg.model,
-          status: response.status 
-        };
-      } catch (error) {
-        results[providerName] = { 
-          available: false, 
-          error: error.response?.data?.error?.message || error.message,
-          status: error.response?.status 
-        };
-      }
-    }
-    
-    return {
-      activeProvider: this.provider,
-      availableProviders: this.availableProviders,
-      providers: results,
-      timestamp: new Date().toISOString()
-    };
-  }
-
-  /**
-   * Intenta llamar al LLM con fallback automático entre proveedores
-   */
-  async llamarLLMConFallback(messages, options = {}) {
-    const errors = [];
-    
-    // Intentar proveedores en orden de preferencia
-    for (const providerName of this.availableProviders) {
-      try {
-        const cfg = LLM_CONFIG[providerName];
-        const payload = {
-          model: cfg.model,
-          messages: Array.isArray(messages) ? messages : [{ role: 'user', content: messages }],
-          temperature: 0.3,
-          max_tokens: 4000
-        };
-        
-        if (options.jsonMode) {
-          payload.response_format = { type: "json_object" };
-        }
-        
-        const response = await axios.post(
-          `${cfg.baseUrl}/chat/completions`,
-          payload,
-          {
-            headers: {
-              'Authorization': `Bearer ${cfg.apiKey}`,
-              'Content-Type': 'application/json',
-              ...(providerName === 'openrouter' ? {
-                'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
-                'X-Title': 'CFO AI Agents'
-              } : {})
-            },
-            timeout: 60000
-          }
-        );
-        
-        this.provider = providerName; // Actualizar provider activo
-        return response.data;
-      } catch (error) {
-        const errorMsg = error.response?.data?.error?.message || error.message;
-        errors.push(`${providerName}: ${errorMsg}`);
-        console.warn(`[AIService] ${providerName} failed: ${errorMsg}`);
-      }
-    }
-    
-    // Si llegamos aquí, todos los proveedores fallaron
-    throw new Error(`All LLM providers failed: ${errors.join('; ')}`);
-  }
-
-  /**
    * Análisis financiero inteligente con LLM
-   * @param {Object} data - Datos financieros a analizar
-   * @param {string} context - Contexto del análisis
-   * @param {string} taskType - Tipo de tarea (auditoria, analisis, conciliacion)
-   * @returns {Promise<Object>} - Análisis del LLM
    */
   async analizarDatos(data, context, taskType = 'general') {
     const startTime = Date.now();
@@ -178,9 +47,6 @@ class AIService {
 
   /**
    * Detectar anomalías usando LLM
-   * @param {Array} transacciones - Lista de transacciones
-   * @param {Array} saldos - Lista de saldos
-   * @returns {Promise<Object>} - Anomalías detectadas por IA
    */
   async detectarAnomaliasIA(transacciones, saldos) {
     const prompt = `
@@ -220,9 +86,6 @@ Responde en formato JSON:
 
   /**
    * Generar insights financieros con LLM
-   * @param {Object} metricas - Métricas financieras
-   * @param {Array} tendencias - Datos históricos
-   * @returns {Promise<Object>} - Insights generados
    */
   async generarInsightsIA(metricas, tendencias) {
     const prompt = `
@@ -261,9 +124,6 @@ Responde en formato JSON:
 
   /**
    * Analizar conciliaciones bancarias con LLM
-   * @param {Array} movimientosBanco - Movimientos del banco
-   * @param {Array} transaccionesLibro - Transacciones contables
-   * @returns {Promise<Object>} - Análisis de conciliación
    */
   async analizarConciliacionIA(movimientosBanco, transaccionesLibro) {
     const prompt = `
@@ -367,7 +227,7 @@ ${JSON.stringify(contexto.transacciones_recientes || []).slice(0, 600)}
 9. Para preguntas generales ("¿qué es CCC?"), explica el concepto Y da los números de la empresa.`;
 
     try {
-      const response = await this.llamarLLMConFallback([
+      const response = await this.llamarLLM([
         { role: 'system', content: systemPrompt },
         { role: 'user', content: mensaje }
       ], { jsonMode: false });
@@ -375,7 +235,7 @@ ${JSON.stringify(contexto.transacciones_recientes || []).slice(0, 600)}
       return response.choices[0].message.content;
     } catch (error) {
       console.error('[AIService] Error en conversación:', error.message);
-      return "Lo siento, estoy teniendo problemas técnicos con el servicio de IA. ¿Podrías intentar de nuevo en unos segundos?";
+      return "Lo siento, estoy teniendo problemas técnicos. ¿Podrías intentar de nuevo?";
     }
   }
 
@@ -392,26 +252,45 @@ Responde únicamente en formato JSON válido.`;
   }
 
   async llamarLLM(messages, options = {}) {
-    // Delegar al método con fallback automático
-    return this.llamarLLMConFallback(messages, options);
-  }
-
-  async llamarLLMConFallback(messages, options = {}) {
     this.requestCount++;
     
     const { jsonMode = true } = options;
-    const errors = [];
-    
-    // Formato unificado para mensajes
     const msgs = Array.isArray(messages) ? messages : [{ role: 'user', content: messages }];
     
-    // Intentar cada proveedor disponible
-    for (const providerName of this.availableProviders) {
-      const cfg = LLM_CONFIG[providerName];
+    try {
+      const payload = {
+        model: OPENROUTER_MODEL,
+        messages: msgs,
+        temperature: 0.3,
+        max_tokens: 4000
+      };
       
-      try {
+      if (jsonMode) {
+        payload.response_format = { type: "json_object" };
+      }
+      
+      const response = await axios.post(
+        `${OPENROUTER_BASE_URL}/chat/completions`,
+        payload,
+        {
+          headers: {
+            'Authorization': `Bearer ${this.apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
+            'X-Title': 'CFO AI Agents'
+          },
+          timeout: 60000
+        }
+      );
+      
+      return response.data;
+    } catch (error) {
+      // Intentar con modelo fallback si el primero falló
+      if (error.response?.status === 404 || error.response?.status === 429) {
+        console.warn('[AIService] Modelo principal falló, intentando fallback:', error.message);
+        
         const payload = {
-          model: cfg.model,
+          model: OPENROUTER_FALLBACK_MODEL,
           messages: msgs,
           temperature: 0.3,
           max_tokens: 4000
@@ -422,36 +301,24 @@ Responde únicamente en formato JSON válido.`;
         }
         
         const response = await axios.post(
-          `${cfg.baseUrl}/chat/completions`,
+          `${OPENROUTER_BASE_URL}/chat/completions`,
           payload,
           {
             headers: {
-              'Authorization': `Bearer ${cfg.apiKey}`,
+              'Authorization': `Bearer ${this.apiKey}`,
               'Content-Type': 'application/json',
-              ...(providerName === 'openrouter' ? {
-                'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
-                'X-Title': 'CFO AI Agents'
-              } : {})
+              'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
+              'X-Title': 'CFO AI Agents'
             },
             timeout: 60000
           }
         );
         
-        // Actualizar provider activo al que funcionó
-        this.provider = providerName;
-        this.config = cfg;
         return response.data;
-        
-      } catch (error) {
-        const errorMsg = error.response?.data?.error?.message || error.message;
-        errors.push(`${providerName}: ${errorMsg}`);
-        console.warn(`[AIService] ${providerName} failed: ${errorMsg}`);
       }
+      
+      throw error;
     }
-    
-    // Si llegamos aquí, todos los proveedores fallaron
-    this.errorCount++;
-    throw new Error(`All LLM providers failed: ${errors.join('; ')}`);
   }
 
   parsearRespuesta(response) {
@@ -466,8 +333,8 @@ Responde únicamente en formato JSON válido.`;
 
   getStats() {
     return {
-      provider: this.provider,
-      availableProviders: this.availableProviders,
+      provider: 'openrouter',
+      model: OPENROUTER_MODEL,
       requests: this.requestCount,
       errors: this.errorCount,
       success_rate: this.requestCount > 0 

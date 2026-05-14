@@ -366,8 +366,8 @@ async function obtenerContextoFinancieroCompleto(db, empresaId, isPostgres) {
   };
 
   const runQuery = async (label, query, params = [empresaId]) => {
+    const isSelectAll = query && query.trim().toLowerCase().startsWith('select') && !query.includes(' LIMIT ');
     try {
-      const isSelectAll = query.trim().toLowerCase().startsWith('select') && !query.includes(' LIMIT ');
       const method = isSelectAll ? 'allAsync' : 'getAsync';
       const result = await db[method](query, params);
       return result;

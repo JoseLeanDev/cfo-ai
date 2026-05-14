@@ -489,6 +489,10 @@ router.post('/chat', async (req, res) => {
     
     const messageLower = message.toLowerCase().trim();
     
+    console.log('[Chat] Request body:', JSON.stringify(req.body));
+    console.log('[Chat] DB connected:', !!db);
+    console.log('[Chat] OPENROUTER_API_KEY exists:', !!process.env.OPENROUTER_API_KEY);
+    
     // ========== FAST PATH: Saludos y ayuda (no necesitan LLM) ==========
     const greetings = ['hola', 'buenos días', 'buenas tardes', 'buenas noches', 'hey', 'hi', 'hello', 'qué tal', 'cómo estás'];
     const isGreeting = greetings.some(g => messageLower.includes(g));
@@ -533,13 +537,19 @@ router.post('/chat', async (req, res) => {
     console.log('[Chat] Consulta:', message);
     
     const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
+    console.log('[Chat] isPostgres:', isPostgres);
     
     // Obtener contexto financiero completo
+    console.log('[Chat] Obteniendo contexto financiero...');
     const contexto = await obtenerContextoFinancieroCompleto(db, empresaId, isPostgres);
+    console.log('[Chat] Contexto obtenido. Keys:', Object.keys(contexto).join(', '));
     
     // Verificar API key configurada
     const apiKey = process.env.OPENROUTER_API_KEY;
+    console.log('[Chat] API key check - exists:', !!apiKey, 'length:', apiKey?.length);
+    
     if (!apiKey || apiKey.includes('placeholder') || apiKey.includes('tu-api-key')) {
+      console.error('[Chat] API key no configurada');
       return res.status(503).json({
         success: false,
         error: 'OPENROUTER_API_KEY no configurada en el servidor.'
@@ -578,10 +588,12 @@ router.post('/chat', async (req, res) => {
     
   } catch (error) {
     console.error('[POST /api/agents/chat] Error:', error);
+    console.error('[POST /api/agents/chat] Stack:', error.stack);
     res.status(500).json({
       success: false,
       error: 'Error al procesar el mensaje',
-      details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 });

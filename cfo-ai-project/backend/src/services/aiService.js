@@ -6,7 +6,7 @@
 const axios = require('axios');
 
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1';
-const OPENROUTER_MODEL = 'anthropic/claude-3.7-sonnet';
+const OPENROUTER_MODEL = 'anthropic/claude-sonnet-latest';
 const OPENROUTER_FALLBACK_MODEL = 'openai/gpt-4o';
 
 class AIService {

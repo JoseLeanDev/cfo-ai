@@ -234,7 +234,9 @@ ${JSON.stringify(contexto.transacciones_recientes || []).slice(0, 600)}
       
       return response.choices[0].message.content;
     } catch (error) {
-      console.error('[AIService] Error en conversación:', error.message);
+      console.error('[AIService.conversar] Error completo:', error.message);
+      console.error('[AIService.conversar] Status:', error.response?.status);
+      console.error('[AIService.conversar] Data:', JSON.stringify(error.response?.data));
       return "Lo siento, estoy teniendo problemas técnicos. ¿Podrías intentar de nuevo?";
     }
   }
@@ -285,7 +287,11 @@ Responde únicamente en formato JSON válido.`;
       
       return response.data;
     } catch (error) {
-      // Intentar con modelo fallback si el primero falló
+      console.error('[AIService.llamarLLM] Error completo:', error.message);
+      console.error('[AIService.llamarLLM] Status:', error.response?.status);
+      console.error('[AIService.llamarLLM] Data:', JSON.stringify(error.response?.data));
+      
+      // Intentar con modelo fallback si el primero falló por 404/429
       if (error.response?.status === 404 || error.response?.status === 429) {
         console.warn('[AIService] Modelo principal falló, intentando fallback:', error.message);
         
@@ -315,6 +321,38 @@ Responde únicamente en formato JSON válido.`;
         );
         
         return response.data;
+      }
+      
+      // Fallback a modelo gratis si es error de auth (401) o credits (402)
+      if (error.response?.status === 401 || error.response?.status === 402) {
+        console.warn('[AIService] API key inválida o sin créditos, intentando modelo gratuito...');
+        
+        const freePayload = {
+          model: 'openrouter/owl-alpha',
+          messages: msgs,
+          temperature: 0.3,
+          max_tokens: 4000
+        };
+        
+        if (jsonMode) {
+          freePayload.response_format = { type: "json_object" };
+        }
+        
+        const freeResponse = await axios.post(
+          `${OPENROUTER_BASE_URL}/chat/completions`,
+          freePayload,
+          {
+            headers: {
+              'Authorization': `Bearer ${this.apiKey}`,
+              'Content-Type': 'application/json',
+              'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
+              'X-Title': 'CFO AI Agents'
+            },
+            timeout: 60000
+          }
+        );
+        
+        return freeResponse.data;
       }
       
       throw error;

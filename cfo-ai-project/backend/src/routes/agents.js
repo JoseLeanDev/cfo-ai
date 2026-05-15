@@ -764,4 +764,30 @@ router.get('/ia/briefing', async (req, res) => {
   }
 });
 
+// === DIAGNÓSTICO LLM ===
+// Endpoint para verificar si OpenRouter funciona con la key configurada
+router.get('/diagnostico-llm', async (req, res) => {
+  try {
+    const result = await aiService.llamarLLM(
+      [{ role: 'user', content: 'Responde "OK" en una palabra.' }],
+      { jsonMode: false }
+    );
+    res.json({
+      success: true,
+      model: result.model,
+      content: result.choices[0].message.content,
+      usage: result.usage
+    });
+  } catch (error) {
+    res.json({
+      success: false,
+      status: error.response?.status,
+      code: error.response?.data?.error?.code,
+      message: error.response?.data?.error?.message || error.message,
+      key_configured: !!process.env.OPENROUTER_API_KEY,
+      key_prefix: process.env.OPENROUTER_API_KEY?.substring(0, 15) + '...'
+    });
+  }
+});
+
 module.exports = router;

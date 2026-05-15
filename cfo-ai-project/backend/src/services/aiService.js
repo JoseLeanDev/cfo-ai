@@ -237,8 +237,74 @@ ${JSON.stringify(contexto.transacciones_recientes || []).slice(0, 600)}
       console.error('[AIService.conversar] Error completo:', error.message);
       console.error('[AIService.conversar] Status:', error.response?.status);
       console.error('[AIService.conversar] Data:', JSON.stringify(error.response?.data));
-      return "Lo siento, estoy teniendo problemas técnicos. ¿Podrías intentar de nuevo?";
+      
+      // FALLBACK LOCAL: Generar respuesta directamente desde el contexto
+      return this.generarRespuestaLocal(mensaje, contexto);
     }
+  }
+  
+  /**
+   * Genera una respuesta local usando los datos del contexto financiero
+   * No requiere API externa - funciona siempre
+   */
+  generarRespuestaLocal(mensaje, contexto) {
+    const msg = mensaje.toLowerCase();
+    
+    // RUNWAY
+    if (msg.includes('runway') || msg.includes('efectivo') || msg.includes('liquidez') || msg.includes('cuanto dinero')) {
+      const dias = contexto.runway?.dias || 0;
+      const gtq = contexto.liquidez?.gtq || 0;
+      const estado = dias < 30 ? '🚨 CRÍTICO' : dias < 90 ? '⚠️ Bajo' : '✅ Saludable';
+      return `💰 **Liquidez Actual**\n\n• Efectivo GTQ: Q${gtq.toLocaleString()}\n• Runway: **${dias} días** ${estado}\n• Gasto diario estimado: Q${(contexto.runway?.gasto_diario_estimado || 50000).toLocaleString()}\n\n${dias < 30 ? '⚠️ **Alerta:** Tu runway es crítico. Considera acelerar cobranzas o reducir gastos.' : dias < 90 ? 'ℹ️ Tienes liquidez aceptable pero monitorea de cerca.' : '✅ Tu posición de liquidez es saludable.'}`;
+    }
+    
+    // CCC
+    if (msg.includes('ccc') || msg.includes('cash conversion') || msg.includes('ciclo de efectivo')) {
+      const ccc = contexto.ccc;
+      return `🔄 **Cash Conversion Cycle (CCC)**\n\n• DIO (Inventario): ${ccc?.dio || 45} días\n• DSO (Cobro): ${ccc?.dso || 0} días\n• DPO (Pago): ${ccc?.dpo || 0} días\n• **CCC Total: ${ccc?.valor || 0} días**\n\n${ccc?.interpretacion || 'Interpretación no disponible'}\n\n💡 *CCC = DIO + DSO - DPO. Mide cuántos días tu dinero está "atrapado" en operaciones.*`;
+    }
+    
+    // CxC
+    if (msg.includes('cxc') || msg.includes('cobrar') || msg.includes('deudores') || msg.includes('clientes')) {
+      const cxc = contexto.cxc;
+      return `👥 **Cuentas por Cobrar**\n\n• Total pendiente: **Q${(cxc?.total || 0).toLocaleString()}**\n• Facturas pendientes: ${cxc?.facturas || 0}\n• Días promedio de cobro: ${cxc?.dias_promedio || 0} días\n\n**Top Deudores:**\n${(cxc?.top_deudores || []).map(d => `• ${d.cliente}: Q${(d.monto || 0).toLocaleString()} (${d.dias} días)`).join('\n') || 'Sin datos'}\n\n${(cxc?.dias_promedio || 0) > 60 ? '⚠️ DSO elevado - considera políticas de cobro más estrictas.' : ''}`;
+    }
+    
+    // CxP
+    if (msg.includes('cxp') || msg.includes('pagar') || msg.includes('proveedores') || msg.includes('pagos')) {
+      const cxp = contexto.cxp;
+      return `💳 **Cuentas por Pagar**\n\n• Total pendiente: **Q${(cxp?.total || 0).toLocaleString()}**\n• Facturas pendientes: ${cxp?.facturas || 0}\n\n**Próximos pagos (14 días):**\n${(cxp?.proximos_pagos || []).map(p => `• ${p.proveedor}: Q${(p.monto || 0).toLocaleString()} - vence ${p.fecha_vencimiento?.split('T')[0]}`).join('\n') || 'Sin vencimientos próximos'}\n\n💡 *DPO: ${contexto.ccc?.dpo || 30} días. Aprovecha plazos de pago sin afectar relaciones comerciales.*`;
+    }
+    
+    // KPIs generales
+    if (msg.includes('kpi') || msg.includes('metricas') || msg.includes('indicadores') || msg.includes('resumen')) {
+      return `📊 **KPIs Financieros - ${contexto.fecha_actual}**\n\n💰 **Liquidez:**\n• Efectivo: Q${(contexto.liquidez?.gtq || 0).toLocaleString()}\n• Runway: ${contexto.runway?.dias || 0} días\n\n👥 **CxC:**\n• Pendiente: Q${(contexto.cxc?.total || 0).toLocaleString()} (${contexto.cxc?.facturas || 0} facturas)\n• DSO: ${contexto.cxc?.dias_promedio || 0} días\n\n💳 **CxP:**\n• Pendiente: Q${(contexto.cxp?.total || 0).toLocaleString()} (${contexto.cxp?.facturas || 0} facturas)\n• DPO: ${contexto.ccc?.dpo || 30} días\n\n🔄 **CCC:** ${contexto.ccc?.valor || 0} días\n\n📈 **Ventas 30d:** Q${(contexto.ventas_30d || 0).toLocaleString()}\n📉 **Gastos 30d:** Q${(contexto.gastos_30d || 0).toLocaleString()}\n📊 **Margen:** ${contexto.margen_30d || 0}%`;
+    }
+    
+    // SAT
+    if (msg.includes('sat') || msg.includes('iva') || msg.includes('isr') || msg.includes('impuesto') || msg.includes('obligaciones')) {
+      const obs = contexto.obligaciones_sat || [];
+      return `📅 **Obligaciones SAT**\n\n${obs.length > 0 ? obs.map(o => `• ${o.tipo} - ${o.periodo} (vence ${o.fecha_vencimiento?.split('T')[0]})`).join('\n') : 'Sin obligaciones próximas registradas.'}\n\n${obs.length > 0 ? '⚠️ Asegúrate de cumplir con estas obligaciones para evitar multas.' : ''}`;
+    }
+    
+    // VENTAS
+    if (msg.includes('ventas') || msg.includes('ingresos') || msg.includes('facturacion')) {
+      return `📈 **Ventas (últimos 30 días)**\n\n• Total: **Q${(contexto.ventas_30d || 0).toLocaleString()}**\n• Gastos: Q${(contexto.gastos_30d || 0).toLocaleString()}\n• Margen: **${contexto.margen_30d || 0}%**\n\n${(contexto.margen_30d || 0) < 10 ? '⚠️ Margen bajo - revisa precios o costos.' : (contexto.margen_30d || 0) > 30 ? '✅ Buen margen.' : 'ℹ️ Margen en rango estándar.'}`;
+    }
+    
+    // GASTOS
+    if (msg.includes('gastos') || msg.includes('costos') || msg.includes('egresos')) {
+      return `📉 **Gastos (últimos 30 días)**\n\n• Total: **Q${(contexto.gastos_30d || 0).toLocaleString()}**\n• vs Ventas: Q${(contexto.ventas_30d || 0).toLocaleString()}\n• Margen: **${contexto.margen_30d || 0}%**\n\n💡 *Monitorea que los gastos no crezcan más rápido que las ventas.*`;
+    }
+    
+    // BANCOS
+    if (msg.includes('banco') || msg.includes('cuentas')) {
+      const bancos = contexto.bancos || [];
+      return `🏦 **Cuentas Bancarias**\n\n${bancos.map(b => `• ${b.banco}: Q${(parseFloat(b.saldo) || 0).toLocaleString()} (${b.moneda})`).join('\n') || 'Sin cuentas registradas.'}\n\nTotal cuentas: ${bancos.length}`;
+    }
+    
+    // Default / no reconocido
+    return `🤖 **CFO AI - Respuesta basada en datos actuales**\n\nTengo estos datos disponibles al ${contexto.fecha_actual}:\n\n• 💰 Efectivo: Q${(contexto.liquidez?.gtq || 0).toLocaleString()}\n• 📊 Runway: ${contexto.runway?.dias || 0} días\n• 👥 CxC: Q${(contexto.cxc?.total || 0).toLocaleString()}\n• 💳 CxP: Q${(contexto.cxp?.total || 0).toLocaleString()}\n• 🔄 CCC: ${contexto.ccc?.valor || 0} días\n• 📈 Ventas 30d: Q${(contexto.ventas_30d || 0).toLocaleString()}\n• 📉 Gastos 30d: Q${(contexto.gastos_30d || 0).toLocaleString()}\n\n💡 Pregúntame específicamente por: runway, CCC, CxC, CxP, KPIs, ventas, gastos, bancos, o SAT.`;
   }
 
   // ============ MÉTODOS PRIVADOS ============

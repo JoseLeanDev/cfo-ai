@@ -7,6 +7,7 @@ import Contabilidad from './pages/Contabilidad'
 import Analisis from './pages/Analisis'
 import SAT from './pages/SAT'
 import LogActividades from './pages/LogActividades'
+import Usuarios from './pages/Usuarios'
 import Login from './pages/Login'
 // Páginas secundarias
 import LibroDiario from './pages/LibroDiario'
@@ -52,6 +53,7 @@ function AppRoutes() {
                 <Route path="/analisis" element={<Analisis />} />
                 <Route path="/sat" element={<SAT />} />
                 <Route path="/log-actividades" element={<LogActividades />} />
+                <Route path="/usuarios" element={<Usuarios />} />
                 {/* Páginas secundarias */}
                 <Route path="/contabilidad/libro-diario" element={<LibroDiario />} />
                 <Route path="/tesoreria/cuentas-por-cobrar" element={<CuentasPorCobrar />} />

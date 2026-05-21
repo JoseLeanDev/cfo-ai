@@ -10,6 +10,7 @@ import {
   XMarkIcon,
   ArrowRightOnRectangleIcon,
   UserCircleIcon,
+  UsersIcon,
 } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
@@ -22,6 +23,7 @@ const navigation = [
   { name: 'Análisis', href: '/analisis', icon: ChartBarIcon },
   { name: 'SAT', href: '/sat', icon: DocumentCheckIcon },
   { name: 'Agentes IA', href: '/log-actividades', icon: CpuChipIcon },
+  { name: 'Usuarios', href: '/usuarios', icon: UsersIcon, adminOnly: true },
 ]
 
 export default function DashboardLayout({ children }) {
@@ -60,7 +62,9 @@ export default function DashboardLayout({ children }) {
             </div>
             
             <nav className="p-2 space-y-1">
-              {navigation.map((item) => {
+              {navigation
+                .filter(item => !item.adminOnly || isAdmin)
+                .map((item) => {
                 const isActive = location.pathname === item.href
                 return (
                   <Link
@@ -111,7 +115,9 @@ export default function DashboardLayout({ children }) {
           
           {/* Navigation */}
           <nav className="flex-1 p-2 space-y-1">
-            {navigation.map((item) => {
+            {navigation
+              .filter(item => !item.adminOnly || isAdmin)
+              .map((item) => {
               const isActive = location.pathname === item.href
               return (
                 <Link

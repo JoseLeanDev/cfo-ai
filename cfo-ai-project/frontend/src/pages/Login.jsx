@@ -35,11 +35,10 @@ export default function Login() {
             <img 
               src="/logo-abaco.jpg" 
               alt="abaco" 
-              className="h-16 w-auto object-contain rounded-lg"
+              className="h-24 w-auto object-contain rounded-lg"
             />
           </div>
-          <h1 className="text-3xl font-bold text-[#001639]">abaco</h1>
-          <p className="text-sm text-[var(--text-muted)] mt-1">Inteligencia Financiera para CEOs</p>
+          <p className="text-sm text-[var(--text-muted)] mt-2">Inteligencia Financiera para CEOs</p>
         </div>
 
         {/* Login Card */}

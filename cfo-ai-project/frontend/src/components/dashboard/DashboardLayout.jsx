@@ -54,8 +54,7 @@ export default function DashboardLayout({ children }) {
           <div className="fixed inset-y-0 left-0 w-64 bg-white border-r border-[var(--border-default)]">
             <div className="flex h-20 items-center justify-between px-4 border-b border-[var(--border-default)]">
               <div className="flex items-center gap-3">
-                <img src="/logo-abaco.jpg" alt="abaco" className="h-10 w-auto object-contain rounded" />
-                <span className="text-base font-bold text-[#001639]">abaco</span>
+                <img src="/logo-abaco.jpg" alt="abaco" className="h-14 w-auto object-contain rounded" />
               </div>
               <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-[var(--bg-secondary)] rounded">
                 <XMarkIcon className="w-5 h-5 text-[var(--text-secondary)]" />
@@ -110,8 +109,7 @@ export default function DashboardLayout({ children }) {
           {/* Logo */}
           <div className="flex items-center h-20 px-5 border-b border-[var(--border-default)]">
             <Link to="/" className="flex items-center gap-3">
-              <img src="/logo-abaco.jpg" alt="abaco" className="h-12 w-auto object-contain rounded" />
-              <span className="text-lg font-bold text-[#001639]">abaco</span>
+              <img src="/logo-abaco.jpg" alt="abaco" className="h-16 w-auto object-contain rounded" />
             </Link>
           </div>
           

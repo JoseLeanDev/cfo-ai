@@ -219,6 +219,7 @@ negociar línea de crédito por Q300,000
 | ✅ | **Eliminar agentes viejos de TODO el proyecto** | DONE | 6988b0c |
 | ✅ | **Sistema de Login/Logout con PostgreSQL** | DONE | 8f47feb |
 | ✅ | **Admin de Usuarios en Dashboard** | DONE | cdea62b |
+| ✅ | **Rebrand CFO AI → abaco** | DONE | 152d4e1 |
 | 🟡 | Chatbot/AI Assistant (burbuja) - Testing | IN PROGRESS | - |
 | ✅ | Fix Runway card superior (419 meses) | DONE | 7ce6a36 |
 | 🟢 | Análisis de Ventas (Productos/Tiendas/Clientes) | DONE | 0e47c7e |

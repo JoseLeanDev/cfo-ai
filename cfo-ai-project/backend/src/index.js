@@ -43,6 +43,7 @@ app.set('db', db); // Make db available to routes
 app.set('CFOAICore', getCFOAICore());
 
 // Routes
+app.use('/api/auth', require('./routes/auth'));       // Auth - Login/Logout/Register
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/tesoreria', require('./routes/tesoreria'));
 app.use('/api/contabilidad', require('./routes/contabilidad'));

@@ -235,6 +235,20 @@ CREATE TABLE IF NOT EXISTS cierres_mensuales (
   updated_at TIMESTAMP DEFAULT NOW()
 );
 
+-- Usuarios
+CREATE TABLE IF NOT EXISTS usuarios (
+  id SERIAL PRIMARY KEY,
+  nombre VARCHAR(255) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  rol VARCHAR(50) DEFAULT 'usuario',
+  avatar_url VARCHAR(500),
+  activo BOOLEAN DEFAULT TRUE,
+  ultimo_login TIMESTAMP,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+);
+
 -- Briefings diarios
 CREATE TABLE IF NOT EXISTS briefings_diarios (
   id SERIAL PRIMARY KEY,
@@ -284,6 +298,11 @@ CREATE TABLE IF NOT EXISTS obligaciones_sat (
 -- Insertar empresa por defecto
 INSERT INTO empresas (id, nombre, nit, moneda_principal)
 VALUES (1, 'Empresa Demo', '1234567-8', 'GTQ')
+ON CONFLICT DO NOTHING;
+
+-- Insertar usuario demo (password: demo123)
+INSERT INTO usuarios (id, nombre, email, password_hash, rol)
+VALUES (1, 'Usuario Demo', 'demo@cfoai.com', '$2b$10$wZ/MyH.ecgVvcPD3o06n.OYjy1I1c74BQSG0CKvUbVQkEM6Zcm1aC', 'admin')
 ON CONFLICT DO NOTHING;
 `;
 

@@ -8,8 +8,11 @@ import {
   CpuChipIcon,
   Bars3Icon,
   XMarkIcon,
+  ArrowRightOnRectangleIcon,
+  UserCircleIcon,
 } from '@heroicons/react/24/outline'
 import { useState } from 'react'
+import { useAuth } from '../../context/AuthContext'
 import AgentChat from '../agents/AgentChat'
 
 const navigation = [
@@ -24,6 +27,18 @@ const navigation = [
 export default function DashboardLayout({ children }) {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const { user, logout, isAdmin } = useAuth()
+
+  const handleLogout = async () => {
+    await logout()
+    window.location.href = '/login'
+  }
+
+  // Obtener iniciales del usuario
+  const getInitials = (name) => {
+    if (!name) return 'U'
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+  }
 
   return (
     <div className="min-h-screen bg-[var(--bg-secondary)]">
@@ -60,6 +75,26 @@ export default function DashboardLayout({ children }) {
                 )
               })}
             </nav>
+
+            {/* Mobile user section */}
+            <div className="p-4 border-t border-[var(--border-default)]">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-secondary)]">
+                <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center">
+                  <span className="text-white text-xs font-medium">{getInitials(user?.nombre)}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--text-primary)] truncate">{user?.nombre || 'Usuario'}</p>
+                  <p className="text-xs text-[var(--text-muted)]">{user?.rol || 'Usuario'}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="mt-2 w-full flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              >
+                <ArrowRightOnRectangleIcon className="w-4 h-4" />
+                Cerrar Sesión
+              </button>
+            </div>
           </div>
         </div>
       )}
@@ -97,14 +132,21 @@ export default function DashboardLayout({ children }) {
           {/* Footer */}
           <div className="p-4 border-t border-[var(--border-default)]">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-secondary)]">
-              <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center">
-                <span className="text-white text-xs font-medium">JD</span>
+              <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-xs font-medium">{getInitials(user?.nombre)}</span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--text-primary)] truncate">JoseLeanDev</p>
-                <p className="text-xs text-[var(--text-muted)]">Admin</p>
+                <p className="text-sm font-medium text-[var(--text-primary)] truncate">{user?.nombre || 'Usuario'}</p>
+                <p className="text-xs text-[var(--text-muted)]">{isAdmin ? 'Admin' : (user?.rol || 'Usuario')}</p>
               </div>
             </div>
+            <button
+              onClick={handleLogout}
+              className="mt-2 w-full flex items-center justify-center gap-2 px-3 py-2 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200"
+            >
+              <ArrowRightOnRectangleIcon className="w-4 h-4" />
+              Cerrar Sesión
+            </button>
           </div>
         </div>
       </div>
@@ -132,6 +174,15 @@ export default function DashboardLayout({ children }) {
             </div>
 
             <div className="flex items-center gap-4">
+              {/* User badge */}
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-default)]">
+                <UserCircleIcon className="w-4 h-4 text-[var(--text-muted)]" />
+                <span className="text-xs font-medium text-[var(--text-primary)]">{user?.nombre || 'Usuario'}</span>
+                {isAdmin && (
+                  <span className="text-[10px] px-1.5 py-0.5 bg-black text-white rounded-full">ADMIN</span>
+                )}
+              </div>
+
               <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[var(--success-bg)]">
                 <span className="w-1.5 h-1.5 rounded-full bg-[var(--success)]"></span>
                 <span className="text-xs font-medium text-[var(--success)]">Sistema operativo</span>

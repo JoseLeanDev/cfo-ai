@@ -1,6 +1,6 @@
 /**
  * Agent Scheduler v2.0
- * Orquesta los 4 agentes especializados del CFO AI
+ * Orquesta los 4 agentes especializados del abaco
  */
 
 const cron = require('node-cron');
@@ -19,7 +19,7 @@ class AgentScheduler {
       return;
     }
 
-    console.log('[AgentScheduler] 🚀 Inicializando CFO AI Core v2.0...');
+    console.log('[AgentScheduler] 🚀 Inicializando abaco Core v2.0...');
     await this.core.iniciar();
 
     // Briefing diario 7:00 AM

@@ -6,8 +6,8 @@ export default function AgentChat() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: '¡Hola! Soy CFO AI. ¿En qué puedo ayudarte hoy?',
-      agent: 'CFO AI Core'
+      content: '¡Hola! Soy abaco. ¿En qué puedo ayudarte hoy?',
+      agent: 'abaco Core'
     }
   ]);
   const [input, setInput] = useState('');
@@ -60,12 +60,12 @@ export default function AgentChat() {
 
   const getAgentEmoji = (agentName) => {
     const emojis = {
-      'CFO AI Core': '🤖',
+      'abaco Core': '🤖',
       'Caja': '💰',
       'Análisis': '📊',
       'Cobranza': '📋',
       'Contabilidad': '📅',
-      'CFO AI Core': '🤖',
+      'abaco Core': '🤖',
       'Orchestrator': '🎛️'
     };
     return emojis[agentName] || '🤖';
@@ -112,7 +112,7 @@ export default function AgentChat() {
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🤖</span>
                 <div>
-                  <h3 className="font-semibold">CFO AI Assistant</h3>
+                  <h3 className="font-semibold">abaco Assistant</h3>
                   <p className="text-xs text-blue-100">Multi-Agent System</p>
                 </div>
               </div>

@@ -431,7 +431,7 @@ export default function GastosNomina() {
                       <p className="text-lg font-bold mt-1">{formatGTQ(totalCat)}</p>
                       <div className="mt-2 h-2 bg-white rounded-full overflow-hidden">
                         <div 
-                          className="h-full bg-black rounded-full"
+                          className="h-full bg-[#001639] rounded-full"
                           style={{ width: `${pctTotal}%` }}
                         />
                       </div>
@@ -467,7 +467,7 @@ export default function GastosNomina() {
                     </div>
                     <div className="mt-1 h-1.5 bg-white rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-black rounded-full"
+                        className="h-full bg-[#001639] rounded-full"
                         style={{ width: `${dept.pctTotal * 3}%` }}
                       />
                     </div>

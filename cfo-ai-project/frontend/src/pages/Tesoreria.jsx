@@ -38,7 +38,7 @@ export default function Tesoreria() {
     <div className="space-y-6 animate-fade-in max-w-6xl">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+        <div className="w-10 h-10 rounded-lg bg-[#001639] flex items-center justify-center">
           <BanknotesIcon className="w-5 h-5 text-white" />
         </div>
         <div>
@@ -126,7 +126,7 @@ export default function Tesoreria() {
         <div className="p-5 pt-0">
           {loadingWC ? (
             <div className="h-32 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-[#001639] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : (
             <>
@@ -439,7 +439,7 @@ export default function Tesoreria() {
           
           {loadingProy ? (
             <div className="h-48 flex items-center justify-center">
-              <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
+              <div className="w-8 h-8 border-2 border-[#001639] border-t-transparent rounded-full animate-spin" />
             </div>
           ) : proyeccionData.proyeccion?.length > 0 ? (
             <div className="p-5 pt-0">
@@ -461,7 +461,7 @@ export default function Tesoreria() {
                         } ${semana.alerta ? 'ring-2 ring-rose-400' : ''}`}
                           style={{ height: `${Math.max(altura, 8)}%`, minHeight: '8px' }}
                         />
-                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-black text-white text-xs py-1.5 px-2.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                        <div className="absolute -top-12 left-1/2 -translate-x-1/2 bg-[#001639] text-white text-xs py-1.5 px-2.5 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
                           S{semana.semana}: Q{semana.saldo_acumulado.toLocaleString()}
                           {semana.alerta && <span className="block text-rose-400">⚠️ {semana.alerta}</span>}
                         </div>

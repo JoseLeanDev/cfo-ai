@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-// NUEVO: Importar CFO AI Core v2.0
+// NUEVO: Importar abaco Core v2.0
 const CFOAICore = require('../agents');
 
 const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
@@ -223,7 +223,7 @@ router.get('/insights', async (req, res) => {
     }
 
     // Instanciar agentes (o usar wrappers si no tienen los métodos esperados)
-    // Nota: Agentes v1.0 eliminados. Usando CFO AI Core v2.0
+    // Nota: Agentes v1.0 eliminados. Usando abaco Core v2.0
     // Datos se obtienen directamente de DB o vía CFOAICore
     const analista = CFOAICore;
     const predictor = CFOAICore;
@@ -425,7 +425,7 @@ router.get('/insights', async (req, res) => {
             insight.description, insight.impact || 0, insight.currency || 'GTQ',
             insight.category, insight.action, insight.actionLabel, insight.change || 0,
             responseData.periodo_analisis.desde, responseData.periodo_analisis.hasta,
-            'CFO AI Core', '1.0'
+            'abaco Core', '1.0'
           ]);
         }
       } catch (err) {

@@ -31,10 +31,14 @@ export default function Login() {
       <div className="w-full max-w-md">
         {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-black mb-4">
-            <span className="text-white text-2xl font-bold">CFO</span>
+          <div className="inline-flex items-center justify-center mb-4">
+            <img 
+              src="/logo-abaco.jpg" 
+              alt="abaco" 
+              className="h-16 w-auto object-contain rounded-lg"
+            />
           </div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">CFO AI</h1>
+          <h1 className="text-3xl font-bold text-[#001639]">abaco</h1>
           <p className="text-sm text-[var(--text-muted)] mt-1">Inteligencia Financiera para CEOs</p>
         </div>
 
@@ -58,7 +62,7 @@ export default function Login() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] bg-white text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] bg-white text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[#001639] focus:border-transparent"
                 placeholder="tu@email.com"
                 required
               />
@@ -72,7 +76,7 @@ export default function Login() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] bg-white text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] bg-white text-[var(--text-primary)] text-sm focus:outline-none focus:ring-2 focus:ring-[#001639] focus:border-transparent"
                 placeholder="••••••••"
                 required
               />
@@ -81,7 +85,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-2.5 px-4 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-2.5 px-4 bg-[#001639] text-white rounded-lg text-sm font-medium hover:bg-[#002a5c] disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {loading ? 'Ingresando...' : 'Ingresar'}
             </button>
@@ -95,7 +99,7 @@ export default function Login() {
         </div>
 
         <p className="text-center text-xs text-[var(--text-muted)] mt-6">
-          © 2025 CFO AI — Versión Demo
+          © 2025 abaco — Versión Demo
         </p>
       </div>
     </div>

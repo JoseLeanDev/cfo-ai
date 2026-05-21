@@ -11,12 +11,12 @@ const { wakeUpMiddleware, ejecutarTareasPendientesWakeUp } = require('./services
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialize CFO AI Core v2.0
+// Initialize abaco Core v2.0
 async function initializeAgents() {
   try {
     const core = initializeCFOAICore();
     app.set('CFOAICore', core);
-    console.log('🤖 CFO AI Core v2.0 iniciado exitosamente');
+    console.log('🤖 abaco Core v2.0 iniciado exitosamente');
     console.log('   Agentes: 💰 Caja • 📊 Análisis • 💵 Cobranza • 📗 Contabilidad');
   } catch (error) {
     console.error('❌ Error inicializando CFO AI Core:', error.message);
@@ -171,10 +171,10 @@ app.use((req, res) => {
 app.listen(PORT, async () => {
   console.log(`
 ╔══════════════════════════════════════════════════════════╗
-║              CFO AI - Backend API v2.0                 ║
+║              abaco - Backend API v2.0                 ║
 ╠══════════════════════════════════════════════════════════╣
 ║  🚀 Servidor corriendo en puerto ${PORT}                   ║
-║  📊 CFO AI Core v2.0: ACTIVO                             ║
+║  📊 abaco Core v2.0: ACTIVO                             ║
 ║  🤖 Agentes: 💰 Caja • 📊 Análisis • 📋 Cobranza • 📅 Contabilidad
 ╠══════════════════════════════════════════════════════════╣
 ║  Tareas Programadas:                                     ║
@@ -189,13 +189,13 @@ app.listen(PORT, async () => {
   console.log(`Agentes API: http://localhost:${PORT}/api/agents`);
   console.log(`Health check: http://localhost:${PORT}/api/health`);
   
-  // Initialize CFO AI Core v2.0
+  // Initialize abaco Core v2.0
   await initializeAgents();
   
   // Setup auth tables
   await setupAuthTables();
   
-  // Initialize CFO Scheduler
+  // Initialize abaco Scheduler
   try {
     const CFOScheduler = require('./scheduler/CFOScheduler');
     const scheduler = new CFOScheduler({
@@ -204,9 +204,9 @@ app.listen(PORT, async () => {
     });
     await scheduler.init();
     scheduler.start();
-    console.log(`\n⏰ CFO Scheduler iniciado: ${scheduler.tasks.length} tareas programadas activas`);
+    console.log(`\n⏰ abaco Scheduler iniciado: ${scheduler.tasks.length} tareas programadas activas`);
   } catch (error) {
-    console.error('❌ Error iniciando CFO Scheduler:', error.message);
+    console.error('❌ Error iniciando abaco Scheduler:', error.message);
   }
 });
 

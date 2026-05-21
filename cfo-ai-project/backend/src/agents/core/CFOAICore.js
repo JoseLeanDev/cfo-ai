@@ -1,6 +1,6 @@
 const config = require('../../config/financiera');
 /**
- * CFO AI Core 🤖
+ * abaco Core 🤖
  * Orquestador central que coordina los 4 agentes especializados:
  * - Caja (tesorería)
  * - Análisis (KPIs, rentabilidad)
@@ -17,7 +17,7 @@ const db = require('../../../database/connection');
 
 class CFOAICore extends BaseAgent {
   constructor() {
-    super('CFO AI Core', 'orchestrator', [
+    super('abaco Core', 'orchestrator', [
       'coordinarAgentes',
       'ejecutarTarea',
       'generarBriefingDiario',
@@ -33,11 +33,11 @@ class CFOAICore extends BaseAgent {
    */
   async iniciar() {
     if (this.inicializado) {
-      console.log('[CFO AI Core] Ya inicializado');
+      console.log('[abaco Core] Ya inicializado');
       return;
     }
 
-    console.log('[CFO AI Core] 🤖 Inicializando sistema multi-agente v2.0...');
+    console.log('[abaco Core] 🤖 Inicializando sistema multi-agente v2.0...');
 
     // Crear instancias de agentes
     this.agentes.set('caja', new AgenteCaja());
@@ -46,7 +46,7 @@ class CFOAICore extends BaseAgent {
     this.agentes.set('contabilidad', new AgenteContabilidad());
 
     this.inicializado = true;
-    console.log(`[CFO AI Core] ✅ ${this.agentes.size} agentes listos`);
+    console.log(`[abaco Core] ✅ ${this.agentes.size} agentes listos`);
     console.log('  - 💰 Caja: tesorería, cash flow, runway');
     console.log('  - 📊 Análisis: KPIs, rentabilidad, RFM');
     console.log('  - 💵 Cobranza: CxC, DSO, CCC, cobro');
@@ -66,7 +66,7 @@ class CFOAICore extends BaseAgent {
       throw new Error(`Agente '${agenteId}' no encontrado`);
     }
 
-    console.log(`[CFO AI Core] ▶️ Ejecutando ${agenteId}.${tareaId}()`);
+    console.log(`[abaco Core] ▶️ Ejecutando ${agenteId}.${tareaId}()`);
     const startTime = Date.now();
 
     try {
@@ -100,7 +100,7 @@ class CFOAICore extends BaseAgent {
   async generarBriefingDiario(empresaId = config.default_empresa_id) {
     const startTime = Date.now();
     
-    console.log('[CFO AI Core] 🌅 Generando Briefing Diario...');
+    console.log('[abaco Core] 🌅 Generando Briefing Diario...');
 
     try {
       // Ejecutar análisis clave
@@ -153,7 +153,7 @@ class CFOAICore extends BaseAgent {
         Date.now() - startTime
       );
 
-      console.log(`[CFO AI Core] ✅ Briefing listo: ${exitosos.length} agentes, ${insights.length} insights`);
+      console.log(`[abaco Core] ✅ Briefing listo: ${exitosos.length} agentes, ${insights.length} insights`);
       
       return this.formatResponse(
         `Briefing diario: ${exitosos.length} agentes ejecutados, ${insights.length} insights`,
@@ -277,7 +277,7 @@ class CFOAICore extends BaseAgent {
   detener() {
     this.agentes.clear();
     this.inicializado = false;
-    console.log('[CFO AI Core] 🛑 Detenido');
+    console.log('[abaco Core] 🛑 Detenido');
   }
 
   /**

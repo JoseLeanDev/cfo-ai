@@ -1,5 +1,5 @@
 // Configuración financiera centralizada
-// Todos los umbrales y valores por defecto del sistema CFO AI
+// Todos los umbrales y valores por defecto del sistema abaco
 
 module.exports = {
   // IDs por defecto

@@ -298,7 +298,7 @@ export default function AnalisisVentas() {
                           <p className="font-medium text-sm">{producto.nombre}</p>
                           <div className="mt-1 h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden w-32">
                             <div 
-                              className="h-full bg-black rounded-full transition-all"
+                              className="h-full bg-[#001639] rounded-full transition-all"
                               style={{ width: `${(producto.ingresos / productosOrdenados[0].ingresos) * 100}%` }}
                             />
                           </div>
@@ -386,7 +386,7 @@ export default function AnalisisVentas() {
                           <p className="font-medium text-sm">{tienda.nombre}</p>
                           <div className="mt-1 h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden w-32">
                             <div 
-                              className="h-full bg-black rounded-full"
+                              className="h-full bg-[#001639] rounded-full"
                               style={{ width: `${(tienda.ventas / tiendasOrdenadas[0].ventas) * 100}%` }}
                             />
                           </div>

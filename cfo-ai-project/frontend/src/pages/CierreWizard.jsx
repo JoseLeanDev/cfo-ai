@@ -764,7 +764,7 @@ const CierreWizard = () => {
         <div className="bg-white rounded-lg shadow-md p-6 mb-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">🤖 CFO AI - Wizard de Cierre Contable</h1>
+              <h1 className="text-2xl font-bold text-gray-800">🤖 abaco - Wizard de Cierre Contable</h1>
               <p className="text-gray-600 mt-1">Periodo: Abril 2026 | Empresa: Corporación Demo S.A.C.</p>
             </div>
             <div className="text-right">

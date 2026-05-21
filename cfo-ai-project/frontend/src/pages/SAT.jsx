@@ -158,7 +158,7 @@ export default function SAT() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+          <div className="w-10 h-10 rounded-lg bg-[#001639] flex items-center justify-center">
             <BuildingLibraryIcon className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -186,7 +186,7 @@ export default function SAT() {
             onClick={() => setActiveTab(tab.id)}
             className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'bg-black text-white'
+                ? 'bg-[#001639] text-white'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
             }`}
           >
@@ -402,13 +402,13 @@ export default function SAT() {
       {activeTab === 'libros' && (
         <div className="space-y-6">
           <div className="flex gap-4 mb-4">
-            <button className={`px-4 py-2 rounded-lg text-sm font-medium ${filtroFacturas === 'ventas' ? 'bg-black text-white' : 'bg-[var(--bg-secondary)]'}`} onClick={() => setFiltroFacturas('ventas')}>
+            <button className={`px-4 py-2 rounded-lg text-sm font-medium ${filtroFacturas === 'ventas' ? 'bg-[#001639] text-white' : 'bg-[var(--bg-secondary)]'}`} onClick={() => setFiltroFacturas('ventas')}>
               Libro Ventas
             </button>
-            <button className={`px-4 py-2 rounded-lg text-sm font-medium ${filtroFacturas === 'compras' ? 'bg-black text-white' : 'bg-[var(--bg-secondary)]'}`} onClick={() => setFiltroFacturas('compras')}>
+            <button className={`px-4 py-2 rounded-lg text-sm font-medium ${filtroFacturas === 'compras' ? 'bg-[#001639] text-white' : 'bg-[var(--bg-secondary)]'}`} onClick={() => setFiltroFacturas('compras')}>
               Libro Compras
             </button>
-            <button className={`px-4 py-2 rounded-lg text-sm font-medium ${filtroFacturas === 'todas' ? 'bg-black text-white' : 'bg-[var(--bg-secondary)]'}`} onClick={() => setFiltroFacturas('todas')}>
+            <button className={`px-4 py-2 rounded-lg text-sm font-medium ${filtroFacturas === 'todas' ? 'bg-[#001639] text-white' : 'bg-[var(--bg-secondary)]'}`} onClick={() => setFiltroFacturas('todas')}>
               Ambos
             </button>
           </div>

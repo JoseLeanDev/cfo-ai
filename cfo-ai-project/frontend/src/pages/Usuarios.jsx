@@ -199,7 +199,7 @@ export default function Usuarios() {
   }
 
   const getRolColor = (rol) => {
-    if (rol === 'admin') return 'bg-black text-white'
+    if (rol === 'admin') return 'bg-[#001639] text-white'
     return 'bg-gray-100 text-gray-700'
   }
 
@@ -215,7 +215,7 @@ export default function Usuarios() {
         </div>
         <button
           onClick={() => setShowCreate(true)}
-          className="flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[#001639] text-white rounded-lg text-sm font-medium hover:bg-[#002a5c] transition-colors"
         >
           <PlusIcon className="w-4 h-4" />
           Nuevo Usuario
@@ -255,7 +255,7 @@ export default function Usuarios() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Buscar por nombre, email o rol..."
-            className="w-full pl-9 pr-4 py-2 rounded-lg border border-[var(--border-default)] bg-white text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-black"
+            className="w-full pl-9 pr-4 py-2 rounded-lg border border-[var(--border-default)] bg-white text-sm text-[var(--text-primary)] focus:outline-none focus:ring-2 focus:ring-[#001639]"
           />
         </div>
       )}
@@ -283,7 +283,7 @@ export default function Usuarios() {
                   >
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${u.activo ? 'bg-black text-white' : 'bg-gray-200 text-gray-500'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium ${u.activo ? 'bg-[#001639] text-white' : 'bg-gray-200 text-gray-500'}`}>
                           {getInitials(u.nombre)}
                         </div>
                         <div>
@@ -366,7 +366,7 @@ export default function Usuarios() {
       {/* Loading */}
       {loading && !error && (
         <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-[#001639] border-t-transparent rounded-full animate-spin" />
         </div>
       )}
 
@@ -387,7 +387,7 @@ export default function Usuarios() {
                   type="text"
                   value={newUser.nombre}
                   onChange={(e) => setNewUser({ ...newUser, nombre: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-[#001639]"
                   required
                 />
               </div>
@@ -397,7 +397,7 @@ export default function Usuarios() {
                   type="email"
                   value={newUser.email}
                   onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-[#001639]"
                   required
                 />
               </div>
@@ -407,7 +407,7 @@ export default function Usuarios() {
                   type="password"
                   value={newUser.password}
                   onChange={(e) => setNewUser({ ...newUser, password: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-[#001639]"
                   placeholder="Mínimo 6 caracteres"
                   required
                   minLength={6}
@@ -418,7 +418,7 @@ export default function Usuarios() {
                 <select
                   value={newUser.rol}
                   onChange={(e) => setNewUser({ ...newUser, rol: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-black bg-white"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-[#001639] bg-white"
                 >
                   <option value="usuario">Usuario</option>
                   <option value="admin">Administrador</option>
@@ -435,7 +435,7 @@ export default function Usuarios() {
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="flex-1 py-2 px-4 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                  className="flex-1 py-2 px-4 bg-[#001639] text-white rounded-lg text-sm font-medium hover:bg-[#002a5c] disabled:opacity-50 transition-colors"
                 >
                   {actionLoading ? 'Creando...' : 'Crear Usuario'}
                 </button>
@@ -462,7 +462,7 @@ export default function Usuarios() {
                   type="text"
                   value={showEdit.nombre}
                   onChange={(e) => setShowEdit({ ...showEdit, nombre: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-black"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-[#001639]"
                   required
                 />
               </div>
@@ -477,7 +477,7 @@ export default function Usuarios() {
                 <select
                   value={showEdit.rol}
                   onChange={(e) => setShowEdit({ ...showEdit, rol: e.target.value })}
-                  className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-black bg-white"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-[#001639] bg-white"
                 >
                   <option value="usuario">Usuario</option>
                   <option value="admin">Administrador</option>
@@ -506,7 +506,7 @@ export default function Usuarios() {
                 <button
                   type="submit"
                   disabled={actionLoading}
-                  className="flex-1 py-2 px-4 bg-black text-white rounded-lg text-sm font-medium hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                  className="flex-1 py-2 px-4 bg-[#001639] text-white rounded-lg text-sm font-medium hover:bg-[#002a5c] disabled:opacity-50 transition-colors"
                 >
                   {actionLoading ? 'Guardando...' : 'Guardar Cambios'}
                 </button>

@@ -53,7 +53,7 @@ const agenteConfig = {
     desc: 'Cierre mensual, fiscal, conciliación'
   },
   'orchestrator': { 
-    nombre: 'CFO AI Core', 
+    nombre: 'abaco Core', 
     color: 'text-slate-600',
     bg: 'bg-slate-50',
     border: 'border-slate-200',
@@ -224,7 +224,7 @@ export default function LogActividades() {
       {/* Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded bg-black flex items-center justify-center">
+          <div className="w-10 h-10 rounded bg-[#001639] flex items-center justify-center">
             <CpuChipIcon className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -328,7 +328,7 @@ export default function LogActividades() {
               <option value="analisis">📊 Análisis</option>
               <option value="cobranza">📋 Cobranza</option>
               <option value="contabilidad">📅 Contabilidad</option>
-              <option value="orchestrator">🤖 CFO AI Core</option>
+              <option value="orchestrator">🤖 abaco Core</option>
             </select>
           </div>
 
@@ -381,7 +381,7 @@ export default function LogActividades() {
 
         {isLoading ? (
           <div className="p-8 text-center">
-            <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin mx-auto mb-3" />
+            <div className="w-8 h-8 border-2 border-[#001639] border-t-transparent rounded-full animate-spin mx-auto mb-3" />
             <p className="text-sm text-[var(--text-muted)]">Cargando...</p>
           </div>
         ) : logs.length === 0 ? (

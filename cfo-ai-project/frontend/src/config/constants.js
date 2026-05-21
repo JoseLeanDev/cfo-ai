@@ -1,4 +1,4 @@
-// Constantes financieras centralizadas del frontend CFO AI
+// Constantes financieras centralizadas del frontend abaco
 // Extraídas de componentes para evitar valores hardcodeados
 
 // Moneda

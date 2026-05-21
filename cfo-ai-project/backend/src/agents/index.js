@@ -1,12 +1,12 @@
 /**
- * Agents Index v2.0 - Nuevo Sistema de Agentes CFO AI
+ * Agents Index v2.0 - Nuevo Sistema de Agentes abaco
  * 
  * Agentes especializados:
  * - 💰 Caja: Tesorería, cash flow, runway
  * - 📊 Análisis: KPIs, rentabilidad, RFM, anomalías
  * - 💵 Cobranza: CxC, DSO, CCC, cobro
  * - 📗 Contabilidad: Asientos, cierre, SAT
- * - 🤖 CFO AI Core: Orquestador central
+ * - 🤖 abaco Core: Orquestador central
  */
 
 const BaseAgent = require('./BaseAgent');
@@ -30,7 +30,7 @@ function initializeCFOAICore() {
   console.log('  - 📊 Análisis (KPIs, rentabilidad)');
   console.log('  - 💵 Cobranza (CxC, DSO, CCC)');
   console.log('  - 📗 Contabilidad (asientos, cierre, SAT)');
-  console.log('  - 🤖 CFO AI Core (orquestador)');
+  console.log('  - 🤖 abaco Core (orquestador)');
   
   return coreInstance;
 }

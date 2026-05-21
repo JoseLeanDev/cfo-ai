@@ -270,7 +270,7 @@ export default function Dashboard() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-4 bg-black text-white rounded-lg">
+              <div className="flex items-center justify-between p-4 bg-[#001639] text-white rounded-lg">
                 <div>
                   <span className="text-sm opacity-80">Ratio de Liquidez</span>
                   <p className="text-xs opacity-60">Activo corriente / Pasivo corriente</p>
@@ -328,15 +328,15 @@ export default function Dashboard() {
             </Link>
           </div>
 
-          {/* CFO AI Assistant */}
-          <div className="card bg-black text-white">
+          {/* abaco Assistant */}
+          <div className="card bg-[#001639] text-white">
             <div className="p-5">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded bg-white/10 flex items-center justify-center">
                   <SparklesIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <h2 className="font-semibold">CFO AI</h2>
+                  <h2 className="font-semibold">abaco</h2>
                   <p className="text-xs opacity-70">4 agentes activos</p>
                 </div>
               </div>
@@ -345,7 +345,7 @@ export default function Dashboard() {
                 Agentes inteligentes para análisis financiero, conciliación y cumplimiento fiscal.
               </p>
               
-              <Link to="/log-actividades" className="flex items-center justify-center gap-2 w-full py-2.5 bg-white text-black font-medium rounded-md hover:bg-opacity-90 transition-colors">
+              <Link to="/log-actividades" className="flex items-center justify-center gap-2 w-full py-2.5 bg-white text-[#001639] font-medium rounded-md hover:bg-opacity-90 transition-colors">
                 Ver Agentes
                 <ChevronRightIcon className="w-4 h-4" />
               </Link>

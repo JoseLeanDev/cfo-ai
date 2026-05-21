@@ -66,7 +66,7 @@ export default function CuentasBancarias() {
             <ArrowLeftIcon className="w-5 h-5 text-[var(--text-muted)]" />
           </Link>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-[#001639] flex items-center justify-center">
               <BuildingLibraryIcon className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -143,7 +143,7 @@ export default function CuentasBancarias() {
               <div 
                 key={idx} 
                 className={`p-5 hover:bg-[var(--bg-secondary)] transition-all cursor-pointer ${
-                  cuentaSeleccionada === idx ? 'bg-blue-50 border-l-4 border-black' : 'border-l-4 border-transparent'
+                  cuentaSeleccionada === idx ? 'bg-blue-50 border-l-4 border-[#001639]' : 'border-l-4 border-transparent'
                 }`}
                 onClick={() => setCuentaSeleccionada(cuentaSeleccionada === idx ? null : idx)}
               >

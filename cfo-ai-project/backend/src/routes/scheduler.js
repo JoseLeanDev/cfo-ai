@@ -14,13 +14,13 @@ router.get('/status', async (req, res) => {
       success: true,
       running: core ? true : false,
       timestamp: new Date().toISOString(),
-      message: 'CFO AI Core v2.0',
+      message: 'abaco Core v2.0',
       tareas: [
         { agente: '💰 Caja', frecuencia: 'Cada hora 7AM-6PM, 6AM proyección' },
         { agente: '📊 Análisis', frecuencia: '5AM diario, Lun 5AM, Día 1 6AM' },
         { agente: '📋 Cobranza', frecuencia: 'Cada hora 7AM-6PM, 6AM, Lun 5:30AM' },
         { agente: '📅 Contabilidad', frecuencia: '5AM diario, Vie 6PM, Día 1 4AM' },
-        { agente: '🤖 CFO AI Core', frecuencia: 'Briefing 7:00 AM diario' }
+        { agente: '🤖 abaco Core', frecuencia: 'Briefing 7:00 AM diario' }
       ]
     });
   } catch (error) {
@@ -42,7 +42,7 @@ router.post('/trigger', async (req, res) => {
     const core = req.app.get('CFOAICore');
     
     if (!core) {
-      return res.status(503).json({ error: 'CFO AI Core no inicializado' });
+      return res.status(503).json({ error: 'abaco Core no inicializado' });
     }
 
     const result = await core.ejecutarTarea(agente, tarea);

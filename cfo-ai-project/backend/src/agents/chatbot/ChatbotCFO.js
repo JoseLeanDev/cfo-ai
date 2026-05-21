@@ -73,7 +73,7 @@ class ChatbotCFO extends BaseAgent {
     else if (hour < 18) saludo = '¡Buenas tardes';
     else saludo = '¡Buenas noches';
 
-    const response = `${saludo}! Soy **CFO AI**, tu asistente financiero inteligente. 🤖💼\n\n` +
+    const response = `${saludo}! Soy **abaco**, tu asistente financiero inteligente. 🤖💼\n\n` +
       `Puedo ayudarte con:\n\n` +
       `📊 **Análisis Financiero** - KPIs, ratios, rentabilidad\n` +
       `🏛️ **Obligaciones SAT** - Impuestos y cumplimiento fiscal\n` +
@@ -85,7 +85,7 @@ class ChatbotCFO extends BaseAgent {
   }
 
   showHelp() {
-    const response = `📚 **Menú de Ayuda - CFO AI**\n\n` +
+    const response = `📚 **Menú de Ayuda - abaco**\n\n` +
       `**Ejemplos de consultas que puedes hacer:**\n\n` +
       `💰 *"¿Cuál es mi runway?"* - Análisis de supervivencia\n` +
       `📈 *"Muéstrame los KPIs"* - Indicadores financieros\n` +
@@ -105,7 +105,7 @@ class ChatbotCFO extends BaseAgent {
 
   explainAgents() {
     const response = `🤖 **Nuestro Equipo de Agentes de IA**\n\n` +
-      `CFO AI funciona con 5 agentes especializados coordinados por un Orchestrator:\n\n` +
+      `abaco funciona con 5 agentes especializados coordinados por un Orchestrator:\n\n` +
       `1️⃣ **Analista Financiero** 📊\n` +
       `   • KPIs, ratios de liquidez, rentabilidad\n` +
       `   • Análisis de métricas financieras\n\n` +
@@ -130,7 +130,7 @@ class ChatbotCFO extends BaseAgent {
   sayGoodbye() {
     const responses = [
       '¡Hasta luego! Estaré aquí cuando necesites ayuda con tus finanzas. 📊',
-      'Gracias por usar CFO AI. ¡Que tengas un excelente día! 💼',
+      'Gracias por usar abaco. ¡Que tengas un excelente día! 💼',
       'Nos vemos. Recuerda que puedes consultarme cuando quieras sobre tu runway, KPIs o impuestos. 🚀',
       '¡Adiós! No olvides revisar tus obligaciones SAT pendientes. 🏛️'
     ];

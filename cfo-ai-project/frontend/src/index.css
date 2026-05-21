@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 /* ============================================
-   CFO AI - Cal.com Design System
+   abaco - Cal.com Design System
    Estética: Open Source, Accessible, Trustworthy
    Clean scheduling, neutral palette, transparency
    ============================================ */
@@ -22,9 +22,14 @@
     --text-tertiary: #6B7280;
     --text-muted: #9CA3AF;
     
-    /* Brand - Trustworthy Black */
-    --brand-primary: #000000;
-    --brand-secondary: #1F2937;
+    /* Brand - abaco Blue */
+    --brand-primary: #001639;
+    --brand-secondary: #002a5c;
+    
+    /* Accent - abaco Orange */
+    --accent-orange: #f95f34;
+    --accent-orange-light: #ff7a5c;
+    --accent-orange-subtle: #fff0eb;
     
     /* Accent - Functional Blue */
     --accent-blue: #2563EB;

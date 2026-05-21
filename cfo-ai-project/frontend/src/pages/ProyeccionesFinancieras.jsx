@@ -23,7 +23,7 @@ export default function ProyeccionesFinancieras() {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center py-16">
-        <div className="w-8 h-8 border-2 border-black border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-[#001639] border-t-transparent rounded-full animate-spin" />
         <p className="mt-4 text-[var(--text-muted)]">Cargando proyección...</p>
       </div>
     )
@@ -45,7 +45,7 @@ export default function ProyeccionesFinancieras() {
             <ArrowLeftIcon className="w-5 h-5 text-[var(--text-muted)]" />
           </Link>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+            <div className="w-10 h-10 rounded-lg bg-[#001639] flex items-center justify-center">
               <ChartBarIcon className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -62,7 +62,7 @@ export default function ProyeccionesFinancieras() {
               onClick={() => setSemanas(n)}
               className={`px-4 py-2 rounded-lg font-medium text-sm ${
                 semanas === n 
-                  ? 'bg-black text-white' 
+                  ? 'bg-[#001639] text-white' 
                   : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]'
               }`}
             >
@@ -136,7 +136,7 @@ export default function ProyeccionesFinancieras() {
               
               return (
                 <div key={i} className="flex-1 flex flex-col items-center justify-end group relative h-full">
-                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-black text-white text-xs py-2 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                  <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-[#001639] text-white text-xs py-2 px-3 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
                     <div className="font-bold mb-1">Semana {d.semana}</div>
                     <div>Saldo: Q{d.saldo_acumulado.toLocaleString()}</div>
                     <div className={d.neto >= 0 ? 'text-emerald-400' : 'text-rose-400'}>

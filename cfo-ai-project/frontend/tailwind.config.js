@@ -10,6 +10,16 @@ export default {
         sans: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
+        abaco: {
+          DEFAULT: '#001639',
+          light: '#002a5c',
+          dark: '#000d24',
+        },
+        accent: {
+          DEFAULT: '#f95f34',
+          light: '#ff7a5c',
+          dark: '#e04d22',
+        },
         primary: {
           50: '#eff6ff',
           100: '#dbeafe',

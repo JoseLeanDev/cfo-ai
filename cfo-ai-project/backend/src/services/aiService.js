@@ -169,7 +169,7 @@ Responde en formato JSON:
    * @returns {Promise<string>} - Respuesta del agente
    */
   async conversar(mensaje, contexto) {
-    const systemPrompt = `Eres Finn, CFO AI Agent — un asistente financiero experto, profesional pero cercano. Tienes acceso EN TIEMPO REAL a los datos financieros de la empresa.
+    const systemPrompt = `Eres Finn, abaco Agent — un asistente financiero experto, profesional pero cercano. Tienes acceso EN TIEMPO REAL a los datos financieros de la empresa.
 
 ## TU MISIÓN
 Responde cualquier consulta financiera usando los datos reales que tienes abajo. NO inventes números. Si un dato está en el contexto, úsalo. Si no lo tienes, dilo claramente.
@@ -304,7 +304,7 @@ ${JSON.stringify(contexto.transacciones_recientes || []).slice(0, 600)}
     }
     
     // Default / no reconocido
-    return `🤖 **CFO AI - Respuesta basada en datos actuales**\n\nTengo estos datos disponibles al ${contexto.fecha_actual}:\n\n• 💰 Efectivo: Q${(contexto.liquidez?.gtq || 0).toLocaleString()}\n• 📊 Runway: ${contexto.runway?.dias || 0} días\n• 👥 CxC: Q${(contexto.cxc?.total || 0).toLocaleString()}\n• 💳 CxP: Q${(contexto.cxp?.total || 0).toLocaleString()}\n• 🔄 CCC: ${contexto.ccc?.valor || 0} días\n• 📈 Ventas 30d: Q${(contexto.ventas_30d || 0).toLocaleString()}\n• 📉 Gastos 30d: Q${(contexto.gastos_30d || 0).toLocaleString()}\n\n💡 Pregúntame específicamente por: runway, CCC, CxC, CxP, KPIs, ventas, gastos, bancos, o SAT.`;
+    return `🤖 **abaco - Respuesta basada en datos actuales**\n\nTengo estos datos disponibles al ${contexto.fecha_actual}:\n\n• 💰 Efectivo: Q${(contexto.liquidez?.gtq || 0).toLocaleString()}\n• 📊 Runway: ${contexto.runway?.dias || 0} días\n• 👥 CxC: Q${(contexto.cxc?.total || 0).toLocaleString()}\n• 💳 CxP: Q${(contexto.cxp?.total || 0).toLocaleString()}\n• 🔄 CCC: ${contexto.ccc?.valor || 0} días\n• 📈 Ventas 30d: Q${(contexto.ventas_30d || 0).toLocaleString()}\n• 📉 Gastos 30d: Q${(contexto.gastos_30d || 0).toLocaleString()}\n\n💡 Pregúntame específicamente por: runway, CCC, CxC, CxP, KPIs, ventas, gastos, bancos, o SAT.`;
   }
 
   // ============ MÉTODOS PRIVADOS ============
@@ -345,7 +345,7 @@ Responde únicamente en formato JSON válido.`;
             'Authorization': `Bearer ${this.apiKey}`,
             'Content-Type': 'application/json',
             'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
-            'X-Title': 'CFO AI Agents'
+            'X-Title': 'abaco Agents'
           },
           timeout: 60000
         }
@@ -380,7 +380,7 @@ Responde únicamente en formato JSON válido.`;
               'Authorization': `Bearer ${this.apiKey}`,
               'Content-Type': 'application/json',
               'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
-              'X-Title': 'CFO AI Agents'
+              'X-Title': 'abaco Agents'
             },
             timeout: 60000
           }
@@ -412,7 +412,7 @@ Responde únicamente en formato JSON válido.`;
               'Authorization': `Bearer ${this.apiKey}`,
               'Content-Type': 'application/json',
               'HTTP-Referer': process.env.APP_URL || 'http://localhost:3000',
-              'X-Title': 'CFO AI Agents'
+              'X-Title': 'abaco Agents'
             },
             timeout: 60000
           }

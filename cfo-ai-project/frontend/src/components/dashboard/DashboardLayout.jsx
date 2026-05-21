@@ -54,7 +54,8 @@ export default function DashboardLayout({ children }) {
           <div className="fixed inset-y-0 left-0 w-64 bg-white border-r border-[var(--border-default)]">
             <div className="flex h-20 items-center justify-between px-4 border-b border-[var(--border-default)]">
               <div className="flex items-center gap-3">
-                <img src="/logo.jpg" alt="CFO AI Logo" className="h-14 w-auto object-contain" />
+                <img src="/logo-abaco.jpg" alt="abaco" className="h-10 w-auto object-contain rounded" />
+                <span className="text-base font-bold text-[#001639]">abaco</span>
               </div>
               <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-[var(--bg-secondary)] rounded">
                 <XMarkIcon className="w-5 h-5 text-[var(--text-secondary)]" />
@@ -83,7 +84,7 @@ export default function DashboardLayout({ children }) {
             {/* Mobile user section */}
             <div className="p-4 border-t border-[var(--border-default)]">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-secondary)]">
-                <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-[#001639] flex items-center justify-center">
                   <span className="text-white text-xs font-medium">{getInitials(user?.nombre)}</span>
                 </div>
                 <div className="flex-1 min-w-0">
@@ -109,7 +110,8 @@ export default function DashboardLayout({ children }) {
           {/* Logo */}
           <div className="flex items-center h-20 px-5 border-b border-[var(--border-default)]">
             <Link to="/" className="flex items-center gap-3">
-              <img src="/logo.jpg" alt="CFO AI Logo" className="h-16 w-auto object-contain" />
+              <img src="/logo-abaco.jpg" alt="abaco" className="h-12 w-auto object-contain rounded" />
+              <span className="text-lg font-bold text-[#001639]">abaco</span>
             </Link>
           </div>
           
@@ -138,7 +140,7 @@ export default function DashboardLayout({ children }) {
           {/* Footer */}
           <div className="p-4 border-t border-[var(--border-default)]">
             <div className="flex items-center gap-3 p-3 rounded-lg bg-[var(--bg-secondary)]">
-              <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center flex-shrink-0">
+              <div className="w-8 h-8 rounded-full bg-[#001639] flex items-center justify-center flex-shrink-0">
                 <span className="text-white text-xs font-medium">{getInitials(user?.nombre)}</span>
               </div>
               <div className="flex-1 min-w-0">
@@ -185,7 +187,7 @@ export default function DashboardLayout({ children }) {
                 <UserCircleIcon className="w-4 h-4 text-[var(--text-muted)]" />
                 <span className="text-xs font-medium text-[var(--text-primary)]">{user?.nombre || 'Usuario'}</span>
                 {isAdmin && (
-                  <span className="text-[10px] px-1.5 py-0.5 bg-black text-white rounded-full">ADMIN</span>
+                  <span className="text-[10px] px-1.5 py-0.5 bg-[#001639] text-white rounded-full">ADMIN</span>
                 )}
               </div>
 

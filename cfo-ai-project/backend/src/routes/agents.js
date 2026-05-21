@@ -39,7 +39,7 @@ router.get('/status', async (req, res) => {
       return res.json({
         success: true,
         isRunning: false,
-        message: 'CFO AI Core no inicializado aún'
+        message: 'abaco Core no inicializado aún'
       });
     }
     
@@ -75,7 +75,7 @@ router.post('/execute', async (req, res) => {
     
     if (!core) {
       return res.status(503).json({
-        error: 'CFO AI Core no inicializado'
+        error: 'abaco Core no inicializado'
       });
     }
 
@@ -348,7 +348,7 @@ router.post('/logs', async (req, res) => {
 });
 
 // ============================================
-// CHAT ENDPOINT - CFO AI Assistant
+// CHAT ENDPOINT - abaco Assistant
 // ============================================
 
 /**
@@ -473,7 +473,7 @@ async function obtenerContextoFinancieroCompleto(db, empresaId, isPostgres) {
 
 /**
  * POST /api/agents/chat
- * Endpoint principal para el chat del CFO AI Assistant
+ * Endpoint principal para el chat del abaco Assistant
  * Usa LLM (Claude 3.7 Sonnet via OpenRouter) como motor principal
  * con contexto financiero completo de la base de datos.
  */
@@ -503,8 +503,8 @@ router.post('/chat', async (req, res) => {
       return res.json({
         success: true,
         response: {
-          content: `${saludo}! Soy **CFO AI**, tu asistente financiero inteligente. 🤖💼\n\nPuedo ayudarte con cualquier consulta sobre tus finanzas: runway, KPIs, CCC, cobranzas, pagos, obligaciones SAT, análisis de rentabilidad, y más.\n\n¿Qué necesitas saber hoy?`,
-          agent: 'CFO AI Core',
+          content: `${saludo}! Soy **abaco**, tu asistente financiero inteligente. 🤖💼\n\nPuedo ayudarte con cualquier consulta sobre tus finanzas: runway, KPIs, CCC, cobranzas, pagos, obligaciones SAT, análisis de rentabilidad, y más.\n\n¿Qué necesitas saber hoy?`,
+          agent: 'abaco Core',
           type: 'welcome'
         }
       });
@@ -515,7 +515,7 @@ router.post('/chat', async (req, res) => {
         success: true,
         response: {
           content: `📚 **Puedo ayudarte con cualquier tema financiero:**\n\n• 💰 **Runway** — Días de efectivo disponible\n• 📈 **KPIs** — Indicadores financieros clave\n• 🔄 **CCC** — Cash Conversion Cycle\n• 👥 **CxC** — Cuentas por cobrar y deudores\n• 💳 **CxP** — Pagos a proveedores\n• 🏦 **Conciliación** — Estado bancario\n• 📅 **SAT** — Obligaciones fiscales\n• 📊 **Rentabilidad** — Margen, utilidad, análisis\n• 🔍 **Auditoría** — Detección de anomalías\n\nSolo pregúntame lo que necesites. Tengo acceso en tiempo real a tu base de datos.`,
-          agent: 'CFO AI Core',
+          agent: 'abaco Core',
           type: 'help'
         }
       });
@@ -527,7 +527,7 @@ router.post('/chat', async (req, res) => {
         success: true,
         response: {
           content: `¡Hasta luego! Estaré aquí cuando necesites ayuda con tus finanzas. 📊`,
-          agent: 'CFO AI Core',
+          agent: 'abaco Core',
           type: 'goodbye'
         }
       });
@@ -564,7 +564,7 @@ router.post('/chat', async (req, res) => {
         success: true,
         response: {
           content: respuestaIA,
-          agent: 'CFO AI Core',
+          agent: 'abaco Core',
           type: 'ai_response',
           meta: {
             fecha_contexto: contexto.fecha_actual,
@@ -580,7 +580,7 @@ router.post('/chat', async (req, res) => {
         success: true,
         response: {
           content: `Tengo los datos disponibles pero el asistente de IA está teniendo problemas técnicos momentáneamente.\n\n**Contexto actual:**\n• Efectivo GTQ: Q${(contexto.liquidez?.gtq || 0).toLocaleString()}\n• CxC pendiente: Q${(contexto.cxc?.total || 0).toLocaleString()} (${contexto.cxc?.facturas || 0} facturas)\n• CxP pendiente: Q${(contexto.cxp?.total || 0).toLocaleString()}\n• CCC: ${contexto.ccc?.valor || 0} días\n• Runway: ${contexto.runway?.dias || 0} días\n\nPor favor intenta de nuevo en unos segundos.`,
-          agent: 'CFO AI Core',
+          agent: 'abaco Core',
           type: 'error'
         }
       });
@@ -614,7 +614,7 @@ router.get('/ia/status', async (req, res) => {
       return res.json({
         success: true,
         estado: 'no_inicializado',
-        mensaje: 'CFO AI Core no iniciado',
+        mensaje: 'abaco Core no iniciado',
         agentes: [],
         timestamp: new Date().toISOString()
       });
@@ -657,7 +657,7 @@ router.post('/ia/execute', async (req, res) => {
     if (!core) {
       return res.status(503).json({
         success: false,
-        error: 'CFO AI Core no inicializado'
+        error: 'abaco Core no inicializado'
       });
     }
 

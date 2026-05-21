@@ -8,7 +8,7 @@ export default function Analisis() {
     <div className="space-y-6 animate-fade-in max-w-6xl">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+        <div className="w-10 h-10 rounded-lg bg-[#001639] flex items-center justify-center">
           <ChartBarIcon className="w-5 h-5 text-white" />
         </div>
         <div>
@@ -68,7 +68,7 @@ export default function Analisis() {
                 <p className="text-sm text-[var(--text-primary)]">{item.producto}</p>
                 <div className="mt-2 h-2 bg-white rounded-full overflow-hidden">
                   <div 
-                    className="h-full bg-black rounded-full"
+                    className="h-full bg-[#001639] rounded-full"
                     style={{ width: `${item.rentabilidad}%` }}
                   />
                 </div>

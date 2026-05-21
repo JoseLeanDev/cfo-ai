@@ -17,7 +17,7 @@ export default function Contabilidad() {
     <div className="space-y-6 animate-fade-in max-w-6xl">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center">
+        <div className="w-10 h-10 rounded-lg bg-[#001639] flex items-center justify-center">
           <BookOpenIcon className="w-5 h-5 text-white" />
         </div>
         <div>
@@ -99,7 +99,7 @@ export default function Contabilidad() {
           
           <Link 
             to="/contabilidad/cierre" 
-            className="flex items-center justify-center gap-2 w-full py-3 text-sm font-medium bg-black text-white rounded-md hover:bg-[var(--brand-secondary)] transition-colors"
+            className="flex items-center justify-center gap-2 w-full py-3 text-sm font-medium bg-[#001639] text-white rounded-md hover:bg-[var(--brand-secondary)] transition-colors"
           >
             Continuar cierre
             <ArrowRightIcon className="w-4 h-4" />

@@ -29,7 +29,7 @@ async function setupAuthTables() {
     console.log('🔐 Verificando tabla usuarios...');
     
     // Crear tabla usuarios si no existe
-    await db.runAsync(`
+    const createResult = await db.runAsync(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id SERIAL PRIMARY KEY,
         nombre VARCHAR(255) NOT NULL,
@@ -43,25 +43,29 @@ async function setupAuthTables() {
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `, []);
+    console.log('   CREATE TABLE result:', createResult);
     
     // Verificar si el usuario demo existe
     const demoUser = await db.getAsync(
-      'SELECT id FROM usuarios WHERE email = ?',
+      'SELECT id FROM usuarios WHERE email = $1',
       ['demo@cfoai.com']
     );
     
     if (!demoUser) {
-      await db.runAsync(`
+      const insertResult = await db.runAsync(`
         INSERT INTO usuarios (id, nombre, email, password_hash, rol)
         VALUES (1, 'Usuario Demo', 'demo@cfoai.com', '$2b$10$wZ/MyH.ecgVvcPD3o06n.OYjy1I1c74BQSG0CKvUbVQkEM6Zcm1aC', 'admin')
-        ON CONFLICT DO NOTHING
       `, []);
+      console.log('   INSERT demo result:', insertResult);
       console.log('✅ Usuario demo creado');
+    } else {
+      console.log('   Usuario demo ya existe');
     }
     
     console.log('✅ Tabla usuarios lista');
   } catch (error) {
     console.error('⚠️ Error setup auth tables:', error.message);
+    console.error('   Stack:', error.stack);
   }
 }
 
@@ -76,12 +80,10 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // WakeUp Scheduler Middleware v3.0
-// Ejecuta tareas pendientes en cada request (con cooldown de 5 min)
-// Necesario para Render free tier donde el servidor duerme
 app.use(wakeUpMiddleware());
 
 // Database setup
-app.set('db', db); // Make db available to routes
+app.set('db', db);
 app.set('CFOAICore', getCFOAICore());
 
 // Routes
@@ -92,15 +94,15 @@ app.use('/api/contabilidad', require('./routes/contabilidad'));
 app.use('/api/analisis', require('./routes/analisis'));
 app.use('/api/sat', require('./routes/sat'));
 app.use('/api/alertas', require('./routes/alertas'));
-app.use('/api/agents', require('./routes/agents')); // Multi-Agent System
-app.use('/api/agents/conciliador', require('./routes/conciliador')); // Agente Conciliador Bancario
-app.use('/api/cierre', require('./routes/cierre')); // Cierre Mensual y Conciliación
-app.use('/api/scheduler', require('./routes/scheduler')); // Scheduler System
-app.use('/api/test', require('./routes/test')); // Test endpoints
-app.use('/api/admin', require('./routes/admin')); // Admin endpoints (reset, cleanup, schema fix, seed)
-app.use('/api/admin/run-all', require('./routes/runAllAgents')); // Ejecutar todos los agentes manualmente
-app.use('/api/debug', require('./routes/debug')); // Debug endpoints
-app.use('/api/debug-schema', require('./routes/debug-schema')); // Schema inspection
+app.use('/api/agents', require('./routes/agents'));
+app.use('/api/agents/conciliador', require('./routes/conciliador'));
+app.use('/api/cierre', require('./routes/cierre'));
+app.use('/api/scheduler', require('./routes/scheduler'));
+app.use('/api/test', require('./routes/test'));
+app.use('/api/admin', require('./routes/admin'));
+app.use('/api/admin/run-all', require('./routes/runAllAgents'));
+app.use('/api/debug', require('./routes/debug'));
+app.use('/api/debug-schema', require('./routes/debug-schema'));
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -112,8 +114,7 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Keep-Alive endpoint para cron-job.org o similar
-// Fuerza ejecución de tareas pendientes y responde con el resultado
+// Keep-Alive endpoint
 app.get('/api/keep-alive', async (req, res) => {
   try {
     console.log('[Keep-Alive] 🔥 Recibido ping de wake-up');
@@ -135,13 +136,12 @@ app.get('/api/keep-alive', async (req, res) => {
   }
 });
 
-// Static files - only serve if frontend dist exists (development only)
+// Static files
 const frontendDistPath = path.join(__dirname, '../../frontend/dist');
 const fs = require('fs');
 if (fs.existsSync(frontendDistPath)) {
   app.use(express.static(frontendDistPath));
   
-  // SPA fallback - serve index.html for all non-API routes
   app.get('*', (req, res) => {
     if (!req.path.startsWith('/api')) {
       res.sendFile(path.join(frontendDistPath, 'index.html'));
@@ -195,7 +195,7 @@ app.listen(PORT, async () => {
   // Setup auth tables
   await setupAuthTables();
   
-  // Initialize CFO Scheduler - cron jobs activos en producción
+  // Initialize CFO Scheduler
   try {
     const CFOScheduler = require('./scheduler/CFOScheduler');
     const scheduler = new CFOScheduler({

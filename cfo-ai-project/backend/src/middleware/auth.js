@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const db = require('../database/connection');
+const db = require('../../database/connection');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'cfo-ai-secret-key-dev';
 

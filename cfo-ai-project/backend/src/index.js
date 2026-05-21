@@ -23,6 +23,48 @@ async function initializeAgents() {
   }
 }
 
+// Setup auth tables (auto-migration on startup)
+async function setupAuthTables() {
+  try {
+    console.log('🔐 Verificando tabla usuarios...');
+    
+    // Crear tabla usuarios si no existe
+    await db.runAsync(`
+      CREATE TABLE IF NOT EXISTS usuarios (
+        id SERIAL PRIMARY KEY,
+        nombre VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        rol VARCHAR(50) DEFAULT 'usuario',
+        avatar_url VARCHAR(500),
+        activo BOOLEAN DEFAULT TRUE,
+        ultimo_login TIMESTAMP,
+        created_at TIMESTAMP DEFAULT NOW(),
+        updated_at TIMESTAMP DEFAULT NOW()
+      )
+    `, []);
+    
+    // Verificar si el usuario demo existe
+    const demoUser = await db.getAsync(
+      'SELECT id FROM usuarios WHERE email = ?',
+      ['demo@cfoai.com']
+    );
+    
+    if (!demoUser) {
+      await db.runAsync(`
+        INSERT INTO usuarios (id, nombre, email, password_hash, rol)
+        VALUES (1, 'Usuario Demo', 'demo@cfoai.com', '$2b$10$wZ/MyH.ecgVvcPD3o06n.OYjy1I1c74BQSG0CKvUbVQkEM6Zcm1aC', 'admin')
+        ON CONFLICT DO NOTHING
+      `, []);
+      console.log('✅ Usuario demo creado');
+    }
+    
+    console.log('✅ Tabla usuarios lista');
+  } catch (error) {
+    console.error('⚠️ Error setup auth tables:', error.message);
+  }
+}
+
 // Middleware
 app.use(helmet());
 app.use(cors({
@@ -149,6 +191,9 @@ app.listen(PORT, async () => {
   
   // Initialize CFO AI Core v2.0
   await initializeAgents();
+  
+  // Setup auth tables
+  await setupAuthTables();
   
   // Initialize CFO Scheduler - cron jobs activos en producción
   try {

@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import {
   ShoppingCartIcon,
   ExclamationTriangleIcon,
@@ -235,6 +236,26 @@ export default function Compras() {
             {new Date().toLocaleDateString('es-GT', { day: 'numeric', month: 'short', year: 'numeric' })}
           </span>
         </div>
+      </div>
+
+      {/* Link al historial de ventas */}
+      <div className="flex items-center gap-3 p-4 bg-[var(--accent-blue-subtle)] rounded-lg border border-[var(--accent-blue)]/20">
+        <ChartBarIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+        <div className="flex-1">
+          <p className="text-sm font-medium text-[var(--text-primary)]">
+            ¿Necesitas ver el detalle de ventas por producto?
+          </p>
+          <p className="text-xs text-[var(--text-muted)]">
+            Análisis completo de ventas históricas por línea y producto individual
+          </p>
+        </div>
+        <Link
+          to="/compras/historial-ventas"
+          className="btn-primary text-sm flex items-center gap-2 whitespace-nowrap"
+        >
+          <ChartBarIcon className="w-4 h-4" />
+          Ver Historial de Ventas
+        </Link>
       </div>
 
       {/* ============================================

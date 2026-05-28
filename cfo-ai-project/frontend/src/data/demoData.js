@@ -208,6 +208,75 @@ export const demoProductosStock = [
   { id: 48, nombre: 'Rastrillo de jardín 14 dientes', linea: 'Jardinería', stock: 55, stockMin: 25, stockMax: 80, costoUnitario: 95, ventaPromedioMensual: 22, tendencia: 'stable', proveedor: 'Garden Center GT', diasEntrega: 4 },
 ];
 
+// ============================================
+// HISTORIAL DE VENTAS POR PRODUCTO (6 meses)
+// ============================================
+
+// Generador consistente: usa ventaPromedioMensual como base
+function generarHistorial(promedio, tendencia) {
+  const factor = tendencia === 'up' ? [0.85, 0.88, 0.92, 1.0, 1.08, 1.18] :
+                 tendencia === 'down' ? [1.15, 1.08, 1.0, 0.95, 0.88, 0.82] :
+                 [0.92, 1.05, 0.95, 1.02, 1.08, 0.98]
+  return factor.map(f => Math.max(1, Math.round(promedio * f)))
+}
+
+export const demoHistorialVentasProducto = [
+  // Eléctrico
+  { id: 1, nombre: 'Cable THW 12 AWG (Rollo 100m)', linea: 'Eléctrico', precioVenta: 265, costoUnitario: 180, historial: generarHistorial(420, 'up'), margen: 32, proveedor: 'Elektra Guatemala' },
+  { id: 2, nombre: 'Interruptor Breaker 2P 30A', linea: 'Eléctrico', precioVenta: 220, costoUnitario: 145, historial: generarHistorial(185, 'up'), margen: 35, proveedor: 'Elektra Guatemala' },
+  { id: 3, nombre: 'Foco LED 9W (Caja 10 unds)', linea: 'Eléctrico', precioVenta: 135, costoUnitario: 95, historial: generarHistorial(140, 'up'), margen: 40, proveedor: 'Elektra Guatemala' },
+  { id: 4, nombre: 'Caja de Breakers 8 espacios', linea: 'Eléctrico', precioVenta: 450, costoUnitario: 320, historial: generarHistorial(55, 'stable'), margen: 29, proveedor: 'Elektra Guatemala' },
+  { id: 5, nombre: 'Cable THW 10 AWG (Rollo 100m)', linea: 'Eléctrico', precioVenta: 360, costoUnitario: 240, historial: generarHistorial(210, 'up'), margen: 33, proveedor: 'Elektra Guatemala' },
+  { id: 6, nombre: 'Tomacorriente duplex blanco', linea: 'Eléctrico', precioVenta: 50, costoUnitario: 35, historial: generarHistorial(280, 'stable'), margen: 30, proveedor: 'Elektra Guatemala' },
+  { id: 7, nombre: 'Breakers 1P 20A', linea: 'Eléctrico', precioVenta: 90, costoUnitario: 65, historial: generarHistorial(220, 'up'), margen: 28, proveedor: 'Elektra Guatemala' },
+  { id: 8, nombre: 'Plafón LED 18W cuadrado', linea: 'Eléctrico', precioVenta: 175, costoUnitario: 125, historial: generarHistorial(90, 'up'), margen: 29, proveedor: 'Elektra Guatemala' },
+  // Plomería
+  { id: 9, nombre: 'Tubo PVC 1/2" (Caja 20 unds)', linea: 'Plomería', precioVenta: 120, costoUnitario: 85, historial: generarHistorial(260, 'up'), margen: 29, proveedor: 'Plomería Centroamericana' },
+  { id: 10, nombre: 'Llave de Paso 1/2"', linea: 'Plomería', precioVenta: 105, costoUnitario: 75, historial: generarHistorial(165, 'stable'), margen: 29, proveedor: 'Plomería Centroamericana' },
+  { id: 11, nombre: 'Codo PVC 1/2" (Caja 50 unds)', linea: 'Plomería', precioVenta: 65, costoUnitario: 45, historial: generarHistorial(180, 'up'), margen: 31, proveedor: 'Plomería Centroamericana' },
+  { id: 12, nombre: 'Pegamento PVC 1/4 galón', linea: 'Plomería', precioVenta: 78, costoUnitario: 55, historial: generarHistorial(95, 'stable'), margen: 29, proveedor: 'Plomería Centroamericana' },
+  { id: 13, nombre: 'Tubo PVC 3/4" (Caja 15 unds)', linea: 'Plomería', precioVenta: 155, costoUnitario: 110, historial: generarHistorial(145, 'up'), margen: 29, proveedor: 'Plomería Centroamericana' },
+  { id: 14, nombre: 'Llave de chorro 1/2" cromada', linea: 'Plomería', precioVenta: 230, costoUnitario: 165, historial: generarHistorial(75, 'down'), margen: 28, proveedor: 'Plomería Centroamericana' },
+  { id: 15, nombre: 'Cementarropa 1/2" (Caja 25 unds)', linea: 'Plomería', precioVenta: 50, costoUnitario: 35, historial: generarHistorial(85, 'stable'), margen: 30, proveedor: 'Plomería Centroamericana' },
+  { id: 16, nombre: 'Sanitario blanco económico', linea: 'Plomería', precioVenta: 580, costoUnitario: 420, historial: generarHistorial(40, 'stable'), margen: 28, proveedor: 'Plomería Centroamericana' },
+  // Construcción
+  { id: 17, nombre: 'Cemento Portland 42.5kg', linea: 'Construcción', precioVenta: 105, costoUnitario: 85, historial: generarHistorial(185, 'stable'), margen: 19, proveedor: 'Cementos Progreso' },
+  { id: 18, nombre: 'Lámina Galvanizada 3x8 pies', linea: 'Construcción', precioVenta: 480, costoUnitario: 380, historial: generarHistorial(65, 'up'), margen: 21, proveedor: 'Cementos Progreso' },
+  { id: 19, nombre: 'Varilla corrugada 3/8" (und)', linea: 'Construcción', precioVenta: 35, costoUnitario: 28, historial: generarHistorial(420, 'stable'), margen: 20, proveedor: 'Cementos Progreso' },
+  { id: 20, nombre: 'Arena fina (m3)', linea: 'Construcción', precioVenta: 150, costoUnitario: 120, historial: generarHistorial(40, 'down'), margen: 20, proveedor: 'Materiales El Volcán' },
+  { id: 21, nombre: 'Grava 3/4" (m3)', linea: 'Construcción', precioVenta: 168, costoUnitario: 135, historial: generarHistorial(35, 'stable'), margen: 20, proveedor: 'Materiales El Volcán' },
+  { id: 22, nombre: 'Block 10x20x40 (und)', linea: 'Construcción', precioVenta: 11, costoUnitario: 8.5, historial: generarHistorial(1800, 'up'), margen: 23, proveedor: 'Blockera La Unión' },
+  { id: 23, nombre: 'Alambre recocido (kg)', linea: 'Construcción', precioVenta: 28, costoUnitario: 22, historial: generarHistorial(85, 'stable'), margen: 21, proveedor: 'Cementos Progreso' },
+  { id: 24, nombre: 'Clavo 2" (Caja 25kg)', linea: 'Construcción', precioVenta: 120, costoUnitario: 95, historial: generarHistorial(70, 'down'), margen: 21, proveedor: 'Ferretería El Clavo' },
+  // Pinturas
+  { id: 25, nombre: 'Pintura Latex Blanca 1 Galón', linea: 'Pinturas', precioVenta: 220, costoUnitario: 165, historial: generarHistorial(220, 'up'), margen: 25, proveedor: 'Pinturas Sherwin Williams' },
+  { id: 26, nombre: 'Pintura Latex Blanca 5 Galones', linea: 'Pinturas', precioVenta: 880, costoUnitario: 680, historial: generarHistorial(75, 'up'), margen: 23, proveedor: 'Pinturas Sherwin Williams' },
+  { id: 27, nombre: 'Esmalte Brillante Rojo 1/4 galón', linea: 'Pinturas', precioVenta: 110, costoUnitario: 85, historial: generarHistorial(55, 'stable'), margen: 23, proveedor: 'Pinturas Sherwin Williams' },
+  { id: 28, nombre: 'Brocha 3" profesional', linea: 'Pinturas', precioVenta: 58, costoUnitario: 45, historial: generarHistorial(140, 'stable'), margen: 22, proveedor: 'Pinturas Sherwin Williams' },
+  { id: 29, nombre: 'Rodillo 9" felpa', linea: 'Pinturas', precioVenta: 82, costoUnitario: 65, historial: generarHistorial(90, 'up'), margen: 21, proveedor: 'Pinturas Sherwin Williams' },
+  { id: 30, nombre: 'Thinner 1 galón', linea: 'Pinturas', precioVenta: 120, costoUnitario: 95, historial: generarHistorial(45, 'down'), margen: 21, proveedor: 'Pinturas Sherwin Williams' },
+  { id: 31, nombre: 'Masilla plástica 1kg', linea: 'Pinturas', precioVenta: 45, costoUnitario: 35, historial: generarHistorial(85, 'stable'), margen: 22, proveedor: 'Pinturas Sherwin Williams' },
+  { id: 32, nombre: 'Cinta masking 2" (rollo)', linea: 'Pinturas', precioVenta: 32, costoUnitario: 25, historial: generarHistorial(185, 'up'), margen: 22, proveedor: 'Pinturas Sherwin Williams' },
+  // Herramientas
+  { id: 33, nombre: 'Taladro percutor 1/2" 650W', linea: 'Herramientas', precioVenta: 1180, costoUnitario: 850, historial: generarHistorial(22, 'up'), margen: 28, proveedor: 'Black & Decker CA' },
+  { id: 34, nombre: 'Sierra caladora 450W', linea: 'Herramientas', precioVenta: 980, costoUnitario: 720, historial: generarHistorial(12, 'stable'), margen: 27, proveedor: 'Black & Decker CA' },
+  { id: 35, nombre: 'Martillo carpintero 16oz', linea: 'Herramientas', precioVenta: 128, costoUnitario: 95, historial: generarHistorial(45, 'stable'), margen: 26, proveedor: 'Black & Decker CA' },
+  { id: 36, nombre: 'Cinta métrica 5m profesional', linea: 'Herramientas', precioVenta: 88, costoUnitario: 65, historial: generarHistorial(75, 'up'), margen: 26, proveedor: 'Black & Decker CA' },
+  { id: 37, nombre: 'Nivel de burbuja 24"', linea: 'Herramientas', precioVenta: 248, costoUnitario: 185, historial: generarHistorial(20, 'stable'), margen: 25, proveedor: 'Black & Decker CA' },
+  { id: 38, nombre: 'Juego destornilladores 6pzas', linea: 'Herramientas', precioVenta: 168, costoUnitario: 125, historial: generarHistorial(42, 'up'), margen: 26, proveedor: 'Black & Decker CA' },
+  { id: 39, nombre: 'Amoladora angular 4-1/2" 820W', linea: 'Herramientas', precioVenta: 880, costoUnitario: 650, historial: generarHistorial(14, 'up'), margen: 26, proveedor: 'Black & Decker CA' },
+  { id: 40, nombre: 'Guantes de cuero (par)', linea: 'Herramientas', precioVenta: 60, costoUnitario: 45, historial: generarHistorial(120, 'up'), margen: 25, proveedor: 'Black & Decker CA' },
+  // Jardinería
+  { id: 41, nombre: 'Manguera 1/2" 20m reforzada', linea: 'Jardinería', precioVenta: 220, costoUnitario: 165, historial: generarHistorial(75, 'up'), margen: 25, proveedor: 'Garden Center GT' },
+  { id: 42, nombre: 'Aspersor oscillante plástico', linea: 'Jardinería', precioVenta: 165, costoUnitario: 125, historial: generarHistorial(45, 'up'), margen: 24, proveedor: 'Garden Center GT' },
+  { id: 43, nombre: 'Maceta plástica 12" (und)', linea: 'Jardinería', precioVenta: 48, costoUnitario: 35, historial: generarHistorial(185, 'up'), margen: 27, proveedor: 'Garden Center GT' },
+  { id: 44, nombre: 'Fertilizante NPK 1kg', linea: 'Jardinería', precioVenta: 72, costoUnitario: 55, historial: generarHistorial(135, 'up'), margen: 24, proveedor: 'Garden Center GT' },
+  { id: 45, nombre: 'Pala de jardín mango corto', linea: 'Jardinería', precioVenta: 110, costoUnitario: 85, historial: generarHistorial(35, 'stable'), margen: 23, proveedor: 'Garden Center GT' },
+  { id: 46, nombre: 'Tijeras de podar 8"', linea: 'Jardinería', precioVenta: 162, costoUnitario: 125, historial: generarHistorial(28, 'up'), margen: 23, proveedor: 'Garden Center GT' },
+  { id: 47, nombre: 'Tierra abonada 10kg', linea: 'Jardinería', precioVenta: 58, costoUnitario: 45, historial: generarHistorial(65, 'up'), margen: 22, proveedor: 'Garden Center GT' },
+  { id: 48, nombre: 'Rastrillo de jardín 14 dientes', linea: 'Jardinería', precioVenta: 118, costoUnitario: 95, historial: generarHistorial(22, 'stable'), margen: 20, proveedor: 'Garden Center GT' },
+];
+
 // Meses para labels de historial
 export const demoMesesHistorial = ['Dic 2025', 'Ene 2026', 'Feb 2026', 'Mar 2026', 'Abr 2026', 'May 2026'];
 export const demoMesesProyeccion = ['Jun 2026', 'Jul 2026', 'Ago 2026'];

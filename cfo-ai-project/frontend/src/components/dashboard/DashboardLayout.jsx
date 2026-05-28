@@ -1,6 +1,7 @@
 import { Link, useLocation } from 'react-router-dom'
 import {
   HomeIcon,
+  ShoppingCartIcon,
   BanknotesIcon,
   BookOpenIcon,
   ChartBarIcon,
@@ -18,6 +19,7 @@ import AgentChat from '../agents/AgentChat'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
+  { name: 'Compras', href: '/compras', icon: ShoppingCartIcon },
   { name: 'Tesorería', href: '/tesoreria', icon: BanknotesIcon },
   { name: 'Contabilidad', href: '/contabilidad', icon: BookOpenIcon },
   { name: 'Análisis', href: '/analisis', icon: ChartBarIcon },

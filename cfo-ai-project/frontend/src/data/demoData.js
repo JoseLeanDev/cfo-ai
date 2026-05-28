@@ -63,3 +63,151 @@ export const demoAlertasCierre = [
   { id: 2, tipo: 'error', mensaje: 'Conciliación bancaria pendiente - Marzo', fecha: '2025-04-05' },
   { id: 3, tipo: 'info', mensaje: 'Nuevos asientos requieren aprobación', count: 12 },
 ];
+
+// ============================================
+// DATOS DE COMPRAS INTELIGENTES
+// ============================================
+
+// Líneas de producto con historial de ventas (6 meses)
+export const demoLineasProducto = [
+  {
+    id: 'ELEC-001',
+    nombre: 'Eléctrico',
+    descripcion: 'Cables, interruptores, focos, accesorios eléctricos',
+    stockActual: 3420,
+    stockMinimo: 1500,
+    costoUnitarioPromedio: 285,
+    historialVentas: [2840, 3120, 2980, 3450, 3620, 3890], // últimos 6 meses
+    tendencia: 'up',
+    margen: 32,
+    proveedorPrincipal: 'Elektra Guatemala',
+    tiempoEntregaDias: 7,
+  },
+  {
+    id: 'PLOM-001',
+    nombre: 'Plomería',
+    descripcion: 'Tuberías, llaves de paso, conectores, sanitarios',
+    stockActual: 1850,
+    stockMinimo: 1200,
+    costoUnitarioPromedio: 195,
+    historialVentas: [1650, 1720, 1580, 1890, 2100, 2250],
+    tendencia: 'up',
+    margen: 28,
+    proveedorPrincipal: 'Plomería Centroamericana',
+    tiempoEntregaDias: 10,
+  },
+  {
+    id: 'CONS-001',
+    nombre: 'Construcción',
+    descripcion: 'Cemento, láminas, varilla, arena, grava',
+    stockActual: 420,
+    stockMinimo: 800,
+    costoUnitarioPromedio: 420,
+    historialVentas: [850, 920, 780, 980, 890, 1020],
+    tendencia: 'stable',
+    margen: 18,
+    proveedorPrincipal: 'Cementos Progreso',
+    tiempoEntregaDias: 3,
+  },
+  {
+    id: 'PINT-001',
+    nombre: 'Pinturas',
+    descripcion: 'Pinturas latex, esmaltes, solventes, brochas',
+    stockActual: 1560,
+    stockMinimo: 600,
+    costoUnitarioPromedio: 310,
+    historialVentas: [890, 950, 1100, 1050, 1200, 1350],
+    tendencia: 'up',
+    margen: 25,
+    proveedorPrincipal: 'Pinturas Sherwin Williams',
+    tiempoEntregaDias: 5,
+  },
+  {
+    id: 'HERR-001',
+    nombre: 'Herramientas',
+    descripcion: 'Taladros, sierras, martillos, cintas métricas',
+    stockActual: 680,
+    stockMinimo: 400,
+    costoUnitarioPromedio: 450,
+    historialVentas: [420, 480, 510, 490, 580, 620],
+    tendencia: 'up',
+    margen: 35,
+    proveedorPrincipal: 'Black & Decker Centroamérica',
+    tiempoEntregaDias: 14,
+  },
+  {
+    id: 'JARD-001',
+    nombre: 'Jardinería',
+    descripcion: 'Mangueras, aspersores, macetas, fertilizantes',
+    stockActual: 2100,
+    stockMinimo: 500,
+    costoUnitarioPromedio: 125,
+    historialVentas: [320, 380, 450, 520, 680, 890],
+    tendencia: 'up',
+    margen: 40,
+    proveedorPrincipal: 'Garden Center GT',
+    tiempoEntregaDias: 4,
+  },
+];
+
+// Productos individuales con estado de stock detallado
+export const demoProductosStock = [
+  // Eléctrico
+  { id: 1, nombre: 'Cable THW 12 AWG (Rollo 100m)', linea: 'Eléctrico', stock: 850, stockMin: 400, stockMax: 1200, costoUnitario: 180, ventaPromedioMensual: 420, tendencia: 'up', proveedor: 'Elektra Guatemala', diasEntrega: 7 },
+  { id: 2, nombre: 'Interruptor Breaker 2P 30A', linea: 'Eléctrico', stock: 320, stockMin: 200, stockMax: 600, costoUnitario: 145, ventaPromedioMensual: 185, tendencia: 'up', proveedor: 'Elektra Guatemala', diasEntrega: 7 },
+  { id: 3, nombre: 'Foco LED 9W (Caja 10 unds)', linea: 'Eléctrico', stock: 180, stockMin: 150, stockMax: 500, costoUnitario: 95, ventaPromedioMensual: 140, tendencia: 'up', proveedor: 'Elektra Guatemala', diasEntrega: 7 },
+  { id: 4, nombre: 'Caja de Breakers 8 espacios', linea: 'Eléctrico', stock: 95, stockMin: 80, stockMax: 200, costoUnitario: 320, ventaPromedioMensual: 55, tendencia: 'stable', proveedor: 'Elektra Guatemala', diasEntrega: 7 },
+  { id: 5, nombre: 'Cable THW 10 AWG (Rollo 100m)', linea: 'Eléctrico', stock: 420, stockMin: 250, stockMax: 800, costoUnitario: 240, ventaPromedioMensual: 210, tendencia: 'up', proveedor: 'Elektra Guatemala', diasEntrega: 7 },
+  { id: 6, nombre: 'Tomacorriente duplex blanco', linea: 'Eléctrico', stock: 620, stockMin: 300, stockMax: 1000, costoUnitario: 35, ventaPromedioMensual: 280, tendencia: 'stable', proveedor: 'Elektra Guatemala', diasEntrega: 7 },
+  { id: 7, nombre: 'Breakers 1P 20A', linea: 'Eléctrico', stock: 280, stockMin: 250, stockMax: 600, costoUnitario: 65, ventaPromedioMensual: 220, tendencia: 'up', proveedor: 'Elektra Guatemala', diasEntrega: 7 },
+  { id: 8, nombre: 'Plafón LED 18W cuadrado', linea: 'Eléctrico', stock: 55, stockMin: 80, stockMax: 200, costoUnitario: 125, ventaPromedioMensual: 90, tendencia: 'up', proveedor: 'Elektra Guatemala', diasEntrega: 7 },
+  // Plomería
+  { id: 9, nombre: 'Tubo PVC 1/2" (Caja 20 unds)', linea: 'Plomería', stock: 480, stockMin: 300, stockMax: 800, costoUnitario: 85, ventaPromedioMensual: 260, tendencia: 'up', proveedor: 'Plomería Centroamericana', diasEntrega: 10 },
+  { id: 10, nombre: 'Llave de Paso 1/2"', linea: 'Plomería', stock: 320, stockMin: 200, stockMax: 500, costoUnitario: 75, ventaPromedioMensual: 165, tendencia: 'stable', proveedor: 'Plomería Centroamericana', diasEntrega: 10 },
+  { id: 11, nombre: 'Codo PVC 1/2" (Caja 50 unds)', linea: 'Plomería', stock: 290, stockMin: 250, stockMax: 600, costoUnitario: 45, ventaPromedioMensual: 180, tendencia: 'up', proveedor: 'Plomería Centroamericana', diasEntrega: 10 },
+  { id: 12, nombre: 'Pegamento PVC 1/4 galón', linea: 'Plomería', stock: 180, stockMin: 150, stockMax: 400, costoUnitario: 55, ventaPromedioMensual: 95, tendencia: 'stable', proveedor: 'Plomería Centroamericana', diasEntrega: 10 },
+  { id: 13, nombre: 'Tubo PVC 3/4" (Caja 15 unds)', linea: 'Plomería', stock: 220, stockMin: 200, stockMax: 500, costoUnitario: 110, ventaPromedioMensual: 145, tendencia: 'up', proveedor: 'Plomería Centroamericana', diasEntrega: 10 },
+  { id: 14, nombre: 'Llave de chorro 1/2" cromada', linea: 'Plomería', stock: 85, stockMin: 100, stockMax: 250, costoUnitario: 165, ventaPromedioMensual: 75, tendencia: 'down', proveedor: 'Plomería Centroamericana', diasEntrega: 10 },
+  { id: 15, nombre: 'Cementarropa 1/2" (Caja 25 unds)', linea: 'Plomería', stock: 150, stockMin: 120, stockMax: 350, costoUnitario: 35, ventaPromedioMensual: 85, tendencia: 'stable', proveedor: 'Plomería Centroamericana', diasEntrega: 10 },
+  { id: 16, nombre: 'Sanitario blanco económico', linea: 'Plomería', stock: 45, stockMin: 60, stockMax: 150, costoUnitario: 420, ventaPromedioMensual: 40, tendencia: 'stable', proveedor: 'Plomería Centroamericana', diasEntrega: 10 },
+  // Construcción
+  { id: 17, nombre: 'Cemento Portland 42.5kg', linea: 'Construcción', stock: 120, stockMin: 200, stockMax: 500, costoUnitario: 85, ventaPromedioMensual: 185, tendencia: 'stable', proveedor: 'Cementos Progreso', diasEntrega: 3 },
+  { id: 18, nombre: 'Lámina Galvanizada 3x8 pies', linea: 'Construcción', stock: 45, stockMin: 80, stockMax: 200, costoUnitario: 380, ventaPromedioMensual: 65, tendencia: 'up', proveedor: 'Cementos Progreso', diasEntrega: 3 },
+  { id: 19, nombre: 'Varilla corrugada 3/8" (und)', linea: 'Construcción', stock: 850, stockMin: 600, stockMax: 1500, costoUnitario: 28, ventaPromedioMensual: 420, tendencia: 'stable', proveedor: 'Cementos Progreso', diasEntrega: 3 },
+  { id: 20, nombre: 'Arena fina (m3)', linea: 'Construcción', stock: 65, stockMin: 50, stockMax: 150, costoUnitario: 120, ventaPromedioMensual: 40, tendencia: 'down', proveedor: 'Materiales El Volcán', diasEntrega: 2 },
+  { id: 21, nombre: 'Grava 3/4" (m3)', linea: 'Construcción', stock: 48, stockMin: 40, stockMax: 120, costoUnitario: 135, ventaPromedioMensual: 35, tendencia: 'stable', proveedor: 'Materiales El Volcán', diasEntrega: 2 },
+  { id: 22, nombre: 'Block 10x20x40 (und)', linea: 'Construcción', stock: 3200, stockMin: 2000, stockMax: 5000, costoUnitario: 8.5, ventaPromedioMensual: 1800, tendencia: 'up', proveedor: 'Blockera La Unión', diasEntrega: 5 },
+  { id: 23, nombre: 'Alambre recocido (kg)', linea: 'Construcción', stock: 180, stockMin: 100, stockMax: 300, costoUnitario: 22, ventaPromedioMensual: 85, tendencia: 'stable', proveedor: 'Cementos Progreso', diasEntrega: 3 },
+  { id: 24, nombre: 'Clavo 2" (Caja 25kg)', linea: 'Construcción', stock: 92, stockMin: 80, stockMax: 200, costoUnitario: 95, ventaPromedioMensual: 70, tendencia: 'down', proveedor: 'Ferretería El Clavo', diasEntrega: 4 },
+  // Pinturas
+  { id: 25, nombre: 'Pintura Latex Blanca 1 Galón', linea: 'Pinturas', stock: 380, stockMin: 200, stockMax: 600, costoUnitario: 165, ventaPromedioMensual: 220, tendencia: 'up', proveedor: 'Pinturas Sherwin Williams', diasEntrega: 5 },
+  { id: 26, nombre: 'Pintura Latex Blanca 5 Galones', linea: 'Pinturas', stock: 120, stockMin: 80, stockMax: 250, costoUnitario: 680, ventaPromedioMensual: 75, tendencia: 'up', proveedor: 'Pinturas Sherwin Williams', diasEntrega: 5 },
+  { id: 27, nombre: 'Esmalte Brillante Rojo 1/4 galón', linea: 'Pinturas', stock: 95, stockMin: 60, stockMax: 200, costoUnitario: 85, ventaPromedioMensual: 55, tendencia: 'stable', proveedor: 'Pinturas Sherwin Williams', diasEntrega: 5 },
+  { id: 28, nombre: 'Brocha 3" profesional', linea: 'Pinturas', stock: 280, stockMin: 150, stockMax: 400, costoUnitario: 45, ventaPromedioMensual: 140, tendencia: 'stable', proveedor: 'Pinturas Sherwin Williams', diasEntrega: 5 },
+  { id: 29, nombre: 'Rodillo 9" felpa', linea: 'Pinturas', stock: 145, stockMin: 80, stockMax: 250, costoUnitario: 65, ventaPromedioMensual: 90, tendencia: 'up', proveedor: 'Pinturas Sherwin Williams', diasEntrega: 5 },
+  { id: 30, nombre: 'Thinner 1 galón', linea: 'Pinturas', stock: 68, stockMin: 50, stockMax: 150, costoUnitario: 95, ventaPromedioMensual: 45, tendencia: 'down', proveedor: 'Pinturas Sherwin Williams', diasEntrega: 5 },
+  { id: 31, nombre: 'Masilla plástica 1kg', linea: 'Pinturas', stock: 195, stockMin: 100, stockMax: 300, costoUnitario: 35, ventaPromedioMensual: 85, tendencia: 'stable', proveedor: 'Pinturas Sherwin Williams', diasEntrega: 5 },
+  { id: 32, nombre: 'Cinta masking 2" (rollo)', linea: 'Pinturas', stock: 340, stockMin: 200, stockMax: 600, costoUnitario: 25, ventaPromedioMensual: 185, tendencia: 'up', proveedor: 'Pinturas Sherwin Williams', diasEntrega: 5 },
+  // Herramientas
+  { id: 33, nombre: 'Taladro percutor 1/2" 650W', linea: 'Herramientas', stock: 35, stockMin: 25, stockMax: 80, costoUnitario: 850, ventaPromedioMensual: 22, tendencia: 'up', proveedor: 'Black & Decker CA', diasEntrega: 14 },
+  { id: 34, nombre: 'Sierra caladora 450W', linea: 'Herramientas', stock: 18, stockMin: 15, stockMax: 50, costoUnitario: 720, ventaPromedioMensual: 12, tendencia: 'stable', proveedor: 'Black & Decker CA', diasEntrega: 14 },
+  { id: 35, nombre: 'Martillo carpintero 16oz', linea: 'Herramientas', stock: 85, stockMin: 50, stockMax: 150, costoUnitario: 95, ventaPromedioMensual: 45, tendencia: 'stable', proveedor: 'Black & Decker CA', diasEntrega: 14 },
+  { id: 36, nombre: 'Cinta métrica 5m profesional', linea: 'Herramientas', stock: 145, stockMin: 80, stockMax: 250, costoUnitario: 65, ventaPromedioMensual: 75, tendencia: 'up', proveedor: 'Black & Decker CA', diasEntrega: 14 },
+  { id: 37, nombre: 'Nivel de burbuja 24"', linea: 'Herramientas', stock: 42, stockMin: 30, stockMax: 80, costoUnitario: 185, ventaPromedioMensual: 20, tendencia: 'stable', proveedor: 'Black & Decker CA', diasEntrega: 14 },
+  { id: 38, nombre: 'Juego destornilladores 6pzas', linea: 'Herramientas', stock: 95, stockMin: 60, stockMax: 150, costoUnitario: 125, ventaPromedioMensual: 42, tendencia: 'up', proveedor: 'Black & Decker CA', diasEntrega: 14 },
+  { id: 39, nombre: 'Amoladora angular 4-1/2" 820W', linea: 'Herramientas', stock: 22, stockMin: 15, stockMax: 50, costoUnitario: 650, ventaPromedioMensual: 14, tendencia: 'up', proveedor: 'Black & Decker CA', diasEntrega: 14 },
+  { id: 40, nombre: 'Guantes de cuero (par)', linea: 'Herramientas', stock: 280, stockMin: 150, stockMax: 400, costoUnitario: 45, ventaPromedioMensual: 120, tendencia: 'up', proveedor: 'Black & Decker CA', diasEntrega: 14 },
+  // Jardinería
+  { id: 41, nombre: 'Manguera 1/2" 20m reforzada', linea: 'Jardinería', stock: 180, stockMin: 80, stockMax: 250, costoUnitario: 165, ventaPromedioMensual: 75, tendencia: 'up', proveedor: 'Garden Center GT', diasEntrega: 4 },
+  { id: 42, nombre: 'Aspersor oscillante plástico', linea: 'Jardinería', stock: 95, stockMin: 50, stockMax: 150, costoUnitario: 125, ventaPromedioMensual: 45, tendencia: 'up', proveedor: 'Garden Center GT', diasEntrega: 4 },
+  { id: 43, nombre: 'Maceta plástica 12" (und)', linea: 'Jardinería', stock: 420, stockMin: 200, stockMax: 600, costoUnitario: 35, ventaPromedioMensual: 185, tendencia: 'up', proveedor: 'Garden Center GT', diasEntrega: 4 },
+  { id: 44, nombre: 'Fertilizante NPK 1kg', linea: 'Jardinería', stock: 280, stockMin: 120, stockMax: 400, costoUnitario: 55, ventaPromedioMensual: 135, tendencia: 'up', proveedor: 'Garden Center GT', diasEntrega: 4 },
+  { id: 45, nombre: 'Pala de jardín mango corto', linea: 'Jardinería', stock: 75, stockMin: 40, stockMax: 120, costoUnitario: 85, ventaPromedioMensual: 35, tendencia: 'stable', proveedor: 'Garden Center GT', diasEntrega: 4 },
+  { id: 46, nombre: 'Tijeras de podar 8"', linea: 'Jardinería', stock: 65, stockMin: 30, stockMax: 100, costoUnitario: 125, ventaPromedioMensual: 28, tendencia: 'up', proveedor: 'Garden Center GT', diasEntrega: 4 },
+  { id: 47, nombre: 'Tierra abonada 10kg', linea: 'Jardinería', stock: 150, stockMin: 80, stockMax: 250, costoUnitario: 45, ventaPromedioMensual: 65, tendencia: 'up', proveedor: 'Garden Center GT', diasEntrega: 4 },
+  { id: 48, nombre: 'Rastrillo de jardín 14 dientes', linea: 'Jardinería', stock: 55, stockMin: 25, stockMax: 80, costoUnitario: 95, ventaPromedioMensual: 22, tendencia: 'stable', proveedor: 'Garden Center GT', diasEntrega: 4 },
+];
+
+// Meses para labels de historial
+export const demoMesesHistorial = ['Dic 2025', 'Ene 2026', 'Feb 2026', 'Mar 2026', 'Abr 2026', 'May 2026'];
+export const demoMesesProyeccion = ['Jun 2026', 'Jul 2026', 'Ago 2026'];

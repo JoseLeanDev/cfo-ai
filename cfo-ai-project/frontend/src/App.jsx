@@ -5,6 +5,7 @@ import Dashboard from './pages/Dashboard'
 import Tesoreria from './pages/Tesoreria'
 import Contabilidad from './pages/Contabilidad'
 import Analisis from './pages/Analisis'
+import Compras from './pages/Compras'
 import SAT from './pages/SAT'
 import LogActividades from './pages/LogActividades'
 import Usuarios from './pages/Usuarios'
@@ -51,6 +52,7 @@ function AppRoutes() {
                 <Route path="/tesoreria" element={<Tesoreria />} />
                 <Route path="/contabilidad" element={<Contabilidad />} />
                 <Route path="/analisis" element={<Analisis />} />
+                <Route path="/compras" element={<Compras />} />
                 <Route path="/sat" element={<SAT />} />
                 <Route path="/log-actividades" element={<LogActividades />} />
                 <Route path="/usuarios" element={<Usuarios />} />

@@ -226,7 +226,8 @@ export default function Reportes() {
       params.offset = 0
 
       const res = await cfoApi.get(`/reportes/${template.id}`, { params })
-      setReportData(res.data || res)
+      // cfoApi ya devuelve response.data (el objeto completo del backend)
+      setReportData(res)
     } catch (e) {
       setError(e.response?.data?.error || e.message)
     } finally {
@@ -258,7 +259,8 @@ export default function Reportes() {
       try {
         const params = { fecha_desde: defaultFilters.fecha_desde, fecha_hasta: defaultFilters.fecha_hasta, limit: 5000, offset: 0 }
         const res = await cfoApi.get(`/reportes/${defaultTpl.id}`, { params })
-        setReportData(res.data || res)
+        // cfoApi ya devuelve response.data (el objeto completo del backend)
+        setReportData(res)
       } catch (e) {
         setError(e.response?.data?.error || e.message)
       } finally {
@@ -324,8 +326,10 @@ export default function Reportes() {
 
     cfoApi.get(`/reportes/${tpl.id}`, { params })
       .then(res => {
-        console.log('API Response:', res.data)
-        setReportData(res.data || res)
+        console.log('API Response:', res)
+        // El interceptor de cfoApi ya devuelve response.data (el objeto completo del backend)
+        // No necesitamos acceder a res.data porque res YA es el objeto { success: true, data: [...], ... }
+        setReportData(res)
       })
       .catch(e => {
         console.error('API Error:', e)

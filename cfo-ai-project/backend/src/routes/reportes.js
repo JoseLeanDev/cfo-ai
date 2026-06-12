@@ -161,7 +161,7 @@ router.get('/libro-diario', async (req, res) => {
     const pag = buildPagination(req.query, values.length + 1);
     
     const data = await db.allAsync(`
-      SELECT t.id, t.fecha, cc.codigo, cc.nombre as cuenta, t.tipo, t.monto, t.descripcion, t.referencia, t.documento, t.categoria, t.estado, t.created_at
+      SELECT t.id, t.fecha, cc.codigo, cc.nombre as cuenta, t.tipo, t.monto, t.concepto as descripcion, t.referencia, t.documento_soporte as documento, t.categoria, t.estado, t.created_at
       FROM transacciones t
       JOIN cuentas_contables cc ON t.cuenta_id = cc.id
       ${where}

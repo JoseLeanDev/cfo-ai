@@ -237,13 +237,35 @@ export default function Reportes() {
   useEffect(() => {
     const defaultTpl = reportTemplates[0]
     const defaultFilters = {
-      ...filters,
       fecha_desde: firstDayOfLastMonth(),
-      fecha_hasta: lastDayOfLastMonth()
+      fecha_hasta: lastDayOfLastMonth(),
+      periodo: new Date().toISOString().slice(0, 7),
+      cuenta_id: '',
+      estado: '',
+      tipo: '',
+      banco: '',
+      cuenta_bancaria_id: ''
     }
     setSelectedTemplate(defaultTpl)
-    runReport(defaultTpl, defaultFilters)
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    setFilters(defaultFilters)
+    
+    // Execute directly without useCallback dependency issues
+    const runDefaultReport = async () => {
+      setLoading(true)
+      setError(null)
+      setPage(0)
+      try {
+        const params = { fecha_desde: defaultFilters.fecha_desde, fecha_hasta: defaultFilters.fecha_hasta, limit: 5000, offset: 0 }
+        const res = await cfoApi.get(`/reportes/${defaultTpl.id}`, { params })
+        setReportData(res.data || res)
+      } catch (e) {
+        setError(e.response?.data?.error || e.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+    runDefaultReport()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const handleTemplateClick = (tpl) => {

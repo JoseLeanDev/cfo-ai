@@ -74,25 +74,56 @@ router.get('/estado-resultados', async (req, res) => {
   try {
     const { fecha_desde, fecha_hasta, empresa_id = 1 } = req.query;
     
-    const ingresos = await db.allAsync(`
-      SELECT cc.codigo, cc.nombre, cc.tipo, SUM(CASE WHEN t.tipo = 'haber' THEN t.monto ELSE -t.monto END) as total
-      FROM transacciones t
-      JOIN cuentas_contables cc ON t.cuenta_id = cc.id
-      WHERE cc.tipo = 'ingreso' AND t.estado = 'activa'
-        AND t.empresa_id = $1 AND t.fecha BETWEEN $2 AND $3
-      GROUP BY cc.id, cc.codigo, cc.nombre, cc.tipo
-      ORDER BY cc.codigo
-    `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+    // Primero intentar con JOIN a cuentas_contables (estructura correcta)
+    let ingresos = [], gastos = [];
     
-    const gastos = await db.allAsync(`
-      SELECT cc.codigo, cc.nombre, cc.tipo, SUM(CASE WHEN t.tipo = 'debe' THEN t.monto ELSE -t.monto END) as total
-      FROM transacciones t
-      JOIN cuentas_contables cc ON t.cuenta_id = cc.id
-      WHERE cc.tipo = 'gasto' AND t.estado = 'activa'
-        AND t.empresa_id = $1 AND t.fecha BETWEEN $2 AND $3
-      GROUP BY cc.id, cc.codigo, cc.nombre, cc.tipo
-      ORDER BY cc.codigo
-    `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+    try {
+      ingresos = await db.allAsync(`
+        SELECT cc.codigo, cc.nombre, cc.tipo, SUM(CASE WHEN t.tipo = 'haber' THEN t.monto ELSE -t.monto END) as total
+        FROM transacciones t
+        JOIN cuentas_contables cc ON t.cuenta_id = cc.id
+        WHERE cc.tipo = 'ingreso' AND t.estado = 'activa'
+          AND t.empresa_id = $1 AND t.fecha BETWEEN $2 AND $3
+        GROUP BY cc.id, cc.codigo, cc.nombre, cc.tipo
+        ORDER BY cc.codigo
+      `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+      
+      gastos = await db.allAsync(`
+        SELECT cc.codigo, cc.nombre, cc.tipo, SUM(CASE WHEN t.tipo = 'debe' THEN t.monto ELSE -t.monto END) as total
+        FROM transacciones t
+        JOIN cuentas_contables cc ON t.cuenta_id = cc.id
+        WHERE cc.tipo = 'gasto' AND t.estado = 'activa'
+          AND t.empresa_id = $1 AND t.fecha BETWEEN $2 AND $3
+        GROUP BY cc.id, cc.codigo, cc.nombre, cc.tipo
+        ORDER BY cc.codigo
+      `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+    } catch (joinError) {
+      // Si falla el JOIN, usar datos sin estructura contable (compatibilidad con seed antiguo)
+      console.log('[Reporte] Fallback a modo sin cuentas contables:', joinError.message);
+    }
+    
+    // Si no hay datos con JOIN, leer directamente de transacciones
+    if (ingresos.length === 0 && gastos.length === 0) {
+      // Leer transacciones que tienen tipo 'entrada' o 'salida' (formato del seed)
+      const entradas = await db.allAsync(`
+        SELECT 'VENTAS' as codigo, 'Ventas y otros ingresos' as nombre, 'ingreso' as tipo, 
+               SUM(monto) as total
+        FROM transacciones 
+        WHERE tipo = 'entrada' AND estado = 'activa'
+          AND empresa_id = $1 AND fecha BETWEEN $2 AND $3
+      `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+      
+      const salidas = await db.allAsync(`
+        SELECT 'GASTOS' as codigo, 'Costos y gastos operativos' as nombre, 'gasto' as tipo, 
+               SUM(monto) as total
+        FROM transacciones 
+        WHERE tipo = 'salida' AND estado = 'activa'
+          AND empresa_id = $1 AND fecha BETWEEN $2 AND $3
+      `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+      
+      if (entradas[0]?.total) ingresos = entradas;
+      if (salidas[0]?.total) gastos = salidas;
+    }
     
     const totalIngresos = ingresos.reduce((s, i) => s + parseFloat(i.total || 0), 0);
     const totalGastos = gastos.reduce((s, g) => s + parseFloat(g.total || 0), 0);
@@ -121,14 +152,40 @@ router.get('/balance-general', async (req, res) => {
   try {
     const { fecha_hasta, empresa_id = 1 } = req.query;
     
-    const saldos = await db.allAsync(`
-      SELECT cc.codigo, cc.nombre, cc.tipo, sc.saldo_actual
-      FROM cuentas_contables cc
-      LEFT JOIN saldos_cuentas sc ON cc.id = sc.cuenta_id
-      WHERE cc.activa = TRUE AND (sc.empresa_id = $1 OR sc.empresa_id IS NULL)
-        AND (sc.periodo <= $2 OR sc.periodo IS NULL)
-      ORDER BY cc.codigo
-    `, [empresa_id, fecha_hasta || '2099-12-31']);
+    // Primero intentar con estructura completa de cuentas contables
+    let saldos = [];
+    try {
+      saldos = await db.allAsync(`
+        SELECT cc.codigo, cc.nombre, cc.tipo, sc.saldo_actual
+        FROM cuentas_contables cc
+        LEFT JOIN saldos_cuentas sc ON cc.id = sc.cuenta_id
+        WHERE cc.activa = TRUE AND (sc.empresa_id = $1 OR sc.empresa_id IS NULL)
+          AND (sc.periodo <= $2 OR sc.periodo IS NULL)
+        ORDER BY cc.codigo
+      `, [empresa_id, fecha_hasta || '2099-12-31']);
+    } catch (joinError) {
+      console.log('[Reporte] Fallback balance-general:', joinError.message);
+    }
+    
+    // Si no hay datos, crear un balance desde cuentas bancarias, CxC y CxP
+    if (saldos.length === 0) {
+      const bancos = await db.allAsync(`
+        SELECT '1000' as codigo, banco || ' - ' || numero_cuenta as nombre, 'activo' as tipo, saldo as saldo_actual
+        FROM cuentas_bancarias WHERE empresa_id = $1
+      `, [empresa_id]);
+      
+      const cxc = await db.allAsync(`
+        SELECT '2000' as codigo, 'Cuentas por Cobrar' as nombre, 'activo' as tipo, SUM(monto_pendiente) as saldo_actual
+        FROM cuentas_cobrar WHERE empresa_id = $1
+      `, [empresa_id]);
+      
+      const cxp = await db.allAsync(`
+        SELECT '3000' as codigo, 'Cuentas por Pagar' as nombre, 'pasivo' as tipo, SUM(monto_pendiente) as saldo_actual
+        FROM cuentas_pagar WHERE empresa_id = $1
+      `, [empresa_id]);
+      
+      saldos = [...bancos, ...cxc, ...cxp];
+    }
     
     const activos = saldos.filter(s => s.tipo === 'activo').reduce((a, s) => a + parseFloat(s.saldo_actual || 0), 0);
     const pasivos = saldos.filter(s => s.tipo === 'pasivo').reduce((a, s) => a + parseFloat(s.saldo_actual || 0), 0);
@@ -294,20 +351,43 @@ router.get('/ventas-cliente', async (req, res) => {
   try {
     const { fecha_desde, fecha_hasta, empresa_id = 1 } = req.query;
     
-    const data = await db.allAsync(`
-      SELECT 
-        COALESCE(t.nombre_cliente, 'Sin cliente') as cliente,
-        COUNT(*) as transacciones,
-        SUM(CASE WHEN t.tipo = 'haber' THEN t.monto ELSE 0 END) as total_ventas,
-        SUM(CASE WHEN t.tipo = 'debe' THEN t.monto ELSE 0 END) as total_devoluciones,
-        SUM(CASE WHEN t.tipo = 'haber' THEN t.monto ELSE -t.monto END) as neto
-      FROM transacciones t
-      JOIN cuentas_contables cc ON t.cuenta_id = cc.id
-      WHERE cc.codigo LIKE '4%' AND t.estado = 'activa' AND t.empresa_id = $1
-        AND t.fecha BETWEEN $2 AND $3
-      GROUP BY t.nombre_cliente
-      ORDER BY neto DESC
-    `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+    // Primero intentar con JOIN a cuentas_contables
+    let data = [];
+    try {
+      data = await db.allAsync(`
+        SELECT 
+          COALESCE(t.nombre_cliente, 'Sin cliente') as cliente,
+          COUNT(*) as transacciones,
+          SUM(CASE WHEN t.tipo = 'haber' THEN t.monto ELSE 0 END) as total_ventas,
+          SUM(CASE WHEN t.tipo = 'debe' THEN t.monto ELSE 0 END) as total_devoluciones,
+          SUM(CASE WHEN t.tipo = 'haber' THEN t.monto ELSE -t.monto END) as neto
+        FROM transacciones t
+        JOIN cuentas_contables cc ON t.cuenta_id = cc.id
+        WHERE cc.codigo LIKE '4%' AND t.estado = 'activa' AND t.empresa_id = $1
+          AND t.fecha BETWEEN $2 AND $3
+        GROUP BY t.nombre_cliente
+        ORDER BY neto DESC
+      `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+    } catch (joinError) {
+      console.log('[Reporte] Fallback ventas-cliente:', joinError.message);
+    }
+    
+    // Si no hay datos, leer directamente de transacciones
+    if (data.length === 0) {
+      data = await db.allAsync(`
+        SELECT 
+          COALESCE(t.nombre_cliente, 'Sin cliente') as cliente,
+          COUNT(*) as transacciones,
+          SUM(CASE WHEN t.tipo = 'entrada' THEN t.monto ELSE 0 END) as total_ventas,
+          SUM(CASE WHEN t.tipo = 'salida' THEN t.monto ELSE 0 END) as total_devoluciones,
+          SUM(CASE WHEN t.tipo = 'entrada' THEN t.monto ELSE -t.monto END) as neto
+        FROM transacciones t
+        WHERE t.estado = 'activa' AND t.empresa_id = $1
+          AND t.fecha BETWEEN $2 AND $3
+        GROUP BY t.nombre_cliente
+        ORDER BY neto DESC
+      `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+    }
     
     res.json({ success: true, reporte: 'ventas-cliente', columnas: ['cliente','transacciones','total_ventas','total_devoluciones','neto'], data: data.map(d => ({...d, total_ventas: parseFloat(d.total_ventas), total_devoluciones: parseFloat(d.total_devoluciones), neto: parseFloat(d.neto)})) });
   } catch (e) {
@@ -320,19 +400,41 @@ router.get('/ventas-cuenta', async (req, res) => {
   try {
     const { fecha_desde, fecha_hasta, empresa_id = 1 } = req.query;
     
-    const data = await db.allAsync(`
-      SELECT 
-        cc.codigo,
-        cc.nombre as cuenta,
-        COUNT(*) as transacciones,
-        SUM(CASE WHEN t.tipo = 'haber' THEN t.monto ELSE 0 END) as total
-      FROM transacciones t
-      JOIN cuentas_contables cc ON t.cuenta_id = cc.id
-      WHERE cc.codigo LIKE '4%' AND t.estado = 'activa' AND t.empresa_id = $1
-        AND t.fecha BETWEEN $2 AND $3
-      GROUP BY cc.id, cc.codigo, cc.nombre
-      ORDER BY total DESC
-    `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+    // Primero intentar con JOIN a cuentas_contables
+    let data = [];
+    try {
+      data = await db.allAsync(`
+        SELECT 
+          cc.codigo,
+          cc.nombre as cuenta,
+          COUNT(*) as transacciones,
+          SUM(CASE WHEN t.tipo = 'haber' THEN t.monto ELSE 0 END) as total
+        FROM transacciones t
+        JOIN cuentas_contables cc ON t.cuenta_id = cc.id
+        WHERE cc.codigo LIKE '4%' AND t.estado = 'activa' AND t.empresa_id = $1
+          AND t.fecha BETWEEN $2 AND $3
+        GROUP BY cc.id, cc.codigo, cc.nombre
+        ORDER BY total DESC
+      `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+    } catch (joinError) {
+      console.log('[Reporte] Fallback ventas-cuenta:', joinError.message);
+    }
+    
+    // Si no hay datos, crear un resumen por categoría de transacciones
+    if (data.length === 0) {
+      data = await db.allAsync(`
+        SELECT 
+          '4000' as codigo,
+          COALESCE(categoria, 'Ventas') as cuenta,
+          COUNT(*) as transacciones,
+          SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as total
+        FROM transacciones
+        WHERE estado = 'activa' AND empresa_id = $1
+          AND fecha BETWEEN $2 AND $3
+        GROUP BY categoria
+        ORDER BY total DESC
+      `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+    }
     
     res.json({ success: true, reporte: 'ventas-cuenta', columnas: ['codigo','cuenta','transacciones','total'], data: data.map(d => ({...d, total: parseFloat(d.total)})) });
   } catch (e) {
@@ -372,46 +474,85 @@ router.get('/ratios-financieros', async (req, res) => {
     const { fecha_hasta, empresa_id = 1 } = req.query;
     const fHasta = fecha_hasta || new Date().toISOString().split('T')[0];
     
-    const activos = await db.getAsync(`
-      SELECT SUM(CASE WHEN t.tipo = 'debe' THEN t.monto ELSE -t.monto END) as total
-      FROM transacciones t
-      JOIN cuentas_contables cc ON t.cuenta_id = cc.id
-      WHERE cc.tipo = 'activo' AND t.estado = 'activa' AND t.empresa_id = $1 AND t.fecha <= $2
-    `, [empresa_id, fHasta]);
+    // Intentar con estructura completa de cuentas contables
+    let activos = { total: 0 }, pasivos = { total: 0 }, ingresos = { total: 0 }, gastos = { total: 0 };
     
-    const pasivos = await db.getAsync(`
-      SELECT SUM(CASE WHEN t.tipo = 'haber' THEN t.monto ELSE -t.monto END) as total
-      FROM transacciones t
-      JOIN cuentas_contables cc ON t.cuenta_id = cc.id
-      WHERE cc.tipo = 'pasivo' AND t.estado = 'activa' AND t.empresa_id = $1 AND t.fecha <= $2
-    `, [empresa_id, fHasta]);
+    try {
+      activos = await db.getAsync(`
+        SELECT SUM(CASE WHEN t.tipo = 'debe' THEN t.monto ELSE -t.monto END) as total
+        FROM transacciones t
+        JOIN cuentas_contables cc ON t.cuenta_id = cc.id
+        WHERE cc.tipo = 'activo' AND t.estado = 'activa' AND t.empresa_id = $1 AND t.fecha <= $2
+      `, [empresa_id, fHasta]);
+      
+      pasivos = await db.getAsync(`
+        SELECT SUM(CASE WHEN t.tipo = 'haber' THEN t.monto ELSE -t.monto END) as total
+        FROM transacciones t
+        JOIN cuentas_contables cc ON t.cuenta_id = cc.id
+        WHERE cc.tipo = 'pasivo' AND t.estado = 'activa' AND t.empresa_id = $1 AND t.fecha <= $2
+      `, [empresa_id, fHasta]);
+      
+      ingresos = await db.getAsync(`
+        SELECT SUM(CASE WHEN t.tipo = 'haber' THEN t.monto ELSE -t.monto END) as total
+        FROM transacciones t
+        JOIN cuentas_contables cc ON t.cuenta_id = cc.id
+        WHERE cc.tipo = 'ingreso' AND t.estado = 'activa' AND t.empresa_id = $1 AND t.fecha <= $2
+      `, [empresa_id, fHasta]);
+      
+      gastos = await db.getAsync(`
+        SELECT SUM(CASE WHEN t.tipo = 'debe' THEN t.monto ELSE -t.monto END) as total
+        FROM transacciones t
+        JOIN cuentas_contables cc ON t.cuenta_id = cc.id
+        WHERE cc.tipo = 'gasto' AND t.estado = 'activa' AND t.empresa_id = $1 AND t.fecha <= $2
+      `, [empresa_id, fHasta]);
+    } catch (joinError) {
+      console.log('[Reporte] Fallback ratios:', joinError.message);
+    }
     
-    const ingresos = await db.getAsync(`
-      SELECT SUM(CASE WHEN t.tipo = 'haber' THEN t.monto ELSE -t.monto END) as total
-      FROM transacciones t
-      JOIN cuentas_contables cc ON t.cuenta_id = cc.id
-      WHERE cc.tipo = 'ingreso' AND t.estado = 'activa' AND t.empresa_id = $1 AND t.fecha <= $2
-    `, [empresa_id, fHasta]);
+    // Si no hay datos con JOIN, usar cálculo simple desde transacciones
+    const activoTotal = parseFloat(activos?.total || 0);
+    const pasivoTotal = parseFloat(pasivos?.total || 0);
+    const ingresoTotal = parseFloat(ingresos?.total || 0);
+    const gastoTotal = parseFloat(gastos?.total || 0);
     
-    const gastos = await db.getAsync(`
-      SELECT SUM(CASE WHEN t.tipo = 'debe' THEN t.monto ELSE -t.monto END) as total
-      FROM transacciones t
-      JOIN cuentas_contables cc ON t.cuenta_id = cc.id
-      WHERE cc.tipo = 'gasto' AND t.estado = 'activa' AND t.empresa_id = $1 AND t.fecha <= $2
-    `, [empresa_id, fHasta]);
+    // Usar cuentas bancarias como activos si no hay datos contables
+    let bancos = { total: 0 };
+    try {
+      bancos = await db.getAsync(`
+        SELECT SUM(saldo) as total FROM cuentas_bancarias WHERE empresa_id = $1
+      `, [empresa_id]);
+    } catch(e) {}
     
-    const patrimonio = (parseFloat(activos?.total || 0) - parseFloat(pasivos?.total || 0));
-    const utilidad = (parseFloat(ingresos?.total || 0) - parseFloat(gastos?.total || 0));
+    // Usar CxC como activos
+    let cxc = { total: 0 };
+    try {
+      cxc = await db.getAsync(`
+        SELECT SUM(monto_pendiente) as total FROM cuentas_cobrar WHERE empresa_id = $1
+      `, [empresa_id]);
+    } catch(e) {}
+    
+    // Usar CxP como pasivos
+    let cxp = { total: 0 };
+    try {
+      cxp = await db.getAsync(`
+        SELECT SUM(monto_pendiente) as total FROM cuentas_pagar WHERE empresa_id = $1
+      `, [empresa_id]);
+    } catch(e) {}
+    
+    const totalActivos = Math.max(activoTotal, parseFloat(bancos?.total || 0) + parseFloat(cxc?.total || 0));
+    const totalPasivos = Math.max(pasivoTotal, parseFloat(cxp?.total || 0));
+    const patrimonio = totalActivos - totalPasivos;
+    const utilidad = Math.max(0, ingresoTotal - gastoTotal);
     
     const ratios = [
-      { nombre: 'Liquidez Corriente', formula: 'Activo Corriente / Pasivo Corriente', valor: (parseFloat(activos?.total || 0) / Math.max(parseFloat(pasivos?.total || 1), 1)).toFixed(2), unidad: '', umbral: '1.5', estado: (parseFloat(activos?.total || 0) / Math.max(parseFloat(pasivos?.total || 1), 1)) >= 1.5 ? 'saludable' : 'atencion' },
-      { nombre: 'Endeudamiento', formula: 'Pasivo Total / Activo Total', valor: (parseFloat(pasivos?.total || 0) / Math.max(parseFloat(activos?.total || 1), 1)).toFixed(2), unidad: '', umbral: '0.6', estado: (parseFloat(pasivos?.total || 0) / Math.max(parseFloat(activos?.total || 1), 1)) <= 0.6 ? 'saludable' : 'atencion' },
+      { nombre: 'Liquidez Corriente', formula: 'Activo Corriente / Pasivo Corriente', valor: (totalActivos / Math.max(totalPasivos, 1)).toFixed(2), unidad: '', umbral: '1.5', estado: (totalActivos / Math.max(totalPasivos, 1)) >= 1.5 ? 'saludable' : 'atencion' },
+      { nombre: 'Endeudamiento', formula: 'Pasivo Total / Activo Total', valor: (totalPasivos / Math.max(totalActivos, 1)).toFixed(2), unidad: '', umbral: '0.6', estado: (totalPasivos / Math.max(totalActivos, 1)) <= 0.6 ? 'saludable' : 'atencion' },
       { nombre: 'ROE', formula: 'Utilidad Neta / Patrimonio', valor: patrimonio !== 0 ? ((utilidad / patrimonio) * 100).toFixed(1) : '0.0', unidad: '%', umbral: '15', estado: (utilidad / Math.max(patrimonio, 1)) * 100 >= 15 ? 'saludable' : 'atencion' },
-      { nombre: 'Margen Neto', formula: 'Utilidad Neta / Ingresos', valor: parseFloat(ingresos?.total || 0) !== 0 ? ((utilidad / parseFloat(ingresos?.total || 1)) * 100).toFixed(1) : '0.0', unidad: '%', umbral: '10', estado: (utilidad / Math.max(parseFloat(ingresos?.total || 1), 1)) * 100 >= 10 ? 'saludable' : 'atencion' },
-      { nombre: 'Razón de Solvencia', formula: 'Activo Total / Pasivo Total', valor: (parseFloat(activos?.total || 0) / Math.max(parseFloat(pasivos?.total || 1), 1)).toFixed(2), unidad: '', umbral: '1.5', estado: (parseFloat(activos?.total || 0) / Math.max(parseFloat(pasivos?.total || 1), 1)) >= 1.5 ? 'saludable' : 'atencion' }
+      { nombre: 'Margen Neto', formula: 'Utilidad Neta / Ingresos', valor: ingresoTotal > 0 ? ((utilidad / ingresoTotal) * 100).toFixed(1) : '0.0', unidad: '%', umbral: '10', estado: ingresoTotal > 0 && (utilidad / ingresoTotal) * 100 >= 10 ? 'saludable' : 'atencion' },
+      { nombre: 'Razón de Solvencia', formula: 'Activo Total / Pasivo Total', valor: (totalActivos / Math.max(totalPasivos, 1)).toFixed(2), unidad: '', umbral: '1.5', estado: (totalActivos / Math.max(totalPasivos, 1)) >= 1.5 ? 'saludable' : 'atencion' }
     ];
     
-    res.json({ success: true, reporte: 'ratios-financieros', periodo: { hasta: fHasta }, resumen: { activos: parseFloat(activos?.total || 0), pasivos: parseFloat(pasivos?.total || 0), patrimonio, ingresos: parseFloat(ingresos?.total || 0), gastos: parseFloat(gastos?.total || 0), utilidad }, columnas: ['nombre','formula','valor','unidad','umbral','estado'], data: ratios });
+    res.json({ success: true, reporte: 'ratios-financieros', periodo: { hasta: fHasta }, resumen: { activos: totalActivos, pasivos: totalPasivos, patrimonio, ingresos: ingresoTotal, gastos: gastoTotal, utilidad }, columnas: ['nombre','formula','valor','unidad','umbral','estado'], data: ratios });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }

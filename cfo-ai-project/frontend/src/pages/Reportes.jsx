@@ -202,6 +202,7 @@ export default function Reportes() {
     cuenta_bancaria_id: ''
   })
   const [reportData, setReportData] = useState(null)
+  const [previewData, setPreviewData] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [page, setPage] = useState(0)
@@ -268,6 +269,30 @@ export default function Reportes() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  const handleTemplateHover = (tpl) => {
+    // Pre-cargar datos al hacer hover para preview rápido
+    if (selectedTemplate?.id === tpl.id) return
+    
+    const params = {}
+    tpl.filters.forEach(f => {
+      if (filters[f] !== undefined && filters[f] !== '') {
+        params[f] = filters[f]
+      }
+    })
+    params.limit = 50
+    params.offset = 0
+
+    cfoApi.get(`/reportes/${tpl.id}`, { params })
+      .then(res => {
+        if (res.data?.data?.length > 0) {
+          setPreviewData({ template: tpl, data: res.data })
+        }
+      })
+      .catch(() => {
+        // Silenciar errores en hover
+      })
+  }
+
   const handleTemplateClick = (tpl) => {
     const defaultFilters = { ...filters }
     // Reset date filters to last month for new template
@@ -282,7 +307,31 @@ export default function Reportes() {
     }
     setFilters(defaultFilters)
     setSelectedTemplate(tpl)
-    runReport(tpl, defaultFilters)
+    // Ejecutar el reporte inmediatamente con el template seleccionado
+    setLoading(true)
+    setError(null)
+    setPage(0)
+    setReportData(null)
+    
+    const params = {}
+    tpl.filters.forEach(f => {
+      if (defaultFilters[f] !== undefined && defaultFilters[f] !== '') {
+        params[f] = defaultFilters[f]
+      }
+    })
+    params.limit = 5000
+    params.offset = 0
+
+    cfoApi.get(`/reportes/${tpl.id}`, { params })
+      .then(res => {
+        setReportData(res.data || res)
+      })
+      .catch(e => {
+        setError(e.response?.data?.error || e.message)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }
 
   const exportToExcel = () => {
@@ -411,6 +460,7 @@ export default function Reportes() {
             <button
               key={tpl.id}
               onClick={() => handleTemplateClick(tpl)}
+              onMouseEnter={() => handleTemplateHover(tpl)}
               className={`group text-left p-3 rounded-xl border transition-all hover:shadow-md ${
                 isActive
                   ? 'ring-2 ring-[#001639] shadow-md bg-[#001639]/5'
@@ -426,6 +476,15 @@ export default function Reportes() {
           )
         })}
       </div>
+
+      {/* Preview rápido en hover */}
+      {previewData && previewData.template?.id !== selectedTemplate?.id && (
+        <div className="bg-blue-50 rounded-lg border border-blue-200 p-3 mb-2">
+          <p className="text-xs text-blue-700 font-medium">
+            Preview: {previewData.template.name} — {previewData.data?.data?.length || 0} registros disponibles
+          </p>
+        </div>
+      )}
 
       {selectedTemplate && (
         <>
@@ -598,8 +657,16 @@ export default function Reportes() {
             </div>
           )}
 
+          {/* Sin datos */}
+          {!loading && selectedTemplate && !reportData && (
+            <div className="flex items-center justify-center py-12 text-[var(--text-muted)]">
+              <TableCellsIcon className="w-6 h-6 mr-2" />
+              Haz clic en "Actualizar Reporte" para generar los datos
+            </div>
+          )}
+
           {/* Charts + Preview */}
-          {reportData && reportData.data && !loading && (
+          {reportData && !loading && (
             <>
               {selectedTemplate.hasResumen && renderResumen()}
               {renderChart()}
@@ -607,36 +674,43 @@ export default function Reportes() {
               <div className="card overflow-hidden">
                 <div className="section-header">
                   <EyeIcon className="w-5 h-5 text-[var(--text-muted)]" />
-                  <h2 className="font-semibold">Vista Previa</h2>
+                  <h2 className="font-semibold">Vista Previa — {selectedTemplate.name}</h2>
                   <span className="ml-auto text-xs text-[var(--text-muted)]">
-                    {reportData.data.length.toLocaleString()} registros
+                    {reportData.data?.length?.toLocaleString() || 0} registros
                   </span>
                 </div>
 
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead className="bg-[var(--bg-secondary)] border-b border-[var(--border-default)]">
-                      <tr>
-                        {(reportData.columnas || Object.keys(reportData.data[0] || {})).map(col => (
-                          <th key={col} className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">
-                            {String(col).replace(/_/g, ' ')}
-                          </th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[var(--border-default)]">
-                      {pagedData.map((row, idx) => (
-                        <tr key={idx} className="hover:bg-[var(--bg-secondary)] transition-colors">
-                          {(reportData.columnas || Object.keys(row)).map(col => (
-                            <td key={col} className={`px-4 py-2.5 whitespace-nowrap ${isNumberField(col) ? 'text-right tabular-nums' : ''}`}>
-                              {renderCell(col, row[col])}
-                            </td>
+                {reportData.data && reportData.data.length > 0 ? (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead className="bg-[var(--bg-secondary)] border-b border-[var(--border-default)]">
+                        <tr>
+                          {(reportData.columnas || Object.keys(reportData.data[0] || {})).map(col => (
+                            <th key={col} className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">
+                              {String(col).replace(/_/g, ' ')}
+                            </th>
                           ))}
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                      </thead>
+                      <tbody className="divide-y divide-[var(--border-default)]">
+                        {pagedData.map((row, idx) => (
+                          <tr key={idx} className="hover:bg-[var(--bg-secondary)] transition-colors">
+                            {(reportData.columnas || Object.keys(row)).map(col => (
+                              <td key={col} className={`px-4 py-2.5 whitespace-nowrap ${isNumberField(col) ? 'text-right tabular-nums' : ''}`}>
+                                {renderCell(col, row[col])}
+                              </td>
+                            ))}
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-center py-8 text-[var(--text-muted)]">
+                    <TableCellsIcon className="w-5 h-5 mr-2" />
+                    No hay registros para este período
+                  </div>
+                )}
 
                 {totalPages > 1 && (
                   <div className="flex items-center justify-between px-5 py-3 border-t border-[var(--border-default)]">

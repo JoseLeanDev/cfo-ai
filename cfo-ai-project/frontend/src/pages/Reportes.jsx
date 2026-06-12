@@ -1,5 +1,4 @@
 import { useState, useEffect, useCallback } from 'react'
-import { useLocation } from 'react-router-dom'
 import {
   DocumentChartBarIcon,
   TableCellsIcon,
@@ -18,11 +17,15 @@ import {
   ScaleIcon,
   BookOpenIcon,
   BuildingLibraryIcon,
-  CheckCircleIcon
+  CheckCircleIcon,
+  PresentationChartBarIcon as LucBarChartIcon,
+  ChartPieIcon as LucPieChartIcon
 } from '@heroicons/react/24/outline'
-import cfoApi, { endpoints } from '../services/cfoApi'
+import cfoApi from '../services/cfoApi'
 import * as XLSX from 'xlsx'
-import PageInsights from '../components/agents/PageInsights'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
+
+const COLORS = ['#001639', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16']
 
 const reportTemplates = [
   {
@@ -33,7 +36,8 @@ const reportTemplates = [
     color: 'bg-blue-50 text-blue-600 border-blue-200',
     iconBg: 'bg-blue-100',
     filters: ['fecha_desde', 'fecha_hasta'],
-    hasResumen: true
+    hasResumen: true,
+    chartType: 'bar'
   },
   {
     id: 'balance-general',
@@ -43,7 +47,8 @@ const reportTemplates = [
     color: 'bg-emerald-50 text-emerald-600 border-emerald-200',
     iconBg: 'bg-emerald-100',
     filters: ['fecha_hasta'],
-    hasResumen: true
+    hasResumen: true,
+    chartType: 'pie'
   },
   {
     id: 'libro-diario',
@@ -63,7 +68,8 @@ const reportTemplates = [
     color: 'bg-violet-50 text-violet-600 border-violet-200',
     iconBg: 'bg-violet-100',
     filters: ['fecha_hasta'],
-    hasResumen: true
+    hasResumen: true,
+    chartType: 'bar'
   },
   {
     id: 'cxp-aging',
@@ -73,7 +79,8 @@ const reportTemplates = [
     color: 'bg-rose-50 text-rose-600 border-rose-200',
     iconBg: 'bg-rose-100',
     filters: ['fecha_hasta'],
-    hasResumen: true
+    hasResumen: true,
+    chartType: 'bar'
   },
   {
     id: 'movimientos-bancarios',
@@ -93,7 +100,8 @@ const reportTemplates = [
     color: 'bg-teal-50 text-teal-600 border-teal-200',
     iconBg: 'bg-teal-100',
     filters: ['fecha_desde', 'fecha_hasta'],
-    hasResumen: false
+    hasResumen: false,
+    chartType: 'bar'
   },
   {
     id: 'ventas-cuenta',
@@ -103,7 +111,8 @@ const reportTemplates = [
     color: 'bg-indigo-50 text-indigo-600 border-indigo-200',
     iconBg: 'bg-indigo-100',
     filters: ['fecha_desde', 'fecha_hasta'],
-    hasResumen: false
+    hasResumen: false,
+    chartType: 'pie'
   },
   {
     id: 'conciliaciones',
@@ -123,7 +132,8 @@ const reportTemplates = [
     color: 'bg-orange-50 text-orange-600 border-orange-200',
     iconBg: 'bg-orange-100',
     filters: ['fecha_hasta'],
-    hasResumen: true
+    hasResumen: true,
+    chartType: 'bar'
   },
   {
     id: 'cuentas-bancarias',
@@ -133,7 +143,8 @@ const reportTemplates = [
     color: 'bg-slate-50 text-slate-600 border-slate-200',
     iconBg: 'bg-slate-100',
     filters: [],
-    hasResumen: false
+    hasResumen: false,
+    chartType: 'pie'
   },
   {
     id: 'cuentas-contables',
@@ -167,12 +178,22 @@ const firstDayOfMonth = () => {
   const d = new Date()
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
 }
+const firstDayOfLastMonth = () => {
+  const d = new Date()
+  d.setMonth(d.getMonth() - 1)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
+}
+const lastDayOfLastMonth = () => {
+  const d = new Date()
+  d.setDate(0)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 export default function Reportes() {
   const [selectedTemplate, setSelectedTemplate] = useState(null)
   const [filters, setFilters] = useState({
-    fecha_desde: firstDayOfMonth(),
-    fecha_hasta: today(),
+    fecha_desde: firstDayOfLastMonth(),
+    fecha_hasta: lastDayOfLastMonth(),
     periodo: new Date().toISOString().slice(0, 7),
     cuenta_id: '',
     estado: '',
@@ -186,22 +207,24 @@ export default function Reportes() {
   const [page, setPage] = useState(0)
   const PAGE_SIZE = 50
 
-  const runReport = useCallback(async () => {
-    if (!selectedTemplate) return
+  const runReport = useCallback(async (tpl, customFilters) => {
+    const template = tpl || selectedTemplate
+    if (!template) return
     setLoading(true)
     setError(null)
     setPage(0)
     try {
       const params = {}
-      selectedTemplate.filters.forEach(f => {
-        if (filters[f] !== undefined && filters[f] !== '') {
-          params[f] = filters[f]
+      const activeFilters = customFilters || filters
+      template.filters.forEach(f => {
+        if (activeFilters[f] !== undefined && activeFilters[f] !== '') {
+          params[f] = activeFilters[f]
         }
       })
       params.limit = 5000
       params.offset = 0
 
-      const res = await cfoApi.get(`/reportes/${selectedTemplate.id}`, { params })
+      const res = await cfoApi.get(`/reportes/${template.id}`, { params })
       setReportData(res.data || res)
     } catch (e) {
       setError(e.response?.data?.error || e.message)
@@ -209,6 +232,36 @@ export default function Reportes() {
       setLoading(false)
     }
   }, [selectedTemplate, filters])
+
+  // Auto-run default report on mount (Estado de Resultados, último mes)
+  useEffect(() => {
+    const defaultTpl = reportTemplates[0]
+    const defaultFilters = {
+      ...filters,
+      fecha_desde: firstDayOfLastMonth(),
+      fecha_hasta: lastDayOfLastMonth()
+    }
+    setSelectedTemplate(defaultTpl)
+    runReport(defaultTpl, defaultFilters)
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  const handleTemplateClick = (tpl) => {
+    const defaultFilters = { ...filters }
+    // Reset date filters to last month for new template
+    if (tpl.filters.includes('fecha_desde')) {
+      defaultFilters.fecha_desde = firstDayOfLastMonth()
+    }
+    if (tpl.filters.includes('fecha_hasta')) {
+      defaultFilters.fecha_hasta = lastDayOfLastMonth()
+    }
+    if (tpl.filters.includes('periodo')) {
+      defaultFilters.periodo = new Date().toISOString().slice(0, 7)
+    }
+    setFilters(defaultFilters)
+    setSelectedTemplate(tpl)
+    runReport(tpl, defaultFilters)
+  }
 
   const exportToExcel = () => {
     if (!reportData || !reportData.data) return
@@ -251,6 +304,69 @@ export default function Reportes() {
     )
   }
 
+  const renderChart = () => {
+    if (!reportData?.data || !selectedTemplate?.chartType) return null
+
+    const data = reportData.data.filter(row =>
+      !['TOTAL', 'resumen', ''].includes(row.tipo || '') &&
+      Object.values(row).some(v => typeof v === 'number' && v !== 0)
+    )
+
+    if (!data.length) return null
+
+    if (selectedTemplate.chartType === 'pie') {
+      const keyField = Object.keys(data[0]).find(k => /nombre|cliente|cuenta|banco/.test(k)) || Object.keys(data[0])[1]
+      const valueField = Object.keys(data[0]).find(k => /monto|total|saldo|neto/.test(k)) || Object.keys(data[0]).find(k => typeof data[0][k] === 'number')
+      const chartData = data.slice(0, 8).map(d => ({ name: d[keyField] || 'Sin nombre', value: parseFloat(d[valueField] || 0) }))
+      return (
+        <div className="bg-white rounded-lg border border-[var(--border-default)] p-4 mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <LucPieChartIcon className="w-4 h-4 text-[var(--text-muted)]" />
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Distribución</h3>
+          </div>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={chartData} cx="50%" cy="50%" outerRadius={80} dataKey="value" nameKey="name" label>
+                  {chartData.map((entry, index) => (
+                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip formatter={(val) => formatGTQ(val)} />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )
+    }
+
+    if (selectedTemplate.chartType === 'bar') {
+      const keyField = Object.keys(data[0]).find(k => /nombre|cliente|cuenta|banco|codigo/.test(k)) || Object.keys(data[0])[1]
+      const valueField = Object.keys(data[0]).find(k => /monto|total|saldo|neto|dias/.test(k)) || Object.keys(data[0]).find(k => typeof data[0][k] === 'number')
+      const chartData = data.slice(0, 12).map(d => ({ name: String(d[keyField] || '').slice(0, 20), value: parseFloat(d[valueField] || 0) }))
+      return (
+        <div className="bg-white rounded-lg border border-[var(--border-default)] p-4 mb-4">
+          <div className="flex items-center gap-2 mb-3">
+            <LucBarChartIcon className="w-4 h-4 text-[var(--text-muted)]" />
+            <h3 className="text-sm font-semibold text-[var(--text-primary)]">Vista Gráfica</h3>
+          </div>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={chartData}>
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-30} textAnchor="end" height={60} />
+                <YAxis tickFormatter={(v) => `Q${(v / 1000).toFixed(0)}K`} tick={{ fontSize: 11 }} />
+                <Tooltip formatter={(val) => formatGTQ(val)} />
+                <Bar dataKey="value" fill="#001639" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      )
+    }
+    return null
+  }
+
   return (
     <div className="space-y-6 animate-fade-in max-w-6xl">
       {/* Header */}
@@ -264,47 +380,39 @@ export default function Reportes() {
         </div>
       </div>
 
-      <PageInsights context="reportes" maxInsights={2} />
-
-      {!selectedTemplate ? (
-        <>
-          {/* Selector de plantillas */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {reportTemplates.map((tpl) => {
-              const Icon = tpl.icon
-              return (
-                <button
-                  key={tpl.id}
-                  onClick={() => setSelectedTemplate(tpl)}
-                  className={`group text-left p-5 rounded-xl border transition-all hover:shadow-md hover:-translate-y-0.5 ${tpl.color} bg-white`}
-                >
-                  <div className={`w-10 h-10 rounded-lg ${tpl.iconBg} flex items-center justify-center mb-3`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <h3 className="font-semibold text-[var(--text-primary)] group-hover:text-[#001639] transition-colors">{tpl.name}</h3>
-                  <p className="text-xs text-[var(--text-muted)] mt-1 leading-relaxed">{tpl.description}</p>
-                  <div className="mt-3 flex items-center gap-1 text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                    <EyeIcon className="w-3.5 h-3.5" />
-                    Generar reporte
-                  </div>
-                </button>
-              )
-            })}
-          </div>
-        </>
-      ) : (
-        <>
-          {/* Breadcrumb + volver */}
-          <div className="flex items-center gap-3">
+      {/* Selector de plantillas - siempre visible arriba */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {reportTemplates.map((tpl) => {
+          const Icon = tpl.icon
+          const isActive = selectedTemplate?.id === tpl.id
+          return (
             <button
-              onClick={() => { setSelectedTemplate(null); setReportData(null); setError(null); }}
-              className="flex items-center gap-1 text-sm text-[var(--text-muted)] hover:text-[var(--text-primary)] transition-colors"
+              key={tpl.id}
+              onClick={() => handleTemplateClick(tpl)}
+              className={`group text-left p-3 rounded-xl border transition-all hover:shadow-md ${
+                isActive
+                  ? 'ring-2 ring-[#001639] shadow-md bg-[#001639]/5'
+                  : `${tpl.color} bg-white hover:-translate-y-0.5`
+              }`}
             >
-              <ChevronLeftIcon className="w-4 h-4" />
-              Volver
+              <div className={`w-8 h-8 rounded-lg ${isActive ? 'bg-[#001639]' : tpl.iconBg} flex items-center justify-center mb-2`}>
+                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : ''}`} />
+              </div>
+              <h3 className="text-xs font-semibold text-[var(--text-primary)] leading-tight">{tpl.name}</h3>
+              <p className="text-[10px] text-[var(--text-muted)] mt-1 leading-tight hidden sm:block">{tpl.description}</p>
             </button>
-            <span className="text-[var(--border-strong)]">/</span>
+          )
+        })}
+      </div>
+
+      {selectedTemplate && (
+        <>
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-3">
             <span className="text-sm font-medium text-[var(--text-primary)]">{selectedTemplate.name}</span>
+            <span className="text-xs text-[var(--text-muted)]">
+              ({filters.fecha_desde || '...'} → {filters.fecha_hasta || '...'})
+            </span>
           </div>
 
           {/* Filtros */}
@@ -432,12 +540,12 @@ export default function Reportes() {
 
               <div className="flex items-center gap-3 mt-4">
                 <button
-                  onClick={runReport}
+                  onClick={() => runReport()}
                   disabled={loading}
                   className="btn-primary flex items-center gap-2"
                 >
                   {loading ? <ArrowPathIcon className="w-4 h-4 animate-spin" /> : <TableCellsIcon className="w-4 h-4" />}
-                  {loading ? 'Generando...' : 'Generar Reporte'}
+                  {loading ? 'Generando...' : 'Actualizar Reporte'}
                 </button>
                 {reportData && (
                   <button
@@ -460,66 +568,77 @@ export default function Reportes() {
             </div>
           )}
 
-          {/* Preview */}
-          {reportData && reportData.data && (
-            <div className="card overflow-hidden">
-              <div className="section-header">
-                <EyeIcon className="w-5 h-5 text-[var(--text-muted)]" />
-                <h2 className="font-semibold">Vista Previa</h2>
-                <span className="ml-auto text-xs text-[var(--text-muted)]">
-                  {reportData.data.length.toLocaleString()} registros
-                </span>
-              </div>
+          {/* Loading */}
+          {loading && (
+            <div className="flex items-center justify-center py-12 text-[var(--text-muted)]">
+              <ArrowPathIcon className="w-6 h-6 animate-spin mr-2" />
+              Generando reporte...
+            </div>
+          )}
 
+          {/* Charts + Preview */}
+          {reportData && reportData.data && !loading && (
+            <>
               {selectedTemplate.hasResumen && renderResumen()}
+              {renderChart()}
 
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead className="bg-[var(--bg-secondary)] border-b border-[var(--border-default)]">
-                    <tr>
-                      {(reportData.columnas || Object.keys(reportData.data[0] || {})).map(col => (
-                        <th key={col} className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">
-                          {String(col).replace(/_/g, ' ')}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--border-default)]">
-                    {pagedData.map((row, idx) => (
-                      <tr key={idx} className="hover:bg-[var(--bg-secondary)] transition-colors">
-                        {(reportData.columnas || Object.keys(row)).map(col => (
-                          <td key={col} className={`px-4 py-2.5 whitespace-nowrap ${isNumberField(col) ? 'text-right tabular-nums' : ''}`}>
-                            {renderCell(col, row[col])}
-                          </td>
+              <div className="card overflow-hidden">
+                <div className="section-header">
+                  <EyeIcon className="w-5 h-5 text-[var(--text-muted)]" />
+                  <h2 className="font-semibold">Vista Previa</h2>
+                  <span className="ml-auto text-xs text-[var(--text-muted)]">
+                    {reportData.data.length.toLocaleString()} registros
+                  </span>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead className="bg-[var(--bg-secondary)] border-b border-[var(--border-default)]">
+                      <tr>
+                        {(reportData.columnas || Object.keys(reportData.data[0] || {})).map(col => (
+                          <th key={col} className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider whitespace-nowrap">
+                            {String(col).replace(/_/g, ' ')}
+                          </th>
                         ))}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-5 py-3 border-t border-[var(--border-default)]">
-                  <button
-                    onClick={() => setPage(p => Math.max(0, p - 1))}
-                    disabled={page === 0}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border border-[var(--border-default)] disabled:opacity-40 hover:bg-[var(--bg-secondary)] transition-colors"
-                  >
-                    <ChevronLeftIcon className="w-4 h-4" /> Anterior
-                  </button>
-                  <span className="text-xs text-[var(--text-muted)]">
-                    Página {page + 1} de {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                    disabled={page >= totalPages - 1}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border border-[var(--border-default)] disabled:opacity-40 hover:bg-[var(--bg-secondary)] transition-colors"
-                  >
-                    Siguiente <ChevronRightIcon className="w-4 h-4" />
-                  </button>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--border-default)]">
+                      {pagedData.map((row, idx) => (
+                        <tr key={idx} className="hover:bg-[var(--bg-secondary)] transition-colors">
+                          {(reportData.columnas || Object.keys(row)).map(col => (
+                            <td key={col} className={`px-4 py-2.5 whitespace-nowrap ${isNumberField(col) ? 'text-right tabular-nums' : ''}`}>
+                              {renderCell(col, row[col])}
+                            </td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
-              )}
-            </div>
+
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between px-5 py-3 border-t border-[var(--border-default)]">
+                    <button
+                      onClick={() => setPage(p => Math.max(0, p - 1))}
+                      disabled={page === 0}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border border-[var(--border-default)] disabled:opacity-40 hover:bg-[var(--bg-secondary)] transition-colors"
+                    >
+                      <ChevronLeftIcon className="w-4 h-4" /> Anterior
+                    </button>
+                    <span className="text-xs text-[var(--text-muted)]">
+                      Página {page + 1} de {totalPages}
+                    </span>
+                    <button
+                      onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+                      disabled={page >= totalPages - 1}
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border border-[var(--border-default)] disabled:opacity-40 hover:bg-[var(--bg-secondary)] transition-colors"
+                    >
+                      Siguiente <ChevronRightIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
           )}
         </>
       )}

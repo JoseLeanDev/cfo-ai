@@ -11,6 +11,7 @@ import SAT from './pages/SAT'
 import LogActividades from './pages/LogActividades'
 import Usuarios from './pages/Usuarios'
 import Login from './pages/Login'
+import Reportes from './pages/Reportes'
 // Páginas secundarias
 import LibroDiario from './pages/LibroDiario'
 import CuentasPorCobrar from './pages/CuentasPorCobrar'
@@ -58,6 +59,7 @@ function AppRoutes() {
                 <Route path="/sat" element={<SAT />} />
                 <Route path="/log-actividades" element={<LogActividades />} />
                 <Route path="/usuarios" element={<Usuarios />} />
+                <Route path="/reportes" element={<Reportes />} />
                 {/* Páginas secundarias */}
                 <Route path="/contabilidad/libro-diario" element={<LibroDiario />} />
                 <Route path="/tesoreria/cuentas-por-cobrar" element={<CuentasPorCobrar />} />

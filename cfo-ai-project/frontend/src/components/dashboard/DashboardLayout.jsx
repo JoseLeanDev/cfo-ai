@@ -2,6 +2,7 @@ import { Link, useLocation } from 'react-router-dom'
 import {
   HomeIcon,
   ShoppingCartIcon,
+  DocumentTextIcon,
   BanknotesIcon,
   BookOpenIcon,
   ChartBarIcon,
@@ -23,6 +24,7 @@ const navigation = [
   { name: 'Tesorería', href: '/tesoreria', icon: BanknotesIcon },
   { name: 'Contabilidad', href: '/contabilidad', icon: BookOpenIcon },
   { name: 'Análisis', href: '/analisis', icon: ChartBarIcon },
+  { name: 'Reportes', href: '/reportes', icon: DocumentTextIcon },
   { name: 'SAT', href: '/sat', icon: DocumentCheckIcon },
   { name: 'Agentes IA', href: '/log-actividades', icon: CpuChipIcon },
   { name: 'Usuarios', href: '/usuarios', icon: UsersIcon, adminOnly: true },

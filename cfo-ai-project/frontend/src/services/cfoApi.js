@@ -65,6 +65,9 @@ export const endpoints = {
     prepararDeclaracion: (obligacion) => cfoApi.post('/sat/declaracion/preparar', { obligacion })
   },
   alertas: () => cfoApi.get('/alertas'),
+  reportes: {
+    generar: (tipo, params) => cfoApi.get(`/reportes/${tipo}`, { params })
+  },
   // Multi-Agent System
   agents: {
     chat: (message) => cfoApi.post('/agents/chat', { message }),

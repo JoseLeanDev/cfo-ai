@@ -96,6 +96,7 @@ app.use('/api/sat', require('./routes/sat'));
 app.use('/api/alertas', require('./routes/alertas'));
 app.use('/api/agents', require('./routes/agents'));
 app.use('/api/agents/conciliador', require('./routes/conciliador'));
+app.use('/api/reportes', require('./routes/reportes'));
 app.use('/api/cierre', require('./routes/cierre'));
 app.use('/api/scheduler', require('./routes/scheduler'));
 app.use('/api/test', require('./routes/test'));

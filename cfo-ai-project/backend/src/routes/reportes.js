@@ -217,10 +217,21 @@ router.get('/libro-diario', async (req, res) => {
     const { where, values } = buildDateRange(params);
     const pag = buildPagination(req.query, values.length + 1);
     
+    // Verificar si la columna categoria existe
+    let hasCategoria = false;
+    try {
+      await db.getAsync(`SELECT categoria FROM transacciones LIMIT 1`);
+      hasCategoria = true;
+    } catch(e) {
+      hasCategoria = false;
+    }
+    
+    const categoriaCol = hasCategoria ? ', t.categoria' : '';
+    
     const data = await db.allAsync(`
-      SELECT t.id, t.fecha, cc.codigo, cc.nombre as cuenta, t.tipo, t.monto, t.concepto as descripcion, t.referencia, t.documento_soporte as documento, t.categoria, t.estado, t.created_at
+      SELECT t.id, t.fecha, cc.codigo, cc.nombre as cuenta, t.tipo, t.monto, t.concepto as descripcion, t.referencia, t.documento_soporte as documento${categoriaCol}, t.estado, t.created_at
       FROM transacciones t
-      JOIN cuentas_contables cc ON t.cuenta_id = cc.id
+      LEFT JOIN cuentas_contables cc ON t.cuenta_id = cc.id
       ${where}
       ORDER BY t.fecha DESC, t.id DESC
       ${pag.clause}
@@ -230,7 +241,7 @@ router.get('/libro-diario', async (req, res) => {
       SELECT COUNT(*) as count FROM transacciones t ${where}
     `, values);
     
-    res.json({ success: true, reporte: 'libro-diario', columnas: ['id','fecha','codigo','cuenta','tipo','monto','descripcion','referencia','documento','categoria','estado'], data, total: parseInt(total?.count || 0) });
+    res.json({ success: true, reporte: 'libro-diario', columnas: ['id','fecha','codigo','cuenta','tipo','monto','descripcion','referencia','documento',...(hasCategoria ? ['categoria'] : []),'estado'], data, total: parseInt(total?.count || 0) });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
@@ -329,10 +340,21 @@ router.get('/movimientos-bancarios', async (req, res) => {
     const { where, values } = buildDateRange(params);
     const pag = buildPagination(req.query, values.length + 1);
     
+    // Verificar si la columna estado_conciliacion existe
+    let hasEstadoConciliacion = false;
+    try {
+      await db.getAsync(`SELECT estado_conciliacion FROM movimientos_bancarios LIMIT 1`);
+      hasEstadoConciliacion = true;
+    } catch(e) {
+      hasEstadoConciliacion = false;
+    }
+    
+    const estadoCol = hasEstadoConciliacion ? ', mb.estado_conciliacion' : '';
+    
     const data = await db.allAsync(`
-      SELECT mb.id, mb.fecha, cb.banco, cb.numero_cuenta, mb.descripcion, mb.monto, mb.tipo, mb.referencia, mb.estado_conciliacion, mb.created_at
+      SELECT mb.id, mb.fecha, cb.banco, cb.numero_cuenta, mb.descripcion, mb.monto, mb.tipo, mb.referencia${estadoCol}, mb.created_at
       FROM movimientos_bancarios mb
-      JOIN cuentas_bancarias cb ON mb.cuenta_bancaria_id = cb.id
+      LEFT JOIN cuentas_bancarias cb ON mb.cuenta_bancaria_id = cb.id
       ${where}
       ORDER BY mb.fecha DESC, mb.id DESC
       ${pag.clause}
@@ -340,7 +362,7 @@ router.get('/movimientos-bancarios', async (req, res) => {
     
     const total = await db.getAsync(`SELECT COUNT(*) as count FROM movimientos_bancarios mb ${where}`, values);
     
-    res.json({ success: true, reporte: 'movimientos-bancarios', columnas: ['id','fecha','banco','numero_cuenta','descripcion','monto','tipo','referencia','estado_conciliacion'], data, total: parseInt(total?.count || 0) });
+    res.json({ success: true, reporte: 'movimientos-bancarios', columnas: ['id','fecha','banco','numero_cuenta','descripcion','monto','tipo','referencia',...(hasEstadoConciliacion ? ['estado_conciliacion'] : [])], data, total: parseInt(total?.count || 0) });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
@@ -422,18 +444,40 @@ router.get('/ventas-cuenta', async (req, res) => {
     
     // Si no hay datos, crear un resumen por categoría de transacciones
     if (data.length === 0) {
-      data = await db.allAsync(`
-        SELECT 
-          '4000' as codigo,
-          COALESCE(categoria, 'Ventas') as cuenta,
-          COUNT(*) as transacciones,
-          SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as total
-        FROM transacciones
-        WHERE estado = 'activa' AND empresa_id = $1
-          AND fecha BETWEEN $2 AND $3
-        GROUP BY categoria
-        ORDER BY total DESC
-      `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+      // Verificar si la columna categoria existe
+      let hasCategoria = false;
+      try {
+        const testCol = await db.getAsync(`SELECT categoria FROM transacciones LIMIT 1`);
+        hasCategoria = true;
+      } catch(e) {
+        hasCategoria = false;
+      }
+      
+      if (hasCategoria) {
+        data = await db.allAsync(`
+          SELECT 
+            '4000' as codigo,
+            COALESCE(categoria, 'Ventas') as cuenta,
+            COUNT(*) as transacciones,
+            SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as total
+          FROM transacciones
+          WHERE estado = 'activa' AND empresa_id = $1
+            AND fecha BETWEEN $2 AND $3
+          GROUP BY categoria
+          ORDER BY total DESC
+        `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+      } else {
+        data = await db.allAsync(`
+          SELECT 
+            '4000' as codigo,
+            'Ventas y servicios' as cuenta,
+            COUNT(*) as transacciones,
+            SUM(CASE WHEN tipo = 'entrada' THEN monto ELSE 0 END) as total
+          FROM transacciones
+          WHERE estado = 'activa' AND empresa_id = $1
+            AND fecha BETWEEN $2 AND $3
+        `, [empresa_id, fecha_desde || '2000-01-01', fecha_hasta || '2099-12-31']);
+      }
     }
     
     res.json({ success: true, reporte: 'ventas-cuenta', columnas: ['codigo','cuenta','transacciones','total'], data: data.map(d => ({...d, total: parseFloat(d.total)})) });

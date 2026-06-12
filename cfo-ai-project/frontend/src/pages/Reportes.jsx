@@ -324,9 +324,11 @@ export default function Reportes() {
 
     cfoApi.get(`/reportes/${tpl.id}`, { params })
       .then(res => {
+        console.log('API Response:', res.data)
         setReportData(res.data || res)
       })
       .catch(e => {
+        console.error('API Error:', e)
         setError(e.response?.data?.error || e.message)
       })
       .finally(() => {
@@ -680,7 +682,14 @@ export default function Reportes() {
                   </span>
                 </div>
 
-                {reportData.data && reportData.data.length > 0 ? (
+                {/* DEBUG: Mostrar información de datos recibidos */}
+                {reportData.data && (
+                  <div className="px-4 py-2 bg-yellow-50 text-xs text-yellow-700 border-b border-yellow-200">
+                    DEBUG: Tipo de datos: {typeof reportData.data} | Es array: {Array.isArray(reportData.data).toString()} | Length: {reportData.data?.length}
+                  </div>
+                )}
+                
+                {reportData.data && Array.isArray(reportData.data) && reportData.data.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead className="bg-[var(--bg-secondary)] border-b border-[var(--border-default)]">

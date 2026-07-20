@@ -463,6 +463,21 @@ router.get('/insights', async (req, res) => {
         contexts.push('analisis');
       }
       
+      // Ventas: todo lo relacionado a clientes, ingresos, facturación
+      if (['cliente_en_riesgo', 'cliente_crecimiento', 'caida_ingresos_brusca', 'aumento_ingresos_brusco', 'tendencia_ingresos_decreciente', 'oportunidad', 'margen_decreciente'].includes(tipoBackend)) {
+        contexts.push('ventas');
+      }
+      
+      // Compras: proveedores, stock, inventario
+      if (['cxp_vencidas', 'oportunidad', 'deterioro_flujo_caja'].includes(tipoBackend)) {
+        contexts.push('compras');
+      }
+      
+      // Gastos: gastos operativos, eficiencia
+      if (['gasto_anormal', 'gasto_reducido', 'gasto_inusual_alto', 'variacion_umbral', 'margen_decreciente'].includes(tipoBackend)) {
+        contexts.push('gastos');
+      }
+      
       return contexts.length > 0 ? contexts : ['general'];
     };
 
@@ -531,7 +546,7 @@ router.get('/insights', async (req, res) => {
         impact: 450000,
         currency: 'GTQ',
         category: 'analisis',
-        contexts: ['analisis', 'dashboard'],
+        contexts: ['analisis', 'dashboard', 'ventas'],
         action: 'Ver clientes objetivo',
         actionLabel: 'Ver clientes',
         isNew: true
@@ -545,7 +560,7 @@ router.get('/insights', async (req, res) => {
         impact: 180000,
         currency: 'GTQ',
         category: 'tesoreria',
-        contexts: ['tesoreria', 'dashboard'],
+        contexts: ['tesoreria', 'dashboard', 'compras'],
         action: 'Configurar descuentos',
         actionLabel: 'Configurar',
         isNew: true
@@ -573,7 +588,7 @@ router.get('/insights', async (req, res) => {
         impact: -125000,
         currency: 'GTQ',
         category: 'contabilidad',
-        contexts: ['contabilidad', 'dashboard'],
+        contexts: ['contabilidad', 'dashboard', 'gastos'],
         action: 'Ver desglose',
         actionLabel: 'Ver desglose',
         isNew: true
@@ -587,7 +602,7 @@ router.get('/insights', async (req, res) => {
         impact: 350000,
         currency: 'GTQ',
         category: 'tesoreria',
-        contexts: ['tesoreria', 'dashboard'],
+        contexts: ['tesoreria', 'dashboard', 'compras'],
         action: 'Ver proveedores',
         actionLabel: 'Ver proveedores',
         isNew: true
@@ -601,9 +616,51 @@ router.get('/insights', async (req, res) => {
         impact: 34000,
         currency: 'GTQ',
         category: 'contabilidad',
-        contexts: ['contabilidad', 'analisis', 'dashboard'],
+        contexts: ['contabilidad', 'analisis', 'dashboard', 'ventas'],
         action: 'Revisar pricing',
         actionLabel: 'Revisar',
+        isNew: true
+      },
+      {
+        id: `fallback_7_${Date.now()}`,
+        type: 'ingreso',
+        severity: 'info',
+        title: 'Ventas crecieron 14% - capacidad operativa al 87%',
+        description: 'Crecimiento sostenido los últimos 3 meses. Tu capacidad está al 87%. Si la tendencia continúa, necesitarás inversión en equipamiento en 4-5 meses.',
+        impact: 756000,
+        currency: 'GTQ',
+        category: 'analisis',
+        contexts: ['analisis', 'dashboard', 'ventas'],
+        action: 'Ver proyección',
+        actionLabel: 'Ver proyección',
+        isNew: true
+      },
+      {
+        id: `fallback_8_${Date.now()}`,
+        type: 'alerta',
+        severity: 'warning',
+        title: '5 productos en stock crítico (<7 días cobertura)',
+        description: 'Reordenar urgente: Polietileno HDPE, Aditivo UV, Masterbatch blanco. Valor de compra estimado: Q285,000. Riesgo de paro de producción.',
+        impact: 285000,
+        currency: 'GTQ',
+        category: 'compras',
+        contexts: ['compras', 'dashboard'],
+        action: 'Generar ordenes',
+        actionLabel: 'Generar',
+        isNew: true
+      },
+      {
+        id: `fallback_9_${Date.now()}`,
+        type: 'alerta',
+        severity: 'warning',
+        title: 'Energía eléctrica: 23% sobre presupuesto',
+        description: 'Consumo de 68,000 kWh vs 55,000 presupuestados. Posible causa: equipos con mantenimiento deficiente. Auditoría energética recomendada.',
+        impact: 45000,
+        currency: 'GTQ',
+        category: 'gastos',
+        contexts: ['gastos', 'dashboard'],
+        action: 'Auditoría energética',
+        actionLabel: 'Programar',
         isNew: true
       }
     ];

@@ -20,6 +20,7 @@ import {
   CalculatorIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline'
+import PageInsights from '../components/agents/PageInsights'
 
 const formatGTQ = (value) => {
   if (!value && value !== 0) return 'Q 0'
@@ -337,6 +338,9 @@ export default function GastosOperativos() {
           <span className="text-xs text-[var(--text-muted)]">Próximo trimestre</span>
         </div>
       </div>
+
+      {/* Insights IA */}
+      <PageInsights context="gastos" maxInsights={2} title="Insights de Gastos" />
 
       {/* ============================================
           ALERTAS DE GASTOS ELEVADOS

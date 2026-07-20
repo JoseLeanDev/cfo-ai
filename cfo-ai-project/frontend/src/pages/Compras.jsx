@@ -19,6 +19,7 @@ import {
   CheckCircleIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline'
+import PageInsights from '../components/agents/PageInsights'
 import {
   demoLineasProducto,
   demoProductosStock,
@@ -300,6 +301,9 @@ export default function Compras() {
           <span className="text-xs text-[var(--text-muted)]">Próximo trimestre</span>
         </div>
       </div>
+
+      {/* Insights IA */}
+      <PageInsights context="compras" maxInsights={2} title="Insights de Compras" />
 
       {/* ============================================
           ALERTAS DE STOCK CRÍTICO

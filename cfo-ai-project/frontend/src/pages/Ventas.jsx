@@ -22,6 +22,7 @@ import {
   ExclamationTriangleIcon,
   ClockIcon
 } from '@heroicons/react/24/outline'
+import PageInsights from '../components/agents/PageInsights'
 
 const formatGTQ = (value) => {
   if (!value && value !== 0) return 'Q 0'
@@ -262,28 +263,8 @@ export default function Ventas() {
             </div>
           </div>
 
-          {/* Insights */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {insightsVentas.map((ins, i) => (
-              <div key={i} className={`p-4 rounded-lg border-l-4 ${
-                ins.tipo === 'oportunidad' ? 'bg-green-50 border-green-500' :
-                ins.tipo === 'alerta' ? 'bg-red-50 border-red-500' :
-                'bg-blue-50 border-blue-500'
-              }`}>
-                <div className="flex items-start gap-3">
-                  {ins.tipo === 'oportunidad' ? <TrophyIcon className="w-5 h-5 text-green-600 flex-shrink-0" /> :
-                   ins.tipo === 'alerta' ? <ExclamationTriangleIcon className="w-5 h-5 text-red-600 flex-shrink-0" /> :
-                   <SparklesIcon className="w-5 h-5 text-blue-600 flex-shrink-0" />}
-                  <div>
-                    <p className={`text-sm font-medium ${
-                      ins.tipo === 'oportunidad' ? 'text-green-800' : ins.tipo === 'alerta' ? 'text-red-800' : 'text-blue-800'
-                    }`}>{ins.titulo}</p>
-                    <p className="text-xs text-[var(--text-secondary)] mt-1">{ins.descripcion}</p>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
+          {/* Insights IA */}
+          <PageInsights context="ventas" maxInsights={2} title="Insights de Ventas" />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* TENDENCIA VENTAS */}

@@ -179,8 +179,8 @@ export default function PageInsights({
           </div>
         </div>
 
-        {/* ═══ LISTA DE INSIGHTS ═══ */}
-        <div className="px-3 pb-3 space-y-2">
+        {/* ═══ GRID DE INSIGHTS - 2 COLUMNAS ═══ */}
+        <div className="px-3 pb-3 grid grid-cols-1 lg:grid-cols-2 gap-2">
           {insights.map((insight, index) => {
             const config = typeConfig[insight.type] || typeConfig.oportunidad
             const severity = severityConfig[insight.severity] || severityConfig.info

@@ -288,6 +288,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ═══ INSIGHTS DE IA (2do LUGAR - 2 COLS) ═══ */}
+      <PageInsights context="dashboard" maxInsights={4} title="Insights Inteligentes" />
+
       {/* ═══ ALERTAS ═══ */}
       {alertasCFO.length > 0 && (
         <div className="flex flex-wrap gap-2">
@@ -606,9 +609,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-
-      {/* ═══ SECCIÓN 5: INSIGHTS DE IA (PROMINENTE) ═══ */}
-      <PageInsights context="dashboard" maxInsights={3} title="Insights del CFO AI" />
 
       {/* ═══ SECCIÓN 6: RUNWAY + abaco (2 COLS) ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

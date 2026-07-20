@@ -18,6 +18,7 @@ import {
   ChevronUpIcon,
   CheckCircleIcon,
   InformationCircleIcon,
+  ArrowRightIcon,
 } from '@heroicons/react/24/outline'
 import PageInsights from '../components/agents/PageInsights'
 import {
@@ -302,36 +303,89 @@ export default function Compras() {
         </div>
       </div>
 
-      {/* Insights IA */}
-      <PageInsights context="compras" maxInsights={2} title="Insights de Compras" />
-
-      {/* ============================================
-          ALERTAS DE STOCK CRÍTICO
-      ============================================ */}
+      {/* ═══════════════════════════════════════════
+          INSIGHTS DE IA - ALERTAS DE STOCK CRÍTICO
+          (Mismo diseño distintivo que PageInsights)
+      ═══════════════════════════════════════════ */}
       {alertasCriticas.length > 0 && (
-        <div className="card border-l-4 border-l-[var(--danger)]">
-          <div className="section-header">
-            <ExclamationTriangleIcon className="w-5 h-5 text-[var(--danger)]" />
-            <h2 className="font-semibold text-[var(--danger)]">⚠️ Alertas de Stock Crítico — Reordenar Urgente</h2>
-            <span className="ml-auto badge-danger text-[10px]">{alertasCriticas.length} productos</span>
-          </div>
-          <div className="p-5 pt-0">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-              {alertasCriticas.map((producto) => (
-                <div key={producto.id} className="p-4 rounded-lg bg-[var(--danger-bg)] border border-[var(--danger)]/20">
-                  <div className="flex items-start justify-between mb-2">
-                    <span className="text-xs font-medium text-[var(--danger)] uppercase">{producto.linea}</span>
-                    <span className="badge-danger text-[10px]">{producto.diasCobertura} días</span>
+        <div className="relative overflow-hidden rounded-xl border border-violet-500/30 bg-slate-900">
+          {/* Fondo animado sutil */}
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-slate-900 to-fuchsia-900/10" />
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-fuchsia-500/30 to-transparent" />
+
+          <div className="relative">
+            {/* ═══ HEADER PROMINENTE ═══ */}
+            <div className="px-4 pt-3.5 pb-2 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                {/* Icono IA animado */}
+                <div className="relative">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                    <SparklesIcon className="w-4 h-4 text-white" />
                   </div>
-                  <p className="text-sm font-medium text-[var(--text-primary)] line-clamp-2">{producto.nombre}</p>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="text-xs text-[var(--text-muted)]">Stock: <b>{producto.stock}</b> und</span>
-                    <span className="text-xs font-mono text-[var(--danger)] font-medium">
-                      +{formatNum(producto.cantidadRecomendada)} und
+                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-900 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-white tracking-tight">Insights de Compras</h3>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30 uppercase tracking-wider">
+                      IA
                     </span>
                   </div>
-                  <div className="mt-2 text-xs text-[var(--text-muted)]">
-                    Valor: <span className="font-mono text-[var(--text-primary)]">{formatGTQ(producto.valorCompra)}</span>
+                  <p className="text-[10px] text-slate-400">Análisis automatizado · {alertasCriticas.length} detectado{alertasCriticas.length !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                <BoltIcon className="w-3 h-3 text-amber-400" />
+                <span>abaco AI</span>
+              </div>
+            </div>
+
+            {/* ═══ GRID DE INSIGHTS - 2 COLUMNAS ═══ */}
+            <div className="px-3 pb-3 grid grid-cols-1 lg:grid-cols-2 gap-2">
+              {alertasCriticas.map((producto) => (
+                <div
+                  key={producto.id}
+                  className="group relative p-3 rounded-lg border border-red-500/20 bg-red-500/10 shadow-red-500/10 hover:shadow-lg transition-all duration-200"
+                >
+                  <div className="flex items-start gap-2.5">
+                    {/* Icono tipo */}
+                    <div className="flex-shrink-0 w-7 h-7 rounded-md bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+                      <ExclamationTriangleIcon className="w-3.5 h-3.5 text-red-400" />
+                    </div>
+
+                    {/* Contenido */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border border-red-500/30 bg-red-500/20 text-red-300 uppercase tracking-wider">
+                          Crítico
+                        </span>
+                        <span className="text-[9px] font-mono text-red-400">
+                          {producto.diasCobertura} días
+                        </span>
+                      </div>
+
+                      <h4 className="text-xs font-bold text-white leading-snug">
+                        {producto.nombre}
+                      </h4>
+                      <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-2">
+                        {producto.linea} · Stock: {producto.stock} und · Reordenar: +{formatNum(producto.cantidadRecomendada)} und
+                      </p>
+
+                      {/* Impacto */}
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <span className="text-[10px] text-slate-500">Valor compra:</span>
+                        <span className="text-[10px] font-bold text-red-400">
+                          {formatGTQ(producto.valorCompra)}
+                        </span>
+                      </div>
+
+                      {/* Acción */}
+                      <button className="mt-1.5 text-[10px] font-medium text-violet-300 hover:text-violet-200 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        Generar orden
+                        <ArrowRightIcon className="w-3 h-3" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               ))}

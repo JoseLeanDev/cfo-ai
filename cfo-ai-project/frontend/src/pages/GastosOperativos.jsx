@@ -19,6 +19,7 @@ import {
   ChartBarIcon,
   CalculatorIcon,
   SparklesIcon,
+  ArrowRightIcon,
 } from '@heroicons/react/24/outline'
 
 const formatGTQ = (value) => {
@@ -338,61 +339,98 @@ export default function GastosOperativos() {
         </div>
       </div>
 
-      {/* ============================================
-          ALERTAS DE GASTOS ELEVADOS (Estilo Insights IA)
-      ============================================ */}
+      {/* ═══════════════════════════════════════════
+          INSIGHTS DE IA - GASTOS ELEVADOS
+          (Mismo diseño distintivo que PageInsights)
+      ═══════════════════════════════════════════ */}
       {alertasGastos.length > 0 && (
-        <div className="card border border-[var(--danger)]/20">
-          <div className="section-header">
-            <div className="flex items-center gap-2">
-              <SparklesIcon className="w-5 h-5 text-[var(--accent-orange)]" />
-              <h2 className="font-semibold text-[var(--text-primary)]">Insights de Gastos</h2>
+        <div className="relative overflow-hidden rounded-xl border border-violet-500/30 bg-slate-900">
+          {/* Fondo animado sutil */}
+          <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-slate-900 to-fuchsia-900/10" />
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
+          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-fuchsia-500/30 to-transparent" />
+
+          <div className="relative">
+            {/* ═══ HEADER PROMINENTE ═══ */}
+            <div className="px-4 pt-3.5 pb-2 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                {/* Icono IA animado */}
+                <div className="relative">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
+                    <SparklesIcon className="w-4 h-4 text-white" />
+                  </div>
+                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-900 animate-pulse" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-sm font-bold text-white tracking-tight">Insights de Gastos</h3>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30 uppercase tracking-wider">
+                      IA
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400">Análisis automatizado · {alertasGastos.length} detectado{alertasGastos.length !== 1 ? 's' : ''}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 text-[10px] text-slate-500">
+                <BoltIcon className="w-3 h-3 text-amber-400" />
+                <span>abaco AI</span>
+              </div>
             </div>
-            <span className="badge-danger text-[10px]">{alertasGastos.length} alertas</span>
-          </div>
-          <div className="px-5 pb-5 grid grid-cols-1 lg:grid-cols-2 gap-3">
-            {alertasGastos.map((gasto, index) => {
-              const Icono = gasto.icono
-              return (
-                <div key={gasto.id} className="p-4 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all">
-                  <div className="flex items-start gap-3">
-                    {/* Icono con color de la categoría */}
-                    <div className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: gasto.color + '20' }}>
-                      <Icono className="w-4.5 h-4.5" style={{ color: gasto.color }} />
-                    </div>
-                    
-                    {/* Contenido */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">
-                          Alerta
-                        </span>
-                        <span className="text-xs font-mono text-[var(--danger)]">+{gasto.tendencia.toFixed(1)}%</span>
-                      </div>
-                      <h4 className="text-sm font-semibold text-slate-900 mb-1 leading-tight">
-                        {gasto.nombre}: gasto elevado detectado
-                      </h4>
-                      <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
-                        {gasto.descripcion}. Último mes: {formatGTQ(gasto.ultimoMes)}. Incremento vs inicio: +{formatGTQ(gasto.ultimoMes - gasto.historial[0])}.
-                      </p>
-                      
-                      {/* Impacto */}
-                      <div className="mt-2 flex items-center gap-2">
-                        <span className="text-xs text-slate-500">Incremento:</span>
-                        <span className="text-xs font-bold text-red-600">
-                          +{formatGTQ(gasto.ultimoMes - gasto.historial[0])}
-                        </span>
+
+            {/* ═══ GRID DE INSIGHTS - 2 COLUMNAS ═══ */}
+            <div className="px-3 pb-3 grid grid-cols-1 lg:grid-cols-2 gap-2">
+              {alertasGastos.map((gasto) => {
+                const Icono = gasto.icono
+                const incremento = gasto.ultimoMes - gasto.historial[0]
+                
+                return (
+                  <div
+                    key={gasto.id}
+                    className="group relative p-3 rounded-lg border border-rose-500/20 bg-rose-500/10 shadow-rose-500/10 hover:shadow-lg transition-all duration-200"
+                  >
+                    <div className="flex items-start gap-2.5">
+                      {/* Icono tipo */}
+                      <div className="flex-shrink-0 w-7 h-7 rounded-md bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
+                        <Icono className="w-3.5 h-3.5 text-rose-400" />
                       </div>
 
-                      {/* Acción sugerida */}
-                      <button className="mt-2 text-xs font-medium text-primary-600 hover:text-primary-700 px-2 py-1 rounded hover:bg-primary-50 transition-colors">
-                        Revisar desglose →
-                      </button>
+                      {/* Contenido */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
+                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border border-rose-500/30 bg-rose-500/20 text-rose-300 uppercase tracking-wider">
+                            Alerta
+                          </span>
+                          <span className="text-[9px] font-mono text-rose-400">
+                            +{gasto.tendencia.toFixed(1)}%
+                          </span>
+                        </div>
+
+                        <h4 className="text-xs font-bold text-white leading-snug">
+                          {gasto.nombre}
+                        </h4>
+                        <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-2">
+                          {gasto.descripcion}
+                        </p>
+
+                        {/* Impacto */}
+                        <div className="mt-1.5 flex items-center gap-2">
+                          <span className="text-[10px] text-slate-500">Incremento:</span>
+                          <span className="text-[10px] font-bold text-rose-400">
+                            +{formatGTQ(incremento)}
+                          </span>
+                        </div>
+
+                        {/* Acción */}
+                        <button className="mt-1.5 text-[10px] font-medium text-violet-300 hover:text-violet-200 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                          Revisar desglose
+                          <ArrowRightIcon className="w-3 h-3" />
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )
-            })}
+                )
+              })}
+            </div>
           </div>
         </div>
       )}

@@ -19,6 +19,7 @@ import {
   CheckCircleIcon,
   InformationCircleIcon,
   ArrowRightIcon,
+  BoltIcon,
 } from '@heroicons/react/24/outline'
 import PageInsights from '../components/agents/PageInsights'
 import {

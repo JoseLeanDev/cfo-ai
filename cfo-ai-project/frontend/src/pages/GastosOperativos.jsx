@@ -20,7 +20,6 @@ import {
   CalculatorIcon,
   SparklesIcon,
 } from '@heroicons/react/24/outline'
-import PageInsights from '../components/agents/PageInsights'
 
 const formatGTQ = (value) => {
   if (!value && value !== 0) return 'Q 0'
@@ -339,37 +338,61 @@ export default function GastosOperativos() {
         </div>
       </div>
 
-      {/* Insights IA */}
-      <PageInsights context="gastos" maxInsights={2} title="Insights de Gastos" />
-
       {/* ============================================
-          ALERTAS DE GASTOS ELEVADOS
+          ALERTAS DE GASTOS ELEVADOS (Estilo Insights IA)
       ============================================ */}
       {alertasGastos.length > 0 && (
-        <div className="card border-l-4 border-l-[var(--danger)]">
+        <div className="card border border-[var(--danger)]/20">
           <div className="section-header">
-            <ExclamationTriangleIcon className="w-5 h-5 text-[var(--danger)]" />
-            <h2 className="font-semibold text-[var(--danger)]">⚠️ Alertas de Gastos Elevados</h2>
-            <span className="ml-auto badge-danger text-[10px]">{alertasGastos.length} categorías</span>
+            <div className="flex items-center gap-2">
+              <SparklesIcon className="w-5 h-5 text-[var(--accent-orange)]" />
+              <h2 className="font-semibold text-[var(--text-primary)]">Insights de Gastos</h2>
+            </div>
+            <span className="badge-danger text-[10px]">{alertasGastos.length} alertas</span>
           </div>
-          <div className="p-5 pt-0">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
-              {alertasGastos.map((gasto) => (
-                <div key={gasto.id} className="p-4 rounded-lg bg-[var(--danger-bg)] border border-[var(--danger)]/20">
-                  <div className="flex items-start justify-between mb-2">
-                    <span className="text-xs font-medium text-[var(--danger)] uppercase">{gasto.nombre}</span>
-                    <span className="badge-danger text-[10px]">+{gasto.tendencia.toFixed(1)}%</span>
-                  </div>
-                  <p className="text-sm font-medium text-[var(--text-primary)] line-clamp-2">{gasto.descripcion}</p>
-                  <div className="mt-2 flex items-center justify-between">
-                    <span className="text-xs text-[var(--text-muted)]">Último mes: <b>{formatGTQ(gasto.ultimoMes)}</b></span>
-                    <span className="text-xs font-mono text-[var(--danger)] font-medium">
-                      +{formatGTQ(gasto.ultimoMes - gasto.historial[0])}
-                    </span>
+          <div className="px-5 pb-5 grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {alertasGastos.map((gasto, index) => {
+              const Icono = gasto.icono
+              return (
+                <div key={gasto.id} className="p-4 rounded-xl bg-white border border-slate-100 shadow-sm hover:shadow-md hover:border-slate-200 transition-all">
+                  <div className="flex items-start gap-3">
+                    {/* Icono con color de la categoría */}
+                    <div className="flex-shrink-0 w-9 h-9 rounded-lg flex items-center justify-center" style={{ backgroundColor: gasto.color + '20' }}>
+                      <Icono className="w-4.5 h-4.5" style={{ color: gasto.color }} />
+                    </div>
+                    
+                    {/* Contenido */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200">
+                          Alerta
+                        </span>
+                        <span className="text-xs font-mono text-[var(--danger)]">+{gasto.tendencia.toFixed(1)}%</span>
+                      </div>
+                      <h4 className="text-sm font-semibold text-slate-900 mb-1 leading-tight">
+                        {gasto.nombre}: gasto elevado detectado
+                      </h4>
+                      <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">
+                        {gasto.descripcion}. Último mes: {formatGTQ(gasto.ultimoMes)}. Incremento vs inicio: +{formatGTQ(gasto.ultimoMes - gasto.historial[0])}.
+                      </p>
+                      
+                      {/* Impacto */}
+                      <div className="mt-2 flex items-center gap-2">
+                        <span className="text-xs text-slate-500">Incremento:</span>
+                        <span className="text-xs font-bold text-red-600">
+                          +{formatGTQ(gasto.ultimoMes - gasto.historial[0])}
+                        </span>
+                      </div>
+
+                      {/* Acción sugerida */}
+                      <button className="mt-2 text-xs font-medium text-primary-600 hover:text-primary-700 px-2 py-1 rounded hover:bg-primary-50 transition-colors">
+                        Revisar desglose →
+                      </button>
+                    </div>
                   </div>
                 </div>
-              ))}
-            </div>
+              )
+            })}
           </div>
         </div>
       )}

@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useDashboard, useInsights, useWorkingCapital } from '../hooks/useCfoData'
+import PageInsights from '../components/agents/PageInsights'
 import RunwayCalculator from '../components/dashboard/RunwayCalculator'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -20,7 +21,6 @@ import {
   TruckIcon,
   ChevronRightIcon,
   SparklesIcon,
-  LightBulbIcon,
   CpuChipIcon,
   ArrowPathIcon,
   FireIcon,
@@ -142,7 +142,7 @@ function ConcentracionInline({ clientes }) {
 
 export default function Dashboard() {
   const { data: dashboardData, isLoading } = useDashboard()
-  const { data: insightsData, isLoading: isLoadingInsights } = useInsights('dashboard')
+  const { data: insightsData } = useInsights('dashboard')
   const { data: wcData, isLoading: isLoadingWC } = useWorkingCapital()
   const [animated, setAnimated] = useState(false)
   const [animatedValues, setAnimatedValues] = useState({})
@@ -213,16 +213,6 @@ export default function Dashboard() {
     if (tipo === 'critico') return <ExclamationTriangleIcon className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />
     if (tipo === 'warning') return <ClockIcon className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
     return <CheckCircleIcon className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
-  }
-
-  const getInsightStyles = (tipo) => {
-    switch (tipo) {
-      case 'oportunidad': return 'border-l-emerald-400 bg-emerald-50/50'
-      case 'alerta': return 'border-l-amber-400 bg-amber-50/50'
-      case 'gasto': return 'border-l-red-400 bg-red-50/50'
-      case 'ingreso': return 'border-l-emerald-400 bg-emerald-50/50'
-      default: return 'border-l-blue-400 bg-blue-50/50'
-    }
   }
 
   return (
@@ -617,44 +607,8 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ═══ SECCIÓN 5: INSIGHTS (ANCHO COMPLETO, COMPACTO) ═══ */}
-      {insights.length > 0 && (
-        <div className="card">
-          <div className="flex items-center justify-between p-4 pb-2">
-            <div className="flex items-center gap-2">
-              <SparklesIcon className="w-4 h-4 text-[var(--accent-blue)]" />
-              <h2 className="font-semibold text-sm">Insights de IA</h2>
-            </div>
-            <span className="text-[11px] text-[var(--text-muted)]">{insights.length} detectados</span>
-          </div>
-          <div className="px-4 pb-4">
-            {isLoadingInsights ? (
-              <div className="flex gap-3">
-                {[1, 2, 3].map(i => <div key={i} className="flex-1 h-16 bg-[var(--bg-secondary)] rounded animate-pulse" />)}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
-                {insights.slice(0, 6).map((insight, idx) => (
-                  <div key={idx} className={`p-2.5 rounded-lg border-l-3 ${getInsightStyles(insight.type)}`}>
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${
-                        insight.severity === 'critical' ? 'bg-red-100 text-red-700' :
-                        insight.severity === 'warning' ? 'bg-amber-100 text-amber-700' :
-                        'bg-blue-100 text-blue-700'
-                      }`}>
-                        {insight.severity === 'critical' ? 'alta' : insight.severity === 'warning' ? 'media' : 'baja'}
-                      </span>
-                      <span className="text-[9px] text-[var(--text-muted)] uppercase">{insight.category}</span>
-                    </div>
-                    <h3 className="font-medium text-[var(--text-primary)] text-xs leading-snug">{insight.title}</h3>
-                    <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 line-clamp-2">{insight.description}</p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* ═══ SECCIÓN 5: INSIGHTS DE IA (PROMINENTE) ═══ */}
+      <PageInsights context="dashboard" maxInsights={3} title="Insights del CFO AI" />
 
       {/* ═══ SECCIÓN 6: RUNWAY + abaco (2 COLS) ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

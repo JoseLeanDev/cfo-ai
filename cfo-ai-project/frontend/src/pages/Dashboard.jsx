@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import { useDashboard, useInsights, useWorkingCapital } from '../hooks/useCfoData'
 import RunwayCalculator from '../components/dashboard/RunwayCalculator'
-import CustomerConcentrationRisk from '../components/dashboard/CustomerConcentrationRisk'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
-  PieChart, Pie, Cell, AreaChart, Area, Legend, LineChart, Line
+  PieChart, Pie, Cell, AreaChart, Area, Legend
 } from 'recharts'
 import {
   BanknotesIcon,
@@ -27,7 +26,8 @@ import {
   FireIcon,
   WalletIcon,
   ReceiptRefundIcon,
-  DocumentCurrencyDollarIcon
+  DocumentCurrencyDollarIcon,
+  ArrowTrendingUpIcon as TrendIcon
 } from '@heroicons/react/24/outline'
 import { demoClientesConcentracion } from '../data/demoData'
 
@@ -36,7 +36,7 @@ const formatGTQ = (value) => {
   return 'Q ' + value.toLocaleString('es-GT')
 }
 
-// ========== DATOS DEMO GENÉRICOS ==========
+// ========== DATOS DEMO ==========
 const ventasPorLinea = [
   { nombre: 'Línea A', ventas: 1062500, presupuesto: 1000000, margen: 45 },
   { nombre: 'Línea B', ventas: 775000, presupuesto: 800000, margen: 42 },
@@ -47,10 +47,10 @@ const ventasPorLinea = [
 ]
 
 const vendedores = [
-  { nombre: 'Vendedor 1', ventas: 1850000, meta: 1700000, clientes: 12, ticket: 41111, cobranza: 98 },
-  { nombre: 'Vendedor 2', ventas: 1420000, meta: 1400000, clientes: 10, ticket: 37368, cobranza: 95 },
-  { nombre: 'Vendedor 3', ventas: 980000, meta: 1100000, clientes: 8, ticket: 35000, cobranza: 92 },
-  { nombre: 'Vendedor 4', ventas: 720000, meta: 800000, clientes: 6, ticket: 28000, cobranza: 88 },
+  { nombre: 'Carlos Méndez', ventas: 1850000, meta: 1700000, clientes: 12, ticket: 41111, cobranza: 98 },
+  { nombre: 'Ana López', ventas: 1420000, meta: 1400000, clientes: 10, ticket: 37368, cobranza: 95 },
+  { nombre: 'Sofía Reyes', ventas: 980000, meta: 1100000, clientes: 8, ticket: 35000, cobranza: 92 },
+  { nombre: 'Jorge Castañeda', ventas: 720000, meta: 800000, clientes: 6, ticket: 28000, cobranza: 88 },
 ]
 
 const cxcAging = [
@@ -86,6 +86,60 @@ const produccionPipeline = [
 
 const COLORS = ['#10b981', '#f59e0b', '#f97316', '#ef4444']
 
+// ─── Análisis de concentración inline ───
+function ConcentracionInline({ clientes }) {
+  const analisis = useMemo(() => {
+    if (!clientes.length) return null
+    const sorted = [...clientes].sort((a, b) => b.ingresos - a.ingresos)
+    const total = sorted.reduce((s, c) => s + c.ingresos, 0)
+    const mayor = sorted[0]
+    const top3 = sorted.slice(0, 3)
+    const top3Pct = top3.reduce((s, c) => s + (c.ingresos / total) * 100, 0)
+    const mayorPct = (mayor.ingresos / total) * 100
+    const riesgo = mayorPct >= 30 || top3Pct >= 60 ? 'extremo' : mayorPct >= 20 || top3Pct >= 50 ? 'alto' : 'moderado'
+    return { mayor, mayorPct, top3Pct, riesgo, lista: sorted.slice(0, 6) }
+  }, [clientes])
+
+  if (!analisis) return null
+  const { mayor, mayorPct, top3Pct, riesgo, lista } = analisis
+  const esRiesgo = riesgo === 'extremo' || riesgo === 'alto'
+
+  return (
+    <div className={`p-3 rounded-lg border-l-4 ${esRiesgo ? 'bg-red-50 border-l-red-500' : 'bg-amber-50 border-l-amber-500'}`}>
+      <div className="flex items-center gap-2 mb-2">
+        <ExclamationTriangleIcon className={`w-4 h-4 ${esRiesgo ? 'text-red-600' : 'text-amber-600'}`} />
+        <span className={`text-xs font-bold uppercase ${esRiesgo ? 'text-red-700' : 'text-amber-700'}`}>
+          {esRiesgo ? 'Riesgo Concentración' : 'Atención'}
+        </span>
+        <span className="ml-auto text-[10px] text-[var(--text-muted)]">Top 3 = {top3Pct.toFixed(1)}%</span>
+      </div>
+      <p className="text-xs text-[var(--text-secondary)] mb-2">
+        <strong>{mayor.nombre}</strong> representa el <strong>{mayorPct.toFixed(1)}%</strong> de ingresos
+      </p>
+      <div className="space-y-1">
+        {lista.map((c, i) => {
+          const pct = (c.ingresos / lista.reduce((s, x) => s + x.ingresos, 0) * 100 * (lista.reduce((s, x) => s + x.ingresos, 0) / clientes.reduce((s, x) => s + x.ingresos, 0))) // recalcular % real
+          const realPct = (c.ingresos / clientes.reduce((s, x) => s + x.ingresos, 0)) * 100
+          return (
+            <div key={i} className="flex items-center gap-2">
+              <span className="text-[10px] text-[var(--text-muted)] w-4">{i + 1}</span>
+              <span className="text-xs flex-1 truncate">{c.nombre}</span>
+              <div className="w-20 h-1.5 bg-white rounded-full overflow-hidden">
+                <div className={`h-full rounded-full ${realPct >= 20 ? 'bg-red-400' : realPct >= 10 ? 'bg-amber-400' : 'bg-emerald-400'}`}
+                  style={{ width: `${Math.min(realPct, 100)}%` }} />
+              </div>
+              <span className={`text-xs font-medium w-10 text-right ${realPct >= 20 ? 'text-red-600' : ''}`}>{realPct.toFixed(1)}%</span>
+            </div>
+          )
+        })}
+      </div>
+      <Link to="/ventas" className="text-[10px] text-[var(--accent-blue)] hover:underline mt-2 inline-block">
+        Ver análisis completo →
+      </Link>
+    </div>
+  )
+}
+
 export default function Dashboard() {
   const { data: dashboardData, isLoading } = useDashboard()
   const { data: insightsData, isLoading: isLoadingInsights } = useInsights('dashboard')
@@ -93,7 +147,6 @@ export default function Dashboard() {
   const [animated, setAnimated] = useState(false)
   const [animatedValues, setAnimatedValues] = useState({})
 
-  // Datos reales del backend
   const tesoreria = dashboardData?.data?.tesoreria || {}
   const cxc = dashboardData?.data?.cxc || {}
   const cxp = dashboardData?.data?.cxp || {}
@@ -101,37 +154,29 @@ export default function Dashboard() {
   const alertas = dashboardData?.data?.alertas || []
   const insights = insightsData?.insights || []
 
-  // Calculados
   const workingCapital = (cxc.total || 0) - (cxp.total || 0)
-  const liquidezRatio = ((tesoreria.total_gtq || 0) + (cxc.total || 0)) / (cxp.total || 1)
   const ccc = wcData?.data?.metricas_principales?.c2c || {}
   const cccValor = ccc.valor || 0
   const cccBenchmark = ccc.benchmark || 33
 
-  // Demo calculados
   const totalVentasMes = ventasPorLinea.reduce((s, l) => s + l.ventas, 0)
   const totalPresupuesto = ventasPorLinea.reduce((s, l) => s + l.presupuesto, 0)
   const cumplimientoVentas = Math.round((totalVentasMes / totalPresupuesto) * 100)
   const margenPromedio = Math.round(ventasPorLinea.reduce((s, l) => s + l.margen, 0) / ventasPorLinea.length)
   const totalCxC = cxc.total || 2535000
   const totalCxP = cxp.total || 1850000
-  const efectivo = tesoreria.total_gtq || 1250000
   const totalVencido = cxcAging.slice(1).reduce((s, a) => s + a.monto, 0)
   const pctVencido = Math.round((totalVencido / totalCxC) * 100)
 
-  // Alertas combinadas: reales + demo fallback
   const alertasCFO = alertas.length > 0
     ? alertas.slice(0, 5).map(a => ({
         tipo: a.nivel === 'critico' ? 'critico' : a.nivel === 'warning' ? 'warning' : 'info',
-        mensaje: a.mensaje || a.titulo || 'Alerta del sistema',
-        accion: a.accion || 'Revisar'
+        mensaje: a.mensaje || a.titulo || 'Alerta',
       }))
     : [
-        { tipo: 'critico', mensaje: 'CxP Proveedor A vence en 2 días (Q285K)', accion: 'Pagar ahora' },
-        { tipo: 'warning', mensaje: 'Vendedor 3 está 11% bajo meta de ventas', accion: 'Revisar pipeline' },
-        { tipo: 'warning', mensaje: 'Cartera 60+ días creció 15% (Q85K)', accion: 'Activar cobranza' },
-        { tipo: 'info', mensaje: 'Ventas Julio superan presupuesto en 7.2%', accion: 'Ver detalle' },
-        { tipo: 'info', mensaje: 'Línea C alcanzó margen récord del 52%', accion: 'Analizar' },
+        { tipo: 'critico', mensaje: 'CxP Proveedor A vence en 2 días (Q285K)' },
+        { tipo: 'warning', mensaje: 'Cartera 60+ días creció 15% (Q85K)' },
+        { tipo: 'info', mensaje: 'Ventas Julio superan presupuesto en 7.2%' },
       ]
 
   useEffect(() => { setTimeout(() => setAnimated(true), 100) }, [])
@@ -139,7 +184,7 @@ export default function Dashboard() {
   useEffect(() => {
     const ventasValue = operacion.ventas_mes || operacion.avg_ingresos_mes || totalVentasMes || 0
     if (ventasValue) {
-      const duration = 1000, steps = 20, increment = ventasValue / steps
+      const duration = 800, steps = 16, increment = ventasValue / steps
       let current = 0
       const timer = setInterval(() => {
         current += increment
@@ -153,10 +198,10 @@ export default function Dashboard() {
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
     return (
-      <div className="bg-white p-3 rounded-lg shadow-lg border border-[var(--border-default)]">
-        <p className="text-xs font-medium text-[var(--text-muted)] mb-1">{label}</p>
+      <div className="bg-white p-2.5 rounded-lg shadow-lg border border-[var(--border-default)]">
+        <p className="text-[11px] font-medium text-[var(--text-muted)] mb-1">{label}</p>
         {payload.map((p, i) => (
-          <p key={i} className="text-sm font-semibold" style={{ color: p.color }}>
+          <p key={i} className="text-xs font-semibold" style={{ color: p.color }}>
             {p.name}: {formatGTQ(p.value)}
           </p>
         ))}
@@ -165,207 +210,171 @@ export default function Dashboard() {
   }
 
   const getAlertaIcon = (tipo) => {
-    if (tipo === 'critico') return <ExclamationTriangleIcon className="w-4 h-4 text-red-600 flex-shrink-0" />
-    if (tipo === 'warning') return <ClockIcon className="w-4 h-4 text-amber-600 flex-shrink-0" />
-    return <CheckCircleIcon className="w-4 h-4 text-blue-600 flex-shrink-0" />
+    if (tipo === 'critico') return <ExclamationTriangleIcon className="w-3.5 h-3.5 text-red-600 flex-shrink-0" />
+    if (tipo === 'warning') return <ClockIcon className="w-3.5 h-3.5 text-amber-600 flex-shrink-0" />
+    return <CheckCircleIcon className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
   }
 
   const getInsightStyles = (tipo) => {
     switch (tipo) {
-      case 'oportunidad': return 'border-l-[var(--success)] bg-[var(--success-bg)]'
-      case 'alerta': return 'border-l-[var(--warning)] bg-[var(--warning-bg)]'
-      case 'gasto': return 'border-l-[var(--danger)] bg-[var(--danger-bg)]'
-      case 'ingreso': return 'border-l-[var(--success)] bg-[var(--success-bg)]'
-      default: return 'border-l-[var(--accent-blue)] bg-[var(--info-bg)]'
+      case 'oportunidad': return 'border-l-emerald-400 bg-emerald-50/50'
+      case 'alerta': return 'border-l-amber-400 bg-amber-50/50'
+      case 'gasto': return 'border-l-red-400 bg-red-50/50'
+      case 'ingreso': return 'border-l-emerald-400 bg-emerald-50/50'
+      default: return 'border-l-blue-400 bg-blue-50/50'
     }
   }
 
-  // ─── KPI Mini card helper ───
-  const KpiMini = ({ label, value, icon: Icon, color = 'text-[var(--text-primary)]', subtext }) => (
-    <div className="flex items-center gap-3 p-3 bg-[var(--bg-secondary)] rounded-lg">
-      <div className={`w-9 h-9 rounded-lg bg-white flex items-center justify-center flex-shrink-0`}>
-        <Icon className={`w-5 h-5 ${color}`} />
-      </div>
-      <div className="min-w-0">
-        <p className="text-[10px] text-[var(--text-muted)] uppercase font-medium leading-tight">{label}</p>
-        <p className={`text-sm font-bold tabular-nums ${color}`}>{value}</p>
-        {subtext && <p className="text-[10px] text-[var(--text-muted)]">{subtext}</p>}
-      </div>
-    </div>
-  )
-
   return (
-    <div className="space-y-5 max-w-7xl">
-      {/* ═══════════════════════════════════════
-          HEADER
-          ═══════════════════════════════════════ */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+    <div className="space-y-4">
+      {/* ═══ HEADER ═══ */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-bold">Dashboard Ejecutivo</h1>
-          <p className="text-sm text-[var(--text-muted)] mt-0.5">
-            {isLoading ? 'Cargando datos...' : `Vista general del negocio · Actualizado`}
-          </p>
+          <h1 className="text-xl font-bold">Dashboard Ejecutivo</h1>
+          <p className="text-xs text-[var(--text-muted)]">Vista general del negocio</p>
         </div>
         <div className="flex items-center gap-2">
           {alertasCFO.filter(a => a.tipo === 'critico').length > 0 && (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-50">
-              <FireIcon className="w-3.5 h-3.5 text-red-600" />
-              <span className="text-xs font-medium text-red-700">
-                {alertasCFO.filter(a => a.tipo === 'critico').length} crítico(s)
-              </span>
+            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-red-50">
+              <FireIcon className="w-3 h-3 text-red-600" />
+              <span className="text-[11px] font-medium text-red-700">{alertasCFO.filter(a => a.tipo === 'critico').length} crítico</span>
             </div>
           )}
-          <Link to="/log-actividades" className="btn-secondary text-xs py-1.5">
-            <CpuChipIcon className="w-3.5 h-3.5" />
-            Agentes IA
+          <Link to="/log-actividades" className="btn-secondary text-[11px] py-1 px-2">
+            <CpuChipIcon className="w-3 h-3" /> Agentes
           </Link>
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════
-          SECCIÓN 1: KPIs CRÍTICOS (4 tarjetas)
-          ═══════════════════════════════════════ */}
+      {/* ═══ KPIs ═══ */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="kpi-card card-hover">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="kpi-label">Ventas del Mes</span>
-            <ArrowTrendingUpIcon className="w-4 h-4 text-[var(--text-muted)]" />
+        <div className="kpi-card card-hover p-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] text-[var(--text-muted)]">Ventas del Mes</span>
+            <TrendIcon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
           </div>
-          <div className="kpi-value text-xl">
+          <div className="text-lg font-bold">
             {isLoading ? '---' : formatGTQ(animatedValues.ventas || operacion.ventas_mes || operacion.avg_ingresos_mes || totalVentasMes)}
           </div>
-          <div className="flex items-center gap-1 mt-1">
-            {cumplimientoVentas >= 100 ? (
-              <ArrowTrendingUpIcon className="w-3 h-3 text-[var(--success)]" />
-            ) : (
-              <ArrowTrendingDownIcon className="w-3 h-3 text-[var(--warning)]" />
-            )}
-            <span className={`text-[11px] font-medium ${cumplimientoVentas >= 100 ? 'text-[var(--success)]' : 'text-[var(--warning)]'}`}>
+          <div className="flex items-center gap-1 mt-0.5">
+            {cumplimientoVentas >= 100
+              ? <ArrowTrendingUpIcon className="w-3 h-3 text-emerald-500" />
+              : <ArrowTrendingDownIcon className="w-3 h-3 text-amber-500" />}
+            <span className={`text-[11px] font-medium ${cumplimientoVentas >= 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
               {cumplimientoVentas}% meta
             </span>
           </div>
         </div>
 
-        <div className="kpi-card card-hover">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="kpi-label">Efectivo</span>
-            <WalletIcon className="w-4 h-4 text-[var(--text-muted)]" />
+        <div className="kpi-card card-hover p-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] text-[var(--text-muted)]">Efectivo</span>
+            <WalletIcon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
           </div>
-          <div className="kpi-value text-xl">
-            {isLoading ? '---' : formatGTQ(tesoreria.total_gtq || efectivo)}
-          </div>
-          <span className="text-[11px] text-[var(--text-muted)]">Disponible bancos GTQ</span>
+          <div className="text-lg font-bold">{isLoading ? '---' : formatGTQ(tesoreria.total_gtq || 1250000)}</div>
+          <span className="text-[11px] text-[var(--text-muted)]">Disponible bancos</span>
         </div>
 
-        <div className="kpi-card card-hover">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="kpi-label">CCC</span>
-            <ArrowPathIcon className="w-4 h-4 text-[var(--text-muted)]" />
+        <div className="kpi-card card-hover p-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] text-[var(--text-muted)]">CCC</span>
+            <ArrowPathIcon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
           </div>
-          <div className="kpi-value text-xl">
-            {isLoading || isLoadingWC ? '---' : `${cccValor}d`}
-          </div>
-          <span className={`text-[11px] ${cccValor > cccBenchmark * 1.5 ? 'text-[var(--danger)]' : cccValor > cccBenchmark ? 'text-[var(--warning)]' : 'text-[var(--success)]'}`}>
+          <div className="text-lg font-bold">{isLoading || isLoadingWC ? '---' : `${cccValor}d`}</div>
+          <span className={`text-[11px] ${cccValor > cccBenchmark * 1.5 ? 'text-red-500' : cccValor > cccBenchmark ? 'text-amber-500' : 'text-emerald-500'}`}>
             {cccValor > cccBenchmark * 1.5 ? 'Crítico' : cccValor > cccBenchmark ? 'Atención' : 'Óptimo'} vs {cccBenchmark}d
           </span>
         </div>
 
-        <div className="kpi-card card-hover">
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="kpi-label">Working Capital</span>
-            <ReceiptRefundIcon className="w-4 h-4 text-[var(--text-muted)]" />
+        <div className="kpi-card card-hover p-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] text-[var(--text-muted)]">Working Capital</span>
+            <ReceiptRefundIcon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
           </div>
-          <div className={`kpi-value text-xl ${workingCapital < 0 ? 'text-[var(--danger)]' : ''}`}>
+          <div className={`text-lg font-bold ${workingCapital < 0 ? 'text-red-500' : ''}`}>
             {isLoading ? '---' : formatGTQ(workingCapital)}
           </div>
           <span className="text-[11px] text-[var(--text-muted)]">CxC − CxP</span>
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════
-          SECCIÓN 2: ALERTAS CFO (compacto, accionable)
-          ═══════════════════════════════════════ */}
+      {/* ═══ ALERTAS ═══ */}
       {alertasCFO.length > 0 && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-2">
+        <div className="flex flex-wrap gap-2">
           {alertasCFO.map((a, i) => (
-            <div key={i} className={`p-2.5 rounded-lg border-l-3 flex items-start gap-2 ${
-              a.tipo === 'critico' ? 'bg-red-50 border-l-red-500' :
-              a.tipo === 'warning' ? 'bg-amber-50 border-l-amber-500' :
-              'bg-blue-50 border-l-blue-500'
+            <div key={i} className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-md border-l-3 text-[11px] ${
+              a.tipo === 'critico' ? 'bg-red-50 border-l-red-500 text-red-800' :
+              a.tipo === 'warning' ? 'bg-amber-50 border-l-amber-500 text-amber-800' :
+              'bg-blue-50 border-l-blue-500 text-blue-800'
             }`}>
               {getAlertaIcon(a.tipo)}
-              <div className="min-w-0">
-                <p className={`text-xs font-medium leading-snug ${
-                  a.tipo === 'critico' ? 'text-red-800' : a.tipo === 'warning' ? 'text-amber-800' : 'text-blue-800'
-                }`}>{a.mensaje}</p>
-              </div>
+              <span className="font-medium">{a.mensaje}</span>
             </div>
           ))}
         </div>
       )}
 
-      {/* ═══════════════════════════════════════
-          SECCIÓN 3: TENDENCIA DEL NEGOCIO
-          (2 columnas: Ventas vs Presupuesto + Ventas por Línea)
-          ═══════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Tendencia Ventas */}
-        <div className="card">
-          <div className="section-header pb-3">
-            <ChartBarIcon className="w-5 h-5 text-[var(--accent-blue)]" />
-            <h2 className="font-semibold">Tendencia Ventas vs Presupuesto</h2>
-            <span className="ml-auto text-xs text-[var(--text-muted)]">7 meses</span>
+      {/* ═══ SECCIÓN 1: TENDENCIA (ANCHO COMPLETO) ═══ */}
+      <div className="card">
+        <div className="flex items-center justify-between p-4 pb-2">
+          <div className="flex items-center gap-2">
+            <ChartBarIcon className="w-4 h-4 text-[var(--accent-blue)]" />
+            <h2 className="font-semibold text-sm">Tendencia Ventas vs Presupuesto</h2>
           </div>
-          <div className="p-5 pt-0">
-            <div className="h-60">
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={tendenciaVentas} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                  <defs>
-                    <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#001639" stopOpacity={0.15}/>
-                      <stop offset="95%" stopColor="#001639" stopOpacity={0}/>
-                    </linearGradient>
-                  </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#6b7280' }} />
-                  <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000000).toFixed(1)}M`} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Area type="monotone" dataKey="ventas" name="Ventas" stroke="#001639" strokeWidth={2.5} fill="url(#colorVentas)" />
-                  <Area type="monotone" dataKey="presupuesto" name="Presupuesto" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" fill="none" />
-                </AreaChart>
-              </ResponsiveContainer>
+          <span className="text-[11px] text-[var(--text-muted)]">7 meses YTD</span>
+        </div>
+        <div className="px-4 pb-4">
+          <div className="h-56">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={tendenciaVentas} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <defs>
+                  <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#001639" stopOpacity={0.12}/>
+                    <stop offset="95%" stopColor="#001639" stopOpacity={0}/>
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#6b7280' }} />
+                <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000000).toFixed(1)}M`} />
+                <Tooltip content={<CustomTooltip />} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+                <Area type="monotone" dataKey="ventas" name="Ventas" stroke="#001639" strokeWidth={2} fill="url(#colorVentas)" />
+                <Area type="monotone" dataKey="presupuesto" name="Presupuesto" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="5 5" fill="none" />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+          <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-[var(--border-default)]">
+            <div className="text-center">
+              <p className="text-[10px] text-[var(--text-muted)] uppercase">Acumulado YTD</p>
+              <p className="text-sm font-bold">Q30.1M</p>
             </div>
-            <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-[var(--border-default)]">
-              <div className="text-center">
-                <p className="text-[10px] text-[var(--text-muted)] uppercase">Acumulado YTD</p>
-                <p className="text-base font-bold">Q30.1M</p>
-              </div>
-              <div className="text-center">
-                <p className="text-[10px] text-[var(--text-muted)] uppercase">vs Presupuesto</p>
-                <p className="text-base font-bold text-[var(--success)]">+4.2%</p>
-              </div>
-              <div className="text-center">
-                <p className="text-[10px] text-[var(--text-muted)] uppercase">Meses +Meta</p>
-                <p className="text-base font-bold">5/7</p>
-              </div>
+            <div className="text-center">
+              <p className="text-[10px] text-[var(--text-muted)] uppercase">vs Presupuesto</p>
+              <p className="text-sm font-bold text-emerald-600">+4.2%</p>
+            </div>
+            <div className="text-center">
+              <p className="text-[10px] text-[var(--text-muted)] uppercase">Meses +Meta</p>
+              <p className="text-sm font-bold">5/7</p>
             </div>
           </div>
         </div>
+      </div>
 
+      {/* ═══ SECCIÓN 2: VENTAS + VENDEDORES (2 COLS) ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Ventas por Línea */}
         <div className="card">
-          <div className="section-header pb-3">
-            <ShoppingBagIcon className="w-5 h-5 text-[var(--accent-blue)]" />
-            <h2 className="font-semibold">Ventas por Línea de Producto</h2>
-            <Link to="/ventas" className="ml-auto text-xs text-[var(--accent-blue)] hover:underline flex items-center gap-0.5">
-              Ver detalle <ChevronRightIcon className="w-3 h-3" />
-            </Link>
+          <div className="flex items-center justify-between p-4 pb-2">
+            <div className="flex items-center gap-2">
+              <ShoppingBagIcon className="w-4 h-4 text-[var(--accent-blue)]" />
+              <h2 className="font-semibold text-sm">Ventas por Línea</h2>
+            </div>
+            <Link to="/ventas" className="text-[11px] text-[var(--accent-blue)] hover:underline">Ver detalle →</Link>
           </div>
-          <div className="p-5 pt-0">
-            <div className="h-60">
+          <div className="px-4 pb-4">
+            <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={ventasPorLinea} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
+                <BarChart data={ventasPorLinea} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                   <XAxis dataKey="nombre" tick={{ fontSize: 10, fill: '#6b7280' }} interval={0} />
                   <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
@@ -376,62 +385,109 @@ export default function Dashboard() {
                 </BarChart>
               </ResponsiveContainer>
             </div>
-            <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-[var(--border-default)]">
+            <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-[var(--border-default)]">
               <div className="text-center">
-                <p className="text-[10px] text-[var(--text-muted)] uppercase">Margen Prom.</p>
-                <p className="text-base font-bold text-[var(--success)]">{margenPromedio}%</p>
+                <p className="text-[10px] text-[var(--text-muted)] uppercase">Margen</p>
+                <p className="text-sm font-bold text-emerald-600">{margenPromedio}%</p>
               </div>
               <div className="text-center">
                 <p className="text-[10px] text-[var(--text-muted)] uppercase">Sobre Meta</p>
-                <p className="text-base font-bold">{ventasPorLinea.filter(l => l.ventas >= l.presupuesto).length}/6</p>
+                <p className="text-sm font-bold">{ventasPorLinea.filter(l => l.ventas >= l.presupuesto).length}/6</p>
               </div>
               <div className="text-center">
-                <p className="text-[10px] text-[var(--text-muted)] uppercase">Mejor Margen</p>
-                <p className="text-base font-bold">Línea C 52%</p>
+                <p className="text-[10px] text-[var(--text-muted)] uppercase">Mejor</p>
+                <p className="text-sm font-bold">Línea C 52%</p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Vendedores */}
+        <div className="card">
+          <div className="flex items-center justify-between p-4 pb-2">
+            <div className="flex items-center gap-2">
+              <UsersIcon className="w-4 h-4 text-[var(--accent-blue)]" />
+              <h2 className="font-semibold text-sm">Desempeño Vendedores</h2>
+            </div>
+            <Link to="/ventas" className="text-[11px] text-[var(--accent-blue)] hover:underline">Pipeline →</Link>
+          </div>
+          <div className="px-4 pb-4">
+            <div className="space-y-2 mb-3">
+              {vendedores.map((v, i) => {
+                const cumplimiento = Math.round((v.ventas / v.meta) * 100)
+                return (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-full bg-[#001639] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">
+                      {v.nombre.split(' ').map(n => n[0]).join('')}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium truncate">{v.nombre}</span>
+                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
+                          cumplimiento >= 100 ? 'bg-emerald-100 text-emerald-700' :
+                          cumplimiento >= 90 ? 'bg-amber-100 text-amber-700' :
+                          'bg-red-100 text-red-700'
+                        }`}>{cumplimiento}%</span>
+                      </div>
+                      <div className="w-full h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden mt-0.5">
+                        <div className="h-full rounded-full transition-all duration-1000" style={{
+                          width: animated ? `${Math.min(100, cumplimiento)}%` : '0%',
+                          backgroundColor: cumplimiento >= 100 ? '#10b981' : cumplimiento >= 90 ? '#f59e0b' : '#ef4444'
+                        }} />
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-mono font-medium flex-shrink-0">{formatGTQ(v.ventas)}</span>
+                  </div>
+                )
+              })}
+            </div>
+            <div className="h-36">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={vendedores} layout="vertical" margin={{ top: 0, right: 10, left: 80, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={false} />
+                  <XAxis type="number" tick={{ fontSize: 10, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
+                  <YAxis type="category" dataKey="nombre" tick={{ fontSize: 11, fill: '#374151' }} width={75} />
+                  <Tooltip content={<CustomTooltip />} />
+                  <Bar dataKey="ventas" name="Ventas" fill="#001639" radius={[0, 3, 3, 0]} barSize={12} />
+                  <Bar dataKey="meta" name="Meta" fill="#cbd5e1" radius={[0, 3, 3, 0]} barSize={12} />
+                </BarChart>
+              </ResponsiveContainer>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════
-          SECCIÓN 4: RIESGO + COBRANZA
-          (Concentración + CxC Aging + CxP — 3 columnas)
-          ═══════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Customer Concentration */}
-        <CustomerConcentrationRisk
-          clientes={demoClientesConcentracion}
-          umbralAlerta={20}
-          umbralCritico={30}
-        />
+      {/* ═══ SECCIÓN 3: RIESGO + CxC + CxP (3 COLS balanceadas) ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Concentración — compacto inline */}
+        <ConcentracionInline clientes={demoClientesConcentracion} />
 
         {/* CxC Aging */}
         <div className="card">
-          <div className="section-header pb-3">
-            <UsersIcon className="w-5 h-5 text-[var(--text-muted)]" />
-            <h2 className="font-semibold">Cuentas por Cobrar</h2>
-            <Link to="/tesoreria/cuentas-por-cobrar" className="ml-auto text-xs text-[var(--accent-blue)] hover:underline">Ver →</Link>
+          <div className="flex items-center justify-between p-4 pb-2">
+            <div className="flex items-center gap-2">
+              <UsersIcon className="w-4 h-4 text-[var(--text-muted)]" />
+              <h2 className="font-semibold text-sm">CxC Aging</h2>
+            </div>
+            <Link to="/tesoreria/cuentas-por-cobrar" className="text-[11px] text-[var(--accent-blue)]">Ver →</Link>
           </div>
-          <div className="p-5 pt-0">
+          <div className="px-4 pb-4">
             <div className="flex items-center gap-4">
-              <div className="w-28 h-28 flex-shrink-0">
+              <div className="w-24 h-24 flex-shrink-0">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
-                    <Pie data={cxcAging} cx="50%" cy="50%" innerRadius={28} outerRadius={45} paddingAngle={2} dataKey="monto">
-                      {cxcAging.map((entry, index) => (
-                        <Cell key={index} fill={entry.color} />
-                      ))}
+                    <Pie data={cxcAging} cx="50%" cy="50%" innerRadius={24} outerRadius={40} paddingAngle={2} dataKey="monto">
+                      {cxcAging.map((e, i) => <Cell key={i} fill={e.color} />)}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-              <div className="flex-1 space-y-1.5">
+              <div className="flex-1 space-y-1">
                 {cxcAging.map((a, i) => (
                   <div key={i} className="flex items-center justify-between text-xs">
                     <div className="flex items-center gap-1.5">
-                      <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} />
+                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: a.color }} />
                       <span className="text-[var(--text-secondary)]">{a.rango}</span>
                     </div>
                     <span className="font-mono font-medium">{formatGTQ(a.monto)}</span>
@@ -439,14 +495,14 @@ export default function Dashboard() {
                 ))}
               </div>
             </div>
-            <div className="mt-3 p-2.5 bg-[var(--bg-secondary)] rounded-lg flex items-center justify-between">
+            <div className="mt-3 p-2 bg-[var(--bg-secondary)] rounded-lg flex items-center justify-between">
               <div>
                 <p className="text-[10px] text-[var(--text-muted)] uppercase">Total CxC</p>
                 <p className="text-sm font-bold font-mono">{formatGTQ(totalCxC)}</p>
               </div>
               <div className="text-right">
-                <p className="text-[10px] text-[var(--text-muted)] uppercase">% Vencido</p>
-                <p className={`text-sm font-bold font-mono ${pctVencido > 20 ? 'text-[var(--danger)]' : 'text-[var(--success)]'}`}>{pctVencido}%</p>
+                <p className="text-[10px] text-[var(--text-muted)] uppercase">Vencido</p>
+                <p className={`text-sm font-bold font-mono ${pctVencido > 20 ? 'text-red-500' : 'text-emerald-500'}`}>{pctVencido}%</p>
               </div>
             </div>
           </div>
@@ -454,103 +510,50 @@ export default function Dashboard() {
 
         {/* CxP Próximas */}
         <div className="card">
-          <div className="section-header pb-3">
-            <BuildingOfficeIcon className="w-5 h-5 text-[var(--text-muted)]" />
-            <h2 className="font-semibold">Cuentas por Pagar</h2>
-            <span className="text-xs text-[var(--text-muted)]">{cxpProximas.length} en 10 días</span>
+          <div className="flex items-center justify-between p-4 pb-2">
+            <div className="flex items-center gap-2">
+              <BuildingOfficeIcon className="w-4 h-4 text-[var(--text-muted)]" />
+              <h2 className="font-semibold text-sm">CxP Próximas</h2>
+            </div>
+            <span className="text-[11px] text-[var(--text-muted)]">{cxpProximas.length} en 10 días</span>
           </div>
-          <div className="p-5 pt-0 space-y-2">
+          <div className="px-4 pb-3 space-y-2">
             {cxpProximas.map((p, i) => (
-              <div key={i} className="p-2.5 bg-[var(--bg-secondary)] rounded-lg flex items-center justify-between">
+              <div key={i} className="flex items-center justify-between p-2 bg-[var(--bg-secondary)] rounded-lg">
                 <div className="min-w-0">
                   <p className="text-xs font-medium truncate">{p.proveedor}</p>
-                  <p className="text-[10px] text-[var(--text-muted)]">{p.tipo} · <span className={p.vence === '2 días' ? 'text-[var(--danger)] font-medium' : ''}>{p.vence}</span></p>
+                  <p className="text-[10px] text-[var(--text-muted)]">{p.tipo} · <span className={p.vence === '2 días' ? 'text-red-500 font-medium' : ''}>{p.vence}</span></p>
                 </div>
-                <span className="font-mono font-semibold text-sm flex-shrink-0">{formatGTQ(p.monto)}</span>
+                <span className="font-mono font-semibold text-xs flex-shrink-0">{formatGTQ(p.monto)}</span>
               </div>
             ))}
-            <div className="mt-2 p-2.5 bg-[var(--bg-secondary)] rounded-lg flex items-center justify-between">
-              <p className="text-[10px] text-[var(--text-muted)] uppercase">Total CxP</p>
-              <p className="text-sm font-bold font-mono">{formatGTQ(totalCxP)}</p>
+            <div className="p-2 bg-[var(--bg-secondary)] rounded-lg flex items-center justify-between">
+              <span className="text-[10px] text-[var(--text-muted)] uppercase">Total CxP</span>
+              <span className="text-sm font-bold font-mono">{formatGTQ(totalCxP)}</span>
             </div>
           </div>
-          <Link to="/tesoreria/cuentas-por-pagar" className="flex items-center justify-center gap-1 w-full py-2.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-t border-[var(--border-default)] hover:bg-[var(--bg-secondary)] transition-colors">
+          <Link to="/tesoreria/cuentas-por-pagar" className="flex items-center justify-center gap-1 w-full py-2 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-t border-[var(--border-default)] hover:bg-[var(--bg-secondary)] transition-colors">
             Ver todas <ChevronRightIcon className="w-3 h-3" />
           </Link>
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════
-          SECCIÓN 5: EQUIPO + OPERACIONES
-          (Vendedores + Pipeline — 2 columnas)
-          ═══════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* Desempeño Vendedores */}
+      {/* ═══ SECCIÓN 4: PIPELINE + SAT (2 COLS) ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Pipeline */}
         <div className="card">
-          <div className="section-header pb-3">
-            <UsersIcon className="w-5 h-5 text-[var(--accent-blue)]" />
-            <h2 className="font-semibold">Desempeño de Vendedores</h2>
-            <Link to="/ventas" className="ml-auto text-xs text-[var(--accent-blue)] hover:underline flex items-center gap-0.5">
-              Pipeline <ChevronRightIcon className="w-3 h-3" />
-            </Link>
-          </div>
-          <div className="p-5 pt-0">
-            {/* Cards compactos */}
-            <div className="grid grid-cols-2 gap-2 mb-4">
-              {vendedores.map((v, i) => {
-                const cumplimiento = Math.round((v.ventas / v.meta) * 100)
-                return (
-                  <div key={i} className="p-2.5 bg-[var(--bg-secondary)] rounded-lg">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-semibold truncate">{v.nombre}</span>
-                      <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                        cumplimiento >= 100 ? 'bg-green-100 text-green-700' :
-                        cumplimiento >= 90 ? 'bg-amber-100 text-amber-700' :
-                        'bg-red-100 text-red-700'
-                      }`}>{cumplimiento}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-white rounded-full overflow-hidden mb-1">
-                      <div className="h-full rounded-full transition-all duration-1000" style={{
-                        width: animated ? `${Math.min(100, cumplimiento)}%` : '0%',
-                        backgroundColor: cumplimiento >= 100 ? '#10b981' : cumplimiento >= 90 ? '#f59e0b' : '#ef4444'
-                      }} />
-                    </div>
-                    <div className="flex justify-between text-[10px] text-[var(--text-muted)]">
-                      <span>{formatGTQ(v.ventas)}</span>
-                      <span>{v.clientes} cli · {v.cobranza}% cob</span>
-                    </div>
-                  </div>
-                )
-              })}
+          <div className="flex items-center justify-between p-4 pb-2">
+            <div className="flex items-center gap-2">
+              <TruckIcon className="w-4 h-4 text-[var(--accent-blue)]" />
+              <h2 className="font-semibold text-sm">Pipeline de Órdenes</h2>
             </div>
-            {/* Gráfica */}
-            <div className="h-44">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={vendedores} layout="vertical" margin={{ top: 0, right: 10, left: 70, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
-                  <YAxis type="category" dataKey="nombre" tick={{ fontSize: 11, fill: '#374151' }} width={65} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="ventas" name="Ventas" fill="#001639" radius={[0, 3, 3, 0]} barSize={14} />
-                  <Bar dataKey="meta" name="Meta" fill="#cbd5e1" radius={[0, 3, 3, 0]} barSize={14} />
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
+            <span className="text-[11px] text-[var(--text-muted)]">{produccionPipeline.reduce((s, p) => s + p.cantidad, 0)} activas</span>
           </div>
-        </div>
-
-        {/* Pipeline de Producción */}
-        <div className="card">
-          <div className="section-header pb-3">
-            <TruckIcon className="w-5 h-5 text-[var(--accent-blue)]" />
-            <h2 className="font-semibold">Pipeline de Órdenes</h2>
-            <span className="ml-auto text-xs text-[var(--text-muted)]">{produccionPipeline.reduce((s, p) => s + p.cantidad, 0)} activas</span>
-          </div>
-          <div className="p-5 pt-0">
-            <div className="space-y-3">
+          <div className="px-4 pb-4">
+            <div className="space-y-2.5">
               {produccionPipeline.map((p, i) => (
                 <div key={i} className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-lg bg-[#001639] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#001639] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
                     {p.cantidad}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -558,7 +561,7 @@ export default function Dashboard() {
                       <p className="text-xs font-medium">{p.etapa}</p>
                       <span className="font-mono text-xs font-semibold">{formatGTQ(p.monto)}</span>
                     </div>
-                    <div className="w-full h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
+                    <div className="w-full h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
                       <div className="h-full bg-[#001639] rounded-full transition-all duration-1000"
                         style={{ width: animated ? `${(p.cantidad / 45) * 100}%` : '0%' }} />
                     </div>
@@ -566,75 +569,34 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-            <div className="mt-4 p-3 bg-[#001639] text-white rounded-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-[10px] opacity-70 uppercase">Valor en Pipeline</p>
-                  <p className="text-lg font-bold">{formatGTQ(produccionPipeline.reduce((s, p) => s + p.monto, 0))}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-[10px] opacity-70 uppercase">Conversión Est.</p>
-                  <p className="text-lg font-bold">78%</p>
-                </div>
+            <div className="mt-3 p-2.5 bg-[#001639] text-white rounded-lg flex items-center justify-between">
+              <div>
+                <p className="text-[10px] opacity-70 uppercase">Valor Pipeline</p>
+                <p className="text-base font-bold">{formatGTQ(produccionPipeline.reduce((s, p) => s + p.monto, 0))}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[10px] opacity-70 uppercase">Conversión Est.</p>
+                <p className="text-base font-bold">78%</p>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      {/* ═══════════════════════════════════════
-          SECCIÓN 6: INSIGHTS + SAT + HERRAMIENTAS
-          (3 columnas: Insights | SAT Vencimientos | Mini herramientas)
-          ═══════════════════════════════════════ */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
-        {/* Insights de IA */}
-        <div className="card lg:col-span-1">
-          <div className="section-header pb-3">
-            <SparklesIcon className="w-5 h-5 text-[var(--accent-blue)]" />
-            <h2 className="font-semibold">Insights de IA</h2>
-            <span className="ml-auto text-[10px] text-[var(--text-muted)]">{insights.length} detectados</span>
-          </div>
-          {isLoadingInsights ? (
-            <div className="space-y-2 p-5 pt-0">
-              {[1, 2, 3].map(i => <div key={i} className="h-16 bg-[var(--bg-secondary)] rounded animate-pulse" />)}
-            </div>
-          ) : insights.length === 0 ? (
-            <div className="empty-state py-6">
-              <LightBulbIcon className="w-6 h-6 text-[var(--text-muted)]" />
-              <p className="text-sm text-[var(--text-muted)] mt-1">No hay insights nuevos</p>
-            </div>
-          ) : (
-            <div className="space-y-2 p-5 pt-0">
-              {insights.slice(0, 4).map((insight, idx) => (
-                <div key={idx} className={`p-3 rounded-lg border-l-3 ${getInsightStyles(insight.type)}`}>
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className={`badge-${insight.severity === 'critical' ? 'danger' : insight.severity === 'warning' ? 'warning' : 'info'} text-[10px] px-1.5 py-0.5`}>
-                      {insight.severity === 'critical' ? 'alta' : insight.severity === 'warning' ? 'media' : 'baja'}
-                    </span>
-                    <span className="text-[10px] text-[var(--text-muted)] uppercase">{insight.category}</span>
-                  </div>
-                  <h3 className="font-medium text-[var(--text-primary)] text-xs leading-snug">{insight.title}</h3>
-                  <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 line-clamp-2">{insight.description}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
 
         {/* SAT Vencimientos */}
         <div className="card">
-          <div className="section-header pb-3">
-            <BuildingOfficeIcon className="w-4 h-4 text-[var(--text-muted)]" />
-            <h2 className="font-semibold text-sm">SAT — Vencimientos</h2>
-            <span className="badge-warning text-[10px] ml-auto">2 urgentes</span>
+          <div className="flex items-center justify-between p-4 pb-2">
+            <div className="flex items-center gap-2">
+              <BuildingOfficeIcon className="w-4 h-4 text-[var(--text-muted)]" />
+              <h2 className="font-semibold text-sm">SAT — Vencimientos</h2>
+            </div>
+            <span className="badge-warning text-[10px]">2 urgentes</span>
           </div>
-          <div className="p-5 pt-0 space-y-2">
+          <div className="px-4 pb-4 space-y-2">
             <div className="p-2.5 bg-red-50 rounded-lg border border-red-100">
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded bg-red-500 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">HOY</div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium">1ra. Cuota ISR</p>
-                  <p className="text-[10px] text-[var(--text-muted)]">SAT-2221</p>
+                  <p className="text-xs font-medium">1ra. Cuota ISR <span className="text-[10px] text-[var(--text-muted)]">SAT-2221</span></p>
                 </div>
                 <span className="font-mono text-sm font-bold text-red-600 flex-shrink-0">Q175K</span>
               </div>
@@ -643,52 +605,91 @@ export default function Dashboard() {
               <div className="flex items-center gap-2">
                 <div className="w-7 h-7 rounded bg-amber-500 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">15d</div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium">IVA Marzo</p>
-                  <p className="text-[10px] text-[var(--text-muted)]">SAT-2231</p>
+                  <p className="text-xs font-medium">IVA Marzo <span className="text-[10px] text-[var(--text-muted)]">SAT-2231</span></p>
                 </div>
                 <span className="font-mono text-sm font-bold text-amber-600 flex-shrink-0">Q185K</span>
               </div>
             </div>
-            <Link to="/sat" className="flex items-center justify-center gap-1 w-full py-2 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-t border-[var(--border-default)] hover:bg-[var(--bg-secondary)] transition-colors mt-2">
+            <Link to="/sat" className="flex items-center justify-center gap-1 w-full py-2 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-t border-[var(--border-default)] hover:bg-[var(--bg-secondary)] transition-colors">
               Ver calendario <ChevronRightIcon className="w-3 h-3" />
             </Link>
           </div>
         </div>
+      </div>
 
-        {/* Mini herramientas + Agentes */}
-        <div className="space-y-4">
-          {/* Runway Calculator — compacto, al final */}
+      {/* ═══ SECCIÓN 5: INSIGHTS (ANCHO COMPLETO, COMPACTO) ═══ */}
+      {insights.length > 0 && (
+        <div className="card">
+          <div className="flex items-center justify-between p-4 pb-2">
+            <div className="flex items-center gap-2">
+              <SparklesIcon className="w-4 h-4 text-[var(--accent-blue)]" />
+              <h2 className="font-semibold text-sm">Insights de IA</h2>
+            </div>
+            <span className="text-[11px] text-[var(--text-muted)]">{insights.length} detectados</span>
+          </div>
+          <div className="px-4 pb-4">
+            {isLoadingInsights ? (
+              <div className="flex gap-3">
+                {[1, 2, 3].map(i => <div key={i} className="flex-1 h-16 bg-[var(--bg-secondary)] rounded animate-pulse" />)}
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {insights.slice(0, 6).map((insight, idx) => (
+                  <div key={idx} className={`p-2.5 rounded-lg border-l-3 ${getInsightStyles(insight.type)}`}>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className={`text-[9px] px-1.5 py-0.5 rounded font-medium ${
+                        insight.severity === 'critical' ? 'bg-red-100 text-red-700' :
+                        insight.severity === 'warning' ? 'bg-amber-100 text-amber-700' :
+                        'bg-blue-100 text-blue-700'
+                      }`}>
+                        {insight.severity === 'critical' ? 'alta' : insight.severity === 'warning' ? 'media' : 'baja'}
+                      </span>
+                      <span className="text-[9px] text-[var(--text-muted)] uppercase">{insight.category}</span>
+                    </div>
+                    <h3 className="font-medium text-[var(--text-primary)] text-xs leading-snug">{insight.title}</h3>
+                    <p className="text-[11px] text-[var(--text-secondary)] mt-0.5 line-clamp-2">{insight.description}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ═══ SECCIÓN 6: RUNWAY + abaco (2 COLS) ═══ */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
           <RunwayCalculator
             saldoActual={tesoreria.total_gtq || 0}
             promedioIngresosMensual={operacion.avg_ingresos_mes || 0}
             promedioGastosMensual={operacion.avg_gastos_mes || 0}
             proyeccionMeses={12}
           />
-
-          {/* abaco Assistant */}
+        </div>
+        <div className="space-y-3">
           <div className="card bg-[#001639] text-white">
             <div className="p-4">
-              <div className="flex items-center gap-2.5 mb-2">
-                <div className="w-8 h-8 rounded bg-white/10 flex items-center justify-center">
-                  <SparklesIcon className="w-4 h-4" />
-                </div>
+              <div className="flex items-center gap-2 mb-2">
+                <SparklesIcon className="w-4 h-4" />
                 <div>
                   <h2 className="font-semibold text-sm">abaco Assistant</h2>
                   <p className="text-[10px] opacity-70">4 agentes activos</p>
                 </div>
               </div>
-              <Link to="/log-actividades" className="flex items-center justify-center gap-1.5 w-full py-2 bg-white text-[#001639] text-xs font-medium rounded-md hover:bg-opacity-90 transition-colors">
-                Ver Agentes <ChevronRightIcon className="w-3.5 h-3.5" />
+              <Link to="/log-actividades" className="flex items-center justify-center gap-1 w-full py-2 bg-white text-[#001639] text-xs font-medium rounded-md hover:bg-opacity-90 transition-colors">
+                Ver Agentes <ChevronRightIcon className="w-3 h-3" />
               </Link>
             </div>
           </div>
-
-          {/* Quick Stats */}
           <div className="grid grid-cols-2 gap-2">
-            <KpiMini label="Agentes Activos" value="4" icon={CpuChipIcon} color="text-[var(--accent-blue)]" subtext="Todos operando" />
-            <KpiMini label="Insights Hoy" value={insights.length} icon={LightBulbIcon} color="text-[var(--warning)]" subtext="+2 nuevos" />
-            <KpiMini label="Ratio Liquidez" value={liquidezRatio.toFixed(2)} icon={BanknotesIcon} color={liquidezRatio < 1 ? 'text-[var(--danger)]' : 'text-[var(--success)]'} subtext={liquidezRatio < 1 ? 'Bajo' : 'Sano'} />
-            <KpiMini label="Ticket Prom." value="Q35,200" icon={DocumentCurrencyDollarIcon} color="text-[var(--accent-blue)]" subtext="↑ 3% vs mes ant." />
+            <div className="p-3 bg-white rounded-lg border border-[var(--border-default)]">
+              <p className="text-[10px] text-[var(--text-muted)] uppercase">Agentes</p>
+              <p className="text-base font-bold">4 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block ml-1"></span></p>
+            </div>
+            <div className="p-3 bg-white rounded-lg border border-[var(--border-default)]">
+              <p className="text-[10px] text-[var(--text-muted)] uppercase">Insights</p>
+              <p className="text-base font-bold">{insights.length}</p>
+            </div>
           </div>
         </div>
       </div>

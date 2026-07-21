@@ -66,7 +66,8 @@ export const endpoints = {
   },
   alertas: () => cfoApi.get('/alertas'),
   reportes: {
-    generar: (tipo, params) => cfoApi.get(`/reportes/${tipo}`, { params })
+    generar: (tipo, params) => cfoApi.get(`/reportes/${tipo}`, { params }),
+    ratios: (params) => cfoApi.get('/reportes/ratios-financieros', { params })
   },
   // Multi-Agent System
   agents: {

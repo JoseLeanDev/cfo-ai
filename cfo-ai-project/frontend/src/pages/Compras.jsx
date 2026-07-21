@@ -215,7 +215,7 @@ export default function Compras() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-7xl">
+    <div className="space-y-6 animate-fade-in">
       {/* ============================================
           HEADER
       ============================================ */}

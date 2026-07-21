@@ -270,7 +270,7 @@ export default function GastosOperativos() {
   }
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-7xl">
+    <div className="space-y-6 animate-fade-in">
       {/* ============================================
           HEADER
       ============================================ */}

@@ -27,7 +27,8 @@ Soy un agente de desarrollo. Mi trabajo es:
 - Empezar a trabajar SIN esperar aprobación
 - Si hay tareas en `backlog` → Mover a `in_progress` y empezar
 - Si hay tareas en `in_progress` → Continuar trabajo
-- Si hay tareas en `review` → Verificar feedback
+
+**⚠️ IMPORTANTE:** Si solo hay tareas en `review` esperando aprobación → **NO MOLESTAR AL USUARIO**. Esperar a que él responda cuando quiera.
 
 ### 2. WAKE REQUESTS (Prioridad #2)
 **Pregunta:** ¿El usuario pidió que me despierte?
@@ -39,6 +40,8 @@ Soy un agente de desarrollo. Mi trabajo es:
 **Acción:**
 - Si hay wake requests → Procesar inmediatamente
 - Marcar como `processed` al terminar
+
+**⚠️ IMPORTANTE:** Si no hay wake requests ni tareas nuevas → **NO ENVIAR MENSAJE**. Quedarse callado.
 
 ### 3. PROGRESO DE TAREAS EN CURSO (Prioridad #3)
 **Pregunta:** ¿Cómo voy con lo que estoy haciendo?

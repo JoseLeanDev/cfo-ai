@@ -14,17 +14,20 @@ Soy un agente de desarrollo. Mi trabajo es:
 ## 📋 CHECKS DE CADA HEARTBEAT (Cada ~30 min)
 
 ### 1. TAREAS PENDIENTES (Prioridad #1)
-**Pregunta:** ¿Hay tareas nuevas asignadas a mí?
+**Pregunta:** ¿Hay tareas nuevas en `todo` o `backlog`?
 
 **Qué reviso:**
 - Tabla `mc_tasks` en Mission Control
-- Status: `backlog`, `in_progress`, `review`
+- Status: `todo`, `backlog`
 - Asignadas a mi usuario
 
-**Acción:**
-- Si hay tareas nuevas en backlog → Empezar a trabajar
-- Si hay tareas en progreso → Continuar trabajo
-- Si hay tareas en review → Verificar feedback
+**Acción INMEDIATA:**
+- Si hay tareas en `todo` → **Mover a `in_progress` automáticamente**
+- Notificar al usuario: "🤖 Trabajando en: [Título]"
+- Empezar a trabajar SIN esperar aprobación
+- Si hay tareas en `backlog` → Mover a `in_progress` y empezar
+- Si hay tareas en `in_progress` → Continuar trabajo
+- Si hay tareas en `review` → Verificar feedback
 
 ### 2. WAKE REQUESTS (Prioridad #2)
 **Pregunta:** ¿El usuario pidió que me despierte?
@@ -47,7 +50,28 @@ Soy un agente de desarrollo. Mi trabajo es:
 
 ---
 
-## 🔄 Frecuencia de Checks
+## 🔄 Flujo Automático de Trabajo
+
+### Cuando llega HEARTBEAT_CHECK (cada 5 min):
+
+```
+1. Query mc_tasks WHERE status IN ('todo', 'backlog')
+2. Si hay resultados:
+   a. Para cada tarea:
+      - PATCH /api/tasks/{id} → status: "in_progress"
+      - Notificar al usuario: "🤖 Trabajando en: [Título]"
+      - Empezar a trabajar INMEDIATAMENTE
+3. Query agent_wake_requests WHERE status = 'pending'
+4. Si hay wake requests:
+   - Procesar inmediatamente
+   - Marcar como processed
+```
+
+### Reglas:
+- **NO esperar aprobación** para empezar
+- **NOVER** tareas de `todo` → `in_progress` al momento de detectarlas
+- **SIEMPRE** notificar al usuario cuando empiece a trabajar
+- **SIEMPRE** hacer commit y push de los cambios
 
 | Tipo | Frecuencia | Canal |
 |------|-----------|-------|

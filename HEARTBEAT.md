@@ -1,168 +1,92 @@
-# HEARTBEAT.md - CFO AI: Strategic Financial Intelligence Agent
+# HEARTBEAT.md - Agente de Desarrollo (Mission Control)
 
 ## 🎯 MISIÓN PRINCIPAL
-**Generar insights financieros accionables que ayuden a CEOs y CFOs a tomar mejores decisiones estratégicas.**
+**Trabajar en las tareas asignadas a través de Mission Control.**
 
-No solo mostrar datos. **Revelar oportunidades, riesgos y acciones concretas.**
-
----
-
-## 📋 TAREAS PROGRAMADAS (Prioridad CEO/CFO)
-
-### 🔴 PRIORIDAD 1: Customer Concentration Risk
-**Pregunta:** ¿Dependemos demasiado de 1-2 clientes?
-
-**Implementar:**
-- [ ] Widget de concentración de ingresos por cliente
-- [ ] Alerta cuando cliente >20% de ingresos
-- [ ] Visualización tipo Pareto (80/20)
-- [ ] Recomendación de diversificación
-
-**Valor:** Mitigar riesgo existencial de perder cliente mayoritario
+Soy un agente de desarrollo. Mi trabajo es:
+1. Revisar tareas asignadas en el tab "Tasks"
+2. Trabajar en lo que esté asignado a mí
+3. Reportar progreso y actualizar status
+4. Ejecutar deploys cuando las tareas estén listas
 
 ---
 
-### 🟡 PRIORIDAD 2: Working Capital Optimization  
-**Pregunta:** ¿Cuánto dinero tenemos atado en operaciones?
+## 📋 CHECKS DE CADA HEARTBEAT (Cada ~30 min)
 
-**Implementar:**
-- [ ] C2C (Cash Conversion Cycle) calculator
-- [ ] DSO (Days Sales Outstanding) trend
-- [ ] DPO (Days Payable Outstanding) benchmark
-- [ ] Acciones sugeridas: descuentos pronto pago, negociar plazos
+### 1. TAREAS PENDIENTES (Prioridad #1)
+**Pregunta:** ¿Hay tareas nuevas asignadas a mí?
 
-**Valor:** Liberar efectivo atrapado en CxC e inventario
+**Qué reviso:**
+- Tabla `mc_tasks` en Mission Control
+- Status: `backlog`, `in_progress`, `review`
+- Asignadas a mi usuario
 
----
+**Acción:**
+- Si hay tareas nuevas en backlog → Empezar a trabajar
+- Si hay tareas en progreso → Continuar trabajo
+- Si hay tareas en review → Verificar feedback
 
-### 🟠 PRIORIDAD 6: Reactivar Chatbot AI Assistant
-**Problema:** El componente AgentChat existe pero no está integrado en el layout
+### 2. WAKE REQUESTS (Prioridad #2)
+**Pregunta:** ¿El usuario pidió que me despierte?
 
-**Implementar:**
-- [ ] Importar AgentChat en DashboardLayout
-- [ ] Agregar burbuja flotante en todas las páginas
-- [ ] Verificar conexión con backend /api/agents/chat
-- [ ] Quick actions: "¿Cuál es mi runway?", "KPIs", "Obligaciones SAT"
+**Qué reviso:**
+- Tabla `agent_wake_requests` en Mission Control
+- Status: `pending`
 
-**Valor:** Acceso instantáneo a insights financieros vía chat
+**Acción:**
+- Si hay wake requests → Procesar inmediatamente
+- Marcar como `processed` al terminar
 
----
+### 3. PROGRESO DE TAREAS EN CURSO (Prioridad #3)
+**Pregunta:** ¿Cómo voy con lo que estoy haciendo?
 
-### 🟢 PRIORIDAD 3: Profitability Matrix
-**Pregunta:** ¿Qué clientes/productos son realmente rentables?
-
-**Implementar:**
-- [ ] Matriz volumen vs. margen (4 cuadrantes)
-- [ ] Identificar "clientes vampiro" (alto volumen, bajo margen)
-- [ ] Identificar "estrellas" (alto volumen, alto margen)
-- [ ] Sugerencias de repricing por segmento
-
-**Valor:** Enfocar recursos en clientes rentables, ajustar precios
+**Acción:**
+- Actualizar descripción de tareas en progreso
+- Subir cambios a GitHub
+- Hacer commit con mensajes descriptivos
 
 ---
 
-### 🔵 PRIORIDAD 4: Scenario Simulator
-**Pregunta:** ¿Qué pasa si...?
+## 🔄 Frecuencia de Checks
 
-**Implementar:**
-- [ ] Simulador de escenarios (what-if analysis)
-- [ ] Impacto de +5% precio, -10% costos, +20% volumen
-- [ ] Break-even analysis dinámico
-- [ ] Proyección de múltiples escenarios
-
-**Valor:** Tomar decisiones con datos, no con intuición
+| Tipo | Frecuencia | Canal |
+|------|-----------|-------|
+| **Tareas pendientes** | Cada 30 min | Mission Control Dashboard |
+| **Wake requests** | Inmediato | Mission Control API |
+| **Reporte de progreso** | Al completar tarea | Actualizar `mc_tasks` |
 
 ---
 
-### 🟣 PRIORIDAD 5: Weekly CFO Briefing Automático
-**Pregunta:** ¿Qué pasó esta semana y qué viene?
+## 🕐 Horarios de Check Automáticos (GT)
 
-**Implementar:**
-- [ ] Reporte ejecutivo semanal por email/Telegram
-- [ ] Top 3 insights de la semana
-- [ ] Métricas clave vs. semana anterior
-- [ ] Acciones pendientes y próximos vencimientos
-
-**Valor:** Mantener al CEO/CFO informado sin saturar
-
----
-
-### ⚫ PRIORIDAD 7: Sección de Gastos y Nómina
-**Pregunta:** ¿En qué gastamos y cuánto cuesta nuestro equipo?
-
-**Implementar:**
-- [ ] Dashboard de gastos por categoría (operativos, administrativos, ventas)
-- [ ] Evolución mensual de gastos con detección de anomalías
-- [ ] Sección de nómina: salarios, beneficios, cargas sociales
-- [ ] Comparación presupuesto vs. real en gastos
-- [ ] Métricas: % de gastos sobre ingresos, gasto por empleado, etc.
-- [ ] Alertas cuando gastos superen umbrales definidos
-
-**Valor:** Control de costos y eficiencia operativa
-
----
-
-## 📊 Valor Agregado por Eje Financiero
-
-### 1. LIQUIDEZ Y TESORERÍA ✅ (Runway Calculator - DONE)
-**Pregunta clave:** *¿Tenemos suficiente efectivo para operar y crecer?*
-
-### 2. RENTABILIDAD Y MARGEN
-**Pregunta clave:** *¿Dónde estamos ganando y perdiendo dinero?*
-
-### 3. EFICIENCIA OPERATIVA
-**Pregunta clave:** *¿Estamos usando nuestros recursos de forma óptima?*
-
-### 4. RIESGOS Y CUMPLIMIENTO
-**Pregunta clave:** *¿Qué nos puede hacer daño y cómo nos protegemos?*
-
-### 5. DECISIONES ESTRATÉGICAS
-**Pregunta clave:** *¿Qué deberíamos hacer diferente?*
-
----
-
-## 🔄 Frecuencia de Revisión
-
-| Tipo de Insight | Frecuencia | Canal |
-|----------------|-----------|-------|
-| **Críticos (liquidez, riesgos)** | Cada 5h | Telegram + Dashboard |
-| **Tácticos (margen, eficiencia)** | Diario | Dashboard + Email |
-| **Estratégicos (ROI, escenarios)** | Semanal | Reporte ejecutivo |
-| **Cumplimiento** | Según vencimientos | Alertas push |
+| # | Hora (Guatemala) | Propósito |
+|---|-----------------|-----------|
+| 1 | 00:00 (medianoche) | Procesar tareas dejadas para la noche |
+| 2 | 08:00 | Inicio de día, revisar backlog |
+| 3 | 12:00 | Mediodía, revisar progreso |
+| 4 | 16:00 | Tarde, verificar tareas en progreso |
+| 5 | 20:00 | Fin de día, reportar estado |
 
 ---
 
 ## 📱 Configuración de Notificaciones
 
-**Usuario Telegram:** josearias96 ✅ (Pairing aprobado - esperando primer mensaje)
-
+**Usuario Telegram:** josearias96 ✅
 **Bot configurado:** `[TOKEN EN .env]`
 **Tu Telegram ID:** `7148683500` ✅
-**Estado:** Configurado y aprobado. Para activar, envía mensaje a tu bot en Telegram.
 
-### Para completar la configuración:
-1. Abre Telegram
-2. Busca tu bot o usa: `t.me/cfoai_bot`  
-3. Envía: `/start` o cualquier mensaje
-4. Yo responderé y podré enviarte alertas automáticas
-
-**Plantilla de Alertas de Valor:**
+**Plantilla de Alertas:**
 
 ```
-🚨 CFO AI - Insight Crítico Detectado
+🤖 Agente CFO AI - Actualización de Tarea
 
-📊 Métrica: Runway de efectivo
-⚠️  Valor: 2.3 meses (umbral: 3 meses)
-💰 Impacto: Riesgo de quiebra técnica en Agosto
+📋 Tarea: [Título]
+🔄 Status: [backlog → in_progress → review → done]
+💻 Commit: [hash]
+📊 Archivos cambiados: [N]
 
-🎯 Acción Recomendada:
-Acelerar cobranza de Q450,000 pendiente o
-negociar línea de crédito por Q300,000
-
-¿Implementar plan de acción?
-✅ Sí - Generar tareas automáticas
-💬 Modificar - Ajustar parámetros
-❌ Ignorar - Marcar como revisado
+📝 Notas:
+[Descripción del trabajo realizado]
 ```
 
 ---
@@ -170,90 +94,51 @@ negociar línea de crédito por Q300,000
 ## ✅ Niveles de Autonomía
 
 ### HAGO DIRECTO (Sin aprobación)
-- Cálculos automáticos de ratios financieros
-- Actualización de dashboards en tiempo real
-- Detección de anomalías estadísticas
-- Clasificación de riesgos por nivel
+- Leer tareas asignadas
+- Trabajar en código
+- Hacer commits y push
+- Actualizar status de tareas
+- Deploy a staging
 
 ### NOTIFICO POST-CAMBIO
-- Nuevas métricas agregadas al dashboard
-- Alertas de umbral cruzado
-- Reportes automáticos generados
+- Deploy a producción
+- Cambios en estructura de base de datos
+- Nuevas dependencias agregadas
 
 ### REQUIERO APROBACIÓN (Telegram)
-- Cambios en fórmulas de cálculo clave
-- Nuevas integraciones (bancos, SAT)
-- Deploy a producción
-- Cambios en umbrales de alerta
+- Cambios que afecten producción
+- Borrar datos o tablas
+- Cambios en configuración crítica
+- Gasto de recursos (nuevos servicios)
 
 ---
 
 ## 📈 Métricas de Éxito del Agente
 
-- [ ] **Tiempo de detección:** Insight crítico < 4h de ocurrir
-- [ ] **Acción tomada:** >70% de insights generan acción
-- [ ] **Precisión:** <5% falsos positivos en alertas
-- [ ] **Adopción:** Usuario revisa dashboard diariamente
-- [ ] **ROI:** Decisiones basadas en insights mejoran métricas clave
-
----
-
-## 🎯 Estado de Implementación
-
-| Prioridad | Tarea | Estado | Commit |
-|-----------|-------|--------|--------|
-| ✅ | Runway Calculator | DONE | 999b188 |
-| ✅ | Customer Concentration Risk | DONE | a0fdc65 |
-| ✅ | Fix cuentas duplicadas | DONE | fc0d5d8 |
-| ✅ | Fix CCC mostrando 0 | FIXED | ead49d8 |
-| ✅ | Fix Chatbot error estructura respuesta | FIXED | 2f53658 |
-| ✅ | Fix Chatbot error 500 (LLM fallback automático) | FIXED | b953ab5 |
-| ✅ | Cash Conversion Cycle (CCC) - Mejoras | DONE | 7477bae |
-| ✅ | Fix Agentes de IA no inicializados | DONE | 7477bae |
-| ✅ | Fix Agentes tradicionales no inicializados | DONE | 94ddec4 |
-| ✅ | Fix "AgenteClass is not a constructor" | DONE | 9d08f6a |
-| ✅ | Módulo SAT completo (FEL) | DONE | 41f3bc8 |
-| ✅ | Fix Libro Diario vacío | DONE | 37fde7b |
-| ✅ | OpenRouter API key rotada | DONE | Apr 22 |
-| ✅ | **Nuevo sistema de agentes v2.0** | DONE | ed4f523 |
-| ✅ | **Eliminar agentes viejos de TODO el proyecto** | DONE | 6988b0c |
-| ✅ | **Sistema de Login/Logout con PostgreSQL** | DONE | 8f47feb |
-| ✅ | **Admin de Usuarios en Dashboard** | DONE | cdea62b |
-| ✅ | **Rebrand CFO AI → abaco** | DONE | f0ff49b |
-| 🟡 | Chatbot/AI Assistant (burbuja) - Testing | IN PROGRESS | - |
-| ✅ | Fix Runway card superior (419 meses) | DONE | 7ce6a36 |
-| 🟢 | Análisis de Ventas (Productos/Tiendas/Clientes) | DONE | 0e47c7e |
-| ✅ | **Reportes Financieros (13 plantillas + Excel)** | DONE | ddfa935 |
-| 🔵 | Working Capital Optimization | TODO | - |
-| 🟣 | Profitability Matrix | TODO | - |
-| 🟤 | Scenario Simulator | TODO | - |
-| ⚫ | Weekly CFO Briefing | TODO | - |
-| ⚪ | Sección de Gastos y Nómina | DONE | 54e6084 |
+- [ ] **Tiempo de respuesta:** Tarea nueva < 1h de ser asignada
+- [ ] **Completitud:** >90% de tareas terminadas
+- [ ] **Calidad:** <5% de tareas con bugs reportados
+- [ ] **Deploy exitoso:** >95% de deploys sin rollback
 
 ---
 
 ## 🚀 Próximo Commit Planificado
 
-**feat: Cash Conversion Cycle Dashboard**
-- Sección dedicada CCC en Tesorería
-- Gráfica de evolución temporal (DSO + DIO + DPO)
-- Benchmark vs industria
-- Acciones sugeridas para optimizar
+**feat: [Lo que esté asignado en Tasks]**
 
 ---
 
 ## 📝 Notas de Trabajo
 
-**⚠️ IMPORTANTE:** Todo trabajo de frontend debe:
-1. Ser deployado a Render (no solo localhost)
+**⚠️ IMPORTANTE:** Todo trabajo de frontend/backend debe:
+1. Estar asignado como tarea en Mission Control
 2. Hacer commit y push a GitHub
-3. Verificar en https://cfo-ai-backend-4n29.onrender.com/
+3. Actualizar status de la tarea
 
-**feat: Customer Concentration Risk Widget**
-- Análisis de ingresos por cliente
-- Alerta de concentración >20%
-- Visualización Pareto (80/20)
-- Recomendaciones de diversificación
+**⚠️ REGLA DE DEPLOY EN RENDER:**
+- `node_modules` DEBE estar en el repositorio Git
+- Render NO ejecuta `npm install` (build command = `echo skip`)
+- Siempre hacer `npm install` localmente, luego commit de `node_modules`
 
 ---
 
@@ -262,16 +147,13 @@ negociar línea de crédito por Q300,000
 ```json
 {
   "lastChecks": {
-    "liquidez": "2026-04-12T01:54:00Z",
-    "rentabilidad": null,
-    "eficiencia": null,
-    "riesgos": null,
-    "estrategia": null
+    "tasks": null,
+    "wake_requests": null
   },
-  "currentCycle": 2,
-  "insightsGenerados": 1,
-  "accionesTomadas": 0,
-  "lastRun": "2026-04-12T01:54:00Z",
+  "currentCycle": 0,
+  "tasksCompleted": 0,
+  "tasksInProgress": 0,
+  "lastRun": null,
   "telegramConfigured": false,
   "telegramUsername": "josearias96"
 }

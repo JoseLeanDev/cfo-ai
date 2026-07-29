@@ -13,9 +13,56 @@ Before doing anything else:
 1. Read `SOUL.md` — this is who you are
 2. Read `USER.md` — this is who you're helping
 3. Read `memory/YYYY-MM-DD.md` (today + yesterday) for recent context
-4. **If in MAIN SESSION** (direct chat with your human): Also read `MEMORY.md`
+4. **Read `CONTEXT_ABACO.md`** — contexto maestro del proyecto abaco/CFO AI
+5. **Read `HEARTBEAT.md`** — estado actual de implementación y prioridades
+6. **If in MAIN SESSION** (direct chat with your human): Also read `MEMORY.md`
 
 Don't ask permission. Just do it.
+
+## ⚠️ DEPLOYS A RENDER — REGLA INMUTABLE
+
+**El servicio `mission-control-new` en Render tiene build command = `echo skip`.**
+
+**NUNCA ejecuta `npm install`.**
+
+**Para que un deploy funcione:**
+- `node_modules` DEBE estar en el repositorio Git
+- Hacer commit de `node_modules` + `package.json` + `package-lock.json`
+- Push a GitHub → Render deploya con los módulos ya incluidos
+
+**NO funciona:** cambiar scripts en package.json, crear render.yaml, o depender de build automático.
+
+## 🔄 WORKFLOW CRÍTICO — Base de Datos por Cliente
+
+**ESTE ES EL FLUJO CORRECTO. MEMORIZAR.**
+
+### Paso 1: Recibir tarea
+- La tarea tiene `project_id` en `mc_tasks` (mission_control)
+- Ese `project_id` referencia a `mc_clients.id`
+
+### Paso 2: Identificar el cliente
+- Buscar en `mc_clients` con `project_id` → obtener `slug`
+- Buscar en `abaco_master.clients` con ese `slug` → contexto completo + `database_name`
+
+### Paso 3: Trabajar con la base correcta
+- Cada cliente tiene SU propia base de datos
+- `abaco_master` = contexto de TODOS los clientes (cerebro)
+- `database_name` del cliente = base de datos de ESE cliente (cuerpo/datos)
+- **NUNCA asumir que la base es `cfo_ai_db`**
+
+### Flujo de match:
+```
+mc_tasks.project_id → mc_clients.id → mc_clients.slug
+→ abaco_master.clients.slug → abaco_master.clients.database_name
+→ [Conectar a base del cliente]
+```
+
+### Ejemplo:
+| Cliente | mc_clients.slug | abaco_master.database_name |
+|---------|----------------|---------------------------|
+| CFO AI / Abaco | `abaco` | `cfo_ai_db` |
+| Lavanderia Demo | `lavanderia-demo` | `abaco_lavanderia_db` |
+| Mission Control | `mission-control` | `mission_control_e9jm` |
 
 ## Memory
 

@@ -12,6 +12,8 @@ import LogActividades from './pages/LogActividades'
 import Usuarios from './pages/Usuarios'
 import Login from './pages/Login'
 import Reportes from './pages/Reportes'
+import Ventas from './pages/Ventas'
+import GastosOperativos from './pages/GastosOperativos'
 // Páginas secundarias
 import LibroDiario from './pages/LibroDiario'
 import CuentasPorCobrar from './pages/CuentasPorCobrar'
@@ -51,6 +53,8 @@ function AppRoutes() {
             <DashboardLayout>
               <Routes>
                 <Route path="/" element={<Dashboard />} />
+                <Route path="/ventas" element={<Ventas />} />
+                <Route path="/gastos-operativos" element={<GastosOperativos />} />
                 <Route path="/tesoreria" element={<Tesoreria />} />
                 <Route path="/contabilidad" element={<Contabilidad />} />
                 <Route path="/analisis" element={<Analisis />} />

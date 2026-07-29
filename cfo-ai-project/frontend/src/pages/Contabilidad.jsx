@@ -14,7 +14,7 @@ import {
 
 export default function Contabilidad() {
   return (
-    <div className="space-y-6 animate-fade-in max-w-6xl">
+    <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-lg bg-[#001639] flex items-center justify-center">

@@ -162,7 +162,7 @@ export default function HistorialVentas() {
   }, [productosFiltrados])
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-7xl">
+    <div className="space-y-6 animate-fade-in">
       {/* ============================================
           BREADCRUMBS + HEADER
       ============================================ */}

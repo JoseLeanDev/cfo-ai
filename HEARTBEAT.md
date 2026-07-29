@@ -30,6 +30,8 @@ Soy un agente de desarrollo. Mi trabajo es:
 
 **⚠️ IMPORTANTE:** Si solo hay tareas en `review` esperando aprobación → **NO MOLESTAR AL USUARIO**. Esperar a que él responda cuando quiera.
 
+**📝 Feedback:** Si una tarea en `review` tiene `feedback` (campo nuevo en mc_tasks), LEER EL FEEDBACK y actuar en consecuencia. El usuario puede haber dejado comentarios sobre qué corregir.
+
 ### 2. WAKE REQUESTS (Prioridad #2)
 **Pregunta:** ¿El usuario pidió que me despierte?
 

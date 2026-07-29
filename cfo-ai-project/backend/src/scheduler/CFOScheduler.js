@@ -189,15 +189,15 @@ class CFOScheduler {
 
     // === AGENTE ANALISTA ===
 
-    // 6. Briefing matutino (07:00, lunes a viernes)
-    this.schedule('0 7 * * 1-5', 'analista.briefing-matutino', async () => {
-      return await this.callAgent('analista', 'briefing-matutino', {
-        incluirVentas: true,
-        incluirGastos: true,
-        incluirAlertasLiquidez: true,
-        compararConAyer: true
-      });
-    });
+    // 6. Briefing matutino (07:00, lunes a viernes) - DESACTIVADO
+    // this.schedule('0 7 * * 1-5', 'analista.briefing-matutino', async () => {
+    //   return await this.callAgent('analista', 'briefing-matutino', {
+    //     incluirVentas: true,
+    //     incluirGastos: true,
+    //     incluirAlertasLiquidez: true,
+    //     compararConAyer: true
+    //   });
+    // });
 
     // 7. Snapshot diario (18:00)
     this.schedule('0 18 * * *', 'analista.snapshot-diario', async () => {

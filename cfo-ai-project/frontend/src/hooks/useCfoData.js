@@ -83,3 +83,17 @@ export const useRatiosFinancieros = (options = {}) => {
     }
   )
 }
+
+export const useMargenProductos = () => {
+  return useQuery('margen-productos', endpoints.margenProductos.listado, {
+    refetchInterval: 5 * 60 * 1000,
+    staleTime: 2 * 60 * 1000,
+  })
+}
+
+export const useMargenProductoDetalle = (id) => {
+  return useQuery(['margen-producto-detalle', id], () => 
+    endpoints.margenProductos.detalle(id),
+    { enabled: !!id }
+  )
+}

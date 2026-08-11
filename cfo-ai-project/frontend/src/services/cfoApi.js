@@ -57,6 +57,11 @@ export const endpoints = {
     dismissInsight: (id) => cfoApi.patch(`/analisis/insights/${id}/dismiss`, {}),
     workingCapital: (params = {}) => cfoApi.get('/analisis/working-capital', { params })
   },
+  margenProductos: {
+    listado: () => cfoApi.get('/margen-productos'),
+    detalle: (id) => cfoApi.get(`/margen-productos/${id}/detalle`),
+    alertas: () => cfoApi.get('/margen-productos/alertas')
+  },
   sat: {
     calendario: () => cfoApi.get('/sat/calendario'),
     calculoIva: (mes) => cfoApi.get('/sat/calculo/iva', { params: { mes } }),

@@ -5,7 +5,8 @@ _Learn about the person you're helping. Update this as you go._
 - **Name:**
 - **What to call them:**
 - **Pronouns:** _(optional)_
-- **Timezone:**
+- **Timezone:** America/Guatemala (GT)
+- **Notes:** Está en Guatemala. TODOS los horarios deben ser en hora de Guatemala (GT, UTC-6). NUNCA usar hora de China.
 - **Notes:**
 
 ## Context

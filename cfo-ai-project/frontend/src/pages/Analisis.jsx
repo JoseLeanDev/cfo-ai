@@ -7,7 +7,6 @@ import {
   ClockIcon,
   BanknotesIcon,
   ArrowPathIcon,
-  TrendingUpIcon,
   ExclamationTriangleIcon,
   CheckCircleIcon,
   LightBulbIcon,
@@ -94,7 +93,7 @@ export default function Analisis() {
           valor: roe.valor,
           unidad: '%',
           umbral: roe.umbral,
-          icon: TrendingUpIcon,
+          icon: ArrowTrendingUpIcon,
           descripcion: 'Retorno sobre patrimonio'
         })
       }

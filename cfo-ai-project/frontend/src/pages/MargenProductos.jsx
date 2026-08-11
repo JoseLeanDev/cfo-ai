@@ -185,10 +185,10 @@ export default function MargenProductos() {
         </div>
 
         {/* Panel de Detalle */}
-        <div className="card">
+        <div className="card p-6">
           {productoSeleccionado ? (
             <div>
-              <div className="flex items-start justify-between mb-4">
+              <div className="flex items-start justify-between mb-6">
                 <div>
                   <h3 className="font-semibold text-lg">{productoSeleccionado.nombre}</h3>
                   <p className="text-xs text-[var(--text-muted)]">{productoSeleccionado.sku}</p>
@@ -203,7 +203,7 @@ export default function MargenProductos() {
 
               {/* Precio sugerido */}
               {productoSeleccionado.precio_sugerido > productoSeleccionado.precio_actual && (
-                <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg mb-4">
+                <div className="p-4 bg-red-500/10 border border-red-500/20 rounded-lg mb-6">
                   <p className="text-xs text-red-400 uppercase tracking-wider">Precio sugerido para recuperar margen</p>
                   <p className="text-xl font-bold text-red-400">Q {formatNum(productoSeleccionado.precio_sugerido, 2)}</p>
                   <p className="text-xs text-[var(--text-muted)]">
@@ -215,7 +215,7 @@ export default function MargenProductos() {
 
               {/* Gráfico */}
               {chartData.length > 0 && (
-                <div className="h-64 mb-4">
+                <div className="h-64 mb-6">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={chartData}>
                       <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" />
@@ -237,26 +237,26 @@ export default function MargenProductos() {
               )}
 
               {/* Métricas del producto */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
                   <p className="text-xs text-[var(--text-muted)]">Margen Actual</p>
                   <p className={`text-lg font-bold ${productoSeleccionado.margen_pct_actual < 25 ? 'text-red-400' : 'text-emerald-400'}`}>
                     {formatNum(productoSeleccionado.margen_pct_actual)}%
                   </p>
                 </div>
-                <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
+                <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
                   <p className="text-xs text-[var(--text-muted)]">Margen Hace 12m</p>
                   <p className="text-lg font-bold text-[var(--text-primary)]">
                     {formatNum(productoSeleccionado.margen_pct_historico)}%
                   </p>
                 </div>
-                <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
+                <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
                   <p className="text-xs text-[var(--text-muted)]">Δ Puntos</p>
                   <p className={`text-lg font-bold ${productoSeleccionado.delta_puntos < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                     {productoSeleccionado.delta_puntos > 0 ? '+' : ''}{formatNum(productoSeleccionado.delta_puntos)}
                   </p>
                 </div>
-                <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
+                <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
                   <p className="text-xs text-[var(--text-muted)]">Q Perdidos</p>
                   <p className="text-lg font-bold text-red-400">
                     {productoSeleccionado.quetzales_perdidos > 0 ? formatGTQ(productoSeleccionado.quetzales_perdidos) : '-'}

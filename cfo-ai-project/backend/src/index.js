@@ -93,7 +93,6 @@ app.use('/api/tesoreria', require('./routes/tesoreria'));
 app.use('/api/contabilidad', require('./routes/contabilidad'));
 app.use('/api/analisis', require('./routes/analisis'));
 app.use('/api/margen-productos', require('./routes/margen-productos'));
-app.use('/api/margenes', require('./routes/margen-dimensiones'));
 app.use('/api/margenes', require('./routes/margenes'));
 app.use('/api/sat', require('./routes/sat'));
 app.use('/api/alertas', require('./routes/alertas'));

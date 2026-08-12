@@ -86,7 +86,7 @@ app.use(wakeUpMiddleware());
 app.set('db', db);
 app.set('CFOAICore', getCFOAICore());
 
-// Routes
+// Routes - v2
 app.use('/api/auth', require('./routes/auth'));       // Auth - Login/Logout/Register
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/tesoreria', require('./routes/tesoreria'));

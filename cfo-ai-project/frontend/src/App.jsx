@@ -20,7 +20,7 @@ import CuentasPorCobrar from './pages/CuentasPorCobrar'
 import CuentasPorPagar from './pages/CuentasPorPagar'
 import CuentasBancarias from './pages/CuentasBancarias'
 import ProyeccionesFinancieras from './pages/ProyeccionesFinancieras'
-import MargenProductos from './pages/MargenProductos'
+import Margenes from './pages/Margenes'
 // Cierre Mensual
 import CierreDashboard from './pages/CierreDashboard'
 import CierreWizard from './pages/CierreWizard'
@@ -59,7 +59,7 @@ function AppRoutes() {
                 <Route path="/tesoreria" element={<Tesoreria />} />
                 <Route path="/contabilidad" element={<Contabilidad />} />
                 <Route path="/analisis" element={<Analisis />} />
-                <Route path="/analisis/margen-productos" element={<MargenProductos />} />
+                <Route path="/margenes" element={<Margenes />} />
                 <Route path="/compras" element={<Compras />} />
                 <Route path="/compras/historial-ventas" element={<HistorialVentas />} />
                 <Route path="/sat" element={<SAT />} />

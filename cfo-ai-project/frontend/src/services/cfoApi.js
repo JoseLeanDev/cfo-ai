@@ -62,6 +62,16 @@ export const endpoints = {
     detalle: (id) => cfoApi.get(`/margen-productos/${id}/detalle`),
     alertas: () => cfoApi.get('/margen-productos/alertas')
   },
+  margenes: {
+    resumen: () => cfoApi.get('/margenes'),
+    detalleProducto: (id) => cfoApi.get(`/margenes/producto/${id}/detalle`),
+    vendedores: () => cfoApi.get('/margenes/vendedores'),
+    detalleVendedor: (id) => cfoApi.get(`/margenes/vendedores/${id}/detalle`),
+    clientes: () => cfoApi.get('/margenes/clientes'),
+    detalleCliente: (id) => cfoApi.get(`/margenes/clientes/${id}/detalle`),
+    lineas: () => cfoApi.get('/margenes/lineas'),
+    detalleLinea: (id) => cfoApi.get(`/margenes/lineas/${id}/detalle`),
+  },
   sat: {
     calendario: () => cfoApi.get('/sat/calendario'),
     calculoIva: (mes) => cfoApi.get('/sat/calculo/iva', { params: { mes } }),

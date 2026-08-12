@@ -29,7 +29,7 @@ const navigation = [
   { name: 'Tesorería', href: '/tesoreria', icon: BanknotesIcon },
   { name: 'Contabilidad', href: '/contabilidad', icon: BookOpenIcon },
   { name: 'Análisis', href: '/analisis', icon: ChartBarIcon },
-  { name: 'Margen por Producto', href: '/analisis/margen-productos', icon: ArrowTrendingDownIcon },
+  { name: 'Márgenes', href: '/margenes', icon: ArrowTrendingDownIcon },
   { name: 'Reportes', href: '/reportes', icon: DocumentTextIcon },
   { name: 'SAT', href: '/sat', icon: DocumentCheckIcon },
   { name: 'Agentes IA', href: '/log-actividades', icon: CpuChipIcon },

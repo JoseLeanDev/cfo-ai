@@ -95,6 +95,8 @@ Esto significa que NUNCA ejecuta `npm install` automáticamente.
 - Todo cambio hace commit y push
 - PostgreSQL siempre, NUNCA SQLite
 - No mezclar con otros proyectos del workspace
+- **🚨 NUNCA preguntar por token de GitHub. Está en ~/.git-credentials**
+- **🚨 Push automático inmediato después de commit. Sin preguntar al usuario.**
 
 ---
 

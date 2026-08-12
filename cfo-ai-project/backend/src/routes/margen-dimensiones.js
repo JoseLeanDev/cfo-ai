@@ -4,17 +4,17 @@
 
 const express = require('express');
 const router = express.Router();
-const { query } = require('../config/database');
+const db = require('../../database/connection');
 
 // ============================================
 // MARGEN POR VENDEDOR
 // ============================================
 router.get('/vendedores', async (req, res) => {
   try {
-    const result = await query(`
+    const result = await db.allAsync(`
       SELECT * FROM vw_margen_vendedor ORDER BY delta_puntos ASC
     `);
-    res.json({ success: true, data: result.rows });
+    res.json({ success: true, data: result });
   } catch (error) {
     console.error('Error en margen por vendedor:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -25,7 +25,7 @@ router.get('/vendedores/:id/detalle', async (req, res) => {
   try {
     const { id } = req.params;
     // Historial mensual del vendedor
-    const historial = await query(`
+    const historial = await db.allAsync(`
       SELECT 
         DATE_TRUNC('month', fecha)::date as mes,
         SUM(total_venta) as ventas,
@@ -34,13 +34,13 @@ router.get('/vendedores/:id/detalle', async (req, res) => {
           THEN ((SUM(total_venta) - SUM(total_costo)) / SUM(total_venta) * 100)
           ELSE 0 END as margen_pct
       FROM ventas_detalle
-      WHERE vendedor_id = $1
+      WHERE vendedor_id = ?
       GROUP BY DATE_TRUNC('month', fecha)
       ORDER BY mes
     `, [id]);
 
     // Top productos vendidos por este vendedor
-    const productos = await query(`
+    const productos = await db.allAsync(`
       SELECT 
         p.nombre,
         SUM(v.cantidad) as unidades,
@@ -50,14 +50,14 @@ router.get('/vendedores/:id/detalle', async (req, res) => {
           ELSE 0 END as margen_pct
       FROM ventas_detalle v
       JOIN productos p ON v.producto_id = p.id
-      WHERE v.vendedor_id = $1
+      WHERE v.vendedor_id = ?
         AND v.fecha >= CURRENT_DATE - INTERVAL '12 months'
       GROUP BY p.id, p.nombre
       ORDER BY ventas DESC
       LIMIT 10
     `, [id]);
 
-    res.json({ success: true, data: { historial: historial.rows, productos: productos.rows } });
+    res.json({ success: true, data: { historial, productos } });
   } catch (error) {
     console.error('Error en detalle vendedor:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -69,10 +69,10 @@ router.get('/vendedores/:id/detalle', async (req, res) => {
 // ============================================
 router.get('/clientes', async (req, res) => {
   try {
-    const result = await query(`
+    const result = await db.allAsync(`
       SELECT * FROM vw_margen_cliente ORDER BY delta_puntos ASC
     `);
-    res.json({ success: true, data: result.rows });
+    res.json({ success: true, data: result });
   } catch (error) {
     console.error('Error en margen por cliente:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -83,7 +83,7 @@ router.get('/clientes/:id/detalle', async (req, res) => {
   try {
     const { id } = req.params;
     // Historial mensual del cliente
-    const historial = await query(`
+    const historial = await db.allAsync(`
       SELECT 
         DATE_TRUNC('month', fecha)::date as mes,
         SUM(total_venta) as ventas,
@@ -92,13 +92,13 @@ router.get('/clientes/:id/detalle', async (req, res) => {
           THEN ((SUM(total_venta) - SUM(total_costo)) / SUM(total_venta) * 100)
           ELSE 0 END as margen_pct
       FROM ventas_detalle
-      WHERE cliente_nombre = $1
+      WHERE cliente_nombre = ?
       GROUP BY DATE_TRUNC('month', fecha)
       ORDER BY mes
     `, [id]);
 
     // Top productos comprados por este cliente
-    const productos = await query(`
+    const productos = await db.allAsync(`
       SELECT 
         p.nombre,
         SUM(v.cantidad) as unidades,
@@ -108,14 +108,14 @@ router.get('/clientes/:id/detalle', async (req, res) => {
           ELSE 0 END as margen_pct
       FROM ventas_detalle v
       JOIN productos p ON v.producto_id = p.id
-      WHERE v.cliente_nombre = $1
+      WHERE v.cliente_nombre = ?
         AND v.fecha >= CURRENT_DATE - INTERVAL '12 months'
       GROUP BY p.id, p.nombre
       ORDER BY ventas DESC
       LIMIT 10
     `, [id]);
 
-    res.json({ success: true, data: { historial: historial.rows, productos: productos.rows } });
+    res.json({ success: true, data: { historial, productos } });
   } catch (error) {
     console.error('Error en detalle cliente:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -127,10 +127,10 @@ router.get('/clientes/:id/detalle', async (req, res) => {
 // ============================================
 router.get('/lineas', async (req, res) => {
   try {
-    const result = await query(`
+    const result = await db.allAsync(`
       SELECT * FROM vw_margen_linea ORDER BY delta_puntos ASC
     `);
-    res.json({ success: true, data: result.rows });
+    res.json({ success: true, data: result });
   } catch (error) {
     console.error('Error en margen por línea:', error);
     res.status(500).json({ success: false, error: error.message });
@@ -141,7 +141,7 @@ router.get('/lineas/:id/detalle', async (req, res) => {
   try {
     const { id } = req.params;
     // Historial mensual de la línea
-    const historial = await query(`
+    const historial = await db.allAsync(`
       SELECT 
         DATE_TRUNC('month', ph.fecha)::date as mes,
         SUM(ph.precio_promedio_realizado * ph.unidades_vendidas) as ventas,
@@ -151,13 +151,13 @@ router.get('/lineas/:id/detalle', async (req, res) => {
           ELSE 0 END as margen_pct
       FROM productos p
       JOIN productos_historial ph ON p.id = ph.producto_id
-      WHERE p.categoria = $1
+      WHERE p.categoria = ?
       GROUP BY DATE_TRUNC('month', ph.fecha)
       ORDER BY mes
     `, [id]);
 
     // Top productos de esta línea
-    const productos = await query(`
+    const productos = await db.allAsync(`
       SELECT 
         nombre,
         sku,
@@ -166,12 +166,12 @@ router.get('/lineas/:id/detalle', async (req, res) => {
         quetzales_perdidos,
         unidades_12m
       FROM vw_margen_productos
-      WHERE categoria = $1
+      WHERE categoria = ?
       ORDER BY delta_puntos ASC
       LIMIT 10
     `, [id]);
 
-    res.json({ success: true, data: { historial: historial.rows, productos: productos.rows } });
+    res.json({ success: true, data: { historial, productos } });
   } catch (error) {
     console.error('Error en detalle línea:', error);
     res.status(500).json({ success: false, error: error.message });

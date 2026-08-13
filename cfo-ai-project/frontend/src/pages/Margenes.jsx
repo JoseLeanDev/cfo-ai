@@ -208,7 +208,7 @@ export default function Margenes() {
               <div className="p-4 border-b border-[var(--border-color)]">
                 <h2 className="font-semibold flex items-center gap-2">
                   <TagIcon className="w-5 h-5 text-[var(--accent-primary)]" />
-                  Productos que perdieron margen
+                  Margen por Producto
                 </h2>
                 <p className="text-sm text-[var(--text-muted)] mt-1">
                   {productos?.filter(p => p.semaforo !== 'verde').length || 0} productos con margen menor al año pasado

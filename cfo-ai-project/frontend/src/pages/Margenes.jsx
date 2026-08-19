@@ -10,6 +10,7 @@ import {
   XMarkIcon,
   ChevronUpIcon,
   ChevronDownIcon,
+  FunnelIcon,
 } from '@heroicons/react/24/outline'
 import {
   BarChart,
@@ -42,6 +43,41 @@ const formatNum = (value, decimals = 1) => {
 }
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899']
+
+// Componente de filtro por semáforo
+function SemaforoFilter({ value, onChange, counts }) {
+  const opciones = [
+    { key: 'todos', label: 'Todos', color: 'bg-[var(--bg-tertiary)] text-[var(--text-primary)]' },
+    { key: 'verde', label: 'Verde', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', dot: 'bg-emerald-500' },
+    { key: 'ambar', label: 'Ámbar', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30', dot: 'bg-amber-500' },
+    { key: 'rojo', label: 'Rojo', color: 'bg-red-500/20 text-red-400 border-red-500/30', dot: 'bg-red-500' },
+  ]
+
+  return (
+    <div className="flex items-center gap-2">
+      <FunnelIcon className="w-4 h-4 text-[var(--text-muted)]" />
+      <div className="flex gap-1.5">
+        {opciones.map(op => (
+          <button
+            key={op.key}
+            onClick={() => onChange(op.key)}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-all ${
+              value === op.key ? op.color : 'bg-transparent text-[var(--text-muted)] border-[var(--border-color)] hover:text-[var(--text-primary)]'
+            }`}
+          >
+            {op.dot && <span className={`w-2 h-2 rounded-full ${op.dot}`} />}
+            {op.label}
+            {counts?.[op.key] !== undefined && (
+              <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] ${value === op.key ? 'bg-white/20' : 'bg-[var(--bg-tertiary)]'}`}>
+                {counts[op.key]}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
 
 // Tabla genérica sorteable
 function SortableTable({ columns, data, onRowClick, keyField = 'id' }) {
@@ -112,6 +148,12 @@ export default function Margenes() {
   const [productoSeleccionado, setProductoSeleccionado] = useState(null)
   const { data: detalleData } = useMargenProductoDetalle(productoSeleccionado?.id)
   const [activeTab, setActiveTab] = useState('productos')
+  
+  // Estados de filtro por semáforo para cada sección
+  const [filtroSemaforoProductos, setFiltroSemaforoProductos] = useState('todos')
+  const [filtroSemaforoVendedores, setFiltroSemaforoVendedores] = useState('todos')
+  const [filtroSemaforoClientes, setFiltroSemaforoClientes] = useState('todos')
+  const [filtroSemaforoLineas, setFiltroSemaforoLineas] = useState('todos')
 
   if (isLoading) return <div className="p-6 text-[var(--text-muted)]">Cargando análisis de márgenes...</div>
   if (error) return <div className="p-6 text-red-400">Error cargando datos: {error.message}</div>
@@ -121,6 +163,25 @@ export default function Margenes() {
   const vendedores = vendedoresData?.data || []
   const clientes = clientesData?.data || []
   const lineas = lineasData?.data || []
+
+  // Función para contar items por semáforo
+  const contarPorSemaforo = (items) => ({
+    todos: items.length,
+    verde: items.filter(i => i.semaforo === 'verde').length,
+    ambar: items.filter(i => i.semaforo === 'ambar').length,
+    rojo: items.filter(i => i.semaforo === 'rojo').length,
+  })
+
+  // Función para filtrar items por semáforo
+  const filtrarPorSemaforo = (items, filtro) => {
+    if (filtro === 'todos') return items
+    return items.filter(i => i.semaforo === filtro)
+  }
+
+  const productosFiltrados = filtrarPorSemaforo(productos || [], filtroSemaforoProductos)
+  const vendedoresFiltrados = filtrarPorSemaforo(vendedores, filtroSemaforoVendedores)
+  const clientesFiltrados = filtrarPorSemaforo(clientes, filtroSemaforoClientes)
+  const lineasFiltradas = filtrarPorSemaforo(lineas, filtroSemaforoLineas)
 
   const chartData = detalleData?.data?.historial?.map(h => ({
     fecha: h.fecha.slice(0, 7),
@@ -206,13 +267,22 @@ export default function Margenes() {
           <div className="lg:col-span-2 space-y-4">
             <div className="card">
               <div className="p-4 border-b border-[var(--border-color)]">
-                <h2 className="font-semibold flex items-center gap-2">
-                  <TagIcon className="w-5 h-5 text-[var(--accent-primary)]" />
-                  Productos que perdieron margen
-                </h2>
-                <p className="text-sm text-[var(--text-muted)] mt-1">
-                  {productos?.filter(p => p.semaforo !== 'verde').length || 0} productos con margen menor al año pasado
-                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <h2 className="font-semibold flex items-center gap-2">
+                      <TagIcon className="w-5 h-5 text-[var(--accent-primary)]" />
+                      Margen por Producto
+                    </h2>
+                    <p className="text-sm text-[var(--text-muted)] mt-1">
+                      {productos?.filter(p => p.semaforo !== 'verde').length || 0} productos con margen menor al año pasado
+                    </p>
+                  </div>
+                  <SemaforoFilter 
+                    value={filtroSemaforoProductos} 
+                    onChange={setFiltroSemaforoProductos}
+                    counts={contarPorSemaforo(productos || [])}
+                  />
+                </div>
               </div>
               <SortableTable
                 columns={[
@@ -241,7 +311,7 @@ export default function Margenes() {
                     }`} />
                   )},
                 ]}
-                data={productos || []}
+                data={productosFiltrados}
                 onRowClick={row => setProductoSeleccionado(row)}
                 keyField="sku"
               />
@@ -328,13 +398,22 @@ export default function Margenes() {
           <div className="lg:col-span-2 space-y-4">
             <div className="card">
               <div className="p-4 border-b border-[var(--border-color)]">
-                <h2 className="font-semibold flex items-center gap-2">
-                  <UsersIcon className="w-5 h-5 text-[var(--accent-primary)]" />
-                  Margen por Vendedor
-                </h2>
-                <p className="text-sm text-[var(--text-muted)] mt-1">
-                  {vendedores.filter(v => v.semaforo === 'rojo').length} vendedores con pérdida fuerte de margen
-                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <h2 className="font-semibold flex items-center gap-2">
+                      <UsersIcon className="w-5 h-5 text-[var(--accent-primary)]" />
+                      Margen por Vendedor
+                    </h2>
+                    <p className="text-sm text-[var(--text-muted)] mt-1">
+                      {vendedores.filter(v => v.semaforo === 'rojo').length} vendedores con pérdida fuerte de margen
+                    </p>
+                  </div>
+                  <SemaforoFilter 
+                    value={filtroSemaforoVendedores} 
+                    onChange={setFiltroSemaforoVendedores}
+                    counts={contarPorSemaforo(vendedores)}
+                  />
+                </div>
               </div>
               {vLoading ? (
                 <div className="p-6 text-[var(--text-muted)]">Cargando vendedores...</div>
@@ -360,7 +439,7 @@ export default function Margenes() {
                       }`} />
                     )},
                   ]}
-                  data={vendedores}
+                  data={vendedoresFiltrados}
                   keyField="id"
                 />
               )}
@@ -404,13 +483,22 @@ export default function Margenes() {
           <div className="lg:col-span-2 space-y-4">
             <div className="card">
               <div className="p-4 border-b border-[var(--border-color)]">
-                <h2 className="font-semibold flex items-center gap-2">
-                  <BuildingStorefrontIcon className="w-5 h-5 text-[var(--accent-primary)]" />
-                  Margen por Cliente
-                </h2>
-                <p className="text-sm text-[var(--text-muted)] mt-1">
-                  {clientes.filter(c => c.semaforo === 'rojo').length} clientes con margen crítico
-                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <h2 className="font-semibold flex items-center gap-2">
+                      <BuildingStorefrontIcon className="w-5 h-5 text-[var(--accent-primary)]" />
+                      Margen por Cliente
+                    </h2>
+                    <p className="text-sm text-[var(--text-muted)] mt-1">
+                      {clientes.filter(c => c.semaforo === 'rojo').length} clientes con margen crítico
+                    </p>
+                  </div>
+                  <SemaforoFilter 
+                    value={filtroSemaforoClientes} 
+                    onChange={setFiltroSemaforoClientes}
+                    counts={contarPorSemaforo(clientes)}
+                  />
+                </div>
               </div>
               {cLoading ? (
                 <div className="p-6 text-[var(--text-muted)]">Cargando clientes...</div>
@@ -436,7 +524,7 @@ export default function Margenes() {
                       }`} />
                     )},
                   ]}
-                  data={clientes}
+                  data={clientesFiltrados}
                   keyField="id"
                 />
               )}
@@ -480,13 +568,22 @@ export default function Margenes() {
           <div className="lg:col-span-2 space-y-4">
             <div className="card">
               <div className="p-4 border-b border-[var(--border-color)]">
-                <h2 className="font-semibold flex items-center gap-2">
-                  <ChartBarIcon className="w-5 h-5 text-[var(--accent-primary)]" />
-                  Margen por Línea de Producto
-                </h2>
-                <p className="text-sm text-[var(--text-muted)] mt-1">
-                  {lineas.filter(l => l.semaforo === 'rojo').length} líneas con pérdida de margen
-                </p>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <h2 className="font-semibold flex items-center gap-2">
+                      <ChartBarIcon className="w-5 h-5 text-[var(--accent-primary)]" />
+                      Margen por Línea de Producto
+                    </h2>
+                    <p className="text-sm text-[var(--text-muted)] mt-1">
+                      {lineas.filter(l => l.semaforo === 'rojo').length} líneas con pérdida de margen
+                    </p>
+                  </div>
+                  <SemaforoFilter 
+                    value={filtroSemaforoLineas} 
+                    onChange={setFiltroSemaforoLineas}
+                    counts={contarPorSemaforo(lineas)}
+                  />
+                </div>
               </div>
               {lLoading ? (
                 <div className="p-6 text-[var(--text-muted)]">Cargando líneas...</div>
@@ -513,7 +610,7 @@ export default function Margenes() {
                       }`} />
                     )},
                   ]}
-                  data={lineas}
+                  data={lineasFiltradas}
                   keyField="id"
                 />
               )}

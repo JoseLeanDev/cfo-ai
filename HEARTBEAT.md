@@ -11,27 +11,38 @@ Soy un agente de desarrollo. Mi trabajo es:
 
 ---
 
-## 🔄 CÓMO FUNCIONAN LOS HEARTBEATS (v2)
+## 🔄 CÓMO FUNCIONAN LOS HEARTBEATS (v3 - con QA)
 
 ### Flujo Automático (sin intervención humana):
 
 ```
-Cada 30 min (cron) → mission-control-heartbeat.js corre:
+Cada 30 min (cron) -> Heartbeat Agent:
   1. Busca tareas en 'todo'/'backlog'
   2. Las mueve a 'in_progress' automaticamente
-  3. Registra heartbeat en agent_heartbeat_log (con datos reales)
-  4. Si hay trabajo nuevo → crea wake request
+  3. Registra heartbeat en agent_heartbeat_log
+  4. Si hay trabajo nuevo -> crea wake request
   5. Notifica por Telegram
-```
 
-```
+Cada 15 min (cron) -> QA Checker:
+  1. Busca tareas en 'review' (Ready for QA)
+  2. Ejecuta checks automatizados segun los tags:
+     - health: API health check
+     - tasks_endpoint: Verifica /api/tasks
+     - heartbeat_endpoint: Verifica /api/heartbeat/status
+     - github_repo: Verifica GitHub API
+     - database: Verifica conexion PostgreSQL
+     - image_upload: Verifica endpoint de imagenes
+  3. Si TODOS los checks pasan -> mueve a 'done'
+  4. Si FALLA alguno -> mueve a 'in_progress' con feedback
+  5. Registra resultado en agent_heartbeat_log
+
 Cuando yo (el agente IA) recibo heartbeat-check:
   1. Leo wake requests pendientes
   2. Leo tareas en 'in_progress'
   3. Trabajo en las tareas
   4. Hago commit y push
-  5. Muevo tareas a 'review'
-  6. Registro mi propio heartbeat de completion
+  5. Muevo tareas a 'review' (Ready for QA)
+  6. El QA Checker se encargara de verificar despues
 ```
 
 ---
@@ -94,13 +105,14 @@ Cuando yo (el agente IA) recibo heartbeat-check:
 
 ### Componentes:
 
-| Componente | Qué hace | Ubicación |
-|-----------|----------|-----------|
-| `mission-control-heartbeat.js` | Script de cron que revisa BD, mueve tareas, registra heartbeat | `/mission-control/scripts/` |
-| Cron job | Corre el script cada 30 min | Crontab del servidor |
-| `agent_heartbeat_log` | Tabla donde se guardan los logs | PostgreSQL `mission_control_e9jm` |
-| `agent_wake_requests` | Cola de solicitudes para despertar al agente IA | PostgreSQL `mission_control_e9jm` |
-| `mc_tasks` | Tablero Kanban con tareas | PostgreSQL `mission_control_e9jm` |
+| Componente | Qué hace | Ubicación | Frecuencia |
+|-----------|----------|-----------|------------|
+| `mission-control-heartbeat.js` | Script de cron que revisa BD, mueve tareas, registra heartbeat | `/mission-control/scripts/` | Cada 30 min |
+| `qa-checker.js` | Script de QA que testea tareas en review | `/mission-control/scripts/` | Cada 15 min |
+| Cron job | Corre los scripts automaticamente | Crontab del servidor | - |
+| `agent_heartbeat_log` | Tabla donde se guardan los logs | PostgreSQL `mission_control_e9jm` | - |
+| `agent_wake_requests` | Cola de solicitudes para despertar al agente IA | PostgreSQL `mission_control_e9jm` | - |
+| `mc_tasks` | Tablero Kanban con tareas | PostgreSQL `mission_control_e9jm` | - |
 
 ### Comandos útiles:
 
@@ -117,6 +129,12 @@ psql -h dpg-d9hudajeo5us73dmtr70-a.ohio-postgres.render.com \
 
 # Correr heartbeat manualmente
 cd /root/.openclaw/workspace/mission-control && node scripts/mission-control-heartbeat.js
+
+# Correr QA checker manualmente
+cd /root/.openclaw/workspace/mission-control && node scripts/qa-checker.js
+
+# Ver logs de QA
+ tail -f /var/log/mc-qa.log
 ```
 
 ---

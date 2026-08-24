@@ -1252,7 +1252,13 @@ router.get('/working-capital', async (req, res) => {
         tipo: 'dso_reduccion',
         titulo: `Reducir días de cobro`,
         descripcion: `DSO actual (${dso.valor} días) vs benchmark (${dso.benchmark_sector} días)`,
-        prioridad: 'alta'
+        prioridad: 'alta',
+        impacto_efectivo: dso.monto_vencido || 0,
+        acciones: [
+          'Implementar descuento 2% por pronto pago',
+          'Enviar recordatorios automáticos a los 15 días',
+          'Revisar política de crédito para nuevos clientes'
+        ]
       });
     }
     
@@ -1261,7 +1267,13 @@ router.get('/working-capital', async (req, res) => {
         tipo: 'c2c_optimizacion',
         titulo: `Optimizar Cash Conversion Cycle`,
         descripcion: `C2C actual (${c2c} días) vs óptimo (${c2cBenchmark} días)`,
-        prioridad: 'alta'
+        prioridad: 'alta',
+        impacto_efectivo: Math.round(c2c * 5000),
+        acciones: [
+          'Negociar mejores plazos con proveedores',
+          'Acelerar proceso de cobranza',
+          'Reducir niveles de inventario'
+        ]
       });
     }
     

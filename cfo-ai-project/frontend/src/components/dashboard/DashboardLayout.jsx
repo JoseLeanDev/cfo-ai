@@ -16,6 +16,7 @@ import {
   CurrencyDollarIcon,
   CalculatorIcon,
   ArrowTrendingDownIcon,
+  TruckIcon,
 } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
@@ -24,6 +25,7 @@ import AgentChat from '../agents/AgentChat'
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
   { name: 'Ventas', href: '/ventas', icon: CurrencyDollarIcon },
+  { name: 'Producción', href: '/produccion', icon: TruckIcon },
   { name: 'Gastos Operativos', href: '/gastos-operativos', icon: CalculatorIcon },
   { name: 'Compras', href: '/compras', icon: ShoppingCartIcon },
   { name: 'Tesorería', href: '/tesoreria', icon: BanknotesIcon },

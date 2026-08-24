@@ -21,6 +21,7 @@ import CuentasPorPagar from './pages/CuentasPorPagar'
 import CuentasBancarias from './pages/CuentasBancarias'
 import ProyeccionesFinancieras from './pages/ProyeccionesFinancieras'
 import Margenes from './pages/Margenes'
+import Produccion from './pages/Produccion'
 // Cierre Mensual
 import CierreDashboard from './pages/CierreDashboard'
 import CierreWizard from './pages/CierreWizard'
@@ -60,6 +61,7 @@ function AppRoutes() {
                 <Route path="/contabilidad" element={<Contabilidad />} />
                 <Route path="/analisis" element={<Analisis />} />
                 <Route path="/margenes" element={<Margenes />} />
+                <Route path="/produccion" element={<Produccion />} />
                 <Route path="/compras" element={<Compras />} />
                 <Route path="/compras/historial-ventas" element={<HistorialVentas />} />
                 <Route path="/sat" element={<SAT />} />

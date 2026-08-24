@@ -540,7 +540,7 @@ export default function Dashboard() {
               <TruckIcon className="w-4 h-4 text-[var(--accent-blue)]" />
               <h2 className="font-semibold text-sm">Pipeline de Órdenes</h2>
             </div>
-            <span className="text-[11px] text-[var(--text-muted)]">{produccionPipeline.reduce((s, p) => s + p.cantidad, 0)} activas</span>
+            <Link to="/produccion" className="text-[11px] text-[var(--accent-blue)] hover:underline">Ver detalle →</Link>
           </div>
           <div className="px-4 pb-4">
             <div className="space-y-2.5">

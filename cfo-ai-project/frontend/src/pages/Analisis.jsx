@@ -393,7 +393,7 @@ export default function Analisis() {
                   </p>
                 )}
                 <div className="mt-2 space-y-1">
-                  {rec.acciones.map((accion, i) => (
+                  {rec.acciones?.map((accion, i) => (
                     <div key={i} className="flex items-start gap-1.5">
                       <CheckCircleIcon className="w-3 h-3 text-[var(--accent-orange)] mt-0.5 flex-shrink-0" />
                       <p className="text-[11px] text-[var(--text-muted)]">{accion}</p>

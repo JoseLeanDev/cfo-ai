@@ -11,6 +11,31 @@ Soy un agente de desarrollo. Mi trabajo es:
 
 ---
 
+## 🔄 CÓMO FUNCIONAN LOS HEARTBEATS (v2)
+
+### Flujo Automático (sin intervención humana):
+
+```
+Cada 30 min (cron) → mission-control-heartbeat.js corre:
+  1. Busca tareas en 'todo'/'backlog'
+  2. Las mueve a 'in_progress' automaticamente
+  3. Registra heartbeat en agent_heartbeat_log (con datos reales)
+  4. Si hay trabajo nuevo → crea wake request
+  5. Notifica por Telegram
+```
+
+```
+Cuando yo (el agente IA) recibo heartbeat-check:
+  1. Leo wake requests pendientes
+  2. Leo tareas en 'in_progress'
+  3. Trabajo en las tareas
+  4. Hago commit y push
+  5. Muevo tareas a 'review'
+  6. Registro mi propio heartbeat de completion
+```
+
+---
+
 ## 📋 CHECKS DE CADA HEARTBEAT (Cada ~30 min)
 
 ### 1. TAREAS PENDIENTES (Prioridad #1)
@@ -22,15 +47,13 @@ Soy un agente de desarrollo. Mi trabajo es:
 - Asignadas a mi usuario
 
 **Acción INMEDIATA:**
-- Si hay tareas en `todo` → **Mover a `in_progress` automáticamente**
+- Si hay tareas en `todo` → **Mover a `in_progress` automáticamente** (lo hace el script de cron)
 - Notificar al usuario: "🤖 Trabajando en: [Título]"
 - Empezar a trabajar SIN esperar aprobación
-- Si hay tareas en `backlog` → Mover a `in_progress` y empezar
-- Si hay tareas en `in_progress` → Continuar trabajo
 
 **⚠️ IMPORTANTE:** Si solo hay tareas en `review` esperando aprobación → **NO MOLESTAR AL USUARIO**. Esperar a que él responda cuando quiera.
 
-**📝 Feedback:** Si una tarea en `review` tiene `feedback` (campo nuevo en mc_tasks), LEER EL FEEDBACK y actuar en consecuencia. El usuario puede haber dejado comentarios sobre qué corregir.
+**📝 Feedback:** Si una tarea en `review` tiene `feedback` (campo nuevo en mc_tasks), LEER EL FEEDBACK y actuar en consecuencia.
 
 ### 2. WAKE REQUESTS (Prioridad #2)
 **Pregunta:** ¿El usuario pidió que me despierte?
@@ -43,8 +66,6 @@ Soy un agente de desarrollo. Mi trabajo es:
 - Si hay wake requests → Procesar inmediatamente
 - Marcar como `processed` al terminar
 
-**⚠️ IMPORTANTE:** Si no hay wake requests ni tareas nuevas → **NO ENVIAR MENSAJE**. Quedarse callado.
-
 ### 3. PROGRESO DE TAREAS EN CURSO (Prioridad #3)
 **Pregunta:** ¿Cómo voy con lo que estoy haciendo?
 
@@ -52,37 +73,6 @@ Soy un agente de desarrollo. Mi trabajo es:
 - Actualizar descripción de tareas en progreso
 - Subir cambios a GitHub
 - Hacer commit con mensajes descriptivos
-
----
-
-## 🔄 Flujo Automático de Trabajo
-
-### Cuando llega HEARTBEAT_CHECK (cada 5 min):
-
-```
-1. Query mc_tasks WHERE status IN ('todo', 'backlog')
-2. Si hay resultados:
-   a. Para cada tarea:
-      - PATCH /api/tasks/{id} → status: "in_progress"
-      - Notificar al usuario: "🤖 Trabajando en: [Título]"
-      - Empezar a trabajar INMEDIATAMENTE
-3. Query agent_wake_requests WHERE status = 'pending'
-4. Si hay wake requests:
-   - Procesar inmediatamente
-   - Marcar como processed
-```
-
-### Reglas:
-- **NO esperar aprobación** para empezar
-- **NOVER** tareas de `todo` → `in_progress` al momento de detectarlas
-- **SIEMPRE** notificar al usuario cuando empiece a trabajar
-- **SIEMPRE** hacer commit y push de los cambios
-
-| Tipo | Frecuencia | Canal |
-|------|-----------|-------|
-| **Tareas pendientes** | Cada 30 min | Mission Control Dashboard |
-| **Wake requests** | Inmediato | Mission Control API |
-| **Reporte de progreso** | Al completar tarea | Actualizar `mc_tasks` |
 
 ---
 
@@ -96,26 +86,37 @@ Soy un agente de desarrollo. Mi trabajo es:
 | 4 | 16:00 | Tarde, verificar tareas en progreso |
 | 5 | 20:00 | Fin de día, reportar estado |
 
+**Nota:** El cron corre cada 30 min, no solo en estas horas. Pero el backend de Mission Control calcula `nextRun` basado en este schedule de 5 checks/día.
+
 ---
 
-## 📱 Configuración de Notificaciones
+## 🤖 Estructura del Sistema
 
-**Usuario Telegram:** josearias96 ✅
-**Bot configurado:** `[TOKEN EN .env]`
-**Tu Telegram ID:** `7148683500` ✅
+### Componentes:
 
-**Plantilla de Alertas:**
+| Componente | Qué hace | Ubicación |
+|-----------|----------|-----------|
+| `mission-control-heartbeat.js` | Script de cron que revisa BD, mueve tareas, registra heartbeat | `/mission-control/scripts/` |
+| Cron job | Corre el script cada 30 min | Crontab del servidor |
+| `agent_heartbeat_log` | Tabla donde se guardan los logs | PostgreSQL `mission_control_e9jm` |
+| `agent_wake_requests` | Cola de solicitudes para despertar al agente IA | PostgreSQL `mission_control_e9jm` |
+| `mc_tasks` | Tablero Kanban con tareas | PostgreSQL `mission_control_e9jm` |
 
-```
-🤖 Agente CFO AI - Actualización de Tarea
+### Comandos útiles:
 
-📋 Tarea: [Título]
-🔄 Status: [backlog → in_progress → review → done]
-💻 Commit: [hash]
-📊 Archivos cambiados: [N]
+```bash
+# Ver últimos heartbeats
+psql -h dpg-d9hudajeo5us73dmtr70-a.ohio-postgres.render.com \
+  -U mission_control_e9jm_user -d mission_control_e9jm \
+  -c "SELECT * FROM agent_heartbeat_log ORDER BY created_at DESC LIMIT 10;"
 
-📝 Notas:
-[Descripción del trabajo realizado]
+# Ver tareas activas
+psql -h dpg-d9hudajeo5us73dmtr70-a.ohio-postgres.render.com \
+  -U mission_control_e9jm_user -d mission_control_e9jm \
+  -c "SELECT id, title, status, priority FROM mc_tasks WHERE status != 'done' ORDER BY updated_at DESC;"
+
+# Correr heartbeat manualmente
+cd /root/.openclaw/workspace/mission-control && node scripts/mission-control-heartbeat.js
 ```
 
 ---
@@ -148,12 +149,6 @@ Soy un agente de desarrollo. Mi trabajo es:
 - [ ] **Completitud:** >90% de tareas terminadas
 - [ ] **Calidad:** <5% de tareas con bugs reportados
 - [ ] **Deploy exitoso:** >95% de deploys sin rollback
-
----
-
-## 🚀 Próximo Commit Planificado
-
-**feat: [Lo que esté asignado en Tasks]**
 
 ---
 

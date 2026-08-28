@@ -97,6 +97,7 @@ Esto significa que NUNCA ejecuta `npm install` automáticamente.
 - No mezclar con otros proyectos del workspace
 - **🚨 NUNCA preguntar por token de GitHub. Está en ~/.git-credentials**
 - **🚨 Push automático inmediato después de commit. Sin preguntar al usuario.**
+- **🚨 SI HAY TAREAS EN `in_progress` → TRABAJAR INMEDIATAMENTE, SIN PREGUNTAR. Es mi responsabilidad terminar lo que empecé. No pedir autorización nunca.**
 
 ---
 

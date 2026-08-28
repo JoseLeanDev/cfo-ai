@@ -29,15 +29,17 @@ const formatNum = (value) => {
   return value.toLocaleString('es-GT')
 }
 
-const lineas = ['todas', 'Eléctrico', 'Plomería', 'Construcción', 'Pinturas', 'Herramientas', 'Jardinería']
+const lineas = ['todas', 'Ropa Hombre', 'Ropa Mujer', 'Calzado', 'Accesorios', 'Electrónica', 'Perfumería', 'Hogar', 'Niños']
 
 const coloresLinea = {
-  'Eléctrico': '#2563EB',
-  'Plomería': '#059669',
-  'Construcción': '#D97706',
-  'Pinturas': '#7C3AED',
-  'Herramientas': '#DC2626',
-  'Jardinería': '#0891B2',
+  'Ropa Hombre': '#2563EB',
+  'Ropa Mujer': '#EC4899',
+  'Calzado': '#D97706',
+  'Accesorios': '#7C3AED',
+  'Electrónica': '#0891B2',
+  'Perfumería': '#DC2626',
+  'Hogar': '#059669',
+  'Niños': '#F59E0B',
 }
 
 // ============================================

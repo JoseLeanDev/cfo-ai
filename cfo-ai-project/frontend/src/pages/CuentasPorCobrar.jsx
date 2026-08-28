@@ -27,16 +27,16 @@ export default function CuentasPorCobrar() {
   
   // Mock data extendido para la vista completa
   const todasLasCxC = [
-    { cliente: 'Corporación ABC S.A.', nit: '1234567-8', monto: 245000, dias: 15, estado: 'al_corriente', factura: 'FAC-001-256', vencimiento: '2026-04-15', contacto: 'Juan Pérez', telefono: '5555-1234' },
-    { cliente: 'Distribuidora XYZ', nit: '8765432-1', monto: 180000, dias: 5, estado: 'al_corriente', factura: 'FAC-001-257', vencimiento: '2026-04-10', contacto: 'María García', telefono: '5555-5678' },
-    { cliente: 'Industrias del Sur', nit: '5678901-2', monto: 320000, dias: 45, estado: '_30_dias', factura: 'FAC-001-245', vencimiento: '2026-03-15', contacto: 'Pedro López', telefono: '5555-9012' },
-    { cliente: 'Comercial Centroamericana', nit: '1098765-4', monto: 156000, dias: 32, estado: '_30_dias', factura: 'FAC-001-248', vencimiento: '2026-03-20', contacto: 'Ana Morales', telefono: '5555-3456' },
-    { cliente: 'Servicios Técnicos S.A.', nit: '3456789-0', monto: 89000, dias: 72, estado: '_60_dias', factura: 'FAC-001-230', vencimiento: '2026-02-25', contacto: 'Luis Hernández', telefono: '5555-7890' },
-    { cliente: 'Constructora El Progreso', nit: '6543210-9', monto: 445000, dias: 85, estado: '_60_dias', factura: 'FAC-001-220', vencimiento: '2026-02-10', contacto: 'Carlos Ruiz', telefono: '5555-2345' },
-    { cliente: 'Importadora del Norte', nit: '7890123-4', monto: 520000, dias: 95, estado: '_90_dias', factura: 'FAC-001-200', vencimiento: '2026-01-25', contacto: 'Sofia Martínez', telefono: '5555-6789' },
-    { cliente: 'Exportaciones Guatemala', nit: '4567890-1', monto: 275000, dias: 110, estado: '_90_dias', factura: 'FAC-001-190', vencimiento: '2026-01-10', contacto: 'Roberto Castillo', telefono: '5555-0123' },
-    { cliente: 'Ferretería La Unión', nit: '2345678-9', monto: 67000, dias: 8, estado: 'al_corriente', factura: 'FAC-001-260', vencimiento: '2026-04-12', contacto: 'Diana Flores', telefono: '5555-4567' },
-    { cliente: 'Agroindustrias del Valle', nit: '8901234-5', monto: 198000, dias: 22, estado: 'al_corriente', factura: 'FAC-001-255', vencimiento: '2026-04-05', contacto: 'Miguel Torres', telefono: '5555-8901' },
+    { cliente: 'Tienda Moda Express Zona 10', nit: '1234567-8', monto: 245000, dias: 15, estado: 'al_corriente', factura: 'FAC-001-256', vencimiento: '2026-04-15', contacto: 'Juan Pérez', telefono: '5555-1234' },
+    { cliente: 'Outlet Centroamérica', nit: '8765432-1', monto: 180000, dias: 5, estado: 'al_corriente', factura: 'FAC-001-257', vencimiento: '2026-04-10', contacto: 'María García', telefono: '5555-5678' },
+    { cliente: 'Fashion Plus Miraflores', nit: '5678901-2', monto: 320000, dias: 45, estado: '_30_dias', factura: 'FAC-001-245', vencimiento: '2026-03-15', contacto: 'Pedro López', telefono: '5555-9012' },
+    { cliente: 'Boutique El Paseo Cayalá', nit: '1098765-4', monto: 156000, dias: 32, estado: '_30_dias', factura: 'FAC-001-248', vencimiento: '2026-03-20', contacto: 'Ana Morales', telefono: '5555-3456' },
+    { cliente: 'Tienda Urbana Roosevelt', nit: '3456789-0', monto: 89000, dias: 72, estado: '_60_dias', factura: 'FAC-001-230', vencimiento: '2026-02-25', contacto: 'Luis Hernández', telefono: '5555-7890' },
+    { cliente: 'Style Center Xela', nit: '6543210-9', monto: 445000, dias: 85, estado: '_60_dias', factura: 'FAC-001-220', vencimiento: '2026-02-10', contacto: 'Carlos Ruiz', telefono: '5555-2345' },
+    { cliente: 'Moda Joven Quetzaltenango', nit: '7890123-4', monto: 520000, dias: 95, estado: '_90_dias', factura: 'FAC-001-200', vencimiento: '2026-01-25', contacto: 'Sofia Martínez', telefono: '5555-6789' },
+    { cliente: 'Fashion Mall Escuintla', nit: '4567890-1', monto: 275000, dias: 110, estado: '_90_dias', factura: 'FAC-001-190', vencimiento: '2026-01-10', contacto: 'Roberto Castillo', telefono: '5555-0123' },
+    { cliente: 'Boutique Premium Antigua', nit: '2345678-9', monto: 67000, dias: 8, estado: 'al_corriente', factura: 'FAC-001-260', vencimiento: '2026-04-12', contacto: 'Diana Flores', telefono: '5555-4567' },
+    { cliente: 'Kids World Guatemala', nit: '8901234-5', monto: 198000, dias: 22, estado: 'al_corriente', factura: 'FAC-001-255', vencimiento: '2026-04-05', contacto: 'Miguel Torres', telefono: '5555-8901' },
   ]
 
   const cxcFiltradas = todasLasCxC.filter(cxc => {

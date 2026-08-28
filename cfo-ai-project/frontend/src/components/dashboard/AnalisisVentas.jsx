@@ -22,14 +22,14 @@ const formatGTQ = (value) => {
 
 // Datos de ejemplo - En producción vendrían del API
 const productosData = [
-  { id: 1, nombre: 'Cable THW 12 AWG (Rollo 100m)', categoria: 'Eléctrico', unidadesVendidas: 2450, ingresos: 882000, margen: 32, tendencia: 'up', stock: 'ok' },
-  { id: 2, nombre: 'Tubo PVC 1/2" (Caja 20 unds)', categoria: 'Plomería', unidadesVendidas: 1890, ingresos: 567000, margen: 28, tendencia: 'up', stock: 'bajo' },
-  { id: 3, nombre: 'Interruptor Breaker 2P 30A', categoria: 'Eléctrico', unidadesVendidas: 1240, ingresos: 496000, margen: 35, tendencia: 'down', stock: 'ok' },
-  { id: 4, nombre: 'Pintura Latex Blanca 1 Galón', categoria: 'Pinturas', unidadesVendidas: 1100, ingresos: 385000, margen: 25, tendencia: 'up', stock: 'ok' },
-  { id: 5, nombre: 'Cemento Portland 42.5kg', categoria: 'Construcción', unidadesVendidas: 980, ingresos: 441000, margen: 18, tendencia: 'down', stock: 'crítico' },
-  { id: 6, nombre: 'Lámina Galvanizada 3x8 pies', categoria: 'Construcción', unidadesVendidas: 750, ingresos: 375000, margen: 22, tendencia: 'up', stock: 'ok' },
-  { id: 7, nombre: 'Foco LED 9W (Caja 10 unds)', categoria: 'Eléctrico', unidadesVendidas: 680, ingresos: 204000, margen: 40, tendencia: 'up', stock: 'ok' },
-  { id: 8, nombre: 'Llave de Paso 1/2"', categoria: 'Plomería', unidadesVendidas: 620, ingresos: 186000, margen: 30, tendencia: 'stable', stock: 'ok' },
+  { id: 1, nombre: 'Camisa Oxford Manga Larga Blanca', categoria: 'Ropa Hombre', unidadesVendidas: 2450, ingresos: 796250, margen: 45, tendencia: 'up', stock: 'ok' },
+  { id: 2, nombre: 'Blusa Elegante Seda Blanca', categoria: 'Ropa Mujer', unidadesVendidas: 1890, ingresos: 519750, margen: 48, tendencia: 'up', stock: 'bajo' },
+  { id: 3, nombre: 'Polo Piqué Algodón Negro', categoria: 'Ropa Hombre', unidadesVendidas: 1240, ingresos: 217000, margen: 46, tendencia: 'up', stock: 'ok' },
+  { id: 4, nombre: 'Labial Matte Rojo Intenso', categoria: 'Perfumería', unidadesVendidas: 1100, ingresos: 143000, margen: 50, tendencia: 'up', stock: 'ok' },
+  { id: 5, nombre: 'Jeans Slim Fit Azul Oscuro', categoria: 'Ropa Hombre', unidadesVendidas: 980, ingresos: 328300, margen: 45, tendencia: 'up', stock: 'crítico' },
+  { id: 6, nombre: 'Vestido Casual Floral', categoria: 'Ropa Mujer', unidadesVendidas: 750, ingresos: 243750, margen: 46, tendencia: 'up', stock: 'ok' },
+  { id: 7, nombre: 'Gafas de Sol UV400', categoria: 'Accesorios', unidadesVendidas: 680, ingresos: 142800, margen: 55, tendencia: 'up', stock: 'ok' },
+  { id: 8, nombre: 'Zapatilla Casual Mujer Blanca', categoria: 'Calzado', unidadesVendidas: 620, ingresos: 316200, margen: 42, tendencia: 'stable', stock: 'ok' },
 ]
 
 const tiendasData = [
@@ -41,26 +41,26 @@ const tiendasData = [
 ]
 
 const clientesData = [
-  { id: 1, nombre: 'Constructora Metropolitana', tipo: 'Empresarial', compras: 8500000, transacciones: 45, ticketPromedio: 188888, frecuencia: 'Semanal', tendencia: 'up' },
-  { id: 2, nombre: 'Grupo Industrial Centroamericano', tipo: 'Empresarial', compras: 6200000, transacciones: 38, ticketPromedio: 163157, frecuencia: 'Quincenal', tendencia: 'up' },
-  { id: 3, nombre: 'Inversiones del Norte', tipo: 'Empresarial', compras: 4100000, transacciones: 28, ticketPromedio: 146428, frecuencia: 'Mensual', tendencia: 'stable' },
-  { id: 4, nombre: 'Distribuidora del Sur', tipo: 'Distribuidor', compras: 2800000, transacciones: 52, ticketPromedio: 53846, frecuencia: 'Semanal', tendencia: 'down' },
-  { id: 5, nombre: 'Comercializadora Maya', tipo: 'Pyme', compras: 1900000, transacciones: 85, ticketPromedio: 22352, frecuencia: 'Semanal', tendencia: 'up' },
-  { id: 6, nombre: 'Importadora del Pacífico', tipo: 'Empresarial', compras: 1500000, transacciones: 18, ticketPromedio: 83333, frecuencia: 'Mensual', tendencia: 'stable' },
-  { id: 7, nombre: 'Ferretería La Unión', tipo: 'Pyme', compras: 1200000, transacciones: 120, ticketPromedio: 10000, frecuencia: '2x semana', tendencia: 'up' },
-  { id: 8, nombre: 'Suministros Industriales', tipo: 'Pyme', compras: 950000, transacciones: 42, ticketPromedio: 22619, frecuencia: 'Semanal', tendencia: 'down' },
+  { id: 1, nombre: 'Tienda Moda Express Zona 10', tipo: 'Tienda', compras: 8500000, transacciones: 145, ticketPromedio: 58621, frecuencia: 'Semanal', tendencia: 'up' },
+  { id: 2, nombre: 'Outlet Centroamérica', tipo: 'Tienda', compras: 6200000, transacciones: 118, ticketPromedio: 52542, frecuencia: 'Semanal', tendencia: 'up' },
+  { id: 3, nombre: 'Fashion Plus Miraflores', tipo: 'Tienda', compras: 4100000, transacciones: 92, ticketPromedio: 44565, frecuencia: 'Semanal', tendencia: 'stable' },
+  { id: 4, nombre: 'Boutique El Paseo Cayalá', tipo: 'Boutique', compras: 2800000, transacciones: 68, ticketPromedio: 41176, frecuencia: 'Semanal', tendencia: 'down' },
+  { id: 5, nombre: 'Tienda Urbana Roosevelt', tipo: 'Tienda', compras: 1900000, transacciones: 85, ticketPromedio: 22353, frecuencia: '2x semana', tendencia: 'up' },
+  { id: 6, nombre: 'Style Center Xela', tipo: 'Tienda', compras: 1500000, transacciones: 52, ticketPromedio: 28846, frecuencia: 'Semanal', tendencia: 'stable' },
+  { id: 7, nombre: 'Moda Joven Quetzaltenango', tipo: 'Tienda', compras: 1200000, transacciones: 42, ticketPromedio: 28571, frecuencia: '2x semana', tendencia: 'up' },
+  { id: 8, nombre: 'Fashion Mall Escuintla', tipo: 'Tienda', compras: 950000, transacciones: 38, ticketPromedio: 25000, frecuencia: 'Semanal', tendencia: 'down' },
 ]
 
 const insightsData = [
   {
     tipo: 'oportunidad',
-    titulo: 'Cable THW lidera ventas con 32% margen',
-    descripcion: 'El producto estrella genera Q882K mensuales. Considerar negociar volumen con proveedor para mejorar margen al 35%.',
+    titulo: 'Camisa Oxford lidera ventas con 45% margen',
+    descripcion: 'El producto estrella genera Q796K mensuales. Considerar negociar volumen con proveedor para mejorar margen al 48%.',
     icono: TrophyIcon
   },
   {
     tipo: 'alerta',
-    titulo: 'Stock crítico en Cemento Portland',
+    titulo: 'Stock crítico en Jeans Slim Fit',
     descripcion: 'Solo quedan 45 unidades. El producto tiene alta rotación (980/mes). Reordenar inmediatamente para evitar pérdida de ventas.',
     icono: CubeIcon
   },
@@ -72,7 +72,7 @@ const insightsData = [
   },
   {
     tipo: 'alerta',
-    titulo: 'Cliente "Distribuidora del Sur" en tendencia negativa',
+    titulo: 'Cliente "Boutique El Paseo Cayalá" en tendencia negativa',
     descripcion: 'Compras bajaron 15% vs mes anterior. Contactar para evaluar satisfacción y ofrecer incentivos de volumen.',
     icono: UsersIcon
   }
@@ -226,10 +226,14 @@ export default function AnalisisVentas() {
                 className="input text-xs py-1.5 w-auto"
               >
                 <option value="todas">Todas las categorías</option>
-                <option value="Eléctrico">Eléctrico</option>
-                <option value="Plomería">Plomería</option>
-                <option value="Construcción">Construcción</option>
-                <option value="Pinturas">Pinturas</option>
+                <option value="Ropa Hombre">Ropa Hombre</option>
+                <option value="Ropa Mujer">Ropa Mujer</option>
+                <option value="Calzado">Calzado</option>
+                <option value="Accesorios">Accesorios</option>
+                <option value="Electrónica">Electrónica</option>
+                <option value="Perfumería">Perfumería</option>
+                <option value="Hogar">Hogar</option>
+                <option value="Niños">Niños</option>
               </select>
             )}
             {activeTab === 'tiendas' && (
@@ -252,9 +256,9 @@ export default function AnalisisVentas() {
                 className="input text-xs py-1.5 w-auto"
               >
                 <option value="todos">Todos los tipos</option>
-                <option value="Empresarial">Empresarial</option>
-                <option value="Distribuidor">Distribuidor</option>
-                <option value="Pyme">Pyme</option>
+                <option value="Tienda">Tienda</option>
+                <option value="Boutique">Boutique</option>
+                <option value="Franquicia">Franquicia</option>
               </select>
             )}
           </div>
@@ -340,7 +344,7 @@ export default function AnalisisVentas() {
             
             {/* Resumen por categoría */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              {['Eléctrico', 'Plomería', 'Construcción', 'Pinturas'].map(cat => {
+              {['Ropa Hombre', 'Ropa Mujer', 'Calzado', 'Accesorios'].map(cat => {
                 const productosCat = productosData.filter(p => p.categoria === cat)
                 const totalCat = productosCat.reduce((sum, p) => sum + p.ingresos, 0)
                 const margenPromedio = productosCat.length > 0 
@@ -533,8 +537,8 @@ export default function AnalisisVentas() {
                       </td>
                       <td>
                         <span className={`badge text-[10px] ${
-                          cliente.tipo === 'Empresarial' ? 'badge-info' :
-                          cliente.tipo === 'Distribuidor' ? 'badge-success' :
+                          cliente.tipo === 'Tienda' ? 'badge-info' :
+                          cliente.tipo === 'Boutique' ? 'badge-success' :
                           'badge-neutral'
                         }`}>
                           {cliente.tipo}

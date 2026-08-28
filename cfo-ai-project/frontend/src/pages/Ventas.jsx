@@ -42,14 +42,14 @@ const ventasMensuales = [
 ]
 
 const ventasPorLinea = [
-  { id: 1, nombre: 'Línea A - Productos Estándar', categoria: 'Alimentaria', ventas: 1062500, meta: 1000000, margen: 45, unidades: 8500, tendencia: 'up' },
-  { id: 2, nombre: 'Línea B - Envases Premium Bebidas', categoria: 'Bebidas', ventas: 775000, meta: 800000, margen: 42, unidades: 6200, tendencia: 'stable' },
-  { id: 3, nombre: 'Laminaciones PVC/Aluminio', categoria: 'Logística', ventas: 292500, meta: 280000, margen: 52, unidades: 650, tendencia: 'up' },
-  { id: 4, nombre: 'Polietileno Soplado', categoria: 'Química', ventas: 272000, meta: 300000, margen: 38, unidades: 3200, tendencia: 'down' },
-  { id: 5, nombre: 'Blíster Farmacéutico', categoria: 'Farmacéutica', ventas: 168750, meta: 150000, margen: 48, unidades: 450, tendencia: 'up' },
-  { id: 6, nombre: 'Industrial Termoformado', categoria: 'Industrial', ventas: 180000, meta: 200000, margen: 28, unidades: 1200, tendencia: 'stable' },
-  { id: 7, nombre: 'Tapas y Válvulas', categoria: 'Farmacéutica', ventas: 162000, meta: 160000, margen: 40, unidades: 1800, tendencia: 'up' },
-  { id: 8, nombre: 'Línea B - Envases Premium Alimentaria', categoria: 'Alimentaria', ventas: 189000, meta: 180000, margen: 35, unidades: 4200, tendencia: 'down' },
+  { id: 1, nombre: 'Ropa Hombre', categoria: 'Ropa', ventas: 1862500, meta: 1700000, margen: 45, unidades: 5850, tendencia: 'up' },
+  { id: 2, nombre: 'Ropa Mujer', categoria: 'Ropa', ventas: 2250000, meta: 2100000, margen: 48, unidades: 9200, tendencia: 'up' },
+  { id: 3, nombre: 'Calzado', categoria: 'Calzado', ventas: 1292500, meta: 1200000, margen: 42, unidades: 2650, tendencia: 'up' },
+  { id: 4, nombre: 'Accesorios', categoria: 'Accesorios', ventas: 872000, meta: 850000, margen: 55, unidades: 6200, tendencia: 'up' },
+  { id: 5, nombre: 'Electrónica', categoria: 'Electrónica', ventas: 768750, meta: 800000, margen: 35, unidades: 4850, tendencia: 'stable' },
+  { id: 6, nombre: 'Perfumería', categoria: 'Perfumería', ventas: 680000, meta: 650000, margen: 50, unidades: 3200, tendencia: 'up' },
+  { id: 7, nombre: 'Hogar', categoria: 'Hogar', ventas: 462000, meta: 450000, margen: 40, unidades: 2800, tendencia: 'stable' },
+  { id: 8, nombre: 'Niños', categoria: 'Niños', ventas: 589000, meta: 550000, margen: 44, unidades: 4100, tendencia: 'up' },
 ]
 
 const vendedores = [
@@ -91,14 +91,14 @@ const vendedores = [
 ]
 
 const clientesTop = [
-  { id: 1, nombre: 'Cervecería Centroamericana', sector: 'Alimentaria', compras: 1850000, transacciones: 45, ticketPromedio: 41111, vendedor: 'Vendedor 1', tendencia: 'up' },
-  { id: 2, nombre: 'Cementos Progreso', sector: 'Alimentaria', compras: 1420000, transacciones: 38, ticketPromedio: 37368, vendedor: 'Vendedor 2', tendencia: 'up' },
-  { id: 3, nombre: 'Transportes Galgos', sector: 'Logística', compras: 980000, transacciones: 28, ticketPromedio: 35000, vendedor: 'Sofía Reyes', tendencia: 'stable' },
-  { id: 4, nombre: 'Genfar Guatemala', sector: 'Farmacéutica', compras: 720000, transacciones: 52, ticketPromedio: 13846, vendedor: 'Diana Flores', tendencia: 'up' },
-  { id: 5, nombre: 'Empresas Diana', sector: 'Química', compras: 450000, transacciones: 85, ticketPromedio: 5294, vendedor: 'Jorge Castañeda', tendencia: 'up' },
-  { id: 6, nombre: 'Lácteos del Sur', sector: 'Alimentaria', compras: 380000, transacciones: 18, ticketPromedio: 21111, vendedor: 'Vendedor 1', tendencia: 'stable' },
-  { id: 7, nombre: 'Agua Pura Vida', sector: 'Farmacéutica', compras: 290000, transacciones: 42, ticketPromedio: 6905, vendedor: 'Vendedor 2', tendencia: 'down' },
-  { id: 8, nombre: 'Helados Sarita', sector: 'Logística', compras: 195000, transacciones: 25, ticketPromedio: 7800, vendedor: 'Sofía Reyes', tendencia: 'up' },
+  { id: 1, nombre: 'Tienda Moda Express Zona 10', sector: 'Retail', compras: 1850000, transacciones: 145, ticketPromedio: 12759, vendedor: 'Vendedor 1', tendencia: 'up' },
+  { id: 2, nombre: 'Outlet Centroamérica', sector: 'Retail', compras: 1420000, transacciones: 118, ticketPromedio: 12034, vendedor: 'Vendedor 2', tendencia: 'up' },
+  { id: 3, nombre: 'Fashion Plus Miraflores', sector: 'Retail', compras: 980000, transacciones: 92, ticketPromedio: 10652, vendedor: 'Sofía Reyes', tendencia: 'stable' },
+  { id: 4, nombre: 'Boutique El Paseo Cayalá', sector: 'Retail', compras: 720000, transacciones: 68, ticketPromedio: 10588, vendedor: 'Diana Flores', tendencia: 'up' },
+  { id: 5, nombre: 'Tienda Urbana Roosevelt', sector: 'Retail', compras: 450000, transacciones: 55, ticketPromedio: 8182, vendedor: 'Jorge Castañeda', tendencia: 'up' },
+  { id: 6, nombre: 'Style Center Xela', sector: 'Retail', compras: 380000, transacciones: 42, ticketPromedio: 9048, vendedor: 'Vendedor 1', tendencia: 'stable' },
+  { id: 7, nombre: 'Moda Joven Quetzaltenango', sector: 'Retail', compras: 290000, transacciones: 35, ticketPromedio: 8286, vendedor: 'Vendedor 2', tendencia: 'down' },
+  { id: 8, nombre: 'Fashion Mall Escuintla', sector: 'Retail', compras: 195000, transacciones: 28, ticketPromedio: 6964, vendedor: 'Sofía Reyes', tendencia: 'up' },
 ]
 
 const pipelineVentas = [
@@ -109,10 +109,10 @@ const pipelineVentas = [
 ]
 
 const insightsVentas = [
-  { tipo: 'oportunidad', titulo: 'Cervecería Centroamericana +18% vs mes anterior', descripcion: 'El cliente más grande está creciendo. Propuesta: contrato anual con descuento escalonado por volumen.', icono: 'trophy' },
+  { tipo: 'oportunidad', titulo: 'Tienda Moda Express Zona 10 +18% vs mes anterior', descripcion: 'El cliente más grande está creciendo. Propuesta: contrato anual con descuento escalonado por volumen.', icono: 'trophy' },
   { tipo: 'alerta', titulo: 'Jorge Castañeda 10% bajo meta YTD', descripcion: 'Desempeño descendente 3 meses consecutivos. Evaluar coaching o redistribución de cartera.', icono: 'warning' },
-  { tipo: 'insight', titulo: 'Línea Farmacéutica tiene el mejor margen (48%)', descripcion: 'Blíster y Tapas generan 48% y 40% de margen. Priorizar leads en sector farmacéutico.', icono: 'lightbulb' },
-  { tipo: 'alerta', titulo: 'Polietileno Soplado 9% bajo meta', descripcion: 'Ventas bajaron Q28K vs meta. Competencia de precios reportada por Jorge Castañeda.', icono: 'warning' },
+  { tipo: 'insight', titulo: 'Accesorios tienen el mejor margen (55%)', descripcion: 'Bolsos, carteras y gafas generan 55% de margen. Priorizar exhibición en punto de venta.', icono: 'lightbulb' },
+  { tipo: 'alerta', titulo: 'Electrónica 4% bajo meta', descripcion: 'Ventas bajaron Q31K vs meta. Competencia de precios reportada por Jorge Castañeda.', icono: 'warning' },
 ]
 
 const COLORS_MARGEN = ['#10b981', '#f59e0b', '#f97316', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16']
@@ -175,7 +175,7 @@ export default function Ventas() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Ventas</h1>
-            <p className="text-sm text-[var(--text-muted)]">Empresa Industrial, S.A. — Análisis completo de ventas y desempeño comercial</p>
+            <p className="text-sm text-[var(--text-muted)]">Retail Fashion GT — Análisis completo de ventas y desempeño comercial</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -642,12 +642,13 @@ export default function Ventas() {
               className="input text-xs py-1.5 w-auto"
             >
               <option value="todas">Todas las categorías</option>
-              <option value="Alimentaria">Alimentaria</option>
-              <option value="Bebidas">Bebidas</option>
-              <option value="Química">Química</option>
-              <option value="Farmacéutica">Farmacéutica</option>
-              <option value="Logística">Logística</option>
-              <option value="Industrial">Industrial</option>
+              <option value="Ropa">Ropa</option>
+              <option value="Calzado">Calzado</option>
+              <option value="Accesorios">Accesorios</option>
+              <option value="Electrónica">Electrónica</option>
+              <option value="Perfumería">Perfumería</option>
+              <option value="Hogar">Hogar</option>
+              <option value="Niños">Niños</option>
             </select>
           </div>
 

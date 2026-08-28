@@ -138,14 +138,14 @@ const HISTORIAL_GASTOS = {
 
 const MESES_HISTORIAL = ['Ene 2026', 'Feb 2026', 'Mar 2026', 'Abr 2026', 'May 2026', 'Jun 2026']
 
-// Productos ofrecidos por Empresa Industrial
+// Productos ofrecidos por Retail Fashion GT
 const SERVICIOS = [
-  { id: 1, nombre: 'Producto Industrial A', descripcion: 'Componentes industriales estándar', precioBase: 2.50, unidad: 'unidad', volumenMensual: 85000, clientes: 14 },
-  { id: 2, nombre: 'Producto Industrial B', descripcion: 'Envases y contenedores industriales', precioBase: 1.80, unidad: 'unidad', volumenMensual: 120000, clientes: 8 },
-  { id: 3, nombre: 'Producto Industrial C', descripcion: 'Materiales de seguridad industrial', precioBase: 0.45, unidad: 'unidad', volumenMensual: 650000, clientes: 25 },
-  { id: 4, nombre: 'Producto Industrial D', descripcion: 'Materiales laminados industriales', precioBase: 8.50, unidad: 'metro', volumenMensual: 32000, clientes: 12 },
-  { id: 5, nombre: 'Producto Industrial E', descripcion: 'Contenedores industriales soplados', precioBase: 4.20, unidad: 'unidad', volumenMensual: 42000, clientes: 6 },
-  { id: 6, nombre: 'Producto Industrial F', descripcion: 'Equipo industrial y maquinaria', precioBase: 25000.00, unidad: 'equipo', volumenMensual: 3, clientes: 5 },
+  { id: 1, nombre: 'Ropa Hombre', descripcion: 'Camisas, pantalones, polos, jeans, suéteres', precioBase: 285, unidad: 'unidad', volumenMensual: 5850, clientes: 14 },
+  { id: 2, nombre: 'Ropa Mujer', descripcion: 'Blusas, vestidos, faldas, tops, leggings', precioBase: 245, unidad: 'unidad', volumenMensual: 9200, clientes: 8 },
+  { id: 3, nombre: 'Calzado', descripcion: 'Tenis, zapatillas, sandalias, zapatos formales', precioBase: 485, unidad: 'unidad', volumenMensual: 2650, clientes: 25 },
+  { id: 4, nombre: 'Accesorios', descripcion: 'Bolsos, carteras, gafas, cinturones, joyería', precioBase: 195, unidad: 'unidad', volumenMensual: 6200, clientes: 12 },
+  { id: 5, nombre: 'Electrónica', descripcion: 'Audífonos, cargadores, cables, smartwatches', precioBase: 145, unidad: 'unidad', volumenMensual: 4850, clientes: 6 },
+  { id: 6, nombre: 'Perfumería', descripcion: 'Perfumes, colonias, cremas, maquillaje', precioBase: 310, unidad: 'unidad', volumenMensual: 3200, clientes: 5 },
 ]
 
 // ============================================
@@ -282,7 +282,7 @@ export default function GastosOperativos() {
           <div>
             <h1 className="text-2xl font-semibold">Gastos Operativos</h1>
             <p className="text-sm text-[var(--text-muted)]">
-              Análisis de costos · Proyección · Control de gastos de Empresa Industrial
+              Análisis de costos · Proyección · Control de gastos de Retail Fashion GT
             </p>
           </div>
         </div>
@@ -678,7 +678,7 @@ export default function GastosOperativos() {
       <div className="card">
         <div className="section-header">
           <InformationCircleIcon className="w-5 h-5 text-[var(--accent-blue)]" />
-          <h2 className="font-semibold">Productos Ofrecidos por Empresa Industrial</h2>
+          <h2 className="font-semibold">Productos Ofrecidos por Retail Fashion GT</h2>
           <span className="ml-auto text-xs text-[var(--text-muted)]">
             Ingresos por línea de servicio
           </span>

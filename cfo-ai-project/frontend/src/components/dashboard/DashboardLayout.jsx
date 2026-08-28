@@ -29,7 +29,6 @@ const navigation = [
   { name: 'Gastos Operativos', href: '/gastos-operativos', icon: CalculatorIcon },
   { name: 'Compras', href: '/compras', icon: ShoppingCartIcon },
   { name: 'Tesorería', href: '/tesoreria', icon: BanknotesIcon },
-  { name: 'Contabilidad', href: '/contabilidad', icon: BookOpenIcon },
   { name: 'Análisis', href: '/analisis', icon: ChartBarIcon },
   { name: 'Márgenes', href: '/margenes', icon: ArrowTrendingDownIcon },
   { name: 'Reportes', href: '/reportes', icon: DocumentTextIcon },

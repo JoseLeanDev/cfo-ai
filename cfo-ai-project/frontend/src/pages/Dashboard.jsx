@@ -382,7 +382,7 @@ export default function Dashboard() {
                 <div className="w-7 h-7 rounded bg-amber-500 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">NI</div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium">Inventario bajo en 3 tiendas</p>
-                  <p className="text-[10px] text-[var(--text-muted)]">Stock < mínimo en Casa & Hogar</p>
+                  <p className="text-[10px] text-[var(--text-muted)]">Stock menor al mínimo en Casa y Hogar</p>
                 </div>
               </div>
             </div>

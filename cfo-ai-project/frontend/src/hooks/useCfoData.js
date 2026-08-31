@@ -84,11 +84,20 @@ export const useRatiosFinancieros = (options = {}) => {
   )
 }
 
-export const useMargenes = () => {
-  return useQuery('margenes', endpoints.margenes.resumen, {
-    refetchInterval: 5 * 60 * 1000,
-    staleTime: 2 * 60 * 1000,
-  })
+// ============================================
+// MÁRGENES - Con soporte para filtros multi-dimensión
+// ============================================
+
+export const useMargenes = (filters = {}) => {
+  const { marca_id, tienda_id, pais_id } = filters
+  return useQuery(
+    ['margenes', marca_id, tienda_id, pais_id],
+    () => endpoints.margenes.resumen(filters),
+    {
+      refetchInterval: 5 * 60 * 1000,
+      staleTime: 2 * 60 * 1000,
+    }
+  )
 }
 
 export const useMargenProductoDetalle = (id) => {
@@ -98,23 +107,86 @@ export const useMargenProductoDetalle = (id) => {
   )
 }
 
-export const useMargenVendedores = () => {
-  return useQuery('margen-vendedores', endpoints.margenes.vendedores, {
-    refetchInterval: 5 * 60 * 1000,
-    staleTime: 2 * 60 * 1000,
-  })
+export const useMargenVendedores = (filters = {}) => {
+  const { marca_id, tienda_id, pais_id } = filters
+  return useQuery(
+    ['margen-vendedores', marca_id, tienda_id, pais_id],
+    () => endpoints.margenes.vendedores(filters),
+    {
+      refetchInterval: 5 * 60 * 1000,
+      staleTime: 2 * 60 * 1000,
+    }
+  )
 }
 
-export const useMargenClientes = () => {
-  return useQuery('margen-clientes', endpoints.margenes.clientes, {
-    refetchInterval: 5 * 60 * 1000,
-    staleTime: 2 * 60 * 1000,
-  })
+export const useMargenClientes = (filters = {}) => {
+  const { marca_id, tienda_id, pais_id } = filters
+  return useQuery(
+    ['margen-clientes', marca_id, tienda_id, pais_id],
+    () => endpoints.margenes.clientes(filters),
+    {
+      refetchInterval: 5 * 60 * 1000,
+      staleTime: 2 * 60 * 1000,
+    }
+  )
 }
 
-export const useMargenLineas = () => {
-  return useQuery('margen-lineas', endpoints.margenes.lineas, {
-    refetchInterval: 5 * 60 * 1000,
-    staleTime: 2 * 60 * 1000,
-  })
+export const useMargenLineas = (filters = {}) => {
+  const { marca_id, tienda_id, pais_id } = filters
+  return useQuery(
+    ['margen-lineas', marca_id, tienda_id, pais_id],
+    () => endpoints.margenes.lineas(filters),
+    {
+      refetchInterval: 5 * 60 * 1000,
+      staleTime: 2 * 60 * 1000,
+    }
+  )
+}
+
+// Nuevos hooks para multi-marca
+export const useMargenMarcas = (filters = {}) => {
+  const { tienda_id, pais_id } = filters
+  return useQuery(
+    ['margen-marcas', tienda_id, pais_id],
+    () => endpoints.margenes.marcas(filters),
+    {
+      refetchInterval: 5 * 60 * 1000,
+      staleTime: 2 * 60 * 1000,
+    }
+  )
+}
+
+export const useMargenTiendas = (filters = {}) => {
+  const { marca_id, pais_id } = filters
+  return useQuery(
+    ['margen-tiendas', marca_id, pais_id],
+    () => endpoints.margenes.tiendas(filters),
+    {
+      refetchInterval: 5 * 60 * 1000,
+      staleTime: 2 * 60 * 1000,
+    }
+  )
+}
+
+export const useMargenPaises = (filters = {}) => {
+  const { marca_id, tienda_id } = filters
+  return useQuery(
+    ['margen-paises', marca_id, tienda_id],
+    () => endpoints.margenes.paises(filters),
+    {
+      refetchInterval: 5 * 60 * 1000,
+      staleTime: 2 * 60 * 1000,
+    }
+  )
+}
+
+export const useMargenCatalogos = () => {
+  return useQuery(
+    'margen-catalogos',
+    endpoints.margenes.catalogos,
+    {
+      refetchInterval: 30 * 60 * 1000, // 30 minutos, no cambian mucho
+      staleTime: 15 * 60 * 1000,
+    }
+  )
 }

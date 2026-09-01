@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react'
 import { Link } from 'react-router-dom'
-import { useDashboard, useInsights, useWorkingCapital } from '../hooks/useCfoData'
+import { useDashboard, useInsights, useWorkingCapital, useMargenCatalogos, useMargenPaises } from '../hooks/useCfoData'
 import PageInsights from '../components/agents/PageInsights'
 import RunwayCalculator from '../components/dashboard/RunwayCalculator'
 import {
@@ -18,7 +18,8 @@ import {
   ClockIcon,
   ChartBarIcon,
   ShoppingBagIcon,
-  TruckIcon,
+  GlobeAltIcon,
+  MapPinIcon,
   ChevronRightIcon,
   SparklesIcon,
   CpuChipIcon,
@@ -26,124 +27,58 @@ import {
   FireIcon,
   WalletIcon,
   ReceiptRefundIcon,
-  DocumentCurrencyDollarIcon,
-  ArrowTrendingUpIcon as TrendIcon
+  ArrowTrendingUpIcon as TrendIcon,
+  BuildingStorefrontIcon,
 } from '@heroicons/react/24/outline'
-import { demoClientesConcentracion } from '../data/demoData'
 
 const formatGTQ = (value) => {
   if (!value && value !== 0) return 'Q 0'
-  return 'Q ' + value.toLocaleString('es-GT')
+  return 'Q ' + Math.round(value).toLocaleString('es-GT')
 }
 
-// ========== DATOS DEMO ==========
-const ventasPorLinea = [
-  { nombre: 'Línea A', ventas: 1062500, presupuesto: 1000000, margen: 45 },
-  { nombre: 'Línea B', ventas: 775000, presupuesto: 800000, margen: 42 },
-  { nombre: 'Línea C', ventas: 292500, presupuesto: 280000, margen: 52 },
-  { nombre: 'Línea D', ventas: 272000, presupuesto: 300000, margen: 38 },
-  { nombre: 'Línea E', ventas: 168750, presupuesto: 150000, margen: 48 },
-  { nombre: 'Línea F', ventas: 180000, presupuesto: 200000, margen: 28 },
+const COLORS = ['#10b981', '#f59e0b', '#f97316', '#ef4444', '#8b5cf6', '#06b6d4']
+
+// Datos demo por país para el dashboard corporativo
+const ventasPorPais = [
+  { pais: 'Guatemala', codigo: 'GT', ventas: 2850000, tiendas: 6, moneda: 'GTQ' },
+  { pais: 'El Salvador', codigo: 'SV', ventas: 1950000, tiendas: 3, moneda: 'USD' },
+  { pais: 'Honduras', codigo: 'HN', ventas: 1650000, tiendas: 3, moneda: 'HNL' },
+  { pais: 'Costa Rica', codigo: 'CR', ventas: 2100000, tiendas: 3, moneda: 'CRC' },
+  { pais: 'Nicaragua', codigo: 'NI', ventas: 980000, tiendas: 2, moneda: 'NIO' },
 ]
 
-const vendedores = [
-  { nombre: 'Carlos Méndez', ventas: 1850000, meta: 1700000, clientes: 12, ticket: 41111, cobranza: 98 },
-  { nombre: 'Ana López', ventas: 1420000, meta: 1400000, clientes: 10, ticket: 37368, cobranza: 95 },
-  { nombre: 'Sofía Reyes', ventas: 980000, meta: 1100000, clientes: 8, ticket: 35000, cobranza: 92 },
-  { nombre: 'Jorge Castañeda', ventas: 720000, meta: 800000, clientes: 6, ticket: 28000, cobranza: 88 },
+const ventasPorMarca = [
+  { marca: 'Moda Urbana', segmento: 'masivo', ventas: 3850000, tiendas: 6, color: '#001639' },
+  { marca: 'SportLife', segmento: 'premium', ventas: 2100000, tiendas: 4, color: '#10b981' },
+  { marca: 'Casa & Hogar', segmento: 'masivo', ventas: 1650000, tiendas: 3, color: '#f59e0b' },
+  { marca: 'TechZone', segmento: 'premium', ventas: 1950000, tiendas: 4, color: '#8b5cf6' },
 ]
 
-const cxcAging = [
-  { rango: 'Al Corriente', monto: 1850000, color: '#10b981' },
-  { rango: '1-30 días', monto: 420000, color: '#f59e0b' },
-  { rango: '31-60 días', monto: 180000, color: '#f97316' },
-  { rango: '60+ días', monto: 85000, color: '#ef4444' },
+const tiendasTop = [
+  { nombre: 'Moda Urbana Oakland', pais: 'Guatemala', marca: 'Moda Urbana', ventas: 520000, margen: 42 },
+  { nombre: 'SportLife Paseo Cayalá', pais: 'Guatemala', marca: 'SportLife', ventas: 480000, margen: 45 },
+  { nombre: 'TechZone Galerías', pais: 'Guatemala', marca: 'TechZone', ventas: 410000, margen: 38 },
+  { nombre: 'Moda Urbana Avenida Escazú', pais: 'Costa Rica', marca: 'Moda Urbana', ventas: 395000, margen: 41 },
+  { nombre: 'Casa & Hogar Pradera', pais: 'Guatemala', marca: 'Casa & Hogar', ventas: 380000, margen: 35 },
 ]
 
-const cxpProximas = [
-  { proveedor: 'Proveedor A', monto: 285000, vence: '2 días', tipo: 'Materia Prima' },
-  { proveedor: 'Proveedor B', monto: 145000, vence: '5 días', tipo: 'Mantenimiento' },
-  { proveedor: 'Proveedor C', monto: 95000, vence: '7 días', tipo: 'Logística' },
-  { proveedor: 'Proveedor D', monto: 68000, vence: '10 días', tipo: 'Servicios' },
+const tendenciaMensual = [
+  { mes: 'Ene', gt: 420000, sv: 280000, hn: 240000, cr: 310000, ni: 145000 },
+  { mes: 'Feb', gt: 385000, sv: 265000, hn: 220000, cr: 295000, ni: 130000 },
+  { mes: 'Mar', gt: 450000, sv: 310000, hn: 260000, cr: 340000, ni: 155000 },
+  { mes: 'Abr', gt: 510000, sv: 350000, hn: 295000, cr: 385000, ni: 180000 },
+  { mes: 'May', gt: 480000, sv: 330000, hn: 275000, cr: 360000, ni: 165000 },
+  { mes: 'Jun', gt: 520000, sv: 360000, hn: 300000, cr: 395000, ni: 190000 },
+  { mes: 'Jul', gt: 535000, sv: 370000, hn: 310000, cr: 410000, ni: 195000 },
 ]
-
-const tendenciaVentas = [
-  { mes: 'Ene', ventas: 4200000, presupuesto: 4000000 },
-  { mes: 'Feb', ventas: 3850000, presupuesto: 4000000 },
-  { mes: 'Mar', ventas: 4500000, presupuesto: 4200000 },
-  { mes: 'Abr', ventas: 5100000, presupuesto: 4500000 },
-  { mes: 'May', ventas: 4800000, presupuesto: 4600000 },
-  { mes: 'Jun', ventas: 5200000, presupuesto: 4800000 },
-  { mes: 'Jul', ventas: 5358000, presupuesto: 5000000 },
-]
-
-const produccionPipeline = [
-  { etapa: 'Órdenes Nuevas', cantidad: 45, monto: 2850000 },
-  { etapa: 'En Producción', cantidad: 32, monto: 1950000 },
-  { etapa: 'Envasado/Empaque', cantidad: 18, monto: 1120000 },
-  { etapa: 'Listo para Entrega', cantidad: 12, monto: 780000 },
-]
-
-const COLORS = ['#10b981', '#f59e0b', '#f97316', '#ef4444']
-
-// ─── Análisis de concentración inline ───
-function ConcentracionInline({ clientes }) {
-  const analisis = useMemo(() => {
-    if (!clientes.length) return null
-    const sorted = [...clientes].sort((a, b) => b.ingresos - a.ingresos)
-    const total = sorted.reduce((s, c) => s + c.ingresos, 0)
-    const mayor = sorted[0]
-    const top3 = sorted.slice(0, 3)
-    const top3Pct = top3.reduce((s, c) => s + (c.ingresos / total) * 100, 0)
-    const mayorPct = (mayor.ingresos / total) * 100
-    const riesgo = mayorPct >= 30 || top3Pct >= 60 ? 'extremo' : mayorPct >= 20 || top3Pct >= 50 ? 'alto' : 'moderado'
-    return { mayor, mayorPct, top3Pct, riesgo, lista: sorted.slice(0, 6) }
-  }, [clientes])
-
-  if (!analisis) return null
-  const { mayor, mayorPct, top3Pct, riesgo, lista } = analisis
-  const esRiesgo = riesgo === 'extremo' || riesgo === 'alto'
-
-  return (
-    <div className={`p-3 rounded-lg border-l-4 ${esRiesgo ? 'bg-red-50 border-l-red-500' : 'bg-amber-50 border-l-amber-500'}`}>
-      <div className="flex items-center gap-2 mb-2">
-        <ExclamationTriangleIcon className={`w-4 h-4 ${esRiesgo ? 'text-red-600' : 'text-amber-600'}`} />
-        <span className={`text-xs font-bold uppercase ${esRiesgo ? 'text-red-700' : 'text-amber-700'}`}>
-          {esRiesgo ? 'Riesgo Concentración' : 'Atención'}
-        </span>
-        <span className="ml-auto text-[10px] text-[var(--text-muted)]">Top 3 = {top3Pct.toFixed(1)}%</span>
-      </div>
-      <p className="text-xs text-[var(--text-secondary)] mb-2">
-        <strong>{mayor.nombre}</strong> representa el <strong>{mayorPct.toFixed(1)}%</strong> de ingresos
-      </p>
-      <div className="space-y-1">
-        {lista.map((c, i) => {
-          const pct = (c.ingresos / lista.reduce((s, x) => s + x.ingresos, 0) * 100 * (lista.reduce((s, x) => s + x.ingresos, 0) / clientes.reduce((s, x) => s + x.ingresos, 0))) // recalcular % real
-          const realPct = (c.ingresos / clientes.reduce((s, x) => s + x.ingresos, 0)) * 100
-          return (
-            <div key={i} className="flex items-center gap-2">
-              <span className="text-[10px] text-[var(--text-muted)] w-4">{i + 1}</span>
-              <span className="text-xs flex-1 truncate">{c.nombre}</span>
-              <div className="w-20 h-1.5 bg-white rounded-full overflow-hidden">
-                <div className={`h-full rounded-full ${realPct >= 20 ? 'bg-red-400' : realPct >= 10 ? 'bg-amber-400' : 'bg-emerald-400'}`}
-                  style={{ width: `${Math.min(realPct, 100)}%` }} />
-              </div>
-              <span className={`text-xs font-medium w-10 text-right ${realPct >= 20 ? 'text-red-600' : ''}`}>{realPct.toFixed(1)}%</span>
-            </div>
-          )
-        })}
-      </div>
-      <Link to="/ventas" className="text-[10px] text-[var(--accent-blue)] hover:underline mt-2 inline-block">
-        Ver análisis completo →
-      </Link>
-    </div>
-  )
-}
 
 export default function Dashboard() {
   const { data: dashboardData, isLoading } = useDashboard()
   const { data: insightsData } = useInsights('dashboard')
   const { data: wcData, isLoading: isLoadingWC } = useWorkingCapital()
+  const { data: catalogosData } = useMargenCatalogos()
+  const { data: paisesData } = useMargenPaises()
+  
   const [animated, setAnimated] = useState(false)
   const [animatedValues, setAnimatedValues] = useState({})
 
@@ -153,20 +88,19 @@ export default function Dashboard() {
   const operacion = dashboardData?.data?.operacion || {}
   const alertas = dashboardData?.data?.alertas || []
   const insights = insightsData?.insights || []
+  
+  const paisesReales = paisesData?.data || []
+  const catalogos = catalogosData?.data || {}
 
   const workingCapital = (cxc.total || 0) - (cxp.total || 0)
   const ccc = wcData?.data?.metricas_principales?.c2c || {}
   const cccValor = ccc.valor || 0
   const cccBenchmark = ccc.benchmark || 33
 
-  const totalVentasMes = ventasPorLinea.reduce((s, l) => s + l.ventas, 0)
-  const totalPresupuesto = ventasPorLinea.reduce((s, l) => s + l.presupuesto, 0)
-  const cumplimientoVentas = Math.round((totalVentasMes / totalPresupuesto) * 100)
-  const margenPromedio = Math.round(ventasPorLinea.reduce((s, l) => s + l.margen, 0) / ventasPorLinea.length)
-  const totalCxC = cxc.total || 2535000
-  const totalCxP = cxp.total || 1850000
-  const totalVencido = cxcAging.slice(1).reduce((s, a) => s + a.monto, 0)
-  const pctVencido = Math.round((totalVencido / totalCxC) * 100)
+  const totalVentasMes = ventasPorPais.reduce((s, p) => s + p.ventas, 0)
+  const totalTiendas = ventasPorPais.reduce((s, p) => s + p.tiendas, 0)
+  const totalMarcas = ventasPorMarca.length
+  const totalPaises = ventasPorPais.length
 
   const alertasCFO = alertas.length > 0
     ? alertas.slice(0, 5).map(a => ({
@@ -174,26 +108,12 @@ export default function Dashboard() {
         mensaje: a.mensaje || a.titulo || 'Alerta',
       }))
     : [
-        { tipo: 'critico', mensaje: 'CxP Proveedor A vence en 2 días (Q285K)' },
-        { tipo: 'warning', mensaje: 'Cartera 60+ días creció 15% (Q85K)' },
-        { tipo: 'info', mensaje: 'Ventas Julio superan presupuesto en 7.2%' },
+        { tipo: 'critico', mensaje: 'Tienda TechZone Metrocentro SV: margen cayó 8 pts este mes' },
+        { tipo: 'warning', mensaje: 'Inventario bajo en 3 tiendas de Nicaragua' },
+        { tipo: 'info', mensaje: 'Ventas Julio: Guatemala +7.2% vs mismo mes año anterior' },
       ]
 
   useEffect(() => { setTimeout(() => setAnimated(true), 100) }, [])
-
-  useEffect(() => {
-    const ventasValue = operacion.ventas_mes || operacion.avg_ingresos_mes || totalVentasMes || 0
-    if (ventasValue) {
-      const duration = 800, steps = 16, increment = ventasValue / steps
-      let current = 0
-      const timer = setInterval(() => {
-        current += increment
-        if (current >= ventasValue) { current = ventasValue; clearInterval(timer) }
-        setAnimatedValues(prev => ({ ...prev, ventas: Math.floor(current) }))
-      }, duration / steps)
-      return () => clearInterval(timer)
-    }
-  }, [operacion.ventas_mes, operacion.avg_ingresos_mes])
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
@@ -215,13 +135,26 @@ export default function Dashboard() {
     return <CheckCircleIcon className="w-3.5 h-3.5 text-blue-600 flex-shrink-0" />
   }
 
+  // Preparar datos reales si existen
+  const paisesChartData = paisesReales.length > 0 ? paisesReales.map(p => ({
+    name: p.nombre,
+    ventas: parseFloat(p.total_ventas_q) || 0,
+    margen: parseFloat(p.margen_pct) || 0,
+    tiendas: parseInt(p.num_tiendas) || 0,
+  })) : ventasPorPais.map(p => ({
+    name: p.pais,
+    ventas: p.ventas,
+    margen: 40 + Math.random() * 10,
+    tiendas: p.tiendas,
+  }))
+
   return (
     <div className="space-y-4">
       {/* ═══ HEADER ═══ */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
         <div>
-          <h1 className="text-xl font-bold">Dashboard Ejecutivo</h1>
-          <p className="text-xs text-[var(--text-muted)]">Vista general del negocio</p>
+          <h1 className="text-xl font-bold">Dashboard Corporativo</h1>
+          <p className="text-xs text-[var(--text-muted)]">Grupo Retail Centroamérica, S.A. — {totalTiendas} tiendas en {totalPaises} países</p>
         </div>
         <div className="flex items-center gap-2">
           {alertasCFO.filter(a => a.tipo === 'critico').length > 0 && (
@@ -236,24 +169,36 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* ═══ KPIs ═══ */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* ═══ KPIs CORPORATIVOS ═══ */}
+      <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
         <div className="kpi-card card-hover p-3">
           <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] text-[var(--text-muted)]">Ventas del Mes</span>
+            <span className="text-[11px] text-[var(--text-muted)]">Ventas Mes</span>
             <TrendIcon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
           </div>
-          <div className="text-lg font-bold">
-            {isLoading ? '---' : formatGTQ(animatedValues.ventas || operacion.ventas_mes || operacion.avg_ingresos_mes || totalVentasMes)}
-          </div>
+          <div className="text-lg font-bold">{formatGTQ(totalVentasMes)}</div>
           <div className="flex items-center gap-1 mt-0.5">
-            {cumplimientoVentas >= 100
-              ? <ArrowTrendingUpIcon className="w-3 h-3 text-emerald-500" />
-              : <ArrowTrendingDownIcon className="w-3 h-3 text-amber-500" />}
-            <span className={`text-[11px] font-medium ${cumplimientoVentas >= 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
-              {cumplimientoVentas}% meta
-            </span>
+            <ArrowTrendingUpIcon className="w-3 h-3 text-emerald-500" />
+            <span className="text-[11px] font-medium text-emerald-600">+4.2% vs LY</span>
           </div>
+        </div>
+
+        <div className="kpi-card card-hover p-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] text-[var(--text-muted)]">Tiendas</span>
+            <BuildingStorefrontIcon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+          </div>
+          <div className="text-lg font-bold">{totalTiendas}</div>
+          <span className="text-[11px] text-[var(--text-muted)]">{totalMarcas} marcas</span>
+        </div>
+
+        <div className="kpi-card card-hover p-3">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[11px] text-[var(--text-muted)]">Países</span>
+            <GlobeAltIcon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
+          </div>
+          <div className="text-lg font-bold">{totalPaises}</div>
+          <span className="text-[11px] text-[var(--text-muted)]">CA + GTQ/USD/HNL/CRC/NIO</span>
         </div>
 
         <div className="kpi-card card-hover p-3">
@@ -262,7 +207,7 @@ export default function Dashboard() {
             <WalletIcon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
           </div>
           <div className="text-lg font-bold">{isLoading ? '---' : formatGTQ(tesoreria.total_gtq || 1250000)}</div>
-          <span className="text-[11px] text-[var(--text-muted)]">Disponible bancos</span>
+          <span className="text-[11px] text-[var(--text-muted)]">Disponible consolidado</span>
         </div>
 
         <div className="kpi-card card-hover p-3">
@@ -275,20 +220,9 @@ export default function Dashboard() {
             {cccValor > cccBenchmark * 1.5 ? 'Crítico' : cccValor > cccBenchmark ? 'Atención' : 'Óptimo'} vs {cccBenchmark}d
           </span>
         </div>
-
-        <div className="kpi-card card-hover p-3">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[11px] text-[var(--text-muted)]">Working Capital</span>
-            <ReceiptRefundIcon className="w-3.5 h-3.5 text-[var(--text-muted)]" />
-          </div>
-          <div className={`text-lg font-bold ${workingCapital < 0 ? 'text-red-500' : ''}`}>
-            {isLoading ? '---' : formatGTQ(workingCapital)}
-          </div>
-          <span className="text-[11px] text-[var(--text-muted)]">CxC − CxP</span>
-        </div>
       </div>
 
-      {/* ═══ INSIGHTS DE IA (2do LUGAR - 2 COLS) ═══ */}
+      {/* ═══ INSIGHTS DE IA ═══ */}
       <PageInsights context="dashboard" maxInsights={4} title="Insights Inteligentes" />
 
       {/* ═══ ALERTAS ═══ */}
@@ -307,195 +241,211 @@ export default function Dashboard() {
         </div>
       )}
 
-      {/* ═══ SECCIÓN 1: TENDENCIA (ANCHO COMPLETO) ═══ */}
+      {/* ═══ SECCIÓN 1: VENTAS POR PAÍS (ANCHO COMPLETO) ═══ */}
       <div className="card">
         <div className="flex items-center justify-between p-4 pb-2">
           <div className="flex items-center gap-2">
-            <ChartBarIcon className="w-4 h-4 text-[var(--accent-blue)]" />
-            <h2 className="font-semibold text-sm">Tendencia Ventas vs Presupuesto</h2>
+            <GlobeAltIcon className="w-4 h-4 text-[var(--accent-blue)]" />
+            <h2 className="font-semibold text-sm">Ventas por País</h2>
           </div>
-          <span className="text-[11px] text-[var(--text-muted)]">7 meses YTD</span>
+          <Link to="/margenes" className="text-[11px] text-[var(--accent-blue)] hover:underline">Ver márgenes →</Link>
         </div>
         <div className="px-4 pb-4">
           <div className="h-56">
             <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={tendenciaVentas} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#001639" stopOpacity={0.12}/>
-                    <stop offset="95%" stopColor="#001639" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
+              <AreaChart data={tendenciaMensual} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="mes" tick={{ fontSize: 11, fill: '#6b7280' }} />
-                <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000000).toFixed(1)}M`} />
+                <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
                 <Tooltip content={<CustomTooltip />} />
                 <Legend wrapperStyle={{ fontSize: 11 }} />
-                <Area type="monotone" dataKey="ventas" name="Ventas" stroke="#001639" strokeWidth={2} fill="url(#colorVentas)" />
-                <Area type="monotone" dataKey="presupuesto" name="Presupuesto" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="5 5" fill="none" />
+                <Area type="monotone" dataKey="gt" name="Guatemala" stackId="1" stroke="#001639" fill="#001639" fillOpacity={0.6} />
+                <Area type="monotone" dataKey="cr" name="Costa Rica" stackId="1" stroke="#10b981" fill="#10b981" fillOpacity={0.6} />
+                <Area type="monotone" dataKey="sv" name="El Salvador" stackId="1" stroke="#f59e0b" fill="#f59e0b" fillOpacity={0.6} />
+                <Area type="monotone" dataKey="hn" name="Honduras" stackId="1" stroke="#8b5cf6" fill="#8b5cf6" fillOpacity={0.6} />
+                <Area type="monotone" dataKey="ni" name="Nicaragua" stackId="1" stroke="#06b6d4" fill="#06b6d4" fillOpacity={0.6} />
               </AreaChart>
             </ResponsiveContainer>
           </div>
-          <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-[var(--border-default)]">
-            <div className="text-center">
-              <p className="text-[10px] text-[var(--text-muted)] uppercase">Acumulado YTD</p>
-              <p className="text-sm font-bold">Q30.1M</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] text-[var(--text-muted)] uppercase">vs Presupuesto</p>
-              <p className="text-sm font-bold text-emerald-600">+4.2%</p>
-            </div>
-            <div className="text-center">
-              <p className="text-[10px] text-[var(--text-muted)] uppercase">Meses +Meta</p>
-              <p className="text-sm font-bold">5/7</p>
-            </div>
+          <div className="grid grid-cols-5 gap-3 mt-3 pt-3 border-t border-[var(--border-default)]">
+            {paisesChartData.map((p, i) => (
+              <div key={i} className="text-center">
+                <p className="text-[10px] text-[var(--text-muted)] uppercase">{p.name}</p>
+                <p className="text-sm font-bold">{formatGTQ(p.ventas)}</p>
+                <p className="text-[10px] text-[var(--text-muted)]">{p.tiendas} tiendas</p>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* ═══ SECCIÓN 2: VENTAS + VENDEDORES (2 COLS) ═══ */}
+      {/* ═══ SECCIÓN 2: VENTAS POR MARCA + TOP TIENDAS (2 COLS) ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Ventas por Línea */}
+        {/* Ventas por Marca */}
         <div className="card">
           <div className="flex items-center justify-between p-4 pb-2">
             <div className="flex items-center gap-2">
-              <ShoppingBagIcon className="w-4 h-4 text-[var(--accent-blue)]" />
-              <h2 className="font-semibold text-sm">Ventas por Línea</h2>
+              <BuildingOfficeIcon className="w-4 h-4 text-[var(--accent-blue)]" />
+              <h2 className="font-semibold text-sm">Ventas por Marca</h2>
             </div>
-            <Link to="/ventas" className="text-[11px] text-[var(--accent-blue)] hover:underline">Ver detalle →</Link>
+            <Link to="/margenes" className="text-[11px] text-[var(--accent-blue)] hover:underline">Ver detalle →</Link>
           </div>
           <div className="px-4 pb-4">
             <div className="h-48">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={ventasPorLinea} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
+                <BarChart data={ventasPorMarca} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="nombre" tick={{ fontSize: 10, fill: '#6b7280' }} interval={0} />
+                  <XAxis dataKey="marca" tick={{ fontSize: 10, fill: '#6b7280' }} interval={0} />
                   <YAxis tick={{ fontSize: 10, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
                   <Tooltip content={<CustomTooltip />} />
-                  <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Bar dataKey="ventas" name="Ventas" fill="#001639" radius={[3, 3, 0, 0]} />
-                  <Bar dataKey="presupuesto" name="Meta" fill="#cbd5e1" radius={[3, 3, 0, 0]} />
+                  <Bar dataKey="ventas" name="Ventas" radius={[3, 3, 0, 0]}>
+                    {ventasPorMarca.map((m, i) => (
+                      <Cell key={i} fill={m.color} />
+                    ))}
+                  </Bar>
                 </BarChart>
               </ResponsiveContainer>
             </div>
             <div className="grid grid-cols-3 gap-2 mt-3 pt-3 border-t border-[var(--border-default)]">
               <div className="text-center">
-                <p className="text-[10px] text-[var(--text-muted)] uppercase">Margen</p>
-                <p className="text-sm font-bold text-emerald-600">{margenPromedio}%</p>
+                <p className="text-[10px] text-[var(--text-muted)] uppercase">Marcas</p>
+                <p className="text-sm font-bold">{totalMarcas}</p>
               </div>
               <div className="text-center">
-                <p className="text-[10px] text-[var(--text-muted)] uppercase">Sobre Meta</p>
-                <p className="text-sm font-bold">{ventasPorLinea.filter(l => l.ventas >= l.presupuesto).length}/6</p>
+                <p className="text-[10px] text-[var(--text-muted)] uppercase">Premium</p>
+                <p className="text-sm font-bold">2</p>
               </div>
               <div className="text-center">
-                <p className="text-[10px] text-[var(--text-muted)] uppercase">Mejor</p>
-                <p className="text-sm font-bold">Línea C 52%</p>
+                <p className="text-[10px] text-[var(--text-muted)] uppercase">Masivo</p>
+                <p className="text-sm font-bold">2</p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* Vendedores */}
+        {/* Top Tiendas */}
         <div className="card">
           <div className="flex items-center justify-between p-4 pb-2">
             <div className="flex items-center gap-2">
-              <UsersIcon className="w-4 h-4 text-[var(--accent-blue)]" />
-              <h2 className="font-semibold text-sm">Desempeño Vendedores</h2>
+              <MapPinIcon className="w-4 h-4 text-[var(--accent-blue)]" />
+              <h2 className="font-semibold text-sm">Top Tiendas por Ventas</h2>
             </div>
-            <Link to="/ventas" className="text-[11px] text-[var(--accent-blue)] hover:underline">Pipeline →</Link>
+            <Link to="/margenes" className="text-[11px] text-[var(--accent-blue)] hover:underline">Ver todas →</Link>
           </div>
           <div className="px-4 pb-4">
-            <div className="space-y-2 mb-3">
-              {vendedores.map((v, i) => {
-                const cumplimiento = Math.round((v.ventas / v.meta) * 100)
-                return (
-                  <div key={i} className="flex items-center gap-2">
-                    <div className="w-7 h-7 rounded-full bg-[#001639] text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">
-                      {v.nombre.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium truncate">{v.nombre}</span>
-                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${
-                          cumplimiento >= 100 ? 'bg-emerald-100 text-emerald-700' :
-                          cumplimiento >= 90 ? 'bg-amber-100 text-amber-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>{cumplimiento}%</span>
-                      </div>
-                      <div className="w-full h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden mt-0.5">
-                        <div className="h-full rounded-full transition-all duration-1000" style={{
-                          width: animated ? `${Math.min(100, cumplimiento)}%` : '0%',
-                          backgroundColor: cumplimiento >= 100 ? '#10b981' : cumplimiento >= 90 ? '#f59e0b' : '#ef4444'
-                        }} />
-                      </div>
-                    </div>
-                    <span className="text-[11px] font-mono font-medium flex-shrink-0">{formatGTQ(v.ventas)}</span>
+            <div className="space-y-2.5">
+              {tiendasTop.map((t, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-[#001639] text-white flex items-center justify-center font-bold text-[10px] flex-shrink-0">
+                    {i + 1}
                   </div>
-                )
-              })}
-            </div>
-            <div className="h-36">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={vendedores} layout="vertical" margin={{ top: 0, right: 10, left: 80, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={false} />
-                  <XAxis type="number" tick={{ fontSize: 10, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
-                  <YAxis type="category" dataKey="nombre" tick={{ fontSize: 11, fill: '#374151' }} width={75} />
-                  <Tooltip content={<CustomTooltip />} />
-                  <Bar dataKey="ventas" name="Ventas" fill="#001639" radius={[0, 3, 3, 0]} barSize={12} />
-                  <Bar dataKey="meta" name="Meta" fill="#cbd5e1" radius={[0, 3, 3, 0]} barSize={12} />
-                </BarChart>
-              </ResponsiveContainer>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-xs font-medium truncate">{t.nombre}</span>
+                      <span className="font-mono text-xs font-semibold">{formatGTQ(t.ventas)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-[var(--text-muted)]">{t.pais}</span>
+                      <span className="text-[10px] text-[var(--text-muted)]">•</span>
+                      <span className="text-[10px] text-emerald-600">{t.margen}% margen</span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* ═══ SECCIÓN 3: RIESGO + CxC + CxP (3 COLS balanceadas) ═══ */}
+      {/* ═══ SECCIÓN 3: RIESGO + CxC + CxP (3 COLS) ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Concentración — compacto inline */}
-        <ConcentracionInline clientes={demoClientesConcentracion} />
+        {/* Alertas por región */}
+        <div className="card">
+          <div className="flex items-center justify-between p-4 pb-2">
+            <div className="flex items-center gap-2">
+              <ExclamationTriangleIcon className="w-4 h-4 text-[var(--text-muted)]" />
+              <h2 className="font-semibold text-sm">Alertas por Región</h2>
+            </div>
+          </div>
+          <div className="px-4 pb-4 space-y-2">
+            <div className="p-2.5 bg-red-50 rounded-lg border border-red-100">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded bg-red-500 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">GT</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium">TechZone Galerías — Margen en caída</p>
+                  <p className="text-[10px] text-[var(--text-muted)]">-8 pts vs mes anterior</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-2.5 bg-amber-50 rounded-lg border border-amber-100">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded bg-amber-500 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">NI</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium">Inventario bajo en 3 tiendas</p>
+                  <p className="text-[10px] text-[var(--text-muted)]">Stock menor al mínimo en Casa y Hogar</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-2.5 bg-blue-50 rounded-lg border border-blue-100">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded bg-blue-500 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">CR</div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-xs font-medium">Apertura nueva tienda planificada</p>
+                  <p className="text-[10px] text-[var(--text-muted)]">Q3 2026 — Avenida Escazú</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-        {/* CxC Aging */}
+        {/* CxC Consolidado */}
         <div className="card">
           <div className="flex items-center justify-between p-4 pb-2">
             <div className="flex items-center gap-2">
               <UsersIcon className="w-4 h-4 text-[var(--text-muted)]" />
-              <h2 className="font-semibold text-sm">CxC Aging</h2>
+              <h2 className="font-semibold text-sm">CxC Consolidado</h2>
             </div>
-            <Link to="/tesoreria/cuentas-por-cobrar" className="text-[11px] text-[var(--accent-blue)]">Ver →</Link>
+            <Link to="/tesoreria" className="text-[11px] text-[var(--accent-blue)]">Ver →</Link>
           </div>
           <div className="px-4 pb-4">
-            <div className="flex items-center gap-4">
-              <div className="w-24 h-24 flex-shrink-0">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie data={cxcAging} cx="50%" cy="50%" innerRadius={24} outerRadius={40} paddingAngle={2} dataKey="monto">
-                      {cxcAging.map((e, i) => <Cell key={i} fill={e.color} />)}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between p-2 bg-[var(--bg-secondary)] rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                  <span className="text-xs">Al Corriente</span>
+                </div>
+                <span className="font-mono text-xs font-semibold">{formatGTQ(1850000)}</span>
               </div>
-              <div className="flex-1 space-y-1">
-                {cxcAging.map((a, i) => (
-                  <div key={i} className="flex items-center justify-between text-xs">
-                    <div className="flex items-center gap-1.5">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: a.color }} />
-                      <span className="text-[var(--text-secondary)]">{a.rango}</span>
-                    </div>
-                    <span className="font-mono font-medium">{formatGTQ(a.monto)}</span>
-                  </div>
-                ))}
+              <div className="flex items-center justify-between p-2 bg-[var(--bg-secondary)] rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-amber-500" />
+                  <span className="text-xs">1-30 días</span>
+                </div>
+                <span className="font-mono text-xs font-semibold">{formatGTQ(420000)}</span>
+              </div>
+              <div className="flex items-center justify-between p-2 bg-[var(--bg-secondary)] rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-orange-500" />
+                  <span className="text-xs">31-60 días</span>
+                </div>
+                <span className="font-mono text-xs font-semibold">{formatGTQ(180000)}</span>
+              </div>
+              <div className="flex items-center justify-between p-2 bg-red-50 border border-red-100 rounded-lg">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-red-500" />
+                  <span className="text-xs font-medium text-red-700">60+ días</span>
+                </div>
+                <span className="font-mono text-xs font-semibold text-red-600">{formatGTQ(85000)}</span>
               </div>
             </div>
             <div className="mt-3 p-2 bg-[var(--bg-secondary)] rounded-lg flex items-center justify-between">
               <div>
                 <p className="text-[10px] text-[var(--text-muted)] uppercase">Total CxC</p>
-                <p className="text-sm font-bold font-mono">{formatGTQ(totalCxC)}</p>
+                <p className="text-sm font-bold font-mono">{formatGTQ(2535000)}</p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] text-[var(--text-muted)] uppercase">Vencido</p>
-                <p className={`text-sm font-bold font-mono ${pctVencido > 20 ? 'text-red-500' : 'text-emerald-500'}`}>{pctVencido}%</p>
+                <p className="text-sm font-bold font-mono text-amber-600">23.8%</p>
               </div>
             </div>
           </div>
@@ -506,111 +456,37 @@ export default function Dashboard() {
           <div className="flex items-center justify-between p-4 pb-2">
             <div className="flex items-center gap-2">
               <BuildingOfficeIcon className="w-4 h-4 text-[var(--text-muted)]" />
-              <h2 className="font-semibold text-sm">CxP Próximas</h2>
+              <h2 className="font-semibold text-sm">CxP Consolidado</h2>
             </div>
-            <span className="text-[11px] text-[var(--text-muted)]">{cxpProximas.length} en 10 días</span>
+            <span className="text-[11px] text-[var(--text-muted)]">4 proveedores en 10 días</span>
           </div>
           <div className="px-4 pb-3 space-y-2">
-            {cxpProximas.map((p, i) => (
+            {[
+              { proveedor: 'Proveedor Textil Centroamérica', monto: 285000, vence: '2 días', pais: 'GT' },
+              { proveedor: 'Importadora Electrónica SV', monto: 145000, vence: '5 días', pais: 'SV' },
+              { proveedor: 'Logística Express Honduras', monto: 95000, vence: '7 días', pais: 'HN' },
+              { proveedor: 'Servicios Retail Costa Rica', monto: 68000, vence: '10 días', pais: 'CR' },
+            ].map((p, i) => (
               <div key={i} className="flex items-center justify-between p-2 bg-[var(--bg-secondary)] rounded-lg">
                 <div className="min-w-0">
                   <p className="text-xs font-medium truncate">{p.proveedor}</p>
-                  <p className="text-[10px] text-[var(--text-muted)]">{p.tipo} · <span className={p.vence === '2 días' ? 'text-red-500 font-medium' : ''}>{p.vence}</span></p>
+                  <p className="text-[10px] text-[var(--text-muted)]">{p.pais} · <span className={p.vence === '2 días' ? 'text-red-500 font-medium' : ''}>{p.vence}</span></p>
                 </div>
                 <span className="font-mono font-semibold text-xs flex-shrink-0">{formatGTQ(p.monto)}</span>
               </div>
             ))}
             <div className="p-2 bg-[var(--bg-secondary)] rounded-lg flex items-center justify-between">
               <span className="text-[10px] text-[var(--text-muted)] uppercase">Total CxP</span>
-              <span className="text-sm font-bold font-mono">{formatGTQ(totalCxP)}</span>
+              <span className="text-sm font-bold font-mono">{formatGTQ(1850000)}</span>
             </div>
           </div>
-          <Link to="/tesoreria/cuentas-por-pagar" className="flex items-center justify-center gap-1 w-full py-2 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-t border-[var(--border-default)] hover:bg-[var(--bg-secondary)] transition-colors">
-            Ver todas <ChevronRightIcon className="w-3 h-3" />
+          <Link to="/tesoreria" className="flex items-center justify-center gap-1 w-full py-2 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-t border-[var(--border-default)] hover:bg-[var(--bg-secondary)] transition-colors">
+            Ver tesorería <ChevronRightIcon className="w-3 h-3" />
           </Link>
         </div>
       </div>
 
-      {/* ═══ SECCIÓN 4: PIPELINE + SAT (2 COLS) ═══ */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Pipeline */}
-        <div className="card">
-          <div className="flex items-center justify-between p-4 pb-2">
-            <div className="flex items-center gap-2">
-              <TruckIcon className="w-4 h-4 text-[var(--accent-blue)]" />
-              <h2 className="font-semibold text-sm">Pipeline de Órdenes</h2>
-            </div>
-            <Link to="/produccion" className="text-[11px] text-[var(--accent-blue)] hover:underline">Ver detalle →</Link>
-          </div>
-          <div className="px-4 pb-4">
-            <div className="space-y-2.5">
-              {produccionPipeline.map((p, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-[#001639] text-white flex items-center justify-center font-bold text-xs flex-shrink-0">
-                    {p.cantidad}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-0.5">
-                      <p className="text-xs font-medium">{p.etapa}</p>
-                      <span className="font-mono text-xs font-semibold">{formatGTQ(p.monto)}</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
-                      <div className="h-full bg-[#001639] rounded-full transition-all duration-1000"
-                        style={{ width: animated ? `${(p.cantidad / 45) * 100}%` : '0%' }} />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="mt-3 p-2.5 bg-[#001639] text-white rounded-lg flex items-center justify-between">
-              <div>
-                <p className="text-[10px] opacity-70 uppercase">Valor Pipeline</p>
-                <p className="text-base font-bold">{formatGTQ(produccionPipeline.reduce((s, p) => s + p.monto, 0))}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-[10px] opacity-70 uppercase">Conversión Est.</p>
-                <p className="text-base font-bold">78%</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* SAT Vencimientos */}
-        <div className="card">
-          <div className="flex items-center justify-between p-4 pb-2">
-            <div className="flex items-center gap-2">
-              <BuildingOfficeIcon className="w-4 h-4 text-[var(--text-muted)]" />
-              <h2 className="font-semibold text-sm">SAT — Vencimientos</h2>
-            </div>
-            <span className="badge-warning text-[10px]">2 urgentes</span>
-          </div>
-          <div className="px-4 pb-4 space-y-2">
-            <div className="p-2.5 bg-red-50 rounded-lg border border-red-100">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded bg-red-500 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">HOY</div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium">1ra. Cuota ISR <span className="text-[10px] text-[var(--text-muted)]">SAT-2221</span></p>
-                </div>
-                <span className="font-mono text-sm font-bold text-red-600 flex-shrink-0">Q175K</span>
-              </div>
-            </div>
-            <div className="p-2.5 bg-amber-50 rounded-lg border border-amber-100">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded bg-amber-500 text-white flex items-center justify-center text-[10px] font-bold flex-shrink-0">15d</div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-xs font-medium">IVA Marzo <span className="text-[10px] text-[var(--text-muted)]">SAT-2231</span></p>
-                </div>
-                <span className="font-mono text-sm font-bold text-amber-600 flex-shrink-0">Q185K</span>
-              </div>
-            </div>
-            <Link to="/sat" className="flex items-center justify-center gap-1 w-full py-2 text-[11px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border-t border-[var(--border-default)] hover:bg-[var(--bg-secondary)] transition-colors">
-              Ver calendario <ChevronRightIcon className="w-3 h-3" />
-            </Link>
-          </div>
-        </div>
-      </div>
-
-      {/* ═══ SECCIÓN 6: RUNWAY + abaco (2 COLS) ═══ */}
+      {/* ═══ SECCIÓN 4: RUNWAY + abaco (2 COLS) ═══ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2">
           <RunwayCalculator
@@ -627,7 +503,7 @@ export default function Dashboard() {
                 <SparklesIcon className="w-4 h-4" />
                 <div>
                   <h2 className="font-semibold text-sm">abaco Assistant</h2>
-                  <p className="text-[10px] opacity-70">4 agentes activos</p>
+                  <p className="text-[10px] opacity-70">4 agentes monitoreando {totalTiendas} tiendas</p>
                 </div>
               </div>
               <Link to="/log-actividades" className="flex items-center justify-center gap-1 w-full py-2 bg-white text-[#001639] text-xs font-medium rounded-md hover:bg-opacity-90 transition-colors">
@@ -643,6 +519,14 @@ export default function Dashboard() {
             <div className="p-3 bg-white rounded-lg border border-[var(--border-default)]">
               <p className="text-[10px] text-[var(--text-muted)] uppercase">Insights</p>
               <p className="text-base font-bold">{insights.length}</p>
+            </div>
+            <div className="p-3 bg-white rounded-lg border border-[var(--border-default)]">
+              <p className="text-[10px] text-[var(--text-muted)] uppercase">Países</p>
+              <p className="text-base font-bold">{totalPaises}</p>
+            </div>
+            <div className="p-3 bg-white rounded-lg border border-[var(--border-default)]">
+              <p className="text-[10px] text-[var(--text-muted)] uppercase">Marcas</p>
+              <p className="text-base font-bold">{totalMarcas}</p>
             </div>
           </div>
         </div>

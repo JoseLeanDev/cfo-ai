@@ -63,14 +63,18 @@ export const endpoints = {
     alertas: () => cfoApi.get('/margen-productos/alertas')
   },
   margenes: {
-    resumen: () => cfoApi.get('/margenes'),
+    resumen: (filters = {}) => cfoApi.get('/margenes', { params: filters }),
     detalleProducto: (id) => cfoApi.get(`/margenes/producto/${id}/detalle`),
-    vendedores: () => cfoApi.get('/margenes/vendedores'),
+    vendedores: (filters = {}) => cfoApi.get('/margenes/vendedores', { params: filters }),
     detalleVendedor: (id) => cfoApi.get(`/margenes/vendedores/${id}/detalle`),
-    clientes: () => cfoApi.get('/margenes/clientes'),
+    clientes: (filters = {}) => cfoApi.get('/margenes/clientes', { params: filters }),
     detalleCliente: (id) => cfoApi.get(`/margenes/clientes/${id}/detalle`),
-    lineas: () => cfoApi.get('/margenes/lineas'),
+    lineas: (filters = {}) => cfoApi.get('/margenes/lineas', { params: filters }),
     detalleLinea: (id) => cfoApi.get(`/margenes/lineas/${id}/detalle`),
+    marcas: (filters = {}) => cfoApi.get('/margenes/marcas', { params: filters }),
+    tiendas: (filters = {}) => cfoApi.get('/margenes/tiendas', { params: filters }),
+    paises: (filters = {}) => cfoApi.get('/margenes/paises', { params: filters }),
+    catalogos: () => cfoApi.get('/margenes/catalogos'),
   },
   sat: {
     calendario: () => cfoApi.get('/sat/calendario'),

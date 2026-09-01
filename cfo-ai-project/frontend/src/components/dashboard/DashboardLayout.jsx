@@ -17,6 +17,9 @@ import {
   CalculatorIcon,
   ArrowTrendingDownIcon,
   TruckIcon,
+  GlobeAltIcon,
+  BuildingOfficeIcon,
+  MapPinIcon,
 } from '@heroicons/react/24/outline'
 import { useState } from 'react'
 import { useAuth } from '../../context/AuthContext'
@@ -25,12 +28,9 @@ import AgentChat from '../agents/AgentChat'
 const navigation = [
   { name: 'Dashboard', href: '/', icon: HomeIcon },
   { name: 'Ventas', href: '/ventas', icon: CurrencyDollarIcon },
-  { name: 'Producción', href: '/produccion', icon: TruckIcon },
-  { name: 'Gastos Operativos', href: '/gastos-operativos', icon: CalculatorIcon },
-  { name: 'Compras', href: '/compras', icon: ShoppingCartIcon },
+  { name: 'Márgenes', href: '/margenes', icon: ArrowTrendingDownIcon },
   { name: 'Tesorería', href: '/tesoreria', icon: BanknotesIcon },
   { name: 'Análisis', href: '/analisis', icon: ChartBarIcon },
-  { name: 'Márgenes', href: '/margenes', icon: ArrowTrendingDownIcon },
   { name: 'Reportes', href: '/reportes', icon: DocumentTextIcon },
   { name: 'SAT', href: '/sat', icon: DocumentCheckIcon },
   { name: 'Agentes IA', href: '/log-actividades', icon: CpuChipIcon },
@@ -41,6 +41,12 @@ export default function DashboardLayout({ children }) {
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const { user, logout, isAdmin } = useAuth()
+  
+  // Corporate context (demo)
+  const [corporateContext, setCorporateContext] = useState({
+    marca: { id: null, nombre: 'Todas las marcas' },
+    pais: { id: null, nombre: 'Todos los países' },
+  })
 
   const handleLogout = async () => {
     await logout()
@@ -65,11 +71,32 @@ export default function DashboardLayout({ children }) {
           <div className="fixed inset-y-0 left-0 w-64 bg-white border-r border-[var(--border-default)]">
             <div className="flex h-20 items-center justify-between px-4 border-b border-[var(--border-default)]">
               <div className="flex items-center gap-3">
-                <img src="/logo-abaco.jpg" alt="abaco" className="h-14 w-auto object-contain rounded" />
+                <div className="h-10 w-10 rounded-lg bg-[#001639] flex items-center justify-center">
+                  <span className="text-white text-xs font-bold">GR</span>
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-[var(--text-primary)]">Grupo Retail</p>
+                  <p className="text-[10px] text-[var(--text-muted)]">Centroamérica</p>
+                </div>
               </div>
               <button onClick={() => setSidebarOpen(false)} className="p-2 hover:bg-[var(--bg-secondary)] rounded">
                 <XMarkIcon className="w-5 h-5 text-[var(--text-secondary)]" />
               </button>
+            </div>
+            
+            {/* Corporate selector mobile */}
+            <div className="px-4 py-3 border-b border-[var(--border-default)] bg-[var(--bg-secondary)]">
+              <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-2">Contexto Corporativo</p>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <BuildingOfficeIcon className="w-3 h-3 text-[var(--text-muted)]" />
+                  <span className="text-xs font-medium">{corporateContext.marca.nombre}</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <GlobeAltIcon className="w-3 h-3 text-[var(--text-muted)]" />
+                  <span className="text-xs font-medium">{corporateContext.pais.nombre}</span>
+                </div>
+              </div>
             </div>
             
             <nav className="p-2 space-y-1">
@@ -120,8 +147,29 @@ export default function DashboardLayout({ children }) {
           {/* Logo */}
           <div className="flex items-center h-20 px-5 border-b border-[var(--border-default)]">
             <Link to="/" className="flex items-center gap-3">
-              <img src="/logo-abaco.jpg" alt="abaco" className="h-16 w-auto object-contain rounded" />
+              <div className="h-10 w-10 rounded-lg bg-[#001639] flex items-center justify-center flex-shrink-0">
+                <span className="text-white text-sm font-bold">GR</span>
+              </div>
+              <div>
+                <p className="text-sm font-bold text-[var(--text-primary)] leading-tight">Grupo Retail</p>
+                <p className="text-[10px] text-[var(--text-muted)]">Centroamérica, S.A.</p>
+              </div>
             </Link>
+          </div>
+          
+          {/* Corporate context */}
+          <div className="px-4 py-3 border-b border-[var(--border-default)] bg-[var(--bg-secondary)]">
+            <p className="text-[10px] text-[var(--text-muted)] uppercase tracking-wider mb-2">Vista Corporativa</p>
+            <div className="space-y-1.5">
+              <div className="flex items-center gap-2 px-2 py-1 rounded bg-white border border-[var(--border-default)]">
+                <BuildingOfficeIcon className="w-3 h-3 text-[var(--accent-primary)]" />
+                <span className="text-xs font-medium truncate">{corporateContext.marca.nombre}</span>
+              </div>
+              <div className="flex items-center gap-2 px-2 py-1 rounded bg-white border border-[var(--border-default)]">
+                <GlobeAltIcon className="w-3 h-3 text-[var(--accent-primary)]" />
+                <span className="text-xs font-medium truncate">{corporateContext.pais.nombre}</span>
+              </div>
+            </div>
           </div>
           
           {/* Navigation */}
@@ -182,7 +230,8 @@ export default function DashboardLayout({ children }) {
               </button>
               
               <nav className="hidden sm:flex items-center gap-2 text-sm">
-                <span className="text-[var(--text-muted)]">GT</span>
+                <GlobeAltIcon className="w-3 h-3 text-[var(--text-muted)]" />
+                <span className="text-[var(--text-muted)]">CA</span>
                 <span className="text-[var(--border-strong)]">/</span>
                 <span className="text-[var(--text-primary)] font-medium">
                   {navigation.find(n => n.href === location.pathname)?.name || 'Dashboard'}
@@ -191,6 +240,19 @@ export default function DashboardLayout({ children }) {
             </div>
 
             <div className="flex items-center gap-4">
+              {/* Corporate badges */}
+              <div className="hidden md:flex items-center gap-2">
+                <span className="px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-default)] text-[10px] text-[var(--text-muted)]">
+                  4 Marcas
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-default)] text-[10px] text-[var(--text-muted)]">
+                  17 Tiendas
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-default)] text-[10px] text-[var(--text-muted)]">
+                  5 Países
+                </span>
+              </div>
+              
               {/* User badge */}
               <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-default)]">
                 <UserCircleIcon className="w-4 h-4 text-[var(--text-muted)]" />

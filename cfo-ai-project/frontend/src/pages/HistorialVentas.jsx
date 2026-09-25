@@ -32,14 +32,14 @@ const formatNum = (value) => {
 const lineas = ['todas', 'Ropa Hombre', 'Ropa Mujer', 'Calzado', 'Accesorios', 'Electrónica', 'Perfumería', 'Hogar', 'Niños']
 
 const coloresLinea = {
-  'Ropa Hombre': '#2563EB',
-  'Ropa Mujer': '#EC4899',
-  'Calzado': '#D97706',
-  'Accesorios': '#7C3AED',
-  'Electrónica': '#0891B2',
-  'Perfumería': '#DC2626',
-  'Hogar': '#059669',
-  'Niños': '#F59E0B',
+  'Ropa Hombre': '#3D56C9',
+  'Ropa Mujer': '#636970',
+  'Calzado': '#8A5A24',
+  'Accesorios': '#3D56C9',
+  'Electrónica': '#3D56C9',
+  'Perfumería': '#9B3320',
+  'Hogar': '#1F6B45',
+  'Niños': '#8A5A24',
 }
 
 // ============================================
@@ -56,7 +56,7 @@ function GraficaHistorial({ historial, color, maxValor, meses }) {
             style={{ height: `${(v / max) * 100}%`, backgroundColor: color, opacity: 0.8 }}
           />
           {/* Tooltip */}
-          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-[#001639] text-white text-[10px] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
+          <div className="absolute -top-8 left-1/2 -translate-x-1/2 bg-ink text-white text-[0.75rem] px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10 pointer-events-none">
             {formatNum(v)} und
           </div>
         </div>
@@ -90,7 +90,7 @@ function GraficaComparativaLineas({ datosPorLinea, meses }) {
               {valores.map((v, i) => (
                 <div
                   key={i}
-                  className="flex-1 rounded-sm transition-all"
+                  className="flex-1 rounded-control transition-all"
                   style={{ height: `${(v / max) * 100}%`, backgroundColor: coloresLinea[linea], opacity: 0.7 }}
                 />
               ))}
@@ -101,7 +101,7 @@ function GraficaComparativaLineas({ datosPorLinea, meses }) {
       <div className="flex gap-0.5 pt-1">
         {meses.map((m, i) => (
           <div key={i} className="flex-1 text-center">
-            <span className="text-[9px] text-[var(--text-muted)]">{m.split(' ')[0]}</span>
+            <span className="text-[0.6875rem] text-[var(--text-muted)]">{m.split(' ')[0]}</span>
           </div>
         ))}
       </div>
@@ -180,12 +180,9 @@ export default function HistorialVentas() {
 
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-[#001639] flex items-center justify-center shadow-lg">
-              <ChartBarIcon className="w-6 h-6 text-white" />
-            </div>
             <div>
-              <h1 className="text-2xl font-semibold">Historial de Ventas por Línea</h1>
-              <p className="text-sm text-[var(--text-muted)]">
+              <h1 className="font-display text-[2.125rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">Historial de Ventas por Línea</h1>
+              <p className="measure mt-2 text-[0.9375rem] leading-relaxed text-slate">
                 Análisis de ventas por producto — 6 meses de historial
               </p>
             </div>
@@ -230,7 +227,7 @@ export default function HistorialVentas() {
             <span className="kpi-label">Margen Bruto 6M</span>
             <ChartBarIcon className="w-4 h-4 text-[var(--text-muted)]" />
           </div>
-          <div className="kpi-value text-[var(--success)]">{formatGTQ(totalMargen)}</div>
+          <div className="kpi-value">{formatGTQ(totalMargen)}</div>
           <span className="text-xs text-[var(--text-muted)]">
             {totalIngresos > 0 ? ((totalMargen / totalIngresos) * 100).toFixed(1) : 0}% del ingreso
           </span>
@@ -254,7 +251,7 @@ export default function HistorialVentas() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="card lg:col-span-2">
           <div className="section-header">
-            <ChartPieIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+            <ChartPieIcon className="w-5 h-5 text-slate" />
             <h2 className="font-semibold">Comparativa de Ventas por Línea</h2>
             <span className="ml-auto text-xs text-[var(--text-muted)]">Unidades por mes</span>
           </div>
@@ -277,7 +274,7 @@ export default function HistorialVentas() {
                     className="h-full rounded-full transition-all"
                     style={{
                       width: `${(v / Math.max(...totalesPorMes)) * 100}%`,
-                      backgroundColor: '#001639',
+                      backgroundColor: '#17181B',
                     }}
                   />
                 </div>
@@ -286,7 +283,7 @@ export default function HistorialVentas() {
             ))}
             <div className="pt-2 border-t border-[var(--border-default)] flex items-center justify-between">
               <span className="text-xs font-medium text-[var(--text-primary)]">Total 6 meses</span>
-              <span className="text-sm font-bold font-mono">{formatNum(totalUnidades)} und</span>
+              <span className="text-sm font-semibold font-mono">{formatNum(totalUnidades)} und</span>
             </div>
           </div>
         </div>
@@ -304,7 +301,7 @@ export default function HistorialVentas() {
               onClick={() => setLineaSeleccionada(linea)}
               className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
                 lineaSeleccionada === linea
-                  ? 'bg-[#001639] text-white'
+                  ? 'bg-ink text-white'
                   : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--border-strong)]'
               }`}
             >
@@ -318,7 +315,7 @@ export default function HistorialVentas() {
             onClick={() => setVista('tarjetas')}
             className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
               vista === 'tarjetas'
-                ? 'bg-[#001639] text-white'
+                ? 'bg-ink text-white'
                 : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--border-strong)]'
             }`}
           >
@@ -328,7 +325,7 @@ export default function HistorialVentas() {
             onClick={() => setVista('tabla')}
             className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
               vista === 'tabla'
-                ? 'bg-[#001639] text-white'
+                ? 'bg-ink text-white'
                 : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--border-strong)]'
             }`}
           >
@@ -343,18 +340,18 @@ export default function HistorialVentas() {
       {vista === 'tarjetas' && (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {productosFiltrados.map((producto, idx) => {
-            const color = coloresLinea[producto.linea] || '#001639'
+            const color = coloresLinea[producto.linea] || '#17181B'
             return (
               <div key={producto.id} className="card card-hover">
                 <div className="p-5">
                   {/* Header */}
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: color + '15' }}>
-                        <span className="text-xs font-bold" style={{ color }}>{idx + 1}</span>
+                      <div className="w-8 h-8 rounded-card flex items-center justify-center" style={{ backgroundColor: color + '15' }}>
+                        <span className="text-xs font-semibold" style={{ color }}>{idx + 1}</span>
                       </div>
                       <div>
-                        <span className="text-[10px] uppercase font-medium text-[var(--text-muted)]">{producto.linea}</span>
+                        <span className="text-[0.75rem] uppercase font-medium text-[var(--text-muted)]">{producto.linea}</span>
                       </div>
                     </div>
                     <div className="flex items-center gap-1">
@@ -386,7 +383,7 @@ export default function HistorialVentas() {
                   <div className="flex gap-1 mt-1">
                     {demoMesesHistorial.map((m, i) => (
                       <div key={i} className="flex-1 text-center">
-                        <span className="text-[9px] text-[var(--text-muted)]">{m.split(' ')[0]}</span>
+                        <span className="text-[0.6875rem] text-[var(--text-muted)]">{m.split(' ')[0]}</span>
                       </div>
                     ))}
                   </div>
@@ -394,21 +391,21 @@ export default function HistorialVentas() {
                   {/* Stats */}
                   <div className="grid grid-cols-3 gap-2 mt-4 pt-3 border-t border-[var(--border-default)]">
                     <div>
-                      <p className="text-[10px] text-[var(--text-muted)] uppercase">Total 6M</p>
-                      <p className="text-sm font-bold font-mono">{formatNum(producto.totalUnidades)}</p>
+                      <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Total 6M</p>
+                      <p className="text-sm font-semibold font-mono">{formatNum(producto.totalUnidades)}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-[var(--text-muted)] uppercase">Prom/Mes</p>
-                      <p className="text-sm font-bold font-mono">{formatNum(producto.promedioMensual)}</p>
+                      <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Prom/Mes</p>
+                      <p className="text-sm font-semibold font-mono">{formatNum(producto.promedioMensual)}</p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-[var(--text-muted)] uppercase">Ingresos</p>
-                      <p className="text-sm font-bold font-mono">{formatGTQ(producto.totalIngresos)}</p>
+                      <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Ingresos</p>
+                      <p className="text-sm font-semibold font-mono">{formatGTQ(producto.totalIngresos)}</p>
                     </div>
                   </div>
 
                   {/* Relación con compras */}
-                  <div className="mt-3 p-2 bg-[var(--bg-secondary)] rounded-lg">
+                  <div className="mt-3 p-2 bg-[var(--bg-secondary)] rounded-card">
                     <div className="flex items-center justify-between text-xs">
                       <span className="text-[var(--text-muted)]">Margen:</span>
                       <span className="font-mono font-medium" style={{ color }}>{producto.margen}%</span>
@@ -464,13 +461,13 @@ export default function HistorialVentas() {
                     </td>
                     <td>
                       <p className="font-medium text-sm">{producto.nombre}</p>
-                      <p className="text-[10px] text-[var(--text-muted)]">
+                      <p className="text-[0.75rem] text-[var(--text-muted)]">
                         Q {producto.precioVenta} venta · Q {producto.costoUnitario} costo
                       </p>
                     </td>
                     <td>
                       <span
-                        className="badge text-[10px]"
+                        className="badge text-[0.75rem]"
                         style={{
                           backgroundColor: coloresLinea[producto.linea] + '15',
                           color: coloresLinea[producto.linea],
@@ -493,15 +490,15 @@ export default function HistorialVentas() {
                     </td>
                     <td className="text-center">
                       {producto.tendencia === 'up' ? (
-                        <span className="badge-success text-[10px] flex items-center justify-center gap-1">
+                        <span className="badge-success text-[0.75rem] flex items-center justify-center gap-1">
                           <ArrowTrendingUpIcon className="w-3 h-3" /> +{producto.crecimiento}%
                         </span>
                       ) : producto.tendencia === 'down' ? (
-                        <span className="badge-danger text-[10px] flex items-center justify-center gap-1">
+                        <span className="badge-danger text-[0.75rem] flex items-center justify-center gap-1">
                           <ArrowTrendingDownIcon className="w-3 h-3" /> {producto.crecimiento}%
                         </span>
                       ) : (
-                        <span className="badge-neutral text-[10px]">→ Estable</span>
+                        <span className="badge-neutral text-[0.75rem]">→ Estable</span>
                       )}
                     </td>
                   </tr>
@@ -512,23 +509,23 @@ export default function HistorialVentas() {
 
           {/* Totales */}
           <div className="px-5 pb-5">
-            <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+            <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
                 <div>
                   <p className="text-xs text-[var(--text-muted)] uppercase">Total Unidades</p>
-                  <p className="text-lg font-bold font-mono">{formatNum(totalUnidades)}</p>
+                  <p className="text-lg font-semibold font-mono">{formatNum(totalUnidades)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-[var(--text-muted)] uppercase">Ingresos Totales</p>
-                  <p className="text-lg font-bold font-mono text-[var(--accent-orange)]">{formatGTQ(totalIngresos)}</p>
+                  <p className="text-lg font-semibold font-mono text-[var(--accent-orange)]">{formatGTQ(totalIngresos)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-[var(--text-muted)] uppercase">Margen Bruto</p>
-                  <p className="text-lg font-bold font-mono text-[var(--success)]">{formatGTQ(totalMargen)}</p>
+                  <p className="text-lg font-semibold font-mono text-[var(--success)]">{formatGTQ(totalMargen)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-[var(--text-muted)] uppercase">Margen %</p>
-                  <p className="text-lg font-bold font-mono">
+                  <p className="text-lg font-semibold font-mono">
                     {totalIngresos > 0 ? ((totalMargen / totalIngresos) * 100).toFixed(1) : 0}%
                   </p>
                 </div>

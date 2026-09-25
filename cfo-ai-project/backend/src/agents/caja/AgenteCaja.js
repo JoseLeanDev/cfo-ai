@@ -131,11 +131,12 @@ class AgenteCaja extends BaseAgent {
       const diasHastaNegativo = proyeccion.findIndex(p => p.saldo_proyectado < 0);
       const runwayDias = diasHastaNegativo > 0 ? diasHastaNegativo : 90;
 
-      // Guardar snapshot (compatibilidad con schema existente)
+      // Guardar snapshot. La tabla tiene datos_json, no metricas_json: con el
+      // nombre viejo esta tarea falló en cada corrida desde abril.
       await db.runAsync(`
-        INSERT INTO snapshots_financieros (fecha, metricas_json, created_at)
-        VALUES (?, ?, NOW())
-      `, [new Date().toISOString(), JSON.stringify({ proyeccion, runwayDias, posicionActual: posicionCaja })]);
+        INSERT INTO snapshots_financieros (empresa_id, tipo, fecha, datos_json, created_at)
+        VALUES (?, 'proyeccion_cashflow', CURRENT_DATE, ?, NOW())
+      `, [empresaId, JSON.stringify({ proyeccion, runwayDias, posicionActual: posicionCaja })]);
 
       // Log del agente
       await this.logActividad('proyeccion_cashflow', 

@@ -1,4 +1,12 @@
-const { Pool } = require('pg');
+const { Pool, types } = require('pg');
+
+// Postgres manda NUMERIC y BIGINT como texto para no perder precisión. Todo el
+// código de esta app asume números: con texto, `total + fila.monto` concatena
+// en vez de sumar y los totales de los agentes salían como "0123.00456.00".
+// Los montos del demo caben de sobra en un double, así que se convierten aquí,
+// una vez, para toda la app (incluido el agente SQL, que usa el mismo módulo).
+types.setTypeParser(1700, (v) => (v === null ? null : parseFloat(v))); // numeric
+types.setTypeParser(20, (v) => (v === null ? null : parseInt(v, 10)));  // bigint, count(*)
 
 // PostgreSQL connection - Production only
 const pool = new Pool({

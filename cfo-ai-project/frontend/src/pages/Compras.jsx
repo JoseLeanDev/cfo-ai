@@ -1,3 +1,4 @@
+import { QoraMark } from '../components/brand/QoraLogo'
 import { useState, useMemo } from 'react'
 import { Link } from 'react-router-dom'
 import {
@@ -48,7 +49,7 @@ function calcularProyeccion(historial) {
   const primeros3 = historial.slice(0, 3).reduce((a, b) => a + b, 0) / 3
   const ultimos3 = historial.slice(3, 6).reduce((a, b) => a + b, 0) / 3
   const tendencia = (ultimos3 - primeros3) / primeros3 // % de crecimiento
-  
+
   const promedio = historial.reduce((a, b) => a + b, 0) / historial.length
   const proyeccion3meses = [
     Math.round(promedio * (1 + tendencia * 0.3)),
@@ -63,11 +64,11 @@ function calcularRecomendacion(linea, proyeccion) {
   const stockSeguridad = Math.round(proyeccion.promedioMensual * (linea.tiempoEntregaDias / 30) * 1.5)
   const cantidadRecomendada = Math.max(0, totalProyeccion + stockSeguridad - linea.stockActual)
   const valorCompra = cantidadRecomendada * linea.costoUnitarioPromedio
-  
+
   // Determinar prioridad
   let prioridad = 'Baja'
   const diasCobertura = linea.stockActual / (proyeccion.promedioMensual / 30)
-  
+
   if (linea.stockActual < linea.stockMinimo) {
     prioridad = 'Urgente'
   } else if (diasCobertura < linea.tiempoEntregaDias * 1.5) {
@@ -75,7 +76,7 @@ function calcularRecomendacion(linea, proyeccion) {
   } else if (diasCobertura < linea.tiempoEntregaDias * 3) {
     prioridad = 'Media'
   }
-  
+
   return {
     cantidadRecomendada,
     valorCompra,
@@ -89,22 +90,22 @@ function calcularEstadoProducto(producto) {
   const diasCobertura = producto.stock / (producto.ventaPromedioMensual / 30)
   const cantidadRecomendada = Math.max(0, producto.ventaPromedioMensual + producto.stockMin - producto.stock)
   const valorCompra = cantidadRecomendada * producto.costoUnitario
-  
+
   let estado = 'OK'
   if (producto.stock < producto.stockMin) estado = 'Crítico'
   else if (diasCobertura < producto.diasEntrega * 2) estado = 'Bajo'
   else if (diasCobertura < producto.diasEntrega * 4) estado = 'Atención'
-  
+
   return { diasCobertura: Math.round(diasCobertura), cantidadRecomendada, valorCompra, estado }
 }
 
 // ============================================
 // COMPONENTE BARRA DE PROGRESO (histórico + proyección)
 // ============================================
-function BarraHistorialProyeccion({ historial, proyeccion, maxValor, color = '#001639' }) {
+function BarraHistorialProyeccion({ historial, proyeccion, maxValor, color = '#17181B' }) {
   const todos = [...historial, ...proyeccion]
   const max = maxValor || Math.max(...todos) * 1.1
-  
+
   return (
     <div className="flex items-end gap-1 h-16">
       {historial.map((v, i) => (
@@ -198,10 +199,10 @@ export default function Compras() {
 
   const getPrioridadStyles = (prioridad) => {
     switch (prioridad) {
-      case 'Urgente': return 'bg-red-50 text-red-700 border-red-200'
-      case 'Alta': return 'bg-orange-50 text-orange-700 border-orange-200'
-      case 'Media': return 'bg-yellow-50 text-yellow-700 border-yellow-200'
-      default: return 'bg-green-50 text-green-700 border-green-200'
+      case 'Urgente': return 'bg-breach-50 text-breach border-breach-100'
+      case 'Alta': return 'bg-copper-50 text-copper border-copper-100'
+      case 'Media': return 'bg-copper-50 text-copper border-copper-100'
+      default: return 'bg-verified-50 text-verified border-verified-100'
     }
   }
 
@@ -221,20 +222,17 @@ export default function Compras() {
       ============================================ */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#001639] flex items-center justify-center shadow-lg">
-            <ShoppingCartIcon className="w-6 h-6 text-white" />
-          </div>
           <div>
-            <h1 className="text-2xl font-semibold">Compras Inteligentes</h1>
-            <p className="text-sm text-[var(--text-muted)]">
+            <h1 className="font-display text-[2.125rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">Compras Inteligentes</h1>
+            <p className="measure mt-2 text-[0.9375rem] leading-relaxed text-slate">
               Análisis de ventas · Proyección · Recomendaciones de inventario
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <span className="text-xs text-[var(--text-muted)]">Análisis actualizado:</span>
-          <span className="badge-success text-[10px] flex items-center gap-1">
+          <span className="badge-success text-[0.75rem] flex items-center gap-1">
             <CheckCircleIcon className="w-3 h-3" />
             {new Date().toLocaleDateString('es-GT', { day: 'numeric', month: 'short', year: 'numeric' })}
           </span>
@@ -242,8 +240,8 @@ export default function Compras() {
       </div>
 
       {/* Link al historial de ventas */}
-      <div className="flex items-center gap-3 p-4 bg-[var(--accent-blue-subtle)] rounded-lg border border-[var(--accent-blue)]/20">
-        <ChartBarIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+      <div className="flex items-center gap-3 p-4 bg-[var(--accent-blue-subtle)] rounded-card border border-[var(--accent-blue)]/20">
+        <ChartBarIcon className="w-5 h-5 text-slate" />
         <div className="flex-1">
           <p className="text-sm font-medium text-[var(--text-primary)]">
             ¿Necesitas ver el detalle de ventas por producto?
@@ -288,7 +286,7 @@ export default function Compras() {
             <span className="kpi-label">Stock Crítico</span>
             <ExclamationTriangleIcon className="w-4 h-4 text-[var(--danger)]" />
           </div>
-          <div className="kpi-value text-[var(--danger)]">{lineasEnCritico} líneas</div>
+          <div className="kpi-value">{lineasEnCritico} líneas</div>
           <span className="text-xs text-[var(--text-muted)]">
             {datosProductos.filter(p => p.estado === 'Crítico').length} productos
           </span>
@@ -299,7 +297,7 @@ export default function Compras() {
             <span className="kpi-label">Compra Recomendada</span>
             <CurrencyDollarIcon className="w-4 h-4 text-[var(--success)]" />
           </div>
-          <div className="kpi-value text-[var(--accent-orange)]">{formatGTQ(totalAComprar)}</div>
+          <div className="kpi-value">{formatGTQ(totalAComprar)}</div>
           <span className="text-xs text-[var(--text-muted)]">Próximo trimestre</span>
         </div>
       </div>
@@ -309,80 +307,59 @@ export default function Compras() {
           (Mismo diseño distintivo que PageInsights)
       ═══════════════════════════════════════════ */}
       {alertasCriticas.length > 0 && (
-        <div className="relative overflow-hidden rounded-xl border border-violet-500/30 bg-slate-900">
-          {/* Fondo animado sutil */}
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-slate-900 to-fuchsia-900/10" />
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-fuchsia-500/30 to-transparent" />
-
-          <div className="relative">
-            {/* ═══ HEADER PROMINENTE ═══ */}
-            <div className="px-4 pt-3.5 pb-2 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                {/* Icono IA animado */}
-                <div className="relative">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
-                    <SparklesIcon className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-900 animate-pulse" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-white tracking-tight">Insights de Compras</h3>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30 uppercase tracking-wider">
-                      IA
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-slate-400">Análisis automatizado · {alertasCriticas.length} detectado{alertasCriticas.length !== 1 ? 's' : ''}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                <BoltIcon className="w-3 h-3 text-amber-400" />
-                <span>abaco AI</span>
-              </div>
-            </div>
+        <section className="rounded-card border border-fog bg-white">
+          <div>
+            <header className="flex flex-wrap items-center gap-3 border-b border-fog px-6 py-4">
+              <QoraMark className="h-4 w-4 shrink-0 text-ink" />
+              <h2 className="font-display text-[1rem] font-semibold leading-tight text-ink">
+                Hallazgos de compras
+              </h2>
+              <p className="eyebrow ml-auto text-[0.6875rem]">
+                {alertasCriticas.length} {alertasCriticas.length === 1 ? 'hallazgo' : 'hallazgos'}
+              </p>
+            </header>
 
             {/* ═══ GRID DE INSIGHTS - 2 COLUMNAS ═══ */}
             <div className="px-3 pb-3 grid grid-cols-1 lg:grid-cols-2 gap-2">
               {alertasCriticas.map((producto) => (
                 <div
                   key={producto.id}
-                  className="group relative p-3 rounded-lg border border-red-500/20 bg-red-500/10 shadow-red-500/10 hover:shadow-lg transition-all duration-200"
+                  className="group relative p-3 rounded-card border border-breach/20 bg-breach/10 shadow-red-500/10 hover: transition-all duration-200"
                 >
                   <div className="flex items-start gap-2.5">
                     {/* Icono tipo */}
-                    <div className="flex-shrink-0 w-7 h-7 rounded-md bg-red-500/10 border border-red-500/20 flex items-center justify-center">
-                      <ExclamationTriangleIcon className="w-3.5 h-3.5 text-red-400" />
+                    <div className="flex-shrink-0 w-7 h-7 rounded-card bg-breach/10 border border-breach/20 flex items-center justify-center">
+                      <ExclamationTriangleIcon className="w-3.5 h-3.5 text-breach" />
                     </div>
 
                     {/* Contenido */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                        <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border border-red-500/30 bg-red-500/20 text-red-300 uppercase tracking-wider">
+                        <span className="text-[0.6875rem] font-semibold px-1.5 py-0.5 rounded border border-breach/30 bg-breach/20 text-breach uppercase tracking-wider">
                           Crítico
                         </span>
-                        <span className="text-[9px] font-mono text-red-400">
+                        <span className="text-[0.6875rem] font-mono text-breach">
                           {producto.diasCobertura} días
                         </span>
                       </div>
 
-                      <h4 className="text-xs font-bold text-white leading-snug">
+                      <h4 className="text-[0.875rem] font-semibold leading-snug text-ink">
                         {producto.nombre}
                       </h4>
-                      <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-2">
+                      <p className="text-[0.8125rem] text-slate mt-0.5 line-clamp-2">
                         {producto.linea} · Stock: {producto.stock} und · Reordenar: +{formatNum(producto.cantidadRecomendada)} und
                       </p>
 
                       {/* Impacto */}
                       <div className="mt-1.5 flex items-center gap-2">
-                        <span className="text-[10px] text-slate-500">Valor compra:</span>
-                        <span className="text-[10px] font-bold text-red-400">
+                        <span className="text-[0.75rem] text-slate">Valor compra:</span>
+                        <span className="text-[0.75rem] font-semibold text-breach">
                           {formatGTQ(producto.valorCompra)}
                         </span>
                       </div>
 
                       {/* Acción */}
-                      <button className="mt-1.5 text-[10px] font-medium text-violet-300 hover:text-violet-200 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button className="mt-1.5 text-[0.75rem] font-medium text-cobalt hover:text-cobalt flex items-center gap-0.5 transition-colors">
                         Generar orden
                         <ArrowRightIcon className="w-3 h-3" />
                       </button>
@@ -392,7 +369,7 @@ export default function Compras() {
               ))}
             </div>
           </div>
-        </div>
+        </section>
       )}
 
       {/* ============================================
@@ -404,7 +381,7 @@ export default function Compras() {
             onClick={() => setLineaSeleccionada('todas')}
             className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
               lineaSeleccionada === 'todas'
-                ? 'bg-[#001639] text-white'
+                ? 'bg-ink text-white'
                 : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--border-strong)]'
             }`}
           >
@@ -416,7 +393,7 @@ export default function Compras() {
               onClick={() => setLineaSeleccionada(linea.id)}
               className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
                 lineaSeleccionada === linea.id
-                  ? 'bg-[#001639] text-white'
+                  ? 'bg-ink text-white'
                   : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--border-strong)]'
               }`}
             >
@@ -424,7 +401,7 @@ export default function Compras() {
             </button>
           ))}
         </div>
-        
+
         <div className="flex items-center gap-2">
           <button
             onClick={() => setMostrarSoloCriticos(!mostrarSoloCriticos)}
@@ -452,73 +429,73 @@ export default function Compras() {
       ============================================ */}
       <div className="card">
         <div className="section-header">
-          <ChartBarIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+          <ChartBarIcon className="w-5 h-5 text-slate" />
           <h2 className="font-semibold">Análisis de Ventas por Línea</h2>
           <span className="ml-auto text-xs text-[var(--text-muted)]">
             Histórico 6 meses → Proyección 3 meses
           </span>
         </div>
-        
+
         <div className={`p-5 pt-0 grid gap-4 ${vistaExpandida ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'}`}>
           {lineasFiltradas.map((linea) => {
-            const color = linea.tendencia === 'up' ? '#059669' : linea.tendencia === 'down' ? '#DC2626' : '#2563EB'
+            const color = linea.tendencia === 'up' ? '#1F6B45' : linea.tendencia === 'down' ? '#9B3320' : '#3D56C9'
             const totalHistorico = linea.historialVentas.reduce((a, b) => a + b, 0)
             const totalProyeccion = linea.proyeccion3meses.reduce((a, b) => a + b, 0)
             const crecimiento = ((totalProyeccion - totalHistorico / 2) / (totalHistorico / 2) * 100).toFixed(1)
-            
+
             return (
-              <div key={linea.id} className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+              <div key={linea.id} className="p-4 bg-[var(--bg-secondary)] rounded-card">
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h3 className="font-semibold text-sm">{linea.nombre}</h3>
                     <p className="text-xs text-[var(--text-muted)]">{linea.descripcion.slice(0, 50)}...</p>
                   </div>
                   <div className="text-right">
-                    <span className={`badge text-[10px] ${getPrioridadStyles(linea.prioridad)}`}>
+                    <span className={`badge text-[0.75rem] ${getPrioridadStyles(linea.prioridad)}`}>
                       {linea.prioridad}
                     </span>
                   </div>
                 </div>
-                
+
                 {/* Gráfica mini */}
                 <BarraHistorialProyeccion
                   historial={linea.historialVentas}
                   proyeccion={linea.proyeccion3meses}
                   color={color}
                 />
-                
+
                 {/* Labels */}
                 <div className="flex gap-1 mt-1 mb-3">
                   {demoMesesHistorial.map((m, i) => (
                     <div key={i} className="flex-1 text-center">
-                      <span className="text-[9px] text-[var(--text-muted)]">{m.split(' ')[0]}</span>
+                      <span className="text-[0.6875rem] text-[var(--text-muted)]">{m.split(' ')[0]}</span>
                     </div>
                   ))}
                   {demoMesesProyeccion.map((m, i) => (
                     <div key={`p-${i}`} className="flex-1 text-center">
-                      <span className="text-[9px] text-[var(--text-muted)] italic">{m.split(' ')[0]}</span>
+                      <span className="text-[0.6875rem] text-[var(--text-muted)] italic">{m.split(' ')[0]}</span>
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="p-2 bg-white rounded">
-                    <p className="text-[10px] text-[var(--text-muted)] uppercase">Histórico 6M</p>
-                    <p className="text-sm font-bold font-mono">{formatNum(totalHistorico)} und</p>
+                    <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Histórico 6M</p>
+                    <p className="text-sm font-semibold font-mono">{formatNum(totalHistorico)} und</p>
                   </div>
                   <div className="p-2 bg-white rounded">
-                    <p className="text-[10px] text-[var(--text-muted)] uppercase">Proyección 3M</p>
-                    <p className="text-sm font-bold font-mono">{formatNum(totalProyeccion)} und</p>
+                    <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Proyección 3M</p>
+                    <p className="text-sm font-semibold font-mono">{formatNum(totalProyeccion)} und</p>
                   </div>
                   <div className="p-2 bg-white rounded">
-                    <p className="text-[10px] text-[var(--text-muted)] uppercase">Crecimiento</p>
-                    <p className={`text-sm font-bold font-mono ${parseFloat(crecimiento) > 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                    <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Crecimiento</p>
+                    <p className={`text-sm font-semibold font-mono ${parseFloat(crecimiento) > 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                       {parseFloat(crecimiento) > 0 ? '+' : ''}{crecimiento}%
                     </p>
                   </div>
                 </div>
-                
+
                 {/* Stock actual vs proyección */}
                 <div className="mt-3 p-2 bg-white rounded">
                   <div className="flex items-center justify-between text-xs mb-1">
@@ -555,7 +532,7 @@ export default function Compras() {
             Calculado con proyección + stock de seguridad
           </span>
         </div>
-        
+
         <div className="table-container mx-5 mb-5">
           <table className="table">
             <thead>
@@ -574,7 +551,7 @@ export default function Compras() {
             </thead>
             <tbody>
               {lineasFiltradas.map((linea) => (
-                <tr key={linea.id} className={linea.prioridad === 'Urgente' ? 'bg-red-50/50' : ''}>
+                <tr key={linea.id} className={linea.prioridad === 'Urgente' ? 'bg-breach-50/50' : ''}>
                   <td>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full" style={{
@@ -582,7 +559,7 @@ export default function Compras() {
                       }} />
                       <div>
                         <p className="font-medium text-sm">{linea.nombre}</p>
-                        <p className="text-[10px] text-[var(--text-muted)]">Entrega: {linea.tiempoEntregaDias} días</p>
+                        <p className="text-[0.75rem] text-[var(--text-muted)]">Entrega: {linea.tiempoEntregaDias} días</p>
                       </div>
                     </div>
                   </td>
@@ -597,7 +574,7 @@ export default function Compras() {
                     {linea.valorCompra > 0 ? formatGTQ(linea.valorCompra) : <span className="text-[var(--success)] text-xs">—</span>}
                   </td>
                   <td className="text-center">
-                    <span className={`badge text-[10px] ${getPrioridadStyles(linea.prioridad)}`}>
+                    <span className={`badge text-[0.75rem] ${getPrioridadStyles(linea.prioridad)}`}>
                       {linea.prioridad}
                     </span>
                   </td>
@@ -617,10 +594,10 @@ export default function Compras() {
             </tbody>
           </table>
         </div>
-        
+
         {/* Resumen del pedido recomendado */}
         <div className="px-5 pb-5">
-          <div className="p-4 bg-[var(--accent-orange-subtle)] rounded-lg border border-[var(--accent-orange)]/20">
+          <div className="p-4 bg-[var(--accent-orange-subtle)] rounded-card border border-[var(--accent-orange)]/20">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
                 <CalculatorIcon className="w-5 h-5 text-[var(--accent-orange)]" />
@@ -634,13 +611,13 @@ export default function Compras() {
               <div className="flex items-center gap-6">
                 <div className="text-right">
                   <p className="text-xs text-[var(--text-muted)]">Total Unidades</p>
-                  <p className="text-lg font-bold font-mono text-[var(--accent-orange)]">
+                  <p className="text-lg font-semibold font-mono text-[var(--accent-orange)]">
                     {formatNum(lineasFiltradas.reduce((s, l) => s + l.cantidadRecomendada, 0))}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-[var(--text-muted)]">Inversión Total</p>
-                  <p className="text-xl font-bold font-mono text-[var(--accent-orange)]">
+                  <p className="text-xl font-semibold font-mono text-[var(--accent-orange)]">
                     {formatGTQ(lineasFiltradas.reduce((s, l) => s + l.valorCompra, 0))}
                   </p>
                 </div>
@@ -656,16 +633,16 @@ export default function Compras() {
       {topRecomendaciones.length > 0 && (
         <div className="card">
           <div className="section-header">
-            <ArrowPathIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+            <ArrowPathIcon className="w-5 h-5 text-slate" />
             <h2 className="font-semibold">Productos Prioritarios a Reordenar</h2>
             <span className="ml-auto text-xs text-[var(--text-muted)]">Ordenados por valor de compra</span>
           </div>
           <div className="p-5 pt-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
             {topRecomendaciones.map((producto) => (
-              <div key={producto.id} className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+              <div key={producto.id} className="p-4 bg-[var(--bg-secondary)] rounded-card">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] uppercase font-medium text-[var(--text-muted)]">{producto.linea}</span>
-                  <span className={`badge text-[10px] ${getEstadoStyles(producto.estado)}`}>{producto.estado}</span>
+                  <span className="text-[0.75rem] uppercase font-medium text-[var(--text-muted)]">{producto.linea}</span>
+                  <span className={`badge text-[0.75rem] ${getEstadoStyles(producto.estado)}`}>{producto.estado}</span>
                 </div>
                 <p className="text-sm font-medium line-clamp-2 mb-2">{producto.nombre}</p>
                 <div className="space-y-1 text-xs">
@@ -688,7 +665,7 @@ export default function Compras() {
                     <span className="font-mono font-medium">{formatGTQ(producto.valorCompra)}</span>
                   </div>
                 </div>
-                <div className="mt-2 flex items-center gap-1 text-[10px] text-[var(--text-muted)]">
+                <div className="mt-2 flex items-center gap-1 text-[0.75rem] text-[var(--text-muted)]">
                   <TruckIcon className="w-3 h-3" />
                   {producto.proveedor} · {producto.diasEntrega} días
                 </div>
@@ -709,7 +686,7 @@ export default function Compras() {
             {productosCriticos.length} productos
           </span>
         </div>
-        
+
         <div className="table-container mx-5 mb-5">
           <table className="table">
             <thead>
@@ -730,14 +707,14 @@ export default function Compras() {
               {productosCriticos.map((producto) => (
                 <tr 
                   key={producto.id} 
-                  className={producto.estado === 'Crítico' ? 'bg-red-50/30' : producto.estado === 'Bajo' ? 'bg-orange-50/30' : ''}
+                  className={producto.estado === 'Crítico' ? 'bg-breach-50/30' : producto.estado === 'Bajo' ? 'bg-copper-50/30' : ''}
                 >
                   <td>
                     <p className="font-medium text-sm">{producto.nombre}</p>
-                    <p className="text-[10px] text-[var(--text-muted)]">Q {producto.costoUnitario}/und · Entrega: {producto.diasEntrega}d</p>
+                    <p className="text-[0.75rem] text-[var(--text-muted)]">Q {producto.costoUnitario}/und · Entrega: {producto.diasEntrega}d</p>
                   </td>
                   <td>
-                    <span className="badge-neutral text-[10px]">{producto.linea}</span>
+                    <span className="badge-neutral text-[0.75rem]">{producto.linea}</span>
                   </td>
                   <td className="text-right font-mono text-sm">{producto.stock}</td>
                   <td className="text-right font-mono text-sm text-[var(--text-muted)]">{producto.stockMin}</td>
@@ -748,7 +725,7 @@ export default function Compras() {
                     </span>
                   </td>
                   <td className="text-center">
-                    <span className={`badge text-[10px] ${getEstadoStyles(producto.estado)}`}>
+                    <span className={`badge text-[0.75rem] ${getEstadoStyles(producto.estado)}`}>
                       {producto.estado}
                     </span>
                   </td>
@@ -773,20 +750,20 @@ export default function Compras() {
             </tbody>
           </table>
         </div>
-        
+
         {/* Leyenda */}
         <div className="px-5 pb-5">
           <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--text-muted)]">
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded bg-red-100 border border-red-300" />
+              <div className="w-3 h-3 rounded bg-breach-50 border border-breach-100" />
               <span>Crítico: stock {'<'} mínimo</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded bg-orange-100 border border-orange-300" />
+              <div className="w-3 h-3 rounded bg-copper-50 border border-copper-100" />
               <span>Bajo: cobertura {'<'} 2x entrega</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded bg-blue-100 border border-blue-300" />
+              <div className="w-3 h-3 rounded bg-paper border border-fog" />
               <span>Atención: cobertura {'<'} 4x entrega</span>
             </div>
             <div className="flex items-center gap-1.5">

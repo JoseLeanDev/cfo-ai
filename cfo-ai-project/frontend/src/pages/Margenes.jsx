@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { PageLoading, ErrorState } from '../components/ui/states'
 import {
   ChartBarIcon,
   UsersIcon,
@@ -45,48 +46,48 @@ const formatNum = (value, decimals = 1) => {
   return Number(value).toFixed(decimals)
 }
 
-const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#6366f1', '#14b8a6']
+const COLORS = ['#1F6B45', '#8A5A24', '#9B3320', '#3D56C9', '#3D56C9', '#636970', '#3D56C9', '#3D56C9']
 
 // ===== COMPONENTE: FILTROS MULTI-DIMENSIÓN =====
 function DimensionFilters({ catalogos, filters, onChange }) {
   const { marcas = [], tiendas = [], paises = [] } = catalogos?.data || {}
-  
+
   return (
-    <div className="flex flex-wrap items-center gap-3 p-4 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg">
+    <div className="flex flex-wrap items-center gap-3 p-4 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-card">
       <div className="flex items-center gap-2 text-sm text-[var(--text-muted)]">
         <FunnelIcon className="w-4 h-4" />
         <span>Filtrar por:</span>
       </div>
-      
+
       {/* Filtro Marca */}
-      <select
+      <select aria-label="Todas las marcas"
         value={filters.marca_id || ''}
         onChange={(e) => onChange({ ...filters, marca_id: e.target.value || undefined })}
-        className="px-3 py-1.5 text-sm bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)]"
+        className="px-3 py-1.5 text-sm bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-card text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)]"
       >
         <option value="">Todas las marcas</option>
         {marcas.map(m => (
           <option key={m.id} value={m.id}>{m.nombre}</option>
         ))}
       </select>
-      
+
       {/* Filtro País */}
-      <select
+      <select aria-label="Todos los países"
         value={filters.pais_id || ''}
         onChange={(e) => onChange({ ...filters, pais_id: e.target.value || undefined })}
-        className="px-3 py-1.5 text-sm bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)]"
+        className="px-3 py-1.5 text-sm bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-card text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)]"
       >
         <option value="">Todos los países</option>
         {paises.map(p => (
           <option key={p.id} value={p.id}>{p.nombre}</option>
         ))}
       </select>
-      
+
       {/* Filtro Tienda */}
-      <select
+      <select aria-label="Todas las tiendas"
         value={filters.tienda_id || ''}
         onChange={(e) => onChange({ ...filters, tienda_id: e.target.value || undefined })}
-        className="px-3 py-1.5 text-sm bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-lg text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)]"
+        className="px-3 py-1.5 text-sm bg-[var(--bg-tertiary)] border border-[var(--border-color)] rounded-card text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent-primary)]"
       >
         <option value="">Todas las tiendas</option>
         {tiendas
@@ -96,11 +97,11 @@ function DimensionFilters({ catalogos, filters, onChange }) {
           <option key={t.id} value={t.id}>{t.nombre} ({t.ciudad})</option>
         ))}
       </select>
-      
+
       {(filters.marca_id || filters.tienda_id || filters.pais_id) && (
         <button
           onClick={() => onChange({})}
-          className="px-3 py-1.5 text-sm text-[var(--text-muted)] hover:text-red-400 transition-colors"
+          className="px-3 py-1.5 text-sm text-[var(--text-muted)] hover:text-breach transition-colors"
         >
           Limpiar filtros
         </button>
@@ -113,15 +114,15 @@ function DimensionFilters({ catalogos, filters, onChange }) {
 function SemaforoFilter({ value, onChange, counts }) {
   const opciones = [
     { key: 'todos', label: 'Todos', color: 'bg-[var(--bg-tertiary)] text-[var(--text-primary)]' },
-    { key: 'verde', label: 'Verde', color: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30', dot: 'bg-emerald-500' },
-    { key: 'ambar', label: 'Ámbar', color: 'bg-amber-500/20 text-amber-400 border-amber-500/30', dot: 'bg-amber-500' },
-    { key: 'rojo', label: 'Rojo', color: 'bg-red-500/20 text-red-400 border-red-500/30', dot: 'bg-red-500' },
+    { key: 'verde', label: 'Verde', color: 'bg-verified/20 text-verified border-verified/30', dot: 'bg-verified' },
+    { key: 'ambar', label: 'Ámbar', color: 'bg-copper/20 text-copper border-copper/30', dot: 'bg-copper' },
+    { key: 'rojo', label: 'Rojo', color: 'bg-breach/20 text-breach border-breach/30', dot: 'bg-breach' },
   ]
 
   return (
-    <div className="flex items-center gap-2">
-      <FunnelIcon className="w-4 h-4 text-[var(--text-muted)]" />
-      <div className="flex gap-1.5">
+    <div className="flex min-w-0 items-center gap-2">
+      <FunnelIcon className="w-4 h-4 shrink-0 text-[var(--text-muted)]" />
+      <div className="flex max-w-full gap-1.5 overflow-x-auto">
         {opciones.map(op => (
           <button
             key={op.key}
@@ -133,7 +134,7 @@ function SemaforoFilter({ value, onChange, counts }) {
             {op.dot && <span className={`w-2 h-2 rounded-full ${op.dot}`} />}
             {op.label}
             {counts?.[op.key] !== undefined && (
-              <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[10px] ${value === op.key ? 'bg-white/20' : 'bg-[var(--bg-tertiary)]'}`}>
+              <span className={`ml-0.5 px-1.5 py-0.5 rounded-full text-[0.75rem] ${value === op.key ? 'bg-white/20' : 'bg-[var(--bg-tertiary)]'}`}>
                 {counts[op.key]}
               </span>
             )}
@@ -209,7 +210,7 @@ function KpiCard({ label, value, subtext, color = 'text-[var(--accent-primary)]'
   return (
     <div className="card p-5">
       <p className="text-xs text-[var(--text-muted)] uppercase tracking-wider">{label}</p>
-      <p className={`text-2xl font-bold ${color}`}>{value}</p>
+      <p className={`text-2xl font-semibold ${color}`}>{value}</p>
       {subtext && <p className="text-xs text-[var(--text-muted)]">{subtext}</p>}
     </div>
   )
@@ -219,15 +220,15 @@ export default function Margenes() {
   const [filters, setFilters] = useState({})
   const [activeTab, setActiveTab] = useState('productos')
   const [productoSeleccionado, setProductoSeleccionado] = useState(null)
-  
+
   // Estados de filtro por semáforo para cada sección
   const [filtroSemaforoProductos, setFiltroSemaforoProductos] = useState('todos')
   const [filtroSemaforoVendedores, setFiltroSemaforoVendedores] = useState('todos')
   const [filtroSemaforoClientes, setFiltroSemaforoClientes] = useState('todos')
   const [filtroSemaforoLineas, setFiltroSemaforoLineas] = useState('todos')
-  
+
   // Fetch data con filtros
-  const { data, isLoading, error } = useMargenes(filters)
+  const { data, isLoading, isError, error, refetch } = useMargenes(filters)
   const { data: vendedoresData } = useMargenVendedores(filters)
   const { data: clientesData } = useMargenClientes(filters)
   const { data: lineasData } = useMargenLineas(filters)
@@ -237,8 +238,9 @@ export default function Margenes() {
   const { data: catalogosData } = useMargenCatalogos()
   const { data: detalleData } = useMargenProductoDetalle(productoSeleccionado?.id)
 
-  if (isLoading) return <div className="p-6 text-[var(--text-muted)]">Cargando análisis de márgenes...</div>
-  if (error) return <div className="p-6 text-red-400">Error cargando datos: {error.message}</div>
+  if (isLoading) return <PageLoading label="Leyendo precios y costos" />
+  if (isError) return <ErrorState title="No se pudo leer el análisis de márgenes" error={error} onRetry={refetch} />
+  if (error) return <div className="p-6 text-breach">Error cargando datos: {error.message}</div>
   if (!data?.data) return <div className="p-6 text-[var(--text-muted)]">No hay datos disponibles</div>
 
   const { resumen, productos } = data.data
@@ -302,7 +304,7 @@ export default function Margenes() {
     <div className="space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold flex items-center gap-2">
+        <h1 className="font-display text-[2.125rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">
           <ChartBarIcon className="w-6 h-6 text-[var(--accent-primary)]" />
           Márgenes
         </h1>
@@ -336,19 +338,19 @@ export default function Margenes() {
           label="Margen Bruto Total" 
           value={formatGTQ(resumen?.total_margen_bruto_q || 0)}
           subtext={`${formatNum(resumen?.margen_global_pct)}% sobre ventas`}
-          color="text-emerald-400"
+          color="text-verified"
         />
         <KpiCard 
           label="Dejaste de ganar (12m)" 
           value={formatGTQ(resumen?.total_margen_perdido_12m || 0)}
           subtext="Productos que no ajustaron precio"
-          color="text-red-400"
+          color="text-breach"
         />
         <KpiCard 
           label="Necesitan ajuste" 
-          value={`${resumen?.productos_rojo || 0} 🔴 + ${resumen?.productos_ambar || 0} 🟡`}
+          value={`${resumen?.productos_rojo || 0}  + ${resumen?.productos_ambar || 0} `}
           subtext={`De ${resumen?.total_productos || 0} totales`}
-          color="text-amber-400"
+          color="text-copper"
         />
         <KpiCard 
           label="Total Ventas" 
@@ -426,8 +428,8 @@ export default function Margenes() {
                   { key: 'unidades_12m', label: 'Unidades', className: 'text-right', render: r => (r.unidades_12m || 0).toLocaleString() },
                   { key: 'semaforo', label: '', className: 'text-center', sortable: false, render: r => (
                     <span className={`inline-block w-3 h-3 rounded-full ${
-                      r.semaforo === 'rojo' ? 'bg-red-500' :
-                      r.semaforo === 'ambar' ? 'bg-amber-500' : 'bg-emerald-500'
+                      r.semaforo === 'rojo' ? 'bg-breach' :
+                      r.semaforo === 'ambar' ? 'bg-copper' : 'bg-verified'
                     }`} />
                   )},
                 ]}
@@ -460,23 +462,23 @@ export default function Margenes() {
                         <XAxis dataKey="fecha" tick={{ fontSize: 10 }} />
                         <YAxis tick={{ fontSize: 10 }} />
                         <Tooltip contentStyle={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '12px' }} />
-                        <Bar dataKey="precio" fill="#10b981" name="Precio" />
-                        <Bar dataKey="costo" fill="#ef4444" name="Costo" />
+                        <Bar dataKey="precio" fill="#1F6B45" name="Precio" />
+                        <Bar dataKey="costo" fill="#9B3320" name="Costo" />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
                 )}
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+                  <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                     <p className="text-xs text-[var(--text-muted)]">Margen Actual</p>
-                    <p className={`text-lg font-bold ${parseFloat(productoSeleccionado.margen_pct_actual) < 25 ? 'text-red-400' : 'text-emerald-400'}`}>
+                    <p className={`text-lg font-semibold ${parseFloat(productoSeleccionado.margen_pct_actual) < 25 ? 'text-breach' : 'text-verified'}`}>
                       {formatNum(productoSeleccionado.margen_pct_actual)}%
                     </p>
                   </div>
-                  <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+                  <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                     <p className="text-xs text-[var(--text-muted)]">Unidades (12m)</p>
-                    <p className="text-lg font-bold text-[var(--text-primary)]">{(productoSeleccionado.unidades_12m || 0).toLocaleString()}</p>
+                    <p className="text-lg font-semibold text-[var(--text-primary)]">{(productoSeleccionado.unidades_12m || 0).toLocaleString()}</p>
                   </div>
                 </div>
               </div>
@@ -524,8 +526,8 @@ export default function Margenes() {
                   { key: 'num_ventas', label: 'Trans.', className: 'text-right', render: r => (r.num_ventas || 0).toLocaleString() },
                   { key: 'semaforo', label: '', className: 'text-center', sortable: false, render: r => (
                     <span className={`inline-block w-3 h-3 rounded-full ${
-                      r.semaforo === 'rojo' ? 'bg-red-500' :
-                      r.semaforo === 'ambar' ? 'bg-amber-500' : 'bg-emerald-500'
+                      r.semaforo === 'rojo' ? 'bg-breach' :
+                      r.semaforo === 'ambar' ? 'bg-copper' : 'bg-verified'
                     }`} />
                   )},
                 ]}
@@ -535,7 +537,7 @@ export default function Margenes() {
             </div>
           </div>
           <div className="space-y-4">
-            <KpiCard label="Mejor Vendedor" value={vendedores[0]?.nombre || '-'} subtext={`${formatNum(vendedores[0]?.margen_pct_actual)}% margen`} color="text-emerald-400" />
+            <KpiCard label="Mejor Vendedor" value={vendedores[0]?.nombre || '-'} subtext={`${formatNum(vendedores[0]?.margen_pct_actual)}% margen`} color="text-verified" />
             <div className="card p-6">
               <h3 className="font-semibold mb-4">Ventas por Vendedor</h3>
               <div className="h-64">
@@ -582,8 +584,8 @@ export default function Margenes() {
                   { key: 'num_compras', label: 'Compras', className: 'text-right', render: r => (r.num_compras || 0).toLocaleString() },
                   { key: 'semaforo', label: '', className: 'text-center', sortable: false, render: r => (
                     <span className={`inline-block w-3 h-3 rounded-full ${
-                      r.semaforo === 'rojo' ? 'bg-red-500' :
-                      r.semaforo === 'ambar' ? 'bg-amber-500' : 'bg-emerald-500'
+                      r.semaforo === 'rojo' ? 'bg-breach' :
+                      r.semaforo === 'ambar' ? 'bg-copper' : 'bg-verified'
                     }`} />
                   )},
                 ]}
@@ -593,7 +595,7 @@ export default function Margenes() {
             </div>
           </div>
           <div className="space-y-4">
-            <KpiCard label="Top Cliente" value={clientes[0]?.nombre || '-'} subtext={formatGTQ(clientes[0]?.ventas_12m)} color="text-emerald-400" />
+            <KpiCard label="Top Cliente" value={clientes[0]?.nombre || '-'} subtext={formatGTQ(clientes[0]?.ventas_12m)} color="text-verified" />
             <div className="card p-6">
               <h3 className="font-semibold mb-4">Ventas por Cliente</h3>
               <div className="h-64">
@@ -640,8 +642,8 @@ export default function Margenes() {
                   { key: 'margen_pct_actual', label: 'Margen', className: 'text-right', render: r => `${formatNum(r.margen_pct_actual)}%` },
                   { key: 'semaforo', label: '', className: 'text-center', sortable: false, render: r => (
                     <span className={`inline-block w-3 h-3 rounded-full ${
-                      r.semaforo === 'rojo' ? 'bg-red-500' :
-                      r.semaforo === 'ambar' ? 'bg-amber-500' : 'bg-emerald-500'
+                      r.semaforo === 'rojo' ? 'bg-breach' :
+                      r.semaforo === 'ambar' ? 'bg-copper' : 'bg-verified'
                     }`} />
                   )},
                 ]}
@@ -659,7 +661,7 @@ export default function Margenes() {
                   <XAxis type="number" tick={{ fontSize: 10 }} />
                   <YAxis dataKey="nombre" type="category" width={120} tick={{ fontSize: 10 }} />
                   <Tooltip contentStyle={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '12px' }} />
-                  <Bar dataKey="margen_pct_actual" fill="#10b981" name="Margen %" radius={[0, 4, 4, 0]} />
+                  <Bar dataKey="margen_pct_actual" fill="#1F6B45" name="Margen %" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -754,7 +756,7 @@ export default function Margenes() {
                   <XAxis dataKey="nombre" tick={{ fontSize: 9 }} angle={-45} textAnchor="end" height={80} />
                   <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip contentStyle={{ backgroundColor: 'var(--bg-secondary)', border: '1px solid var(--border-color)', borderRadius: '8px', fontSize: '12px' }} />
-                  <Bar dataKey="total_ventas_q" fill="#10b981" name="Ventas" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="total_ventas_q" fill="#1F6B45" name="Ventas" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             </div>

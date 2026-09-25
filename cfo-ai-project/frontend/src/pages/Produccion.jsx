@@ -37,12 +37,12 @@ const formatNum = (value) => {
 // ═══════════════════════════════════════════════════════════
 
 const ETAPAS_PIPELINE = [
-  { id: 'nueva', nombre: 'Órdenes Nuevas', color: '#3b82f6', icono: ClipboardDocumentListIcon },
-  { id: 'materiales', nombre: 'En Espera de Materiales', color: '#f59e0b', icono: BeakerIcon },
-  { id: 'produccion', nombre: 'En Producción', color: '#8b5cf6', icono: WrenchIcon },
-  { id: 'qa', nombre: 'Control de Calidad', color: '#ec4899', icono: CheckCircleIcon },
-  { id: 'empaque', nombre: 'Envasado/Empaque', color: '#10b981', icono: TruckIcon },
-  { id: 'entrega', nombre: 'Listo para Entrega', color: '#001639', icono: FlagIcon },
+  { id: 'nueva', nombre: 'Órdenes Nuevas', color: '#3D56C9', icono: ClipboardDocumentListIcon },
+  { id: 'materiales', nombre: 'En Espera de Materiales', color: '#8A5A24', icono: BeakerIcon },
+  { id: 'produccion', nombre: 'En Producción', color: '#3D56C9', icono: WrenchIcon },
+  { id: 'qa', nombre: 'Control de Calidad', color: '#636970', icono: CheckCircleIcon },
+  { id: 'empaque', nombre: 'Envasado/Empaque', color: '#1F6B45', icono: TruckIcon },
+  { id: 'entrega', nombre: 'Listo para Entrega', color: '#17181B', icono: FlagIcon },
 ]
 
 const ORDENES_DEMO = [
@@ -220,13 +220,13 @@ const TENDENCIA_PRODUCCION = [
 
 // Distribución de órdenes por prioridad
 const DIST_PRIORIDAD = [
-  { nombre: 'Urgente', valor: 1, color: '#ef4444' },
-  { nombre: 'Alta', valor: 3, color: '#f97316' },
-  { nombre: 'Media', valor: 3, color: '#3b82f6' },
-  { nombre: 'Baja', valor: 1, color: '#10b981' },
+  { nombre: 'Urgente', valor: 1, color: '#9B3320' },
+  { nombre: 'Alta', valor: 3, color: '#8A5A24' },
+  { nombre: 'Media', valor: 3, color: '#3D56C9' },
+  { nombre: 'Baja', valor: 1, color: '#1F6B45' },
 ]
 
-const COLORS = ['#10b981', '#f59e0b', '#f97316', '#ef4444']
+const COLORS = ['#1F6B45', '#8A5A24', '#8A5A24', '#9B3320']
 
 // ═══════════════════════════════════════════════════════════
 // COMPONENTES
@@ -234,13 +234,13 @@ const COLORS = ['#10b981', '#f59e0b', '#f97316', '#ef4444']
 
 const PrioridadBadge = ({ prioridad }) => {
   const styles = {
-    urgente: 'bg-red-500/10 text-red-600 border-red-200',
-    alta: 'bg-orange-500/10 text-orange-600 border-orange-200',
-    media: 'bg-blue-500/10 text-blue-600 border-blue-200',
-    baja: 'bg-emerald-500/10 text-emerald-600 border-emerald-200',
+    urgente: 'bg-breach/10 text-breach border-breach-100',
+    alta: 'bg-copper/10 text-copper border-copper-100',
+    media: 'bg-cobalt/10 text-cobalt border-fog',
+    baja: 'bg-verified/10 text-verified border-verified-100',
   }
   return (
-    <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${styles[prioridad] || styles.media}`}>
+    <span className={`text-[0.75rem] px-2 py-0.5 rounded-full border font-medium ${styles[prioridad] || styles.media}`}>
       {prioridad.toUpperCase()}
     </span>
   )
@@ -249,7 +249,7 @@ const PrioridadBadge = ({ prioridad }) => {
 const EtapaBadge = ({ etapa }) => {
   const etapaInfo = ETAPAS_PIPELINE.find(e => e.id === etapa)
   return (
-    <span className="flex items-center gap-1 text-xs font-medium" style={{ color: etapaInfo?.color || '#6b7280' }}>
+    <span className="flex items-center gap-1 text-xs font-medium" style={{ color: etapaInfo?.color || '#636970' }}>
       {etapaInfo && <etapaInfo.icono className="w-3.5 h-3.5" />}
       {etapaInfo?.nombre || etapa}
     </span>
@@ -271,7 +271,7 @@ export default function Produccion() {
     const eficienciaPromedio = Math.round(ORDENES_DEMO.filter(o => o.eficiencia > 0).reduce((s, o) => s + o.eficiencia, 0) / ORDENES_DEMO.filter(o => o.eficiencia > 0).length)
     const ordenesUrgentes = ORDENES_DEMO.filter(o => o.prioridad === 'urgente' || (o.diasRestantes <= 3 && o.etapa !== 'entrega')).length
     const onTimeDelivery = Math.round((ordenesCompletadas / totalOrdenes) * 100)
-    
+
     return { totalOrdenes, ordenesActivas, ordenesCompletadas, valorTotal, valorWIP, eficienciaPromedio, ordenesUrgentes, onTimeDelivery }
   }, [])
 
@@ -297,8 +297,8 @@ export default function Produccion() {
   const CustomTooltip = ({ active, payload, label }) => {
     if (!active || !payload?.length) return null
     return (
-      <div className="bg-white border border-gray-200 rounded-lg p-2 shadow-lg">
-        <p className="text-xs font-medium text-gray-700 mb-1">{label}</p>
+      <div className="bg-white border border-fog rounded-card p-2">
+        <p className="text-xs font-medium text-graphite mb-1">{label}</p>
         {payload.map((p, i) => (
           <p key={i} className="text-xs" style={{ color: p.color }}>
             {p.name}: {typeof p.value === 'number' ? formatNum(p.value) : p.value}
@@ -313,8 +313,8 @@ export default function Produccion() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-[var(--text-primary)]">Pipeline de Producción</h1>
-          <p className="text-sm text-[var(--text-muted)]">Órdenes de producción y control de operaciones</p>
+          <h1 className="font-display text-[2.125rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">Pipeline de Producción</h1>
+          <p className="measure mt-2 text-[0.9375rem] leading-relaxed text-slate">Órdenes de producción y control de operaciones</p>
         </div>
         <div className="flex items-center gap-2">
           <Link to="/" className="text-xs text-[var(--accent-blue)] hover:underline flex items-center gap-1">
@@ -327,35 +327,35 @@ export default function Produccion() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="card p-4">
           <div className="flex items-center gap-2 mb-2">
-            <ClipboardDocumentListIcon className="w-4 h-4 text-[var(--accent-blue)]" />
-            <span className="text-[10px] text-[var(--text-muted)] uppercase">Órdenes Activas</span>
+            <ClipboardDocumentListIcon className="w-4 h-4 text-slate" />
+            <span className="text-[0.75rem] text-[var(--text-muted)] uppercase">Órdenes Activas</span>
           </div>
-          <p className="text-2xl font-bold font-mono">{metricas.ordenesActivas}</p>
-          <p className="text-[10px] text-[var(--text-muted)]">{metricas.ordenesCompletadas} completadas</p>
+          <p className="text-2xl font-semibold font-mono">{metricas.ordenesActivas}</p>
+          <p className="text-[0.75rem] text-[var(--text-muted)]">{metricas.ordenesCompletadas} completadas</p>
         </div>
         <div className="card p-4">
           <div className="flex items-center gap-2 mb-2">
             <CurrencyDollarIcon className="w-4 h-4 text-[var(--success)]" />
-            <span className="text-[10px] text-[var(--text-muted)] uppercase">Valor Pipeline</span>
+            <span className="text-[0.75rem] text-[var(--text-muted)] uppercase">Valor Pipeline</span>
           </div>
-          <p className="text-2xl font-bold font-mono">{formatGTQ(metricas.valorTotal)}</p>
-          <p className="text-[10px] text-[var(--text-muted)]">WIP: {formatGTQ(metricas.valorWIP)}</p>
+          <p className="text-2xl font-semibold font-mono">{formatGTQ(metricas.valorTotal)}</p>
+          <p className="text-[0.75rem] text-[var(--text-muted)]">WIP: {formatGTQ(metricas.valorWIP)}</p>
         </div>
         <div className="card p-4">
           <div className="flex items-center gap-2 mb-2">
             <ArrowPathIcon className="w-4 h-4 text-[var(--accent-orange)]" />
-            <span className="text-[10px] text-[var(--text-muted)] uppercase">Eficiencia Prom.</span>
+            <span className="text-[0.75rem] text-[var(--text-muted)] uppercase">Eficiencia Prom.</span>
           </div>
-          <p className="text-2xl font-bold font-mono">{metricas.eficienciaPromedio}%</p>
-          <p className="text-[10px] text-[var(--text-muted)]">OEE objetivo: 85%</p>
+          <p className="text-2xl font-semibold font-mono">{metricas.eficienciaPromedio}%</p>
+          <p className="text-[0.75rem] text-[var(--text-muted)]">OEE objetivo: 85%</p>
         </div>
         <div className="card p-4">
           <div className="flex items-center gap-2 mb-2">
-            <CheckCircleIcon className="w-4 h-4 text-emerald-500" />
-            <span className="text-[10px] text-[var(--text-muted)] uppercase">On-Time Delivery</span>
+            <CheckCircleIcon className="w-4 h-4 text-verified" />
+            <span className="text-[0.75rem] text-[var(--text-muted)] uppercase">On-Time Delivery</span>
           </div>
-          <p className="text-2xl font-bold font-mono">{metricas.onTimeDelivery}%</p>
-          <p className="text-[10px] text-[var(--text-muted)]">Meta: 95%</p>
+          <p className="text-2xl font-semibold font-mono">{metricas.onTimeDelivery}%</p>
+          <p className="text-[0.75rem] text-[var(--text-muted)]">Meta: 95%</p>
         </div>
       </div>
 
@@ -365,29 +365,29 @@ export default function Produccion() {
         <div className="lg:col-span-2 card">
           <div className="flex items-center justify-between p-4 pb-2">
             <div className="flex items-center gap-2">
-              <ChartBarIcon className="w-4 h-4 text-[var(--accent-blue)]" />
+              <ChartBarIcon className="w-4 h-4 text-slate" />
               <h2 className="font-semibold text-sm">Pipeline por Etapa</h2>
             </div>
-            <span className="text-[11px] text-[var(--text-muted)]">{metricas.totalOrdenes} órdenes totales</span>
+            <span className="text-[0.8125rem] text-[var(--text-muted)]">{metricas.totalOrdenes} órdenes totales</span>
           </div>
           <div className="px-4 pb-4">
             <div className="grid grid-cols-3 lg:grid-cols-6 gap-2">
               {pipelineResumen.map((etapa) => (
                 <div 
                   key={etapa.id}
-                  className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                    filtroEtapa === etapa.id ? 'border-[var(--accent-blue)] bg-blue-50' : 'border-transparent bg-[var(--bg-secondary)]'
+                  className={`p-3 rounded-card border-2 cursor-pointer transition-all ${
+                    filtroEtapa === etapa.id ? 'border-[var(--accent-blue)] bg-paper' : 'border-transparent bg-[var(--bg-secondary)]'
                   }`}
                   onClick={() => setFiltroEtapa(filtroEtapa === etapa.id ? 'todas' : etapa.id)}
                 >
                   <etapa.icono className="w-5 h-5 mb-2" style={{ color: etapa.color }} />
-                  <p className="text-[10px] text-[var(--text-muted)] leading-tight">{etapa.nombre}</p>
-                  <p className="text-lg font-bold font-mono">{etapa.cantidad}</p>
-                  <p className="text-[10px] text-[var(--text-muted)]">{formatGTQ(etapa.valor)}</p>
+                  <p className="text-[0.75rem] text-[var(--text-muted)] leading-tight">{etapa.nombre}</p>
+                  <p className="text-lg font-semibold font-mono">{etapa.cantidad}</p>
+                  <p className="text-[0.75rem] text-[var(--text-muted)]">{formatGTQ(etapa.valor)}</p>
                 </div>
               ))}
             </div>
-            
+
             {/* Barra de progreso visual */}
             <div className="mt-4">
               <div className="flex h-3 rounded-full overflow-hidden">
@@ -404,7 +404,7 @@ export default function Produccion() {
               </div>
               <div className="flex justify-between mt-1">
                 {pipelineResumen.map((etapa) => (
-                  <span key={etapa.id} className="text-[9px]" style={{ color: etapa.color }}>
+                  <span key={etapa.id} className="text-[0.6875rem]" style={{ color: etapa.color }}>
                     {Math.round(metricas.totalOrdenes > 0 ? (etapa.cantidad / metricas.totalOrdenes) * 100 : 0)}%
                   </span>
                 ))}
@@ -417,24 +417,24 @@ export default function Produccion() {
         <div className="card">
           <div className="flex items-center justify-between p-4 pb-2">
             <div className="flex items-center gap-2">
-              <FireIcon className="w-4 h-4 text-red-500" />
+              <FireIcon className="w-4 h-4 text-breach" />
               <h2 className="font-semibold text-sm">Requieren Atención</h2>
             </div>
-            <span className="badge-danger text-[10px]">{metricas.ordenesUrgentes} urgentes</span>
+            <span className="badge-danger text-[0.75rem]">{metricas.ordenesUrgentes} urgentes</span>
           </div>
           <div className="px-4 pb-4 space-y-2">
             {ORDENES_DEMO.filter(o => o.prioridad === 'urgente' || (o.diasRestantes <= 3 && o.etapa !== 'entrega')).slice(0, 4).map((orden) => (
-              <div key={orden.id} className="p-2.5 bg-red-50 rounded-lg border border-red-100">
+              <div key={orden.id} className="p-2.5 bg-breach-50 rounded-card border border-breach-100">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-medium">{orden.id}</span>
                   <PrioridadBadge prioridad={orden.prioridad} />
                 </div>
-                <p className="text-[10px] text-[var(--text-muted)] truncate">{orden.cliente}</p>
+                <p className="text-[0.75rem] text-[var(--text-muted)] truncate">{orden.cliente}</p>
                 <div className="flex items-center justify-between mt-1">
-                  <span className="text-[10px] text-red-600 font-medium">
+                  <span className="text-[0.75rem] text-breach font-medium">
                     {orden.diasRestantes === 0 ? 'VENCE HOY' : `${orden.diasRestantes} días restantes`}
                   </span>
-                  <span className="text-[10px] font-mono">{formatGTQ(orden.valor)}</span>
+                  <span className="text-[0.75rem] font-mono">{formatGTQ(orden.valor)}</span>
                 </div>
               </div>
             ))}
@@ -448,7 +448,7 @@ export default function Produccion() {
         <div className="card">
           <div className="flex items-center justify-between p-4 pb-2">
             <div className="flex items-center gap-2">
-              <ArrowPathIcon className="w-4 h-4 text-[var(--accent-blue)]" />
+              <ArrowPathIcon className="w-4 h-4 text-slate" />
               <h2 className="font-semibold text-sm">Producción Diaria (Unidades)</h2>
             </div>
           </div>
@@ -458,17 +458,17 @@ export default function Produccion() {
                 <AreaChart data={TENDENCIA_PRODUCCION}>
                   <defs>
                     <linearGradient id="colorUnidades" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor="#001639" stopOpacity={0.1}/>
-                      <stop offset="95%" stopColor="#001639" stopOpacity={0}/>
+                      <stop offset="5%" stopColor="#17181B" stopOpacity={0.1}/>
+                      <stop offset="95%" stopColor="#17181B" stopOpacity={0}/>
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                  <XAxis dataKey="dia" tick={{ fontSize: 11, fill: '#6b7280' }} />
-                  <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(v) => formatNum(v)} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#E9EAEC" />
+                  <XAxis dataKey="dia" tick={{ fontSize: 11, fill: '#636970' }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#636970' }} tickFormatter={(v) => formatNum(v)} />
                   <Tooltip content={<CustomTooltip />} />
                   <Legend wrapperStyle={{ fontSize: 11 }} />
-                  <Area type="monotone" dataKey="unidades" name="Producido" stroke="#001639" fill="url(#colorUnidades)" strokeWidth={2} />
-                  <Area type="monotone" dataKey="meta" name="Meta" stroke="#94a3b8" fill="none" strokeDasharray="5 5" strokeWidth={2} />
+                  <Area type="monotone" dataKey="unidades" name="Producido" stroke="#17181B" fill="url(#colorUnidades)" strokeWidth={2} />
+                  <Area type="monotone" dataKey="meta" name="Meta" stroke="#636970" fill="none" strokeDasharray="5 5" strokeWidth={2} />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -486,40 +486,40 @@ export default function Produccion() {
           <div className="px-4 pb-4">
             <div className="space-y-3">
               {METRICAS_LINEAS.map((linea) => (
-                <div key={linea.linea} className="p-3 bg-[var(--bg-secondary)] rounded-lg">
+                <div key={linea.linea} className="p-3 bg-[var(--bg-secondary)] rounded-card">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs font-medium">{linea.linea}</span>
-                    <span className={`text-sm font-bold font-mono ${linea.oee >= 90 ? 'text-emerald-600' : linea.oee >= 80 ? 'text-amber-600' : 'text-red-600'}`}>
+                    <span className={`text-sm font-semibold font-mono ${linea.oee >= 90 ? 'text-verified' : linea.oee >= 80 ? 'text-copper' : 'text-breach'}`}>
                       {linea.oee}%
                     </span>
                   </div>
-                  <div className="w-full h-2 bg-gray-200 rounded-full overflow-hidden mb-2">
+                  <div className="w-full h-2 bg-fog rounded-full overflow-hidden mb-2">
                     <div 
                       className="h-full rounded-full transition-all" 
-                      style={{ width: `${linea.oee}%`, backgroundColor: linea.oee >= 90 ? '#10b981' : linea.oee >= 80 ? '#f59e0b' : '#ef4444' }}
+                      style={{ width: `${linea.oee}%`, backgroundColor: linea.oee >= 90 ? '#1F6B45' : linea.oee >= 80 ? '#8A5A24' : '#9B3320' }}
                     />
                   </div>
                   <div className="grid grid-cols-3 gap-2 text-center">
                     <div>
-                      <p className="text-[9px] text-[var(--text-muted)]">Disponibilidad</p>
+                      <p className="text-[0.6875rem] text-[var(--text-muted)]">Disponibilidad</p>
                       <p className="text-xs font-mono">{linea.disponibilidad}%</p>
                     </div>
                     <div>
-                      <p className="text-[9px] text-[var(--text-muted)]">Rendimiento</p>
+                      <p className="text-[0.6875rem] text-[var(--text-muted)]">Rendimiento</p>
                       <p className="text-xs font-mono">{linea.rendimiento}%</p>
                     </div>
                     <div>
-                      <p className="text-[9px] text-[var(--text-muted)]">Calidad</p>
+                      <p className="text-[0.6875rem] text-[var(--text-muted)]">Calidad</p>
                       <p className="text-xs font-mono">{linea.calidad}%</p>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-            <div className="mt-3 p-2.5 bg-[#001639] text-white rounded-lg">
+            <div className="mt-3 p-2.5 bg-ink text-white rounded-card">
               <div className="flex items-center justify-between">
-                <span className="text-[10px] opacity-70">OEE Promedio Planta</span>
-                <span className="text-lg font-bold font-mono">
+                <span className="text-[0.75rem] opacity-70">OEE Promedio Planta</span>
+                <span className="text-lg font-semibold font-mono">
                   {Math.round(METRICAS_LINEAS.reduce((s, l) => s + l.oee, 0) / METRICAS_LINEAS.length)}%
                 </span>
               </div>
@@ -532,23 +532,23 @@ export default function Produccion() {
       <div className="card">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 pb-2 gap-3">
           <div className="flex items-center gap-2">
-            <ClipboardDocumentListIcon className="w-4 h-4 text-[var(--accent-blue)]" />
+            <ClipboardDocumentListIcon className="w-4 h-4 text-slate" />
             <h2 className="font-semibold text-sm">Órdenes de Producción</h2>
-            <span className="text-[10px] text-[var(--text-muted)]">({ordenesFiltradas.length} órdenes)</span>
+            <span className="text-[0.75rem] text-[var(--text-muted)]">({ordenesFiltradas.length} órdenes)</span>
           </div>
           <div className="flex items-center gap-2">
-            <select 
+            <select aria-label="Todas las etapas" 
               value={filtroEtapa} 
               onChange={(e) => setFiltroEtapa(e.target.value)}
-              className="text-xs bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-lg px-2 py-1"
+              className="text-xs bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-card px-2 py-1"
             >
               <option value="todas">Todas las etapas</option>
               {ETAPAS_PIPELINE.map(e => <option key={e.id} value={e.id}>{e.nombre}</option>)}
             </select>
-            <select 
+            <select aria-label="Todas las prioridades" 
               value={filtroPrioridad} 
               onChange={(e) => setFiltroPrioridad(e.target.value)}
-              className="text-xs bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-lg px-2 py-1"
+              className="text-xs bg-[var(--bg-secondary)] border border-[var(--border-default)] rounded-card px-2 py-1"
             >
               <option value="todas">Todas las prioridades</option>
               <option value="urgente">Urgente</option>
@@ -591,27 +591,27 @@ export default function Produccion() {
                     <span className="text-[var(--text-secondary)]">{orden.producto}</span>
                   </td>
                   <td className="px-4 py-2.5 text-right font-mono">
-                    {formatNum(orden.cantidad)} <span className="text-[10px] text-[var(--text-muted)]">{orden.unidad}</span>
+                    {formatNum(orden.cantidad)} <span className="text-[0.75rem] text-[var(--text-muted)]">{orden.unidad}</span>
                   </td>
                   <td className="px-4 py-2.5">
                     <EtapaBadge etapa={orden.etapa} />
                   </td>
                   <td className="px-4 py-2.5">
                     <div className="flex items-center gap-2">
-                      <div className="w-16 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="w-16 h-1.5 bg-fog rounded-full overflow-hidden">
                         <div 
-                          className="h-full rounded-full bg-[#001639]" 
+                          className="h-full rounded-full bg-ink" 
                           style={{ width: `${orden.etapaProgreso}%` }}
                         />
                       </div>
-                      <span className="text-[10px] font-mono">{orden.etapaProgreso}%</span>
+                      <span className="text-[0.75rem] font-mono">{orden.etapaProgreso}%</span>
                     </div>
                   </td>
                   <td className="px-4 py-2.5 text-right font-mono font-medium">
                     {formatGTQ(orden.valor)}
                   </td>
                   <td className="px-4 py-2.5 text-center">
-                    <span className={`text-[10px] ${orden.diasRestantes <= 3 && orden.etapa !== 'entrega' ? 'text-red-500 font-medium' : 'text-[var(--text-muted)]'}`}>
+                    <span className={`text-[0.75rem] ${orden.diasRestantes <= 3 && orden.etapa !== 'entrega' ? 'text-breach font-medium' : 'text-[var(--text-muted)]'}`}>
                       {orden.diasRestantes === 0 ? 'HOY' : `${orden.diasRestantes}d`}
                     </span>
                   </td>
@@ -628,33 +628,33 @@ export default function Produccion() {
       {/* ═══ MODAL DETALLE ORDEN ═══ */}
       {ordenSeleccionada && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4" onClick={() => setOrdenSeleccionada(null)}>
-          <div className="bg-white rounded-xl w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
+          <div className="bg-white rounded-card w-full max-w-lg max-h-[85vh] overflow-y-auto" onClick={e => e.stopPropagation()}>
             <div className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <div>
-                  <h3 className="text-lg font-bold">{ordenSeleccionada.id}</h3>
+                  <h3 className="text-lg font-semibold">{ordenSeleccionada.id}</h3>
                   <p className="text-sm text-[var(--text-muted)]">{ordenSeleccionada.cliente}</p>
                 </div>
-                <button onClick={() => setOrdenSeleccionada(null)} className="p-2 hover:bg-gray-100 rounded-lg">
+                <button onClick={() => setOrdenSeleccionada(null)} className="p-2 hover:bg-paper rounded-card">
                   <ChevronRightIcon className="w-5 h-5 rotate-90" />
                 </button>
               </div>
-              
+
               <div className="grid grid-cols-2 gap-3 mb-4">
-                <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
-                  <p className="text-[10px] text-[var(--text-muted)] uppercase">Producto</p>
+                <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
+                  <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Producto</p>
                   <p className="text-sm font-medium">{ordenSeleccionada.producto}</p>
                 </div>
-                <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
-                  <p className="text-[10px] text-[var(--text-muted)] uppercase">Cantidad</p>
+                <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
+                  <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Cantidad</p>
                   <p className="text-sm font-medium">{formatNum(ordenSeleccionada.cantidad)} {ordenSeleccionada.unidad}</p>
                 </div>
-                <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
-                  <p className="text-[10px] text-[var(--text-muted)] uppercase">Valor Total</p>
-                  <p className="text-sm font-bold text-[var(--success)]">{formatGTQ(ordenSeleccionada.valor)}</p>
+                <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
+                  <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Valor Total</p>
+                  <p className="text-sm font-semibold text-[var(--success)]">{formatGTQ(ordenSeleccionada.valor)}</p>
                 </div>
-                <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
-                  <p className="text-[10px] text-[var(--text-muted)] uppercase">Costo Materiales</p>
+                <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
+                  <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Costo Materiales</p>
                   <p className="text-sm font-medium">{formatGTQ(ordenSeleccionada.costoMateriales)}</p>
                 </div>
               </div>
@@ -664,21 +664,21 @@ export default function Produccion() {
                   <EtapaBadge etapa={ordenSeleccionada.etapa} />
                   <PrioridadBadge prioridad={ordenSeleccionada.prioridad} />
                 </div>
-                
-                <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+
+                <div className="w-full h-3 bg-fog rounded-full overflow-hidden">
                   <div 
-                    className="h-full rounded-full bg-[#001639] transition-all" 
+                    className="h-full rounded-full bg-ink transition-all" 
                     style={{ width: `${ordenSeleccionada.etapaProgreso}%` }}
                   />
                 </div>
-                <p className="text-[10px] text-[var(--text-muted)] text-center">{ordenSeleccionada.etapaProgreso}% completado</p>
+                <p className="text-[0.75rem] text-[var(--text-muted)] text-center">{ordenSeleccionada.etapaProgreso}% completado</p>
               </div>
 
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <CalendarIcon className="w-4 h-4 text-[var(--text-muted)]" />
                   <span>Entrega: {ordenSeleccionada.fechaEntrega}</span>
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded ${ordenSeleccionada.diasRestantes <= 3 ? 'bg-red-100 text-red-600' : 'bg-blue-100 text-blue-600'}`}>
+                  <span className={`text-[0.75rem] px-1.5 py-0.5 rounded ${ordenSeleccionada.diasRestantes <= 3 ? 'bg-breach-50 text-breach' : 'bg-paper text-cobalt'}`}>
                     {ordenSeleccionada.diasRestantes} días restantes
                   </span>
                 </div>
@@ -699,8 +699,8 @@ export default function Produccion() {
               </div>
 
               {ordenSeleccionada.notas && (
-                <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-                  <p className="text-xs text-amber-700">{ordenSeleccionada.notas}</p>
+                <div className="mt-4 p-3 bg-copper-50 border border-copper-100 rounded-card">
+                  <p className="text-xs text-copper">{ordenSeleccionada.notas}</p>
                 </div>
               )}
             </div>

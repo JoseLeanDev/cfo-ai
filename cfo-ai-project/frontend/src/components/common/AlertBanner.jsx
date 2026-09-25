@@ -4,23 +4,23 @@ import { Link } from 'react-router-dom'
 const config = {
   critical: {
     icon: ExclamationCircleIcon,
-    colors: 'bg-rose-50/80 border-rose-200 text-rose-900',
-    iconBg: 'bg-rose-100',
-    iconColor: 'text-rose-600',
+    colors: 'bg-breach-50/80 border-breach-100 text-breach',
+    iconBg: 'bg-breach-50',
+    iconColor: 'text-breach',
     glow: 'shadow-glow-danger'
   },
   warning: {
     icon: ExclamationTriangleIcon,
-    colors: 'bg-amber-50/80 border-amber-200 text-amber-900',
-    iconBg: 'bg-amber-100',
-    iconColor: 'text-amber-600',
+    colors: 'bg-copper-50/80 border-copper-100 text-copper',
+    iconBg: 'bg-copper-50',
+    iconColor: 'text-copper',
     glow: ''
   },
   info: {
     icon: InformationCircleIcon,
-    colors: 'bg-blue-50/80 border-blue-200 text-blue-900',
-    iconBg: 'bg-blue-100',
-    iconColor: 'text-blue-600',
+    colors: 'bg-paper/80 border-fog text-cobalt',
+    iconBg: 'bg-paper',
+    iconColor: 'text-cobalt',
     glow: ''
   }
 }
@@ -35,22 +35,22 @@ export default function AlertBanner({ alerts = [] }) {
         return (
           <div
             key={alert.id}
-            className={`relative overflow-hidden rounded-2xl border backdrop-blur-sm ${colors} ${glow}`}
+            className={`relative overflow-hidden rounded-card border backdrop-blur-sm ${colors} ${glow}`}
           >
             <div className="flex items-start gap-4 p-4">
-              <div className={`flex-shrink-0 w-10 h-10 rounded-xl ${iconBg} flex items-center justify-center`}>
+              <div className={`flex-shrink-0 w-10 h-10 rounded-card ${iconBg} flex items-center justify-center`}>
                 <Icon className={`w-5 h-5 ${iconColor}`} />
               </div>
-              
+
               <div className="flex-1 min-w-0">
                 <p className="font-semibold">{alert.message}</p>
-                
+
                 {alert.due_date && (
                   <p className="mt-1 text-sm opacity-80">
                     Vence: {new Date(alert.due_date).toLocaleDateString('es-GT')}
                   </p>
                 )}
-                
+
                 {alert.action_required && (
                   <Link
                     to={alert.action_required}
@@ -63,16 +63,16 @@ export default function AlertBanner({ alerts = [] }) {
                   </Link>
                 )}
               </div>
-              
-              <button className="flex-shrink-0 p-1.5 rounded-lg hover:bg-black/5 transition-colors">
+
+              <button className="flex-shrink-0 p-1.5 rounded-card hover:bg-black/5 transition-colors">
                 <XMarkIcon className="w-5 h-5 opacity-60" />
               </button>
             </div>
-            
+
             {/* Progress bar for urgency */}
             {alert.level === 'critical' && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-rose-200">
-                <div className="h-full bg-rose-500 animate-pulse" style={{ width: '60%' }} />
+              <div className="absolute bottom-0 left-0 right-0 h-1 bg-breach">
+                <div className="h-full bg-breach animate-pulse" style={{ width: '60%' }} />
               </div>
             )}
           </div>

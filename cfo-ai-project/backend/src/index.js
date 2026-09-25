@@ -4,32 +4,37 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const path = require('path');
+const fs = require('fs');
 const { getCFOAICore, initializeCFOAICore } = require('./agents');
 const db = require('../database/connection');
-const { wakeUpMiddleware, ejecutarTareasPendientesWakeUp } = require('./services/wakeUpScheduler');
+const { iniciarAgenda } = require('./scheduler/agenda');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Initialize abaco Core v2.0
+// En producción el JWT_SECRET no puede faltar: sin él la firma de los tokens
+// cae al valor de desarrollo, que está escrito en el código de un repo público,
+// y cualquiera podría forjar una sesión válida. Preferimos no arrancar antes
+// que arrancar inseguro.
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+  console.error('FATAL: falta JWT_SECRET en producción. El servidor no arranca.');
+  process.exit(1);
+}
+
 async function initializeAgents() {
   try {
     const core = initializeCFOAICore();
     app.set('CFOAICore', core);
-    console.log('🤖 abaco Core v2.0 iniciado exitosamente');
-    console.log('   Agentes: 💰 Caja • 📊 Análisis • 💵 Cobranza • 📗 Contabilidad');
+    console.log('Qora Core iniciado: Caja · Análisis · Cobranza · Contabilidad');
   } catch (error) {
-    console.error('❌ Error inicializando CFO AI Core:', error.message);
+    console.error('Error inicializando Qora Core:', error.message);
   }
 }
 
-// Setup auth tables (auto-migration on startup)
+// Tabla de usuarios y usuario de demostración.
 async function setupAuthTables() {
   try {
-    console.log('🔐 Verificando tabla usuarios...');
-    
-    // Crear tabla usuarios si no existe
-    const createResult = await db.runAsync(`
+    await db.runAsync(`
       CREATE TABLE IF NOT EXISTS usuarios (
         id SERIAL PRIMARY KEY,
         nombre VARCHAR(255) NOT NULL,
@@ -43,51 +48,75 @@ async function setupAuthTables() {
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `, []);
-    console.log('   CREATE TABLE result:', createResult);
-    
-    // Verificar si el usuario demo existe
+
     const demoUser = await db.getAsync(
       'SELECT id FROM usuarios WHERE email = $1',
       ['demo@cfoai.com']
     );
-    
+
     if (!demoUser) {
-      const insertResult = await db.runAsync(`
+      await db.runAsync(`
         INSERT INTO usuarios (id, nombre, email, password_hash, rol)
         VALUES (1, 'Usuario Demo', 'demo@cfoai.com', '$2b$10$wZ/MyH.ecgVvcPD3o06n.OYjy1I1c74BQSG0CKvUbVQkEM6Zcm1aC', 'admin')
       `, []);
-      console.log('   INSERT demo result:', insertResult);
-      console.log('✅ Usuario demo creado');
-    } else {
-      console.log('   Usuario demo ya existe');
+      console.log('Usuario demo creado');
     }
-    
-    console.log('✅ Tabla usuarios lista');
   } catch (error) {
-    console.error('⚠️ Error setup auth tables:', error.message);
-    console.error('   Stack:', error.stack);
+    console.error('Error preparando la tabla de usuarios:', error.message);
   }
 }
 
-// Middleware
+// ── Middleware ───────────────────────────────────────────────────────────────
 app.use(helmet());
-app.use(cors({
-  origin: ['https://frontend-blond-rho-55.vercel.app', 'https://*.vercel.app', 'https://*.onrender.com', 'http://localhost:5173', 'http://localhost:3001'],
-  credentials: true
-}));
+
+// El frontend se sirve desde este mismo proceso, así que en producción todo es
+// mismo origen y CORS no interviene. La lista solo importa para desarrollo o
+// para un cliente externo que se agregue a propósito.
+const ORIGENES = (process.env.ALLOWED_ORIGINS || 'http://localhost:3001,http://localhost:5173')
+  .split(',').map((o) => o.trim()).filter(Boolean);
+app.use(cors({ origin: ORIGENES, credentials: true }));
+
 app.use(morgan('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// WakeUp Scheduler Middleware v3.0
-app.use(wakeUpMiddleware());
-
-// Database setup
 app.set('db', db);
 app.set('CFOAICore', getCFOAICore());
 
-// Routes - v2
-app.use('/api/auth', require('./routes/auth'));       // Auth - Login/Logout/Register
+// ── Rutas públicas ───────────────────────────────────────────────────────────
+app.use('/api/auth', require('./routes/auth'));
+
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+  });
+});
+
+// Algún monitor externo puede seguir haciendo ping aquí. Antes este endpoint
+// disparaba todas las tareas de los agentes en cada llamada; ahora las tareas
+// viven en la agenda y esto solo confirma que el proceso responde.
+app.get('/api/keep-alive', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+// ── Compuerta de autenticación ───────────────────────────────────────────────
+// Todo lo que cuelga de /api exige un token válido, salvo las rutas públicas de
+// la lista. La regla vive en un solo lugar para que un router nuevo quede
+// protegido por defecto y haya que optar explícitamente por abrirlo.
+//
+// Antes ningún router lo pedía: la pantalla de login era decorativa y las
+// cifras, el esquema de la base y hasta un endpoint para volver a sembrar datos
+// se servían a cualquiera con la URL.
+const { authenticate } = require('./middleware/auth');
+const RUTAS_PUBLICAS = [/^\/health$/, /^\/keep-alive$/, /^\/auth(\/|$)/];
+app.use('/api', (req, res, next) => {
+  if (RUTAS_PUBLICAS.some((re) => re.test(req.path))) return next();
+  return authenticate(req, res, next);
+});
+
+// ── Rutas protegidas ─────────────────────────────────────────────────────────
 app.use('/api/dashboard', require('./routes/dashboard'));
 app.use('/api/tesoreria', require('./routes/tesoreria'));
 app.use('/api/contabilidad', require('./routes/contabilidad'));
@@ -97,121 +126,47 @@ app.use('/api/margenes', require('./routes/margenes'));
 app.use('/api/sat', require('./routes/sat'));
 app.use('/api/alertas', require('./routes/alertas'));
 app.use('/api/agents', require('./routes/agents'));
-app.use('/api/agents/conciliador', require('./routes/conciliador'));
 app.use('/api/reportes', require('./routes/reportes'));
 app.use('/api/cierre', require('./routes/cierre'));
-app.use('/api/scheduler', require('./routes/scheduler'));
-app.use('/api/test', require('./routes/test'));
-app.use('/api/admin', require('./routes/admin'));
-app.use('/api/admin/run-all', require('./routes/runAllAgents'));
-app.use('/api/debug', require('./routes/debug'));
-app.use('/api/debug-schema', require('./routes/debug-schema'));
 
-// Health check
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok', 
-    timestamp: new Date().toISOString(),
-    version: '1.0.0',
-    environment: process.env.NODE_ENV || 'development'
-  });
-});
-
-// Keep-Alive endpoint
-app.get('/api/keep-alive', async (req, res) => {
-  try {
-    console.log('[Keep-Alive] 🔥 Recibido ping de wake-up');
-    const resultado = await ejecutarTareasPendientesWakeUp();
-    
-    res.json({
-      status: 'ok',
-      message: 'Wake-up ejecutado',
-      timestamp: new Date().toISOString(),
-      tareas: resultado
-    });
-  } catch (error) {
-    console.error('[Keep-Alive] Error:', error);
-    res.status(500).json({
-      status: 'error',
-      message: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
-});
-
-// Static files
+// ── Frontend ─────────────────────────────────────────────────────────────────
 const frontendDistPath = path.join(__dirname, '../../frontend/dist');
-const fs = require('fs');
 if (fs.existsSync(frontendDistPath)) {
   app.use(express.static(frontendDistPath));
-  
-  app.get('*', (req, res) => {
-    if (!req.path.startsWith('/api')) {
-      res.sendFile(path.join(frontendDistPath, 'index.html'));
-    }
+
+  // React Router usa history: toda ruta que no sea de la API devuelve el index.
+  // Las rutas /api desconocidas siguen de largo hasta el 404. Antes este
+  // manejador no respondía ni llamaba a next() para ellas, y el request quedaba
+  // colgado hasta el timeout del cliente.
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) return next();
+    res.sendFile(path.join(frontendDistPath, 'index.html'));
   });
 }
 
-// Error handling
+// ── Errores ──────────────────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
   console.error(err.stack);
   res.status(500).json({
     status: 'error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Error interno del servidor',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     status: 'error',
     message: 'Endpoint no encontrado',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
   });
 });
 
 app.listen(PORT, async () => {
-  console.log(`
-╔══════════════════════════════════════════════════════════╗
-║              abaco - Backend API v2.0                 ║
-╠══════════════════════════════════════════════════════════╣
-║  🚀 Servidor corriendo en puerto ${PORT}                   ║
-║  📊 abaco Core v2.0: ACTIVO                             ║
-║  🤖 Agentes: 💰 Caja • 📊 Análisis • 📋 Cobranza • 📅 Contabilidad
-╠══════════════════════════════════════════════════════════╣
-║  Tareas Programadas:                                     ║
-║    Caja:        Cada hora 7AM-6PM • 6AM proyección      ║
-║    Análisis:    5AM diario • Lun 5AM • Día 1 6AM        ║
-║    Cobranza:    Cada hora 7AM-6PM • 6AM • Lun 5:30AM   ║
-║    Contabilidad: 5AM diario • Vie 6PM • Día 1 4AM       ║
-║    Briefing:    7:00 AM diario                           ║
-╚══════════════════════════════════════════════════════════╝
-  `);
-  console.log(`API disponible en: http://localhost:${PORT}/api`);
-  console.log(`Agentes API: http://localhost:${PORT}/api/agents`);
-  console.log(`Health check: http://localhost:${PORT}/api/health`);
-  
-  // Initialize abaco Core v2.0
+  console.log(`Qora backend escuchando en el puerto ${PORT}`);
   await initializeAgents();
-  
-  // Setup auth tables
   await setupAuthTables();
-  
-  // Initialize abaco Scheduler
-  try {
-    const CFOScheduler = require('./scheduler/CFOScheduler');
-    const scheduler = new CFOScheduler({
-      apiBaseUrl: `http://localhost:${PORT}/api`,
-      empresaId: process.env.DEFAULT_EMPRESA_ID || 1
-    });
-    await scheduler.init();
-    scheduler.start();
-    console.log(`\n⏰ abaco Scheduler iniciado: ${scheduler.tasks.length} tareas programadas activas`);
-  } catch (error) {
-    console.error('❌ Error iniciando abaco Scheduler:', error.message);
-  }
+  iniciarAgenda(getCFOAICore());
 });
 
 module.exports = app;
-// Render deploy trigger 1788215809

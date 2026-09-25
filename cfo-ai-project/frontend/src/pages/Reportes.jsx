@@ -25,7 +25,7 @@ import cfoApi from '../services/cfoApi'
 import * as XLSX from 'xlsx'
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts'
 
-const COLORS = ['#001639', '#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#84cc16']
+const COLORS = ['#17181B', '#3D56C9', '#1F6B45', '#8A5A24', '#9B3320', '#3D56C9', '#3D56C9', '#33373D']
 
 const reportTemplates = [
   {
@@ -33,8 +33,8 @@ const reportTemplates = [
     name: 'Estado de Resultados',
     description: 'Ingresos, gastos y utilidad neta por período.',
     icon: DocumentChartBarIcon,
-    color: 'bg-blue-50 text-blue-600 border-blue-200',
-    iconBg: 'bg-blue-100',
+    color: 'bg-white text-ink border-fog',
+    iconBg: 'bg-paper',
     filters: ['fecha_desde', 'fecha_hasta'],
     hasResumen: true,
     chartType: 'bar'
@@ -44,8 +44,8 @@ const reportTemplates = [
     name: 'Balance General',
     description: 'Activos, pasivos y capital en una fecha determinada.',
     icon: ScaleIcon,
-    color: 'bg-emerald-50 text-emerald-600 border-emerald-200',
-    iconBg: 'bg-emerald-100',
+    color: 'bg-white text-ink border-fog',
+    iconBg: 'bg-paper',
     filters: ['fecha_hasta'],
     hasResumen: true,
     chartType: 'pie'
@@ -55,8 +55,8 @@ const reportTemplates = [
     name: 'Libro Diario',
     description: 'Todas las transacciones contables detalladas.',
     icon: BookOpenIcon,
-    color: 'bg-amber-50 text-amber-600 border-amber-200',
-    iconBg: 'bg-amber-100',
+    color: 'bg-white text-ink border-fog',
+    iconBg: 'bg-paper',
     filters: ['fecha_desde', 'fecha_hasta', 'cuenta_id', 'estado'],
     hasResumen: false
   },
@@ -65,8 +65,8 @@ const reportTemplates = [
     name: 'Cuentas por Cobrar (Aging)',
     description: 'Detalle de facturas pendientes por rango de vencimiento.',
     icon: UsersIcon,
-    color: 'bg-violet-50 text-violet-600 border-violet-200',
-    iconBg: 'bg-violet-100',
+    color: 'bg-white text-ink border-fog',
+    iconBg: 'bg-paper',
     filters: ['fecha_hasta'],
     hasResumen: true,
     chartType: 'bar'
@@ -76,8 +76,8 @@ const reportTemplates = [
     name: 'Cuentas por Pagar (Aging)',
     description: 'Obligaciones con proveedores por rango de vencimiento.',
     icon: BuildingOfficeIcon,
-    color: 'bg-rose-50 text-rose-600 border-rose-200',
-    iconBg: 'bg-rose-100',
+    color: 'bg-white text-ink border-fog',
+    iconBg: 'bg-paper',
     filters: ['fecha_hasta'],
     hasResumen: true,
     chartType: 'bar'
@@ -87,8 +87,8 @@ const reportTemplates = [
     name: 'Movimientos Bancarios',
     description: 'Todas las transacciones bancarias con filtros.',
     icon: BuildingLibraryIcon,
-    color: 'bg-cyan-50 text-cyan-600 border-cyan-200',
-    iconBg: 'bg-cyan-100',
+    color: 'bg-white text-ink border-fog',
+    iconBg: 'bg-paper',
     filters: ['fecha_desde', 'fecha_hasta', 'cuenta_bancaria_id', 'tipo'],
     hasResumen: false
   },
@@ -97,8 +97,8 @@ const reportTemplates = [
     name: 'Ventas por Cliente',
     description: 'Resumen de ventas agrupado por cliente.',
     icon: ReceiptRefundIcon,
-    color: 'bg-teal-50 text-teal-600 border-teal-200',
-    iconBg: 'bg-teal-100',
+    color: 'bg-white text-ink border-fog',
+    iconBg: 'bg-paper',
     filters: ['fecha_desde', 'fecha_hasta'],
     hasResumen: false,
     chartType: 'bar'
@@ -108,8 +108,8 @@ const reportTemplates = [
     name: 'Ventas por Cuenta/Producto',
     description: 'Ventas agrupadas por cuenta contable.',
     icon: DocumentTextIcon,
-    color: 'bg-indigo-50 text-indigo-600 border-indigo-200',
-    iconBg: 'bg-indigo-100',
+    color: 'bg-white text-ink border-fog',
+    iconBg: 'bg-paper',
     filters: ['fecha_desde', 'fecha_hasta'],
     hasResumen: false,
     chartType: 'pie'
@@ -119,8 +119,8 @@ const reportTemplates = [
     name: 'Conciliaciones Bancarias',
     description: 'Estado de conciliaciones por período y banco.',
     icon: CheckCircleIcon,
-    color: 'bg-sky-50 text-sky-600 border-sky-200',
-    iconBg: 'bg-sky-100',
+    color: 'bg-white text-ink border-fog',
+    iconBg: 'bg-paper',
     filters: ['fecha_desde', 'fecha_hasta', 'banco', 'estado'],
     hasResumen: false
   },
@@ -129,8 +129,8 @@ const reportTemplates = [
     name: 'Ratios Financieros',
     description: 'Indicadores clave: liquidez, endeudamiento, ROE, margen.',
     icon: BanknotesIcon,
-    color: 'bg-orange-50 text-orange-600 border-orange-200',
-    iconBg: 'bg-orange-100',
+    color: 'bg-white text-ink border-fog',
+    iconBg: 'bg-paper',
     filters: ['fecha_hasta'],
     hasResumen: true,
     chartType: 'bar'
@@ -140,8 +140,8 @@ const reportTemplates = [
     name: 'Catálogo de Cuentas Bancarias',
     description: 'Listado de bancos con saldos y estados.',
     icon: BuildingLibraryIcon,
-    color: 'bg-slate-50 text-slate-600 border-slate-200',
-    iconBg: 'bg-slate-100',
+    color: 'bg-white text-ink border-fog',
+    iconBg: 'bg-paper',
     filters: [],
     hasResumen: false,
     chartType: 'pie'
@@ -151,8 +151,8 @@ const reportTemplates = [
     name: 'Catálogo de Cuentas Contables',
     description: 'Plan de cuentas con saldos por período.',
     icon: BookOpenIcon,
-    color: 'bg-stone-50 text-stone-600 border-stone-200',
-    iconBg: 'bg-stone-100',
+    color: 'bg-white text-ink border-fog',
+    iconBg: 'bg-paper',
     filters: ['periodo'],
     hasResumen: false
   },
@@ -161,8 +161,8 @@ const reportTemplates = [
     name: 'Obligaciones SAT',
     description: 'Obligaciones fiscales por vencimiento y estado.',
     icon: DocumentTextIcon,
-    color: 'bg-red-50 text-red-600 border-red-200',
-    iconBg: 'bg-red-100',
+    color: 'bg-white text-ink border-fog',
+    iconBg: 'bg-paper',
     filters: ['fecha_desde', 'fecha_hasta', 'estado'],
     hasResumen: false
   }
@@ -250,7 +250,7 @@ export default function Reportes() {
     }
     setSelectedTemplate(defaultTpl)
     setFilters(defaultFilters)
-    
+
     // Execute directly without useCallback dependency issues
     const runDefaultReport = async () => {
       setLoading(true)
@@ -274,7 +274,7 @@ export default function Reportes() {
   const handleTemplateHover = (tpl) => {
     // Pre-cargar datos al hacer hover para preview rápido
     if (selectedTemplate?.id === tpl.id) return
-    
+
     const params = {}
     tpl.filters.forEach(f => {
       if (filters[f] !== undefined && filters[f] !== '') {
@@ -314,7 +314,7 @@ export default function Reportes() {
     setError(null)
     setPage(0)
     setReportData(null)
-    
+
     const params = {}
     tpl.filters.forEach(f => {
       if (defaultFilters[f] !== undefined && defaultFilters[f] !== '') {
@@ -370,9 +370,9 @@ export default function Reportes() {
     return (
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-4">
         {entries.map(([k, v]) => (
-          <div key={k} className="bg-white rounded-lg border border-[var(--border-default)] p-3">
-            <p className="text-[10px] uppercase text-[var(--text-muted)] font-semibold tracking-wider">{k.replace(/_/g, ' ')}</p>
-            <p className={`text-lg font-bold tabular-nums ${typeof v === 'number' && v < 0 ? 'text-[var(--danger)]' : 'text-[var(--text-primary)]'}`}>
+          <div key={k} className="bg-white rounded-card border border-[var(--border-default)] p-3">
+            <p className="text-[0.75rem] uppercase text-[var(--text-muted)] font-semibold tracking-wider">{k.replace(/_/g, ' ')}</p>
+            <p className={`text-lg font-semibold tabular-nums ${typeof v === 'number' && v < 0 ? 'text-[var(--danger)]' : 'text-[var(--text-primary)]'}`}>
               {typeof v === 'number' ? formatGTQ(v) : String(v)}
             </p>
           </div>
@@ -396,7 +396,7 @@ export default function Reportes() {
       const valueField = Object.keys(data[0]).find(k => /monto|total|saldo|neto/.test(k)) || Object.keys(data[0]).find(k => typeof data[0][k] === 'number')
       const chartData = data.slice(0, 8).map(d => ({ name: d[keyField] || 'Sin nombre', value: parseFloat(d[valueField] || 0) }))
       return (
-        <div className="bg-white rounded-lg border border-[var(--border-default)] p-4 mb-4">
+        <div className="bg-white rounded-card border border-[var(--border-default)] p-4 mb-4">
           <div className="flex items-center gap-2 mb-3">
             <LucPieChartIcon className="w-4 h-4 text-[var(--text-muted)]" />
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">Distribución</h3>
@@ -423,7 +423,7 @@ export default function Reportes() {
       const valueField = Object.keys(data[0]).find(k => /monto|total|saldo|neto|dias/.test(k)) || Object.keys(data[0]).find(k => typeof data[0][k] === 'number')
       const chartData = data.slice(0, 12).map(d => ({ name: String(d[keyField] || '').slice(0, 20), value: parseFloat(d[valueField] || 0) }))
       return (
-        <div className="bg-white rounded-lg border border-[var(--border-default)] p-4 mb-4">
+        <div className="bg-white rounded-card border border-[var(--border-default)] p-4 mb-4">
           <div className="flex items-center gap-2 mb-3">
             <LucBarChartIcon className="w-4 h-4 text-[var(--text-muted)]" />
             <h3 className="text-sm font-semibold text-[var(--text-primary)]">Vista Gráfica</h3>
@@ -434,7 +434,7 @@ export default function Reportes() {
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-30} textAnchor="end" height={60} />
                 <YAxis tickFormatter={(v) => `Q${(v / 1000).toFixed(0)}K`} tick={{ fontSize: 11 }} />
                 <Tooltip formatter={(val) => formatGTQ(val)} />
-                <Bar dataKey="value" fill="#001639" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="value" fill="#17181B" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -448,12 +448,9 @@ export default function Reportes() {
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-[#001639] flex items-center justify-center">
-          <DocumentChartBarIcon className="w-5 h-5 text-white" />
-        </div>
         <div>
-          <h1 className="text-2xl font-semibold">Reportes Financieros</h1>
-          <p className="text-sm text-[var(--text-muted)]">Genera reportes contables, tributarios y de gestión. Exporta a Excel.</p>
+          <h1 className="font-display text-[2.125rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">Reportes Financieros</h1>
+          <p className="measure mt-2 text-[0.9375rem] leading-relaxed text-slate">Genera reportes contables, tributarios y de gestión. Exporta a Excel.</p>
         </div>
       </div>
 
@@ -467,17 +464,30 @@ export default function Reportes() {
               key={tpl.id}
               onClick={() => handleTemplateClick(tpl)}
               onMouseEnter={() => handleTemplateHover(tpl)}
-              className={`group text-left p-3 rounded-xl border transition-all hover:shadow-md ${
+              aria-pressed={isActive}
+              className={`group rounded-card border p-4 text-left transition-colors ${
                 isActive
-                  ? 'ring-2 ring-[#001639] shadow-md bg-[#001639]/5'
-                  : `${tpl.color} bg-white hover:-translate-y-0.5`
+                  ? 'border-ink bg-ink text-white'
+                  : 'border-fog bg-white hover:border-mist'
               }`}
             >
-              <div className={`w-8 h-8 rounded-lg ${isActive ? 'bg-[#001639]' : tpl.iconBg} flex items-center justify-center mb-2`}>
-                <Icon className={`w-4 h-4 ${isActive ? 'text-white' : ''}`} />
-              </div>
-              <h3 className="text-xs font-semibold text-[var(--text-primary)] leading-tight">{tpl.name}</h3>
-              <p className="text-[10px] text-[var(--text-muted)] mt-1 leading-tight hidden sm:block">{tpl.description}</p>
+              <Icon
+                className={`h-4 w-4 ${isActive ? 'text-white' : 'text-slate'}`}
+              />
+              <h3
+                className={`mt-3 text-[0.875rem] font-medium leading-tight ${
+                  isActive ? 'text-white' : 'text-ink'
+                }`}
+              >
+                {tpl.name}
+              </h3>
+              <p
+                className={`mt-1 hidden text-[0.8125rem] leading-snug sm:block ${
+                  isActive ? 'text-mist' : 'text-slate'
+                }`}
+              >
+                {tpl.description}
+              </p>
             </button>
           )
         })}
@@ -485,8 +495,8 @@ export default function Reportes() {
 
       {/* Preview rápido en hover */}
       {previewData && previewData.template?.id !== selectedTemplate?.id && (
-        <div className="bg-blue-50 rounded-lg border border-blue-200 p-3 mb-2">
-          <p className="text-xs text-blue-700 font-medium">
+        <div className="bg-paper rounded-card border border-fog p-3 mb-2">
+          <p className="text-xs text-cobalt font-medium">
             Preview: {previewData.template.name} — {previewData.data?.data?.length || 0} registros disponibles
           </p>
         </div>
@@ -512,35 +522,37 @@ export default function Reportes() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 {selectedTemplate.filters.includes('fecha_desde') && (
                   <div>
-                    <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">Fecha desde</label>
+                    <label className="field-label">Fecha desde</label>
                     <div className="relative">
                       <CalendarIcon className="absolute left-3 top-2.5 w-4 h-4 text-[var(--text-muted)]" />
                       <input
                         type="date"
+                        aria-label="Fecha desde"
                         value={filters.fecha_desde}
                         onChange={e => setFilters(f => ({ ...f, fecha_desde: e.target.value }))}
-                        className="w-full pl-9 pr-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-[#001639]/20 focus:border-[#001639]"
+                        className="input pl-9"
                       />
                     </div>
                   </div>
                 )}
                 {selectedTemplate.filters.includes('fecha_hasta') && (
                   <div>
-                    <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">Fecha hasta</label>
+                    <label className="field-label">Fecha hasta</label>
                     <div className="relative">
                       <CalendarIcon className="absolute left-3 top-2.5 w-4 h-4 text-[var(--text-muted)]" />
                       <input
                         type="date"
+                        aria-label="Fecha hasta"
                         value={filters.fecha_hasta}
                         onChange={e => setFilters(f => ({ ...f, fecha_hasta: e.target.value }))}
-                        className="w-full pl-9 pr-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-[#001639]/20 focus:border-[#001639]"
+                        className="input pl-9"
                       />
                     </div>
                   </div>
                 )}
                 {selectedTemplate.filters.includes('periodo') && (
                   <div>
-                    <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">Período (YYYY-MM)</label>
+                    <label className="field-label">Período (YYYY-MM)</label>
                     <div className="relative">
                       <CalendarIcon className="absolute left-3 top-2.5 w-4 h-4 text-[var(--text-muted)]" />
                       <input
@@ -548,30 +560,30 @@ export default function Reportes() {
                         placeholder="2024-01"
                         value={filters.periodo}
                         onChange={e => setFilters(f => ({ ...f, periodo: e.target.value }))}
-                        className="w-full pl-9 pr-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-[#001639]/20 focus:border-[#001639]"
+                        className="input pl-9"
                       />
                     </div>
                   </div>
                 )}
                 {selectedTemplate.filters.includes('cuenta_id') && (
                   <div>
-                    <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">Cuenta contable</label>
+                    <label className="field-label">Cuenta contable</label>
                     <input
                       type="text"
                       placeholder="ID de cuenta"
                       value={filters.cuenta_id}
                       onChange={e => setFilters(f => ({ ...f, cuenta_id: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-[#001639]/20 focus:border-[#001639]"
+                      className="w-full px-3 py-2 rounded-card border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-ink/20 focus:border-ink"
                     />
                   </div>
                 )}
                 {selectedTemplate.filters.includes('estado') && (
                   <div>
-                    <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">Estado</label>
-                    <select
+                    <label className="field-label">Estado</label>
+                    <select aria-label="Estado"
                       value={filters.estado}
                       onChange={e => setFilters(f => ({ ...f, estado: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#001639]/20 focus:border-[#001639]"
+                      className="w-full px-3 py-2 rounded-card border border-[var(--border-default)] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-ink/20 focus:border-ink"
                     >
                       <option value="">Todos</option>
                       <option value="activa">Activo</option>
@@ -585,11 +597,11 @@ export default function Reportes() {
                 )}
                 {selectedTemplate.filters.includes('tipo') && (
                   <div>
-                    <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">Tipo</label>
-                    <select
+                    <label className="field-label">Tipo</label>
+                    <select aria-label="Tipo"
                       value={filters.tipo}
                       onChange={e => setFilters(f => ({ ...f, tipo: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#001639]/20 focus:border-[#001639]"
+                      className="w-full px-3 py-2 rounded-card border border-[var(--border-default)] text-sm bg-white focus:outline-none focus:ring-2 focus:ring-ink/20 focus:border-ink"
                     >
                       <option value="">Todos</option>
                       <option value="ingreso">Ingreso</option>
@@ -601,25 +613,25 @@ export default function Reportes() {
                 )}
                 {selectedTemplate.filters.includes('banco') && (
                   <div>
-                    <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">Banco</label>
+                    <label className="field-label">Banco</label>
                     <input
                       type="text"
                       placeholder="Nombre del banco"
                       value={filters.banco}
                       onChange={e => setFilters(f => ({ ...f, banco: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-[#001639]/20 focus:border-[#001639]"
+                      className="w-full px-3 py-2 rounded-card border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-ink/20 focus:border-ink"
                     />
                   </div>
                 )}
                 {selectedTemplate.filters.includes('cuenta_bancaria_id') && (
                   <div>
-                    <label className="block text-xs font-medium text-[var(--text-muted)] mb-1.5">Cuenta bancaria ID</label>
+                    <label className="field-label">Cuenta bancaria ID</label>
                     <input
                       type="text"
                       placeholder="ID de cuenta bancaria"
                       value={filters.cuenta_bancaria_id}
                       onChange={e => setFilters(f => ({ ...f, cuenta_bancaria_id: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-[#001639]/20 focus:border-[#001639]"
+                      className="w-full px-3 py-2 rounded-card border border-[var(--border-default)] text-sm focus:outline-none focus:ring-2 focus:ring-ink/20 focus:border-ink"
                     />
                   </div>
                 )}
@@ -649,7 +661,7 @@ export default function Reportes() {
 
           {/* Error */}
           {error && (
-            <div className="p-4 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700">
+            <div className="p-4 rounded-card bg-breach-50 border border-breach-100 text-sm text-breach">
               <p className="font-medium">Error al generar reporte:</p>
               <p className="mt-1">{error}</p>
             </div>
@@ -688,11 +700,11 @@ export default function Reportes() {
 
                 {/* DEBUG: Mostrar información de datos recibidos */}
                 {reportData.data && (
-                  <div className="px-4 py-2 bg-yellow-50 text-xs text-yellow-700 border-b border-yellow-200">
+                  <div className="px-4 py-2 bg-copper-50 text-xs text-copper border-b border-copper-100">
                     DEBUG: Tipo de datos: {typeof reportData.data} | Es array: {Array.isArray(reportData.data).toString()} | Length: {reportData.data?.length}
                   </div>
                 )}
-                
+
                 {reportData.data && Array.isArray(reportData.data) && reportData.data.length > 0 ? (
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
@@ -730,7 +742,7 @@ export default function Reportes() {
                     <button
                       onClick={() => setPage(p => Math.max(0, p - 1))}
                       disabled={page === 0}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border border-[var(--border-default)] disabled:opacity-40 hover:bg-[var(--bg-secondary)] transition-colors"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-card text-sm border border-[var(--border-default)] disabled:opacity-40 hover:bg-[var(--bg-secondary)] transition-colors"
                     >
                       <ChevronLeftIcon className="w-4 h-4" /> Anterior
                     </button>
@@ -740,7 +752,7 @@ export default function Reportes() {
                     <button
                       onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
                       disabled={page >= totalPages - 1}
-                      className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border border-[var(--border-default)] disabled:opacity-40 hover:bg-[var(--bg-secondary)] transition-colors"
+                      className="flex items-center gap-1 px-3 py-1.5 rounded-card text-sm border border-[var(--border-default)] disabled:opacity-40 hover:bg-[var(--bg-secondary)] transition-colors"
                     >
                       Siguiente <ChevronRightIcon className="w-4 h-4" />
                     </button>

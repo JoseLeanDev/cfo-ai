@@ -35,6 +35,7 @@ cfoApi.interceptors.response.use(
 // Endpoints específicos
 export const endpoints = {
   dashboard: () => cfoApi.get('/dashboard'),
+  resumen: () => cfoApi.get('/dashboard/resumen'),
   tesoreria: {
     proyeccion: (semanas = 13) => cfoApi.get('/tesoreria/proyeccion', { params: { semanas } }),
     posicion: () => cfoApi.get('/tesoreria/posicion'),
@@ -91,6 +92,11 @@ export const endpoints = {
   // Multi-Agent System
   agents: {
     chat: (message) => cfoApi.post('/agents/chat', { message }),
+    // El agente SQL encadena varias consultas y puede tardar más que el
+    // timeout general de 30 s.
+    chatAgente: (message, historial = []) =>
+      cfoApi.post('/agents/chat-agente', { message, historial }, { timeout: 120000 }),
+    saludAgente: () => cfoApi.get('/agents/chat-agente/salud'),
     status: () => cfoApi.get('/agents/status'),
     history: () => cfoApi.get('/agents/history'),
     clear: () => cfoApi.post('/agents/clear'),
@@ -101,5 +107,6 @@ export const endpoints = {
 
 // Helper para chat de agentes
 export const chatWithAgents = (message) => endpoints.agents.chat(message)
+export const chatConAgenteSQL = (message, historial) => endpoints.agents.chatAgente(message, historial)
 
 export default cfoApi

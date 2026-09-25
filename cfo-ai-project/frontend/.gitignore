@@ -1,1 +1,9 @@
-.vercel
+node_modules
+# El build se genera en cada deploy; versionarlo servía una copia vieja cuando
+# el build fallaba, sin que nadie lo notara.
+dist
+.env
+.env.local
+.DS_Store
+*.log
+shots/

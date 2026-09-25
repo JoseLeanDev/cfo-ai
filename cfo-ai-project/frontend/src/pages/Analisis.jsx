@@ -43,17 +43,17 @@ const getStatus = (value, umbral, inverse = false) => {
 }
 
 const statusStyles = {
-  excelente: 'text-emerald-400',
-  bueno: 'text-green-400',
-  regular: 'text-amber-400',
-  critico: 'text-red-400'
+  excelente: 'text-verified',
+  bueno: 'text-verified',
+  regular: 'text-copper',
+  critico: 'text-breach'
 }
 
 const statusBg = {
-  excelente: 'bg-emerald-500/10 border-emerald-500/20',
-  bueno: 'bg-green-500/10 border-green-500/20',
-  regular: 'bg-amber-500/10 border-amber-500/20',
-  critico: 'bg-red-500/10 border-red-500/20'
+  excelente: 'bg-verified/10 border-verified/20',
+  bueno: 'bg-verified/10 border-verified/20',
+  regular: 'bg-copper/10 border-copper/20',
+  critico: 'bg-breach/10 border-breach/20'
 }
 
 export default function Analisis() {
@@ -137,12 +137,9 @@ export default function Analisis() {
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
-          <ChartBarIcon className="w-5 h-5 text-white" />
-        </div>
         <div>
-          <h1 className="text-2xl font-semibold">Análisis Financiero</h1>
-          <p className="text-sm text-[var(--text-muted)]">Ratios, rentabilidad y eficiencia operativa</p>
+          <h1 className="font-display text-[2.125rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">Análisis Financiero</h1>
+          <p className="measure mt-2 text-[0.9375rem] leading-relaxed text-slate">Ratios, rentabilidad y eficiencia operativa</p>
         </div>
       </div>
 
@@ -152,7 +149,7 @@ export default function Analisis() {
       {/* Loading */}
       {isLoading && (
         <div className="card p-8 text-center">
-          <ArrowPathIcon className="w-8 h-8 text-violet-400 animate-spin mx-auto mb-3" />
+          <ArrowPathIcon className="w-8 h-8 text-cobalt animate-spin mx-auto mb-3" />
           <p className="text-sm text-[var(--text-muted)]">Analizando datos financieros...</p>
         </div>
       )}
@@ -164,16 +161,19 @@ export default function Analisis() {
             const status = getStatus(kpi.valor, kpi.umbral, kpi.inverse)
             const Icon = kpi.icon
             return (
-              <div key={idx} className={`kpi-card card-hover ${statusBg[status]}`}>
-                <div className="flex items-center justify-between mb-2">
-                  <span className="kpi-label text-[var(--text-secondary)]">{kpi.titulo}</span>
-                  <Icon className={`w-4 h-4 ${statusStyles[status]}`} />
+              <div key={idx} className="kpi-card">
+                {/* La tarjeta no se tiñe: el color vive en el estado contra el
+                    umbral, no en la superficie ni en el nivel. */}
+                <span className="kpi-label">{kpi.titulo}</span>
+                <div className="kpi-value">
+                  {kpi.valor}
+                  {kpi.unidad ? <span className="ml-0.5">{kpi.unidad}</span> : null}
                 </div>
-                <div className={`kpi-value ${statusStyles[status]}`}>
-                  {kpi.valor}{kpi.unidad}
-                </div>
-                <p className="text-[10px] text-[var(--text-muted)] mt-1">{kpi.descripcion}</p>
-                <p className="text-[10px] text-[var(--text-muted)]">Umbral: {kpi.umbral}{kpi.unidad}</p>
+                <p className={`mt-2 font-mono text-[0.75rem] tabular-nums ${statusStyles[status]}`}>
+                  Umbral {kpi.umbral}
+                  {kpi.unidad}
+                </p>
+                <p className="mt-1 text-[0.8125rem] leading-snug text-slate">{kpi.descripcion}</p>
               </div>
             )
           })}
@@ -189,21 +189,21 @@ export default function Analisis() {
           </div>
           <div className="p-5 pt-0">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                 <p className="text-xs text-[var(--text-muted)]">Activos Totales</p>
-                <p className="text-lg font-bold text-[var(--success)]">{formatGTQ(resumen.activos)}</p>
+                <p className="text-lg font-semibold text-[var(--success)]">{formatGTQ(resumen.activos)}</p>
               </div>
-              <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                 <p className="text-xs text-[var(--text-muted)]">Pasivos Totales</p>
-                <p className="text-lg font-bold text-[var(--danger)]">{formatGTQ(resumen.pasivos)}</p>
+                <p className="text-lg font-semibold text-[var(--danger)]">{formatGTQ(resumen.pasivos)}</p>
               </div>
-              <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                 <p className="text-xs text-[var(--text-muted)]">Patrimonio</p>
-                <p className="text-lg font-bold text-[var(--text-primary)]">{formatGTQ(resumen.patrimonio)}</p>
+                <p className="text-lg font-semibold text-[var(--text-primary)]">{formatGTQ(resumen.patrimonio)}</p>
               </div>
-              <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                 <p className="text-xs text-[var(--text-muted)]">Utilidad Neta</p>
-                <p className={`text-lg font-bold ${resumen.utilidad >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+                <p className={`text-lg font-semibold ${resumen.utilidad >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
                   {formatGTQ(resumen.utilidad)}
                 </p>
               </div>
@@ -228,30 +228,30 @@ export default function Analisis() {
                 const porcentaje = Math.min((valor / (umbral * 1.5)) * 100, 100)
 
                 return (
-                  <div key={idx} className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-lg">
+                  <div key={idx} className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-card">
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <p className="text-sm font-medium">{ratio.nombre}</p>
-                        <span className={`text-xs font-bold ${statusStyles[status]}`}>
+                        <span className={`text-xs font-semibold ${statusStyles[status]}`}>
                           {ratio.valor}{ratio.unidad}
                         </span>
                       </div>
-                      <p className="text-[10px] text-[var(--text-muted)]">{ratio.formula}</p>
+                      <p className="text-[0.75rem] text-[var(--text-muted)]">{ratio.formula}</p>
                       <div className="mt-2 h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
                         <div
                           className={`h-full rounded-full ${
-                            status === 'excelente' || status === 'bueno' ? 'bg-emerald-500' :
-                            status === 'regular' ? 'bg-amber-500' : 'bg-red-500'
+                            status === 'excelente' || status === 'bueno' ? 'bg-verified' :
+                            status === 'regular' ? 'bg-copper' : 'bg-breach'
                           }`}
                           style={{ width: `${porcentaje}%` }}
                         />
                       </div>
                     </div>
                     <div className="ml-3 text-right">
-                      <span className={`text-[9px] px-1.5 py-0.5 rounded ${
+                      <span className={`text-[0.6875rem] px-1.5 py-0.5 rounded ${
                         status === 'saludable' || status === 'excelente' || status === 'bueno'
-                          ? 'bg-emerald-500/10 text-emerald-400'
-                          : 'bg-amber-500/10 text-amber-400'
+                          ? 'bg-verified/10 text-verified'
+                          : 'bg-copper/10 text-copper'
                       }`}>
                         {status === 'saludable' ? 'OK' : status}
                       </span>
@@ -276,22 +276,22 @@ export default function Analisis() {
                 return (
                   <>
                     {/* DSO */}
-                    <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+                    <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <p className="text-sm font-medium">DSO — Días de Cobro</p>
-                          <p className="text-[10px] text-[var(--text-muted)]">Days Sales Outstanding</p>
+                          <p className="text-[0.75rem] text-[var(--text-muted)]">Days Sales Outstanding</p>
                         </div>
                         <div className="text-right">
-                          <p className={`text-lg font-bold ${dso.valor <= dso.benchmark ? 'text-emerald-400' : 'text-amber-400'}`}>
+                          <p className={`text-lg font-semibold ${dso.valor <= dso.benchmark ? 'text-verified' : 'text-copper'}`}>
                             {dso.valor} días
                           </p>
-                          <p className="text-[10px] text-[var(--text-muted)]">Benchmark: {dso.benchmark}</p>
+                          <p className="text-[0.75rem] text-[var(--text-muted)]">Benchmark: {dso.benchmark}</p>
                         </div>
                       </div>
                       {dso.monto_vencido > 0 && (
-                        <div className="mt-2 p-2 bg-red-500/10 rounded border border-red-500/20">
-                          <p className="text-xs text-red-400">
+                        <div className="mt-2 p-2 bg-breach/10 rounded border border-breach/20">
+                          <p className="text-xs text-breach">
                             <ExclamationTriangleIcon className="w-3 h-3 inline mr-1" />
                             {formatGTQ(dso.monto_vencido)} vencido ({dso.porcentaje_vencido}%)
                           </p>
@@ -300,22 +300,22 @@ export default function Analisis() {
                     </div>
 
                     {/* DPO */}
-                    <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+                    <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <p className="text-sm font-medium">DPO — Días de Pago</p>
-                          <p className="text-[10px] text-[var(--text-muted)]">Days Payable Outstanding</p>
+                          <p className="text-[0.75rem] text-[var(--text-muted)]">Days Payable Outstanding</p>
                         </div>
                         <div className="text-right">
-                          <p className={`text-lg font-bold ${dpo.dias_real >= dpo.benchmark ? 'text-emerald-400' : 'text-amber-400'}`}>
+                          <p className={`text-lg font-semibold ${dpo.dias_real >= dpo.benchmark ? 'text-verified' : 'text-copper'}`}>
                             {dpo.dias_real} días
                           </p>
-                          <p className="text-[10px] text-[var(--text-muted)]">Benchmark: {dpo.benchmark}</p>
+                          <p className="text-[0.75rem] text-[var(--text-muted)]">Benchmark: {dpo.benchmark}</p>
                         </div>
                       </div>
                       {dpo.monto_vencido > 0 && (
-                        <div className="mt-2 p-2 bg-red-500/10 rounded border border-red-500/20">
-                          <p className="text-xs text-red-400">
+                        <div className="mt-2 p-2 bg-breach/10 rounded border border-breach/20">
+                          <p className="text-xs text-breach">
                             <ExclamationTriangleIcon className="w-3 h-3 inline mr-1" />
                             {formatGTQ(dpo.monto_vencido)} vencido con proveedores
                           </p>
@@ -324,37 +324,37 @@ export default function Analisis() {
                     </div>
 
                     {/* C2C */}
-                    <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+                    <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                       <div className="flex items-center justify-between mb-2">
                         <div>
                           <p className="text-sm font-medium">C2C — Cash Conversion Cycle</p>
-                          <p className="text-[10px] text-[var(--text-muted)]">{c2c.formula}</p>
+                          <p className="text-[0.75rem] text-[var(--text-muted)]">{c2c.formula}</p>
                         </div>
                         <div className="text-right">
-                          <p className={`text-lg font-bold ${
-                            c2c.valor < 30 ? 'text-emerald-400' :
-                            c2c.valor < 60 ? 'text-green-400' :
-                            c2c.valor < 90 ? 'text-amber-400' : 'text-red-400'
+                          <p className={`text-lg font-semibold ${
+                            c2c.valor < 30 ? 'text-verified' :
+                            c2c.valor < 60 ? 'text-verified' :
+                            c2c.valor < 90 ? 'text-copper' : 'text-breach'
                           }`}>
                             {c2c.valor} días
                           </p>
-                          <p className="text-[10px] text-[var(--text-muted)]">{c2c.interpretacion}</p>
+                          <p className="text-[0.75rem] text-[var(--text-muted)]">{c2c.interpretacion}</p>
                         </div>
                       </div>
                       <div className="mt-2">
                         <div className="h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
                           <div
                             className={`h-full rounded-full ${
-                              c2c.valor < 60 ? 'bg-emerald-500' :
-                              c2c.valor < 90 ? 'bg-amber-500' : 'bg-red-500'
+                              c2c.valor < 60 ? 'bg-verified' :
+                              c2c.valor < 90 ? 'bg-copper' : 'bg-breach'
                             }`}
                             style={{ width: `${Math.min((c2c.valor / 120) * 100, 100)}%` }}
                           />
                         </div>
                         <div className="flex justify-between mt-1">
-                          <span className="text-[9px] text-[var(--text-muted)]">0 días</span>
-                          <span className="text-[9px] text-[var(--text-muted)]">60 días</span>
-                          <span className="text-[9px] text-[var(--text-muted)]">120 días</span>
+                          <span className="text-[0.6875rem] text-[var(--text-muted)]">0 días</span>
+                          <span className="text-[0.6875rem] text-[var(--text-muted)]">60 días</span>
+                          <span className="text-[0.6875rem] text-[var(--text-muted)]">120 días</span>
                         </div>
                       </div>
                     </div>
@@ -375,13 +375,13 @@ export default function Analisis() {
           </div>
           <div className="p-5 pt-0 grid grid-cols-1 lg:grid-cols-2 gap-3">
             {workingCapital.recomendaciones.map((rec, idx) => (
-              <div key={idx} className="p-4 bg-[var(--bg-secondary)] rounded-lg border-l-4 border-[var(--accent-orange)]">
+              <div key={idx} className="p-4 bg-[var(--bg-secondary)] rounded-card border-l-4 border-[var(--accent-orange)]">
                 <div className="flex items-start justify-between mb-2">
-                  <h4 className="text-sm font-bold text-[var(--text-primary)]">{rec.titulo}</h4>
-                  <span className={`text-[10px] px-2 py-0.5 rounded ${
-                    rec.prioridad === 'alta' ? 'bg-red-500/10 text-red-400' :
-                    rec.prioridad === 'media' ? 'bg-amber-500/10 text-amber-400' :
-                    'bg-blue-500/10 text-blue-400'
+                  <h4 className="text-sm font-semibold text-[var(--text-primary)]">{rec.titulo}</h4>
+                  <span className={`text-[0.75rem] px-2 py-0.5 rounded ${
+                    rec.prioridad === 'alta' ? 'bg-breach/10 text-breach' :
+                    rec.prioridad === 'media' ? 'bg-copper/10 text-copper' :
+                    'bg-cobalt/10 text-cobalt'
                   }`}>
                     {rec.prioridad}
                   </span>
@@ -389,14 +389,14 @@ export default function Analisis() {
                 <p className="text-xs text-[var(--text-secondary)] mb-2">{rec.descripcion}</p>
                 {rec.impacto_efectivo > 0 && (
                   <p className="text-xs text-[var(--success)] font-medium">
-                    💰 Impacto estimado: +{formatGTQ(rec.impacto_efectivo)}
+                     Impacto estimado: +{formatGTQ(rec.impacto_efectivo)}
                   </p>
                 )}
                 <div className="mt-2 space-y-1">
                   {rec.acciones?.map((accion, i) => (
                     <div key={i} className="flex items-start gap-1.5">
                       <CheckCircleIcon className="w-3 h-3 text-[var(--accent-orange)] mt-0.5 flex-shrink-0" />
-                      <p className="text-[11px] text-[var(--text-muted)]">{accion}</p>
+                      <p className="text-[0.8125rem] text-[var(--text-muted)]">{accion}</p>
                     </div>
                   ))}
                 </div>
@@ -410,11 +410,11 @@ export default function Analisis() {
       {!isLoading && workingCapital?.alertas && workingCapital.alertas.length > 0 && (
         <div className="space-y-2">
           {workingCapital.alertas.map((alerta, idx) => (
-            <div key={idx} className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 flex items-start gap-3">
-              <ExclamationTriangleIcon className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+            <div key={idx} className="p-4 rounded-card bg-breach/10 border border-breach/20 flex items-start gap-3">
+              <ExclamationTriangleIcon className="w-5 h-5 text-breach flex-shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-medium text-red-300">{alerta.mensaje}</p>
-                <p className="text-xs text-red-400 mt-1">{alerta.accion_urgente}</p>
+                <p className="text-sm font-medium text-breach">{alerta.mensaje}</p>
+                <p className="text-xs text-breach mt-1">{alerta.accion_urgente}</p>
               </div>
             </div>
           ))}

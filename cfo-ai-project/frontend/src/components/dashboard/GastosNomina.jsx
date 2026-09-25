@@ -164,18 +164,18 @@ export default function GastosNomina() {
             {Number(variacionGastos) > 0 ? '↑' : '↓'} {Math.abs(variacionGastos)}% vs mes ant.
           </span>
         </div>
-        
+
         <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Desv. Presupuesto</span>
             <PercentBadgeIcon className="w-4 h-4 text-[var(--text-muted)]" />
           </div>
-          <div className={`kpi-value ${Number(desviacionPresupuesto) > 5 ? 'text-[var(--danger)]' : Number(desviacionPresupuesto) > 0 ? 'text-[var(--warning)]' : 'text-[var(--success)]'}`}>
+          <div className="kpi-value">
             {desviacionPresupuesto > 0 ? '+' : ''}{desviacionPresupuesto}%
           </div>
           <span className="text-xs text-[var(--text-muted)]">Meta: {formatGTQ(totalPresupuestoMes)}</span>
         </div>
-        
+
         <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Costo Nómina</span>
@@ -184,7 +184,7 @@ export default function GastosNomina() {
           <div className="kpi-value">{formatGTQ(totalNominaMensual)}</div>
           <span className="text-xs text-[var(--text-muted)]">{empleadosData.length} empleados</span>
         </div>
-        
+
         <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Cargas Sociales</span>
@@ -200,7 +200,7 @@ export default function GastosNomina() {
       {/* Insights */}
       <div className="card">
         <div className="section-header">
-          <SparklesIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+          <SparklesIcon className="w-5 h-5 text-slate" />
           <h2 className="font-semibold">Insights de Gastos y Nómina</h2>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 p-5 pt-0">
@@ -209,10 +209,10 @@ export default function GastosNomina() {
             return (
               <div
                 key={idx}
-                className={`p-4 rounded-lg border-l-4 ${getInsightStyles(insight.tipo)}`}
+                className={`p-4 rounded-card border-l-4 ${getInsightStyles(insight.tipo)}`}
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white/60 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-card bg-white/60 flex items-center justify-center flex-shrink-0">
                     <Icon className="w-4 h-4 text-[var(--text-secondary)]" />
                   </div>
                   <div className="flex-1">
@@ -229,16 +229,16 @@ export default function GastosNomina() {
       {/* Tabs */}
       <div className="card">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 border-b border-[var(--border-default)]">
-          <div className="flex items-center gap-1 p-1 bg-[var(--bg-secondary)] rounded-lg">
+          <div className="flex items-center gap-1 p-1 bg-[var(--bg-secondary)] rounded-card">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-card transition-all ${
                     activeTab === tab.id
-                      ? 'bg-white text-[var(--text-primary)] shadow-sm'
+                      ? 'bg-white text-[var(--text-primary)] '
                       : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                   }`}
                 >
@@ -248,12 +248,12 @@ export default function GastosNomina() {
               )
             })}
           </div>
-          
+
           {/* Filtros */}
           <div className="flex items-center gap-2">
             <FunnelIcon className="w-4 h-4 text-[var(--text-muted)]" />
             {activeTab === 'gastos' && (
-              <select 
+              <select aria-label="Todas las categorías" 
                 value={filtroCategoria}
                 onChange={(e) => setFiltroCategoria(e.target.value)}
                 className="input text-xs py-1.5 w-auto"
@@ -267,7 +267,7 @@ export default function GastosNomina() {
               </select>
             )}
             {activeTab === 'nomina' && (
-              <select 
+              <select aria-label="Todos los departamentos" 
                 value={filtroDepartamento}
                 onChange={(e) => setFiltroDepartamento(e.target.value)}
                 className="input text-xs py-1.5 w-auto"
@@ -313,7 +313,7 @@ export default function GastosNomina() {
                           style={{ height: `${alturaGasto}%`, marginTop: 'auto' }}
                         />
                       </div>
-                      <span className="text-[10px] text-[var(--text-muted)]">{h.mes}</span>
+                      <span className="text-[0.75rem] text-[var(--text-muted)]">{h.mes}</span>
                     </div>
                   )
                 })}
@@ -357,7 +357,7 @@ export default function GastosNomina() {
                     return (
                       <tr key={gasto.id}>
                         <td>
-                          <span className={`badge text-[10px] ${
+                          <span className={`badge text-[0.75rem] ${
                             gasto.categoria === 'Costos de Ventas' ? 'badge-info' :
                             gasto.categoria === 'Gastos Operativos' ? 'badge-neutral' :
                             gasto.categoria === 'Gastos Administrativos' ? 'badge-warning' :
@@ -389,9 +389,9 @@ export default function GastosNomina() {
                         </td>
                         <td className="text-center">
                           {gasto.criticidad === 'alta' || esSobrePresupuesto ? (
-                            <span className="badge-danger text-[10px]">⚠️</span>
+                            <span className="badge-danger text-[0.75rem]"></span>
                           ) : gasto.criticidad === 'media' ? (
-                            <span className="badge-warning text-[10px]">!</span>
+                            <span className="badge-warning text-[0.75rem]">!</span>
                           ) : (
                             <span className="text-xs text-[var(--success)]">✓</span>
                           )}
@@ -426,12 +426,12 @@ export default function GastosNomina() {
                   const totalCat = gastosCat.reduce((sum, g) => sum + g.monto, 0)
                   const pctTotal = ((totalCat / totalGastosMes) * 100).toFixed(1)
                   return (
-                    <div key={cat} className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+                    <div key={cat} className="p-4 bg-[var(--bg-secondary)] rounded-card">
                       <p className="text-xs text-[var(--text-muted)] uppercase font-medium truncate">{cat}</p>
-                      <p className="text-lg font-bold mt-1">{formatGTQ(totalCat)}</p>
+                      <p className="text-lg font-semibold mt-1">{formatGTQ(totalCat)}</p>
                       <div className="mt-2 h-2 bg-white rounded-full overflow-hidden">
                         <div 
-                          className="h-full bg-[#001639] rounded-full"
+                          className="h-full bg-ink rounded-full"
                           style={{ width: `${pctTotal}%` }}
                         />
                       </div>
@@ -455,19 +455,19 @@ export default function GastosNomina() {
               </h3>
               <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
                 {departamentosData.map((dept) => (
-                  <div key={dept.nombre} className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+                  <div key={dept.nombre} className="p-4 bg-[var(--bg-secondary)] rounded-card">
                     <div className="flex items-center justify-between">
                       <p className="text-xs text-[var(--text-muted)] uppercase font-medium">{dept.nombre}</p>
-                      <span className="text-[10px] badge-neutral">{dept.empleados} emp.</span>
+                      <span className="text-[0.75rem] badge-neutral">{dept.empleados} emp.</span>
                     </div>
-                    <p className="text-lg font-bold mt-1">{formatGTQ(dept.total)}</p>
+                    <p className="text-lg font-semibold mt-1">{formatGTQ(dept.total)}</p>
                     <div className="mt-2 flex items-center justify-between text-xs">
                       <span className="text-[var(--text-muted)]">Salarios: {formatGTQ(dept.salarios)}</span>
                       <span className="text-[var(--text-muted)]">{dept.pctTotal}%</span>
                     </div>
                     <div className="mt-1 h-1.5 bg-white rounded-full overflow-hidden">
                       <div 
-                        className="h-full bg-[#001639] rounded-full"
+                        className="h-full bg-ink rounded-full"
                         style={{ width: `${dept.pctTotal * 3}%` }}
                       />
                     </div>
@@ -523,7 +523,7 @@ export default function GastosNomina() {
                         <span className="text-xs text-[var(--text-muted)]">{emp.cargo}</span>
                       </td>
                       <td>
-                        <span className="badge-neutral text-[10px]">{emp.departamento}</span>
+                        <span className="badge-neutral text-[0.75rem]">{emp.departamento}</span>
                       </td>
                       <td className="text-right font-mono">{formatGTQ(emp.salario)}</td>
                       <td className="text-right font-mono text-sm">{formatGTQ(emp.bonificacion)}</td>
@@ -562,19 +562,19 @@ export default function GastosNomina() {
 
             {/* Resumen anual nómina */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                 <p className="text-xs text-[var(--text-muted)] uppercase font-medium">Costo Anual Nómina</p>
-                <p className="text-xl font-bold mt-1">{formatGTQ(totalCostoEmpleados * 12)}</p>
+                <p className="text-xl font-semibold mt-1">{formatGTQ(totalCostoEmpleados * 12)}</p>
                 <p className="text-xs text-[var(--text-muted)]">Incluye aguinaldo y bono 14</p>
               </div>
-              <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                 <p className="text-xs text-[var(--text-muted)] uppercase font-medium">Costo Promedio / Empleado</p>
-                <p className="text-xl font-bold mt-1">{formatGTQ(costoPromedioPorEmpleado)}/mes</p>
+                <p className="text-xl font-semibold mt-1">{formatGTQ(costoPromedioPorEmpleado)}/mes</p>
                 <p className="text-xs text-[var(--text-muted)]">Salario + cargas + beneficios</p>
               </div>
-              <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                 <p className="text-xs text-[var(--text-muted)] uppercase font-medium">% Cargas Sociales</p>
-                <p className="text-xl font-bold mt-1">{((totalCargasSociales / totalNominaMensual) * 100).toFixed(1)}%</p>
+                <p className="text-xl font-semibold mt-1">{((totalCargasSociales / totalNominaMensual) * 100).toFixed(1)}%</p>
                 <p className="text-xs text-[var(--text-muted)]">IGSS + IRTRA + Cuota Patronal</p>
               </div>
             </div>

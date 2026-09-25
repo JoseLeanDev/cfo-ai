@@ -152,7 +152,8 @@ router.get('/', async (req, res) => {
         tesoreria: {
           total_gtq: totalGTQ,
           total_usd: totalUSD,
-          total_usd_gtq: totalUSD * 7.8, // Tipo de cambio aproximado
+          total_usd_gtq: totalUSD * 7.75,
+          total_consolidado_gtq: totalGTQ + totalUSD * 7.75,
           total_general: totalGTQ + totalUSD * 7.8,
           num_cuentas: posicionBancaria?.num_cuentas || 0,
           cuentas: (cuentasBancarias || []).map(c => ({
@@ -206,6 +207,96 @@ router.get('/', async (req, res) => {
       message: 'Error cargando dashboard: ' + error.message,
       timestamp: new Date().toISOString()
     });
+  }
+});
+
+/**
+ * GET /api/dashboard/resumen
+ *
+ * Todo lo que muestra la pantalla de Resumen, leído de la capa semántica: las
+ * mismas vistas que consulta el chat. Antes la pantalla mostraba arreglos
+ * fijos en el código ("Ventas del mes Q9,530,000", "Cartera Q2,535,000") que
+ * no coincidían con la base, y el chat respondía otras cifras.
+ */
+router.get('/resumen', async (req, res) => {
+  try {
+    const db = req.app.get('db');
+    const una = async (sql) => (await db.allAsync(sql))[0] || null;
+
+    const [meta, posicion] = await Promise.all([
+      una('SELECT * FROM analitica.v_meta'),
+      una('SELECT * FROM analitica.v_posicion'),
+    ]);
+
+    // Último mes con ventas contra el mismo mes del año anterior.
+    const mes = await una(`
+      WITH m AS (SELECT max(mes) AS fin FROM analitica.v_ventas_mensuales)
+      SELECT (SELECT fin FROM m) AS mes,
+             sum(ventas) FILTER (WHERE mes = (SELECT fin FROM m))                       AS ventas,
+             sum(ventas) FILTER (WHERE mes = (SELECT fin FROM m) - interval '1 year')   AS ventas_anio_anterior
+      FROM analitica.v_ventas_mensuales`);
+
+    const anio = `(SELECT extract(year FROM ventas_hasta) FROM analitica.v_meta)`;
+
+    const [paises, marcas, tiendas, tendencia, conteos, antiguedad, pagos, flujo] = await Promise.all([
+      db.allAsync(`
+        SELECT pais, sum(ventas) AS ventas, count(DISTINCT tienda) AS tiendas,
+               round(sum(margen_bruto) / nullif(sum(ventas), 0) * 100, 1) AS margen
+        FROM analitica.v_ventas WHERE anio = ${anio}
+        GROUP BY pais ORDER BY 2 DESC`),
+      db.allAsync(`
+        SELECT marca, segmento, sum(ventas) AS ventas
+        FROM analitica.v_ventas WHERE anio = ${anio}
+        GROUP BY marca, segmento ORDER BY 3 DESC`),
+      db.allAsync(`
+        SELECT tienda, pais, marca, sum(ventas) AS ventas,
+               round(sum(margen_bruto) / nullif(sum(ventas), 0) * 100, 1) AS margen
+        FROM analitica.v_ventas WHERE anio = ${anio}
+        GROUP BY tienda, pais, marca ORDER BY 4 DESC LIMIT 5`),
+      db.allAsync(`
+        SELECT periodo, pais, sum(ventas) AS ventas
+        FROM analitica.v_ventas
+        WHERE fecha > (SELECT ventas_hasta FROM analitica.v_meta) - interval '7 months'
+        GROUP BY periodo, pais ORDER BY periodo`),
+      una(`SELECT count(DISTINCT tienda) AS tiendas, count(DISTINCT marca) AS marcas,
+                  count(DISTINCT pais) AS paises FROM analitica.v_ventas`),
+      db.allAsync(`
+        SELECT antiguedad AS rango, sum(saldo) AS monto, count(*) AS facturas
+        FROM analitica.v_cxc GROUP BY antiguedad
+        ORDER BY min(dias_vencida)`),
+      db.allAsync(`
+        SELECT proveedor, saldo AS monto, dias_para_vencer AS dias, fecha_vencimiento
+        FROM analitica.v_cxp WHERE dias_para_vencer >= 0
+        ORDER BY fecha_vencimiento, saldo DESC LIMIT 5`),
+      db.allAsync('SELECT periodo, entradas, salidas, neto FROM analitica.v_flujo_mensual ORDER BY mes'),
+    ]);
+
+    // La tendencia se entrega pivotada: una fila por mes, una columna por país.
+    const porMes = new Map();
+    for (const f of tendencia) {
+      if (!porMes.has(f.periodo)) porMes.set(f.periodo, { periodo: f.periodo });
+      porMes.get(f.periodo)[f.pais] = f.ventas;
+    }
+
+    res.json({
+      status: 'success',
+      data: {
+        meta,
+        posicion,
+        mes,
+        conteos,
+        paises,
+        marcas,
+        tiendas,
+        tendencia: [...porMes.values()],
+        antiguedad,
+        pagos,
+        flujo,
+      },
+    });
+  } catch (error) {
+    console.error('[GET /api/dashboard/resumen] Error:', error);
+    res.status(500).json({ status: 'error', message: 'No se pudo leer el resumen' });
   }
 });
 

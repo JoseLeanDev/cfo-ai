@@ -1,3 +1,4 @@
+import { legendLabel } from '../config/charts.jsx'
 import { useState, useEffect } from 'react'
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -115,15 +116,15 @@ const insightsVentas = [
   { tipo: 'alerta', titulo: 'Electrónica 4% bajo meta', descripcion: 'Ventas bajaron Q31K vs meta. Competencia de precios reportada por Jorge Castañeda.', icono: 'warning' },
 ]
 
-const COLORS_MARGEN = ['#10b981', '#f59e0b', '#f97316', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#84cc16']
-const COLORS_PIPELINE = ['#94a3b8', '#f59e0b', '#10b981', '#001639']
+const COLORS_MARGEN = ['#1F6B45', '#8A5A24', '#8A5A24', '#9B3320', '#3D56C9', '#3D56C9', '#636970', '#33373D']
+const COLORS_PIPELINE = ['#636970', '#8A5A24', '#1F6B45', '#17181B']
 
 // ========== COMPONENTES ==========
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
-    <div className="bg-white p-3 rounded-lg shadow-lg border border-[var(--border-default)]">
+    <div className="bg-white p-3 rounded-card border border-[var(--border-default)]">
       <p className="text-xs font-medium text-[var(--text-muted)] mb-1">{label}</p>
       {payload.map((p, i) => (
         <p key={i} className="text-sm font-semibold" style={{ color: p.color }}>
@@ -170,16 +171,13 @@ export default function Ventas() {
       {/* HEADER */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#001639] flex items-center justify-center shadow-lg">
-            <ShoppingBagIcon className="w-6 h-6 text-white" />
-          </div>
           <div>
-            <h1 className="text-2xl font-bold">Ventas</h1>
-            <p className="text-sm text-[var(--text-muted)]">Retail Fashion GT — Análisis completo de ventas y desempeño comercial</p>
+            <h1 className="font-display text-[2.125rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">Ventas</h1>
+            <p className="measure mt-2 text-[0.9375rem] leading-relaxed text-slate">Retail Fashion GT — Análisis completo de ventas y desempeño comercial</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <span className="badge-success text-[10px] flex items-center gap-1">
+          <span className="badge-success text-[0.75rem] flex items-center gap-1">
             <CalendarDaysIcon className="w-3 h-3" />
             Julio 2025
           </span>
@@ -187,7 +185,7 @@ export default function Ventas() {
       </div>
 
       {/* TABS */}
-      <div className="flex items-center gap-1 p-1 bg-[var(--bg-secondary)] rounded-lg w-fit">
+      <div className="flex max-w-full items-center gap-1 overflow-x-auto rounded-card bg-[var(--bg-secondary)] p-1">
         {[
           { id: 'general', label: 'General', icon: ChartBarIcon },
           { id: 'vendedores', label: 'Por Vendedor', icon: UsersIcon },
@@ -199,9 +197,9 @@ export default function Ventas() {
             <button
               key={tab.id}
               onClick={() => { setActiveTab(tab.id); setVendedorSeleccionado(null) }}
-              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${
+              className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-card transition-all ${
                 activeTab === tab.id
-                  ? 'bg-white text-[var(--text-primary)] shadow-sm'
+                  ? 'bg-white text-[var(--text-primary)] '
                   : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
               }`}
             >
@@ -240,7 +238,7 @@ export default function Ventas() {
                 <span className="kpi-label">Margen Bruto</span>
                 <ReceiptPercentIcon className="w-4 h-4 text-[var(--text-muted)]" />
               </div>
-              <div className="kpi-value text-[var(--success)]">{margenBruto}%</div>
+              <div className="kpi-value">{margenBruto}%</div>
               <span className="text-xs text-[var(--text-muted)]">Q{formatGTQ(totalVentasMes - totalCostosMes).slice(2)} contribución</span>
             </div>
 
@@ -249,7 +247,7 @@ export default function Ventas() {
                 <span className="kpi-label">Cumplimiento YTD</span>
                 <CalendarDaysIcon className="w-4 h-4 text-[var(--text-muted)]" />
               </div>
-              <div className={`kpi-value ${cumplimientoYTD >= 100 ? 'text-[var(--success)]' : 'text-[var(--warning)]'}`}>{cumplimientoYTD}%</div>
+              <div className="kpi-value">{cumplimientoYTD}%</div>
               <span className="text-xs text-[var(--text-muted)]">{formatGTQ(ventasYTD)} acumulado</span>
             </div>
 
@@ -270,7 +268,7 @@ export default function Ventas() {
             {/* TENDENCIA VENTAS */}
             <div className="lg:col-span-2 card">
               <div className="section-header">
-                <ChartBarIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+                <ChartBarIcon className="w-5 h-5 text-slate" />
                 <h2 className="font-semibold">Tendencia de Ventas vs Meta</h2>
               </div>
               <div className="p-5 pt-2">
@@ -279,17 +277,17 @@ export default function Ventas() {
                     <AreaChart data={ventasMensuales} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorVentas" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="#001639" stopOpacity={0.15}/>
-                          <stop offset="95%" stopColor="#001639" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#17181B" stopOpacity={0.15}/>
+                          <stop offset="95%" stopColor="#17181B" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="mes" tick={{ fontSize: 12, fill: '#6b7280' }} />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000000).toFixed(1)}M`} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E9EAEC" />
+                      <XAxis dataKey="mes" tick={{ fontSize: 12, fill: '#636970' }} />
+                      <YAxis tick={{ fontSize: 11, fill: '#636970' }} tickFormatter={(v) => `Q${(v/1000000).toFixed(1)}M`} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <Area type="monotone" dataKey="ventas" name="Ventas" stroke="#001639" strokeWidth={2.5} fill="url(#colorVentas)" />
-                      <Area type="monotone" dataKey="meta" name="Meta" stroke="#94a3b8" strokeWidth={2} strokeDasharray="5 5" fill="none" />
+                      <Legend formatter={legendLabel} wrapperStyle={{ fontSize: 12 }} />
+                      <Area type="monotone" dataKey="ventas" name="Ventas" stroke="#17181B" strokeWidth={2.5} fill="url(#colorVentas)" />
+                      <Area type="monotone" dataKey="meta" name="Meta" stroke="#636970" strokeWidth={2} strokeDasharray="5 5" fill="none" />
                     </AreaChart>
                   </ResponsiveContainer>
                 </div>
@@ -305,7 +303,7 @@ export default function Ventas() {
               <div className="p-5 space-y-3">
                 {pipelineVentas.map((p, i) => (
                   <div key={i} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold text-white flex-shrink-0"
+                    <div className="w-8 h-8 rounded-card flex items-center justify-center text-xs font-semibold text-white flex-shrink-0"
                       style={{ backgroundColor: COLORS_PIPELINE[i] }}
                     >
                       {p.cantidad}
@@ -318,14 +316,14 @@ export default function Ventas() {
                     </div>
                     <div className="text-right">
                       <span className="text-xs font-mono font-semibold">{formatGTQ(p.valor)}</span>
-                      <p className="text-[10px] text-[var(--text-muted)]">{p.probabilidad}% prob.</p>
+                      <p className="text-[0.75rem] text-[var(--text-muted)]">{p.probabilidad}% prob.</p>
                     </div>
                   </div>
                 ))}
                 <div className="pt-3 border-t border-[var(--border-default)]">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Valor ponderado</span>
-                    <span className="text-lg font-bold font-mono">{formatGTQ(Math.round(pipelinePonderado))}</span>
+                    <span className="text-lg font-semibold font-mono">{formatGTQ(Math.round(pipelinePonderado))}</span>
                   </div>
                   <p className="text-xs text-[var(--text-muted)] mt-1">62 oportunidades · 62% prob. promedio</p>
                 </div>
@@ -336,7 +334,7 @@ export default function Ventas() {
           {/* VENDEDORES RESUMEN */}
           <div className="card">
             <div className="section-header">
-              <UsersIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+              <UsersIcon className="w-5 h-5 text-slate" />
               <h2 className="font-semibold">Desempeño de Vendedores — Julio</h2>
               <button onClick={() => setActiveTab('vendedores')} className="ml-auto text-xs text-[var(--accent-blue)] hover:underline flex items-center gap-1">
                 Ver detalle <ChevronRightIcon className="w-3 h-3" />
@@ -346,13 +344,13 @@ export default function Ventas() {
               <div className="h-64">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={vendedoresChartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                    <XAxis dataKey="nombre" tick={{ fontSize: 12, fill: '#6b7280' }} />
-                    <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#E9EAEC" />
+                    <XAxis dataKey="nombre" tick={{ fontSize: 12, fill: '#636970' }} />
+                    <YAxis tick={{ fontSize: 11, fill: '#636970' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="ventas" name="Ventas Real" fill="#001639" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="meta" name="Meta" fill="#cbd5e1" radius={[4, 4, 0, 0]} />
+                    <Legend formatter={legendLabel} wrapperStyle={{ fontSize: 12 }} />
+                    <Bar dataKey="ventas" name="Ventas Real" fill="#17181B" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="meta" name="Meta" fill="#C7CBD0" radius={[4, 4, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -374,11 +372,11 @@ export default function Ventas() {
                     <div
                       key={v.id}
                       onClick={() => setVendedorSeleccionado(v.id)}
-                      className="card p-5 cursor-pointer hover:shadow-lg transition-all group"
+                      className="card p-5 cursor-pointer hover: transition-all group"
                     >
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-[#001639] text-white flex items-center justify-center text-sm font-bold">
+                          <div className="w-10 h-10 rounded-full bg-ink text-white flex items-center justify-center text-sm font-semibold">
                             {v.avatar}
                           </div>
                           <div>
@@ -386,10 +384,10 @@ export default function Ventas() {
                             <p className="text-xs text-[var(--text-muted)]">{v.departamento}</p>
                           </div>
                         </div>
-                        <span className={`badge text-[10px] px-2 py-1 ${
-                          cumplimiento >= 100 ? 'bg-green-100 text-green-700' :
-                          cumplimiento >= 90 ? 'bg-amber-100 text-amber-700' :
-                          'bg-red-100 text-red-700'
+                        <span className={`badge text-[0.75rem] px-2 py-1 ${
+                          cumplimiento >= 100 ? 'bg-verified-50 text-verified' :
+                          cumplimiento >= 90 ? 'bg-copper-50 text-copper' :
+                          'bg-breach-50 text-breach'
                         }`}>
                           {cumplimiento}% mes
                         </span>
@@ -397,20 +395,20 @@ export default function Ventas() {
 
                       <div className="grid grid-cols-2 gap-3 mb-4">
                         <div className="p-2 bg-[var(--bg-secondary)] rounded">
-                          <p className="text-[10px] text-[var(--text-muted)] uppercase">Ventas Mes</p>
-                          <p className="text-sm font-bold font-mono">{formatGTQ(v.ventasMes)}</p>
+                          <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Ventas Mes</p>
+                          <p className="text-sm font-semibold font-mono">{formatGTQ(v.ventasMes)}</p>
                         </div>
                         <div className="p-2 bg-[var(--bg-secondary)] rounded">
-                          <p className="text-[10px] text-[var(--text-muted)] uppercase">Ventas YTD</p>
-                          <p className="text-sm font-bold font-mono">{formatGTQ(v.ventasYTD)}</p>
+                          <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Ventas YTD</p>
+                          <p className="text-sm font-semibold font-mono">{formatGTQ(v.ventasYTD)}</p>
                         </div>
                         <div className="p-2 bg-[var(--bg-secondary)] rounded">
-                          <p className="text-[10px] text-[var(--text-muted)] uppercase">Clientes</p>
-                          <p className="text-sm font-bold">{v.clientes} <span className="text-[10px] text-[var(--success)]">(+{v.nuevosClientes})</span></p>
+                          <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Clientes</p>
+                          <p className="text-sm font-semibold">{v.clientes} <span className="text-[0.75rem] text-[var(--success)]">(+{v.nuevosClientes})</span></p>
                         </div>
                         <div className="p-2 bg-[var(--bg-secondary)] rounded">
-                          <p className="text-[10px] text-[var(--text-muted)] uppercase">Cobranza</p>
-                          <p className="text-sm font-bold">{v.cobranza}%</p>
+                          <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Cobranza</p>
+                          <p className="text-sm font-semibold">{v.cobranza}%</p>
                         </div>
                       </div>
 
@@ -422,7 +420,7 @@ export default function Ventas() {
                         <div className="w-full h-2 bg-[var(--bg-tertiary)] rounded-full overflow-hidden">
                           <div className="h-full rounded-full transition-all duration-1000" style={{
                             width: animated ? `${Math.min(100, cumplimientoYTD)}%` : '0%',
-                            backgroundColor: cumplimientoYTD >= 100 ? '#10b981' : cumplimientoYTD >= 90 ? '#f59e0b' : '#ef4444'
+                            backgroundColor: cumplimientoYTD >= 100 ? '#1F6B45' : cumplimientoYTD >= 90 ? '#8A5A24' : '#9B3320'
                           }} />
                         </div>
                       </div>
@@ -434,7 +432,7 @@ export default function Ventas() {
 
                       <div className="mt-3 pt-3 border-t border-[var(--border-default)] flex items-center justify-between">
                         <span className="text-xs text-[var(--text-muted)]">Comisión estimada</span>
-                        <span className="text-sm font-bold font-mono text-[var(--accent-orange)]">{formatGTQ(v.comision)}</span>
+                        <span className="text-sm font-semibold font-mono text-[var(--accent-orange)]">{formatGTQ(v.comision)}</span>
                       </div>
 
                       <div className="mt-3 text-center">
@@ -448,20 +446,20 @@ export default function Ventas() {
               {/* COMPARATIVA VENDEDORES CHART */}
               <div className="card">
                 <div className="section-header">
-                  <ChartBarIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+                  <ChartBarIcon className="w-5 h-5 text-slate" />
                   <h2 className="font-semibold">Comparativa de Vendedores — YTD</h2>
                 </div>
                 <div className="p-5 pt-2">
                   <div className="h-72">
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={vendedoresChartData} layout="vertical" margin={{ top: 10, right: 30, left: 80, bottom: 0 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={false} />
-                        <XAxis type="number" tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000000).toFixed(1)}M`} />
-                        <YAxis type="category" dataKey="nombre" tick={{ fontSize: 12, fill: '#374151' }} width={75} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#E9EAEC" horizontal={false} />
+                        <XAxis type="number" tick={{ fontSize: 11, fill: '#636970' }} tickFormatter={(v) => `Q${(v/1000000).toFixed(1)}M`} />
+                        <YAxis type="category" dataKey="nombre" tick={{ fontSize: 12, fill: '#33373D' }} width={75} />
                         <Tooltip content={<CustomTooltip />} />
-                        <Legend wrapperStyle={{ fontSize: 12 }} />
-                        <Bar dataKey="YTD" name="Ventas YTD" fill="#001639" radius={[0, 4, 4, 0]} />
-                        <Bar dataKey="ventas" name="Ventas Mes" fill="#94a3b8" radius={[0, 4, 4, 0]} />
+                        <Legend formatter={legendLabel} wrapperStyle={{ fontSize: 12 }} />
+                        <Bar dataKey="YTD" name="Ventas YTD" fill="#17181B" radius={[0, 4, 4, 0]} />
+                        <Bar dataKey="ventas" name="Ventas Mes" fill="#636970" radius={[0, 4, 4, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>
@@ -479,34 +477,34 @@ export default function Ventas() {
 
               <div className="card p-6">
                 <div className="flex items-center gap-4 mb-6">
-                  <div className="w-16 h-16 rounded-full bg-[#001639] text-white flex items-center justify-center text-xl font-bold">
+                  <div className="w-16 h-16 rounded-full bg-ink text-white flex items-center justify-center text-xl font-semibold">
                     {vendedorDetalle.avatar}
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold">{vendedorDetalle.nombre}</h2>
+                    <h2 className="text-xl font-semibold">{vendedorDetalle.nombre}</h2>
                     <p className="text-sm text-[var(--text-muted)]">{vendedorDetalle.departamento}</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-                  <div className="p-4 bg-[var(--bg-secondary)] rounded-lg text-center">
+                  <div className="p-4 bg-[var(--bg-secondary)] rounded-card text-center">
                     <p className="text-xs text-[var(--text-muted)] uppercase">Ventas Mes</p>
-                    <p className="text-xl font-bold font-mono">{formatGTQ(vendedorDetalle.ventasMes)}</p>
+                    <p className="text-xl font-semibold font-mono">{formatGTQ(vendedorDetalle.ventasMes)}</p>
                     <p className="text-xs text-[var(--text-muted)]">Meta: {formatGTQ(vendedorDetalle.metaMes)}</p>
                   </div>
-                  <div className="p-4 bg-[var(--bg-secondary)] rounded-lg text-center">
+                  <div className="p-4 bg-[var(--bg-secondary)] rounded-card text-center">
                     <p className="text-xs text-[var(--text-muted)] uppercase">Ventas YTD</p>
-                    <p className="text-xl font-bold font-mono">{formatGTQ(vendedorDetalle.ventasYTD)}</p>
+                    <p className="text-xl font-semibold font-mono">{formatGTQ(vendedorDetalle.ventasYTD)}</p>
                     <p className="text-xs text-[var(--text-muted)]">Meta: {formatGTQ(vendedorDetalle.metaYTD)}</p>
                   </div>
-                  <div className="p-4 bg-[var(--bg-secondary)] rounded-lg text-center">
+                  <div className="p-4 bg-[var(--bg-secondary)] rounded-card text-center">
                     <p className="text-xs text-[var(--text-muted)] uppercase">Ticket Promedio</p>
-                    <p className="text-xl font-bold font-mono">{formatGTQ(vendedorDetalle.ticketPromedio)}</p>
+                    <p className="text-xl font-semibold font-mono">{formatGTQ(vendedorDetalle.ticketPromedio)}</p>
                     <p className="text-xs text-[var(--text-muted)]">{vendedorDetalle.tickets} tickets</p>
                   </div>
-                  <div className="p-4 bg-[var(--bg-secondary)] rounded-lg text-center">
+                  <div className="p-4 bg-[var(--bg-secondary)] rounded-card text-center">
                     <p className="text-xs text-[var(--text-muted)] uppercase">Comisión</p>
-                    <p className="text-xl font-bold font-mono text-[var(--accent-orange)]">{formatGTQ(vendedorDetalle.comision)}</p>
+                    <p className="text-xl font-semibold font-mono text-[var(--accent-orange)]">{formatGTQ(vendedorDetalle.comision)}</p>
                     <p className="text-xs text-[var(--text-muted)]">3% sobre ventas</p>
                   </div>
                 </div>
@@ -514,11 +512,11 @@ export default function Ventas() {
                 <div className="h-64">
                   <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={vendedorDetalle.historial.map((v, i) => ({ mes: mesesLabels[i], ventas: v }))} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="mes" tick={{ fontSize: 12, fill: '#6b7280' }} />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E9EAEC" />
+                      <XAxis dataKey="mes" tick={{ fontSize: 12, fill: '#636970' }} />
+                      <YAxis tick={{ fontSize: 11, fill: '#636970' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Line type="monotone" dataKey="ventas" name="Ventas Mensuales" stroke="#001639" strokeWidth={2.5} dot={{ fill: '#001639', r: 4 }} />
+                      <Line type="monotone" dataKey="ventas" name="Ventas Mensuales" stroke="#17181B" strokeWidth={2.5} dot={{ fill: '#17181B', r: 4 }} />
                     </LineChart>
                   </ResponsiveContainer>
                 </div>
@@ -534,7 +532,7 @@ export default function Ventas() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 card">
               <div className="section-header">
-                <BuildingStorefrontIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+                <BuildingStorefrontIcon className="w-5 h-5 text-slate" />
                 <h2 className="font-semibold">Concentración de Clientes (Regla 80/20)</h2>
               </div>
               <div className="p-5">
@@ -545,11 +543,11 @@ export default function Ventas() {
                       compras: c.compras,
                       acumulado: clientesTop.slice(0, i + 1).reduce((s, x) => s + x.compras, 0)
                     }))} margin={{ top: 10, right: 10, left: 0, bottom: 60 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="nombre" tick={{ fontSize: 10, fill: '#6b7280' }} angle={-45} textAnchor="end" interval={0} />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E9EAEC" />
+                      <XAxis dataKey="nombre" tick={{ fontSize: 10, fill: '#636970' }} angle={-45} textAnchor="end" interval={0} />
+                      <YAxis tick={{ fontSize: 11, fill: '#636970' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Bar dataKey="compras" name="Compras" fill="#001639" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="compras" name="Compras" fill="#17181B" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -571,7 +569,7 @@ export default function Ventas() {
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">{c.nombre}</p>
                         <div className="w-full h-1.5 bg-[var(--bg-tertiary)] rounded-full mt-0.5">
-                          <div className="h-full bg-[#001639] rounded-full" style={{ width: `${pct * 5}%` }} />
+                          <div className="h-full bg-ink rounded-full" style={{ width: `${pct * 5}%` }} />
                         </div>
                       </div>
                       <span className="text-xs font-mono font-semibold whitespace-nowrap">{formatGTQ(c.compras)}</span>
@@ -581,7 +579,7 @@ export default function Ventas() {
                 <div className="pt-3 border-t border-[var(--border-default)]">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-[var(--text-muted)]">Concentración top 3</span>
-                    <span className="font-bold">{((clientesTop.slice(0, 3).reduce((s, c) => s + c.compras, 0) / clientesTop.reduce((s, c) => s + c.compras, 0)) * 100).toFixed(0)}%</span>
+                    <span className="font-semibold">{((clientesTop.slice(0, 3).reduce((s, c) => s + c.compras, 0) / clientesTop.reduce((s, c) => s + c.compras, 0)) * 100).toFixed(0)}%</span>
                   </div>
                 </div>
               </div>
@@ -612,15 +610,15 @@ export default function Ventas() {
                       <td>
                         <p className="font-medium text-sm">{c.nombre}</p>
                       </td>
-                      <td><span className="badge-neutral text-[10px]">{c.sector}</span></td>
+                      <td><span className="badge-neutral text-[0.75rem]">{c.sector}</span></td>
                       <td className="text-right font-mono font-medium">{formatGTQ(c.compras)}</td>
                       <td className="text-right font-mono text-sm">{c.transacciones}</td>
                       <td className="text-right font-mono text-sm">{formatGTQ(c.ticketPromedio)}</td>
                       <td className="text-sm">{c.vendedor}</td>
                       <td className="text-center">
-                        {c.tendencia === 'up' ? <span className="badge-success text-[10px]">↑ Creciendo</span> :
-                         c.tendencia === 'down' ? <span className="badge-danger text-[10px]">↓ Baja</span> :
-                         <span className="badge-neutral text-[10px]">→ Estable</span>}
+                        {c.tendencia === 'up' ? <span className="badge-success text-[0.75rem]">↑ Creciendo</span> :
+                         c.tendencia === 'down' ? <span className="badge-danger text-[0.75rem]">↓ Baja</span> :
+                         <span className="badge-neutral text-[0.75rem]">→ Estable</span>}
                       </td>
                     </tr>
                   ))}
@@ -636,7 +634,7 @@ export default function Ventas() {
         <>
           <div className="flex items-center gap-2 mb-2">
             <FunnelIcon className="w-4 h-4 text-[var(--text-muted)]" />
-            <select
+            <select aria-label="Todas las categorías"
               value={filtroLinea}
               onChange={(e) => setFiltroLinea(e.target.value)}
               className="input text-xs py-1.5 w-auto"
@@ -655,20 +653,20 @@ export default function Ventas() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="card">
               <div className="section-header">
-                <ShoppingBagIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+                <ShoppingBagIcon className="w-5 h-5 text-slate" />
                 <h2 className="font-semibold">Ventas por Línea de Producto</h2>
               </div>
               <div className="p-5">
                 <div className="h-72">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart data={lineasFiltradas} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                      <XAxis dataKey="nombre" tick={{ fontSize: 10, fill: '#6b7280' }} interval={0} />
-                      <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
+                      <CartesianGrid strokeDasharray="3 3" stroke="#E9EAEC" />
+                      <XAxis dataKey="nombre" tick={{ fontSize: 10, fill: '#636970' }} interval={0} />
+                      <YAxis tick={{ fontSize: 11, fill: '#636970' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
                       <Tooltip content={<CustomTooltip />} />
-                      <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <Bar dataKey="ventas" name="Ventas Real" fill="#001639" radius={[4, 4, 0, 0]} />
-                      <Bar dataKey="meta" name="Presupuesto" fill="#cbd5e1" radius={[4, 4, 0, 0]} />
+                      <Legend formatter={legendLabel} wrapperStyle={{ fontSize: 12 }} />
+                      <Bar dataKey="ventas" name="Ventas Real" fill="#17181B" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="meta" name="Presupuesto" fill="#C7CBD0" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>
@@ -677,7 +675,7 @@ export default function Ventas() {
 
             <div className="card">
               <div className="section-header">
-                <ReceiptPercentIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+                <ReceiptPercentIcon className="w-5 h-5 text-slate" />
                 <h2 className="font-semibold">Margen por Línea</h2>
               </div>
               <div className="p-5">
@@ -686,7 +684,7 @@ export default function Ventas() {
                     <PieChart>
                       <Pie data={lineasFiltradas} cx="50%" cy="50%" outerRadius={100} dataKey="ventas" nameKey="nombre"
                         label={({ nombre, margen }) => `${nombre.split(' ')[0]}: ${margen}%`}
-                        labelLine={{ stroke: '#6b7280', strokeWidth: 0.5 }}
+                        labelLine={{ stroke: '#636970', strokeWidth: 0.5 }}
                       >
                         {lineasFiltradas.map((entry, index) => (
                           <Cell key={index} fill={COLORS_MARGEN[index % COLORS_MARGEN.length]} />
@@ -727,7 +725,7 @@ export default function Ventas() {
                         <td>
                           <p className="font-medium text-sm">{l.nombre}</p>
                         </td>
-                        <td><span className="badge-neutral text-[10px]">{l.categoria}</span></td>
+                        <td><span className="badge-neutral text-[0.75rem]">{l.categoria}</span></td>
                         <td className="text-right font-mono text-sm">{l.unidades.toLocaleString()}</td>
                         <td className="text-right font-mono font-medium">{formatGTQ(l.ventas)}</td>
                         <td className="text-right font-mono text-sm text-[var(--text-muted)]">{formatGTQ(l.meta)}</td>
@@ -737,8 +735,8 @@ export default function Ventas() {
                           </span>
                         </td>
                         <td className="text-center">
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${
-                            cumpl >= 100 ? 'bg-green-100 text-green-700' : cumpl >= 90 ? 'bg-amber-100 text-amber-700' : 'bg-red-100 text-red-700'
+                          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${
+                            cumpl >= 100 ? 'bg-verified-50 text-verified' : cumpl >= 90 ? 'bg-copper-50 text-copper' : 'bg-breach-50 text-breach'
                           }`}>{cumpl}%</span>
                         </td>
                         <td className="text-center">

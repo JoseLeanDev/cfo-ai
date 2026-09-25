@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const { execSync } = require('child_process');
-const { ejecutarTareasPendientesWakeUp } = require('../services/wakeUpScheduler');
 const aiService = require('../services/aiService');
 const config = require('../config/financiera');
 
@@ -788,6 +787,115 @@ router.get('/diagnostico-llm', async (req, res) => {
       key_prefix: process.env.OPENROUTER_API_KEY?.substring(0, 15) + '...'
     });
   }
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// Agente SQL (chat)
+// ────────────────────────────────────────────────────────────────────────────
+const agenteSQL = require('../services/agenteSQL');
+
+/**
+ * POST /api/agents/chat-agente
+ *
+ * El modelo decide qué consultar, ejecuta, se corrige si falla, y devuelve
+ * texto más bloques visuales atados a filas reales. A diferencia de /chat, que
+ * arma un contexto fijo antes de preguntar, aquí cada cifra sale de una
+ * consulta, y la respuesta trae el SQL que la produjo.
+ */
+router.post('/chat-agente', async (req, res) => {
+  const t0 = Date.now();
+  const { message, historial } = req.body || {};
+
+  if (!message || !String(message).trim()) {
+    return res.status(400).json({ success: false, error: 'Se requiere un mensaje' });
+  }
+
+  try {
+    const r = await agenteSQL.correr(String(message).trim(), {
+      historial: Array.isArray(historial)
+        ? historial
+            .filter((m) => m && (m.role === 'user' || m.role === 'assistant') && m.content)
+            .slice(-6)
+            .map((m) => ({ role: m.role, content: String(m.content).slice(0, 1500) }))
+        : [],
+    });
+
+    // Traza: cada respuesta queda con el SQL que la produjo. Sin las filas, así
+    // que el JSON es chico y no hace falta recortarlo (recortar un JSON lo deja
+    // inválido para la columna jsonb y el registro falla en silencio).
+    try {
+      const db = req.app.get('db');
+      await db.runAsync(
+        `INSERT INTO agentes_logs (agente_nombre, agente_tipo, categoria, descripcion,
+           detalles_json, resultado_status, duracion_ms, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, NOW())`,
+        ['Agente SQL', 'agente_sql', 'consulta_chat',
+         String(message).slice(0, 500),
+         JSON.stringify({ consultas: r.consultas, pasos: r.pasos, meta: r.meta }),
+         'exitoso', r.meta.ms]
+      );
+    } catch (e) {
+      console.warn('[chat-agente] no se pudo registrar en agentes_logs:', e.message);
+    }
+
+    return res.json({
+      success: true,
+      response: {
+        content: r.texto,
+        bloques: r.bloques,
+        agent: 'Qora · Agente SQL',
+        type: 'agente_sql',
+        consultas: r.consultas,
+        pasos: r.pasos,
+        meta: r.meta,
+      },
+    });
+  } catch (error) {
+    console.error('[POST /api/agents/chat-agente] Error:', error.message);
+    const faltaConfig = /OPENROUTER_API_KEY|DATABASE_URL_READONLY|schema "analitica"/.test(error.message);
+    const agotado = error.code === 'ECONNABORTED' || /timeout/i.test(error.message);
+    // OpenRouter responde 402 cuando la cuenta no tiene saldo para reservar el
+    // costo máximo de la llamada. Es un problema de operación, no del usuario.
+    const sinSaldo = error.response?.status === 402;
+    if (sinSaldo) console.error('[chat-agente] OpenRouter sin saldo:', JSON.stringify(error.response?.data).slice(0, 300));
+
+    return res.status(faltaConfig || sinSaldo ? 503 : agotado ? 504 : 500).json({
+      success: false,
+      error: sinSaldo
+        ? 'El asistente no está disponible: la cuenta del modelo no tiene saldo. Hay que recargar créditos en OpenRouter.'
+        : faltaConfig
+          ? error.message
+          : agotado
+            ? 'El modelo tardó demasiado en responder. Intente de nuevo o con una pregunta más acotada.'
+            : 'No se pudo procesar la consulta.',
+      ms: Date.now() - t0,
+    });
+  }
+});
+
+/**
+ * GET /api/agents/chat-agente/salud
+ * Verifica que el agente tenga lo que necesita, sin gastar una llamada al modelo.
+ */
+router.get('/chat-agente/salud', async (req, res) => {
+  const dbAgente = require('../services/dbAgente');
+  const out = {
+    openrouter: Boolean(process.env.OPENROUTER_API_KEY),
+    conexion_solo_lectura: Boolean(process.env.DATABASE_URL_READONLY),
+    usuario_correcto: (process.env.DATABASE_URL_READONLY || '').includes('agente_ia'),
+    modelo: agenteSQL.MODELO,
+    vistas: [],
+  };
+  try {
+    const cat = await dbAgente.getCatalogo({ refrescar: true });
+    out.vistas = cat.map((v) => v.vista);
+    const r = await dbAgente.ejecutarSQL('SELECT fecha_corte, ventas_hasta FROM analitica.v_meta');
+    out.fechas = r.ok ? r.filas[0] : null;
+  } catch (e) {
+    out.error = e.message;
+  }
+  out.listo = out.openrouter && out.conexion_solo_lectura && out.usuario_correcto && out.vistas.length > 0 && !out.error;
+  res.status(out.listo ? 200 : 503).json(out);
 });
 
 module.exports = router;

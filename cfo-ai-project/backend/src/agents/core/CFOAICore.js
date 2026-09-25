@@ -70,17 +70,11 @@ class CFOAICore extends BaseAgent {
     const startTime = Date.now();
 
     try {
-      const resultado = await agente.process({ tarea: tareaId, empresaId }, {});
-      
-      // Log del orquestador
-      await this.logActividad('tarea_ejecutada',
-        `Tarea ${agenteId}.${tareaId} completada`,
-        { agenteId, tareaId, tipo: resultado.type },
-        null,
-        Date.now() - startTime
-      );
-
-      return resultado;
+      // Cada agente registra su propio trabajo en agentes_logs. El orquestador
+      // ya no agrega una segunda fila de "tarea ejecutada" por cada éxito: eran
+      // 198 mil filas que solo decían que se había escrito otra fila. Solo deja
+      // constancia cuando la tarea revienta antes de que el agente registre.
+      return await agente.process({ tarea: tareaId, empresaId }, {});
 
     } catch (error) {
       await this.logActividad('tarea_ejecutada',
@@ -144,6 +138,10 @@ class CFOAICore extends BaseAgent {
       await db.runAsync(`
         INSERT INTO briefings_diarios (fecha, contenido, datos_json, enviado, created_at)
         VALUES (?, ?, ?, FALSE, NOW())
+        ON CONFLICT (fecha) DO UPDATE
+          SET contenido = EXCLUDED.contenido,
+              datos_json = EXCLUDED.datos_json,
+              updated_at = NOW()
       `, [new Date().toISOString().split('T')[0], JSON.stringify(briefing.detalles), JSON.stringify({ insights: briefing.insights, count: insights.length })]);
 
       await this.logActividad('briefing_diario',

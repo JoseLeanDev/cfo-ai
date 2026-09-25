@@ -1,6 +1,11 @@
 import { useQuery } from 'react-query'
 import { endpoints } from '../services/cfoApi'
 
+// Resumen desde la capa semántica: las mismas cifras que responde el chat.
+export const useResumen = () => {
+  return useQuery('resumen', endpoints.resumen, { staleTime: 5 * 60 * 1000 })
+}
+
 export const useDashboard = () => {
   return useQuery('dashboard', endpoints.dashboard, {
     refetchInterval: 5 * 60 * 1000, // Refetch cada 5 minutos

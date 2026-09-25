@@ -156,14 +156,11 @@ export default function SAT() {
   return (
     <div className="space-y-6 animate-fade-in">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-lg bg-[#001639] flex items-center justify-center">
-            <BuildingLibraryIcon className="w-5 h-5 text-white" />
-          </div>
           <div>
-            <h1 className="text-2xl font-semibold">Módulo SAT</h1>
-            <p className="text-sm text-[var(--text-muted)]">Cálculos, libros, alertas y cumplimiento fiscal</p>
+            <h1 className="font-display text-[2.125rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">Módulo SAT</h1>
+            <p className="measure mt-2 text-[0.9375rem] leading-relaxed text-slate">Cálculos, libros, alertas y cumplimiento fiscal</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -179,14 +176,14 @@ export default function SAT() {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 overflow-x-auto pb-1">
+      <div className="flex max-w-full gap-1 overflow-x-auto pb-1">
         {tabs.map(tab => (
           <button
             key={tab.id}
             onClick={() => setActiveTab(tab.id)}
-            className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-card text-sm font-medium whitespace-nowrap transition-colors ${
               activeTab === tab.id
-                ? 'bg-[#001639] text-white'
+                ? 'bg-ink text-white'
                 : 'text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
             }`}
           >
@@ -203,24 +200,24 @@ export default function SAT() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="card p-4">
               <p className="text-xs text-[var(--text-muted)] mb-1">IVA a Pagar (Abr)</p>
-              <p className={`text-xl font-bold tabular-nums ${iva.ivaPagar >= 0 ? 'text-[var(--danger)]' : 'text-[var(--success)]'}`}>
+              <p className={`text-xl font-semibold tabular-nums ${iva.ivaPagar >= 0 ? 'text-[var(--danger)]' : 'text-[var(--success)]'}`}>
                 {iva.ivaPagar >= 0 ? '-' : '+'} {formatGTQ(Math.abs(iva.ivaPagar))}
               </p>
               <p className="text-xs text-[var(--text-muted)] mt-1">Vence: 30 Abr</p>
             </div>
             <div className="card p-4">
               <p className="text-xs text-[var(--text-muted)] mb-1">ISR Trimestral Q1</p>
-              <p className="text-xl font-bold text-[var(--danger)] tabular-nums">- {formatGTQ(isr.isrMenor)}</p>
+              <p className="text-xl font-semibold text-[var(--danger)] tabular-nums">- {formatGTQ(isr.isrMenor)}</p>
               <p className="text-xs text-[var(--text-muted)] mt-1">{isr.regimenRecomendado}</p>
             </div>
             <div className="card p-4">
               <p className="text-xs text-[var(--text-muted)] mb-1">ISO Q1 (acreditado)</p>
-              <p className="text-xl font-bold text-[var(--danger)] tabular-nums">- {formatGTQ(iso.isoNeto)}</p>
+              <p className="text-xl font-semibold text-[var(--danger)] tabular-nums">- {formatGTQ(iso.isoNeto)}</p>
               <p className="text-xs text-[var(--text-muted)] mt-1">Base: {iso.base}</p>
             </div>
             <div className="card p-4">
               <p className="text-xs text-[var(--text-muted)] mb-1">Retenciones Q1</p>
-              <p className="text-xl font-bold tabular-nums">{formatGTQ(retencionesData.reduce((s, r) => s + r.acumulado, 0))}</p>
+              <p className="text-xl font-semibold tabular-nums">{formatGTQ(retencionesData.reduce((s, r) => s + r.acumulado, 0))}</p>
               <p className="text-xs text-[var(--text-muted)] mt-1">4 tipos registrados</p>
             </div>
           </div>
@@ -234,17 +231,17 @@ export default function SAT() {
               </div>
               <div className="p-5 pt-0 space-y-3">
                 {vencimientos.filter(v => v.dias >= 0 && v.dias <= 30).slice(0, 5).map((item, idx) => (
-                  <div key={idx} className={`p-3 rounded-lg border ${
-                    item.nivel === 'critical' ? 'bg-rose-50 border-rose-200' :
-                    item.nivel === 'warning' ? 'bg-amber-50 border-amber-200' :
-                    'bg-blue-50 border-blue-200'
+                  <div key={idx} className={`p-3 rounded-card border ${
+                    item.nivel === 'critical' ? 'bg-breach-50 border-breach-100' :
+                    item.nivel === 'warning' ? 'bg-copper-50 border-copper-100' :
+                    'bg-paper border-fog'
                   }`}>
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-3">
-                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold ${
-                          item.nivel === 'critical' ? 'bg-rose-500 text-white' :
-                          item.nivel === 'warning' ? 'bg-amber-500 text-white' :
-                          'bg-blue-500 text-white'
+                        <div className={`w-10 h-10 rounded-card flex items-center justify-center text-sm font-semibold ${
+                          item.nivel === 'critical' ? 'bg-breach text-white' :
+                          item.nivel === 'warning' ? 'bg-copper text-white' :
+                          'bg-cobalt text-white'
                         }`}>
                           {item.dias === 0 ? '!' : item.dias}
                         </div>
@@ -252,15 +249,15 @@ export default function SAT() {
                           <p className="font-semibold text-sm">{item.obligacion}</p>
                           <p className="text-xs text-[var(--text-muted)]">{item.formulario} • {formatDate(item.fecha)}</p>
                           <p className={`text-xs font-medium mt-0.5 ${
-                            item.nivel === 'critical' ? 'text-rose-700' :
-                            item.nivel === 'warning' ? 'text-amber-700' :
-                            'text-blue-700'
+                            item.nivel === 'critical' ? 'text-breach' :
+                            item.nivel === 'warning' ? 'text-copper' :
+                            'text-cobalt'
                           }`}>
-                            {item.dias === 0 ? '⚠️ Vence hoy' : `En ${item.dias} días`}
+                            {item.dias === 0 ? ' Vence hoy' : `En ${item.dias} días`}
                           </p>
                         </div>
                       </div>
-                      <span className="text-lg font-bold tabular-nums">{formatGTQ(item.montoEstimado)}</span>
+                      <span className="text-lg font-semibold tabular-nums">{formatGTQ(item.montoEstimado)}</span>
                     </div>
                   </div>
                 ))}
@@ -276,23 +273,23 @@ export default function SAT() {
                 </div>
                 <div className="p-5 pt-0 space-y-3">
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="p-3 bg-[var(--bg-secondary)] rounded-lg text-center">
-                      <p className="text-2xl font-bold tabular-nums">{facturasEmitidas.length}</p>
+                    <div className="p-3 bg-[var(--bg-secondary)] rounded-card text-center">
+                      <p className="text-2xl font-semibold tabular-nums">{facturasEmitidas.length}</p>
                       <p className="text-xs text-[var(--text-muted)]">Emitidas</p>
                     </div>
-                    <div className="p-3 bg-[var(--bg-secondary)] rounded-lg text-center">
-                      <p className="text-2xl font-bold text-[var(--danger)]">
+                    <div className="p-3 bg-[var(--bg-secondary)] rounded-card text-center">
+                      <p className="text-2xl font-semibold text-[var(--danger)]">
                         {facturasEmitidas.filter(f => f.estado !== 'valida').length}
                       </p>
                       <p className="text-xs text-[var(--text-muted)]">Con problemas</p>
                     </div>
                   </div>
-                  <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                  <div className="p-3 bg-verified-50 rounded-card border border-verified-100">
                     <div className="flex items-center gap-2">
-                      <CheckCircleIcon className="w-4 h-4 text-emerald-600" />
-                      <span className="text-sm font-medium text-emerald-800">Certificado FEL activo</span>
+                      <CheckCircleIcon className="w-4 h-4 text-verified" />
+                      <span className="text-sm font-medium text-verified">Certificado FEL activo</span>
                     </div>
-                    <p className="text-xs text-emerald-600 mt-1">Vence: 2026-12-31</p>
+                    <p className="text-xs text-verified mt-1">Vence: 2026-12-31</p>
                   </div>
                 </div>
               </div>
@@ -304,15 +301,15 @@ export default function SAT() {
                   <h2 className="font-semibold">Insights del Mes</h2>
                 </div>
                 <div className="p-5 pt-0 space-y-3">
-                  <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                    <p className="text-sm font-medium text-amber-800">💡 Régimen ISR recomendado</p>
-                    <p className="text-xs text-amber-700 mt-1">
+                  <div className="p-3 bg-copper-50 rounded-card border border-copper-100">
+                    <p className="text-sm font-medium text-copper"> Régimen ISR recomendado</p>
+                    <p className="text-xs text-copper mt-1">
                       {isr.regimenRecomendado} ahorra {formatGTQ(Math.abs(isr.isrR25 - isr.isrS5))} este período
                     </p>
                   </div>
-                  <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-sm font-medium text-blue-800">📊 ISO acreditado al 100%</p>
-                    <p className="text-xs text-blue-700 mt-1">
+                  <div className="p-3 bg-paper rounded-card border border-fog">
+                    <p className="text-sm font-medium text-cobalt"> ISO acreditado al 100%</p>
+                    <p className="text-xs text-cobalt mt-1">
                       El ISR del período cubre completamente el ISO. Sin pago adicional.
                     </p>
                   </div>
@@ -355,17 +352,17 @@ export default function SAT() {
                   <div className="border-t border-[var(--border-default)] pt-3">
                     <div className="flex justify-between">
                       <span className="font-semibold">IVA a Pagar</span>
-                      <span className={`text-xl font-bold tabular-nums ${iva.ivaPagar >= 0 ? 'text-[var(--danger)]' : 'text-[var(--success)]'}`}>
+                      <span className={`text-xl font-semibold tabular-nums ${iva.ivaPagar >= 0 ? 'text-[var(--danger)]' : 'text-[var(--success)]'}`}>
                         {iva.ivaPagar >= 0 ? formatGTQ(iva.ivaPagar) : formatGTQ(Math.abs(iva.ivaPagar)) + ' a favor'}
                       </span>
                     </div>
                   </div>
                 </div>
-                <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
-                  <p className="text-sm text-blue-800">
+                <div className="p-3 bg-paper rounded-card border border-fog">
+                  <p className="text-sm text-cobalt">
                     <strong>Vencimiento:</strong> 30 de abril de 2026
                   </p>
-                  <p className="text-xs text-blue-600 mt-1">
+                  <p className="text-xs text-cobalt mt-1">
                     Formulario SAT-2231. Este cálculo se actualiza automáticamente con cada factura FEL emitida/recibida.
                   </p>
                 </div>
@@ -402,13 +399,13 @@ export default function SAT() {
       {activeTab === 'libros' && (
         <div className="space-y-6">
           <div className="flex gap-4 mb-4">
-            <button className={`px-4 py-2 rounded-lg text-sm font-medium ${filtroFacturas === 'ventas' ? 'bg-[#001639] text-white' : 'bg-[var(--bg-secondary)]'}`} onClick={() => setFiltroFacturas('ventas')}>
+            <button className={`px-4 py-2 rounded-card text-sm font-medium ${filtroFacturas === 'ventas' ? 'bg-ink text-white' : 'bg-[var(--bg-secondary)]'}`} onClick={() => setFiltroFacturas('ventas')}>
               Libro Ventas
             </button>
-            <button className={`px-4 py-2 rounded-lg text-sm font-medium ${filtroFacturas === 'compras' ? 'bg-[#001639] text-white' : 'bg-[var(--bg-secondary)]'}`} onClick={() => setFiltroFacturas('compras')}>
+            <button className={`px-4 py-2 rounded-card text-sm font-medium ${filtroFacturas === 'compras' ? 'bg-ink text-white' : 'bg-[var(--bg-secondary)]'}`} onClick={() => setFiltroFacturas('compras')}>
               Libro Compras
             </button>
-            <button className={`px-4 py-2 rounded-lg text-sm font-medium ${filtroFacturas === 'todas' ? 'bg-[#001639] text-white' : 'bg-[var(--bg-secondary)]'}`} onClick={() => setFiltroFacturas('todas')}>
+            <button className={`px-4 py-2 rounded-card text-sm font-medium ${filtroFacturas === 'todas' ? 'bg-ink text-white' : 'bg-[var(--bg-secondary)]'}`} onClick={() => setFiltroFacturas('todas')}>
               Ambos
             </button>
           </div>
@@ -537,12 +534,12 @@ export default function SAT() {
                   <div className="border-t border-[var(--border-default)] pt-2">
                     <div className="flex justify-between py-2">
                       <span className="font-semibold">Utilidad neta estimada</span>
-                      <span className="font-bold tabular-nums">{formatGTQ(isr.utilidad)}</span>
+                      <span className="font-semibold tabular-nums">{formatGTQ(isr.utilidad)}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-lg border border-[var(--border-default)] bg-[var(--bg-secondary)]">
+                <div className="p-4 rounded-card border border-[var(--border-default)] bg-[var(--bg-secondary)]">
                   <p className="text-sm font-medium mb-3">Comparación de Régimenes</p>
                   <div className="space-y-3">
                     <div className="flex justify-between items-center">
@@ -550,7 +547,7 @@ export default function SAT() {
                         <p className="text-sm">Sobre Utilidades (25%)</p>
                         <p className="text-xs text-[var(--text-muted)]">25% de la utilidad neta</p>
                       </div>
-                      <span className={`font-bold tabular-nums ${isr.isrR25 < isr.isrS5 ? 'text-[var(--success)]' : 'text-[var(--text-muted)]'}`}>
+                      <span className={`font-semibold tabular-nums ${isr.isrR25 < isr.isrS5 ? 'text-[var(--success)]' : 'text-[var(--text-muted)]'}`}>
                         {formatGTQ(isr.isrR25)} {isr.isrR25 < isr.isrS5 && '✓'}
                       </span>
                     </div>
@@ -559,7 +556,7 @@ export default function SAT() {
                         <p className="text-sm">Simplificado (5%)</p>
                         <p className="text-xs text-[var(--text-muted)]">5% de los ingresos brutos</p>
                       </div>
-                      <span className={`font-bold tabular-nums ${isr.isrS5 < isr.isrR25 ? 'text-[var(--success)]' : 'text-[var(--text-muted)]'}`}>
+                      <span className={`font-semibold tabular-nums ${isr.isrS5 < isr.isrR25 ? 'text-[var(--success)]' : 'text-[var(--text-muted)]'}`}>
                         {formatGTQ(isr.isrS5)} {isr.isrS5 < isr.isrR25 && '✓'}
                       </span>
                     </div>
@@ -567,14 +564,14 @@ export default function SAT() {
                   <div className="mt-3 pt-3 border-t border-[var(--border-default)]">
                     <div className="flex justify-between items-center">
                       <span className="font-semibold">ISR estimado a pagar</span>
-                      <span className="text-xl font-bold text-[var(--danger)] tabular-nums">{formatGTQ(isr.isrMenor)}</span>
+                      <span className="text-xl font-semibold text-[var(--danger)] tabular-nums">{formatGTQ(isr.isrMenor)}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className={`p-3 rounded-lg border ${isr.isrR25 < isr.isrS5 ? 'bg-emerald-50 border-emerald-200' : 'bg-amber-50 border-amber-200'}`}>
+                <div className={`p-3 rounded-card border ${isr.isrR25 < isr.isrS5 ? 'bg-verified-50 border-verified-100' : 'bg-copper-50 border-copper-100'}`}>
                   <p className="text-sm font-medium">
-                    💡 Recomendación: <strong>{isr.regimenRecomendado}</strong>
+                     Recomendación: <strong>{isr.regimenRecomendado}</strong>
                   </p>
                   <p className="text-xs mt-1">
                     Ahorro estimado vs el otro régimen: {formatGTQ(Math.abs(isr.isrR25 - isr.isrS5))}
@@ -596,15 +593,15 @@ export default function SAT() {
                   { periodo: '4to Trimestre', fecha: '31 Ene 2027', monto: 650000, estado: 'futuro' },
                   { periodo: 'ISR Anual', fecha: '31 Mar 2027', monto: 0, estado: 'futuro' },
                 ].map((item, idx) => (
-                  <div key={idx} className={`p-3 rounded-lg border ${
-                    item.estado === 'pendiente' ? 'bg-amber-50 border-amber-200' : 'bg-[var(--bg-secondary)] border-[var(--border-default)]'
+                  <div key={idx} className={`p-3 rounded-card border ${
+                    item.estado === 'pendiente' ? 'bg-copper-50 border-copper-100' : 'bg-[var(--bg-secondary)] border-[var(--border-default)]'
                   }`}>
                     <div className="flex justify-between">
                       <div>
                         <p className="font-medium text-sm">{item.periodo}</p>
                         <p className="text-xs text-[var(--text-muted)]">Vence: {item.fecha}</p>
                       </div>
-                      <span className="font-bold tabular-nums">{formatGTQ(item.monto)}</span>
+                      <span className="font-semibold tabular-nums">{formatGTQ(item.monto)}</span>
                     </div>
                   </div>
                 ))}
@@ -644,37 +641,37 @@ export default function SAT() {
                   <div className="border-t border-[var(--border-default)] pt-2">
                     <div className="flex justify-between py-2">
                       <span className="font-semibold">ISO mayor (base: {iso.base})</span>
-                      <span className="font-bold tabular-nums">{formatGTQ(iso.isoMayor)}</span>
+                      <span className="font-semibold tabular-nums">{formatGTQ(iso.isoMayor)}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-lg border border-blue-200 bg-blue-50">
-                  <p className="text-sm font-medium text-blue-800 mb-2">Acreditamiento contra ISR</p>
+                <div className="p-4 rounded-card border border-fog bg-paper">
+                  <p className="text-sm font-medium text-cobalt mb-2">Acreditamiento contra ISR</p>
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-sm text-blue-700">ISR del período</span>
+                      <span className="text-sm text-cobalt">ISR del período</span>
                       <span className="text-sm font-medium tabular-nums">{formatGTQ(isr.isrMenor)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-blue-700">ISO a acreditar (menor de ambos)</span>
+                      <span className="text-sm text-cobalt">ISO a acreditar (menor de ambos)</span>
                       <span className="text-sm font-medium text-[var(--success)] tabular-nums">- {formatGTQ(iso.acreditamiento)}</span>
                     </div>
                   </div>
-                  <div className="mt-2 pt-2 border-t border-blue-200">
+                  <div className="mt-2 pt-2 border-t border-fog">
                     <div className="flex justify-between">
-                      <span className="font-semibold text-blue-800">ISO neto a pagar</span>
-                      <span className="text-lg font-bold text-[var(--danger)] tabular-nums">{formatGTQ(iso.isoNeto)}</span>
+                      <span className="font-semibold text-cobalt">ISO neto a pagar</span>
+                      <span className="text-lg font-semibold text-[var(--danger)] tabular-nums">{formatGTQ(iso.isoNeto)}</span>
                     </div>
                   </div>
                 </div>
 
                 {iso.isoNeto === 0 && (
-                  <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
-                    <p className="text-sm font-medium text-emerald-800">
-                      ✅ ISO cubierto al 100% por ISR
+                  <div className="p-3 bg-verified-50 rounded-card border border-verified-100">
+                    <p className="text-sm font-medium text-verified">
+                       ISO cubierto al 100% por ISR
                     </p>
-                    <p className="text-xs text-emerald-600 mt-1">
+                    <p className="text-xs text-verified mt-1">
                       No hay pago adicional de ISO este período. Todo se acredita contra el ISR.
                     </p>
                   </div>
@@ -758,11 +755,11 @@ export default function SAT() {
                 <h2 className="font-semibold">Reglas de Retención IVA</h2>
               </div>
               <div className="p-5 pt-0 space-y-3 text-sm">
-                <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
+                <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
                   <p className="font-medium">15% — Contribuyente Especial</p>
                   <p className="text-xs text-[var(--text-muted)]">Cuando compras a contribuyentes especiales (grandes empresas)</p>
                 </div>
-                <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
+                <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
                   <p className="font-medium">5% — Pequeño Contribuyente</p>
                   <p className="text-xs text-[var(--text-muted)]">Cuando compras a pequeños contribuyentes y el monto excede Q2,500</p>
                 </div>
@@ -779,7 +776,7 @@ export default function SAT() {
                   { tipo: 'IVA 15% / 5%', formulario: 'SAT-1331', vence: '15 de cada mes' },
                   { tipo: 'ISR 5% / 7%', formulario: 'SAT-2201', vence: '15 de cada mes' },
                 ].map((r, idx) => (
-                  <div key={idx} className="p-3 bg-[var(--bg-secondary)] rounded-lg">
+                  <div key={idx} className="p-3 bg-[var(--bg-secondary)] rounded-card">
                     <p className="font-medium text-sm">{r.tipo}</p>
                     <p className="text-xs text-[var(--text-muted)]">{r.formulario} • {r.vence}</p>
                   </div>
@@ -815,12 +812,12 @@ export default function SAT() {
                   </thead>
                   <tbody>
                     {facturasEmitidas.map((f, idx) => (
-                      <tr key={idx} className={`border-b border-[var(--border-default)] ${f.estado !== 'valida' ? 'bg-rose-50' : ''}`}>
+                      <tr key={idx} className={`border-b border-[var(--border-default)] ${f.estado !== 'valida' ? 'bg-breach-50' : ''}`}>
                         <td className="px-4 py-3">
                           {f.estado === 'valida' ? (
-                            <CheckCircleIcon className="w-5 h-5 text-emerald-500" />
+                            <CheckCircleIcon className="w-5 h-5 text-verified" />
                           ) : (
-                            <XCircleIcon className="w-5 h-5 text-rose-500" />
+                            <XCircleIcon className="w-5 h-5 text-breach" />
                           )}
                         </td>
                         <td className="px-4 py-3 font-mono text-xs">{f.id}</td>
@@ -830,7 +827,7 @@ export default function SAT() {
                         <td className="px-4 py-3 text-right tabular-nums">{formatGTQ(f.monto)}</td>
                         <td className="px-4 py-3">
                           {f.estado === 'valida' ? (
-                            <span className="text-xs text-emerald-600">Sin problemas</span>
+                            <span className="text-xs text-verified">Sin problemas</span>
                           ) : f.estado === 'error_nit' ? (
                             <span className="badge-danger text-xs">NIT inválido</span>
                           ) : f.estado === 'advertencia_monto' ? (
@@ -850,7 +847,7 @@ export default function SAT() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="card p-4">
               <div className="flex items-center gap-2 mb-2">
-                <XCircleIcon className="w-5 h-5 text-rose-500" />
+                <XCircleIcon className="w-5 h-5 text-breach" />
                 <span className="font-medium">NIT Inválido</span>
               </div>
               <p className="text-sm text-[var(--text-secondary)]">
@@ -859,7 +856,7 @@ export default function SAT() {
             </div>
             <div className="card p-4">
               <div className="flex items-center gap-2 mb-2">
-                <ExclamationTriangleIcon className="w-5 h-5 text-amber-500" />
+                <ExclamationTriangleIcon className="w-5 h-5 text-copper" />
                 <span className="font-medium">Monto Inconsistente</span>
               </div>
               <p className="text-sm text-[var(--text-secondary)]">
@@ -868,7 +865,7 @@ export default function SAT() {
             </div>
             <div className="card p-4">
               <div className="flex items-center gap-2 mb-2">
-                <InformationCircleIcon className="w-5 h-5 text-blue-500" />
+                <InformationCircleIcon className="w-5 h-5 text-cobalt" />
                 <span className="font-medium">Sin Crédito Fiscal</span>
               </div>
               <p className="text-sm text-[var(--text-secondary)]">
@@ -905,19 +902,19 @@ export default function SAT() {
                     {vencimientos.map((item, idx) => (
                       <tr key={idx} className={`border-b border-[var(--border-default)] ${
                         item.dias < 0 ? 'opacity-50' :
-                        item.nivel === 'critical' ? 'bg-rose-50' :
-                        item.nivel === 'warning' ? 'bg-amber-50' : ''
+                        item.nivel === 'critical' ? 'bg-breach-50' :
+                        item.nivel === 'warning' ? 'bg-copper-50' : ''
                       }`}>
                         <td className="px-4 py-3">{formatDate(item.fecha)}</td>
                         <td className="px-4 py-3 font-medium">{item.obligacion}</td>
                         <td className="px-4 py-3 font-mono text-xs">{item.formulario}</td>
                         <td className="px-4 py-3">
                           <span className={`badge text-xs ${
-                            item.tipo === 'IVA' ? 'bg-blue-100 text-blue-800' :
-                            item.tipo === 'ISR' ? 'bg-purple-100 text-purple-800' :
-                            item.tipo === 'ISO' ? 'bg-orange-100 text-orange-800' :
-                            item.tipo === 'Retención' ? 'bg-rose-100 text-rose-800' :
-                            'bg-gray-100 text-gray-800'
+                            item.tipo === 'IVA' ? 'bg-paper text-cobalt' :
+                            item.tipo === 'ISR' ? 'bg-paper text-cobalt' :
+                            item.tipo === 'ISO' ? 'bg-copper-50 text-copper' :
+                            item.tipo === 'Retención' ? 'bg-breach-50 text-breach' :
+                            'bg-paper text-ink'
                           }`}>{item.tipo}</span>
                         </td>
                         <td className="px-4 py-3 text-right tabular-nums">{formatGTQ(item.montoEstimado)}</td>
@@ -927,16 +924,16 @@ export default function SAT() {
                           ) : item.dias === 0 ? (
                             <span className="badge-danger text-xs">Hoy</span>
                           ) : (
-                            <span className={item.dias <= 7 ? 'text-amber-600 font-medium' : ''}>{item.dias} días</span>
+                            <span className={item.dias <= 7 ? 'text-copper font-medium' : ''}>{item.dias} días</span>
                           )}
                         </td>
                         <td className="px-4 py-3 text-center">
                           {item.dias < 0 ? (
                             <span className="text-xs text-[var(--text-muted)]">—</span>
                           ) : item.dias <= 7 ? (
-                            <BellAlertIcon className="w-4 h-4 text-amber-500 mx-auto" />
+                            <BellAlertIcon className="w-4 h-4 text-copper mx-auto" />
                           ) : (
-                            <CheckCircleIcon className="w-4 h-4 text-emerald-500 mx-auto" />
+                            <CheckCircleIcon className="w-4 h-4 text-verified mx-auto" />
                           )}
                         </td>
                       </tr>
@@ -953,32 +950,32 @@ export default function SAT() {
               <h2 className="font-semibold">Reglas del Calendario Fiscal</h2>
             </div>
             <div className="p-5 pt-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm">
-              <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
                 <p className="font-medium">IVA Mensual</p>
                 <p className="text-xs text-[var(--text-muted)]">Último día hábil del mes siguiente</p>
                 <p className="text-xs text-[var(--text-muted)]">Formulario: SAT-2231</p>
               </div>
-              <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
                 <p className="font-medium">ISR Trimestral</p>
                 <p className="text-xs text-[var(--text-muted)]">Último día hábil del mes siguiente al trimestre</p>
                 <p className="text-xs text-[var(--text-muted)]">Formulario: SAT-2221</p>
               </div>
-              <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
                 <p className="font-medium">ISR Anual</p>
                 <p className="text-xs text-[var(--text-muted)]">31 de marzo del año siguiente</p>
                 <p className="text-xs text-[var(--text-muted)]">Formulario: SAT-2221</p>
               </div>
-              <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
                 <p className="font-medium">ISO Trimestral</p>
                 <p className="text-xs text-[var(--text-muted)]">Último día hábil del mes siguiente al trimestre</p>
                 <p className="text-xs text-[var(--text-muted)]">Formulario: SAT-2293</p>
               </div>
-              <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
                 <p className="font-medium">Retenciones IVA</p>
                 <p className="text-xs text-[var(--text-muted)]">Primeros 15 días hábiles del mes siguiente</p>
                 <p className="text-xs text-[var(--text-muted)]">Formulario: SAT-1331</p>
               </div>
-              <div className="p-3 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
                 <p className="font-medium">IGSS/IRTRA/INTECAP</p>
                 <p className="text-xs text-[var(--text-muted)]">Día 20 de cada mes</p>
                 <p className="text-xs text-[var(--text-muted)]">Planilla mensual</p>

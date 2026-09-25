@@ -350,7 +350,7 @@ class AgenteContabilidad extends BaseAgent {
         SELECT *
         FROM obligaciones_sat
         WHERE empresa_id = ? AND estado = 'pendiente'
-        AND fecha_vencimiento BETWEEN ? AND date(?, '+7 days')
+        AND fecha_vencimiento BETWEEN ?::date AND (?::date + INTERVAL '7 days')
         ORDER BY fecha_vencimiento
       `, [empresaId, hoy, hoy]);
 
@@ -362,30 +362,39 @@ class AgenteContabilidad extends BaseAgent {
         ORDER BY fecha_vencimiento
       `, [empresaId, hoy]);
 
-      const totalProximas = proximas.reduce((sum, o) => sum + (o.monto_estimado || 0), 0);
-      const totalVencidas = vencidas.reduce((sum, o) => sum + (o.monto_estimado || 0), 0);
+      // pg devuelve numeric como texto: sin Number() la suma concatena.
+      const totalProximas = proximas.reduce((sum, o) => sum + (Number(o.monto_estimado) || 0), 0);
+      const totalVencidas = vencidas.reduce((sum, o) => sum + (Number(o.monto_estimado) || 0), 0);
+      const nombre = (o) => [o.tipo, o.periodo].filter(Boolean).join(' ') || 'Obligación SAT';
+
+      // Una alerta con el mismo título no se repite en el mismo día. Antes se
+      // insertaba de nuevo en cada corrida, y con la columna equivocada quedó
+      // "URGENTE: undefined venció" repetido 4 340 veces.
+      const fechaCorta = (f) => new Date(f).toISOString().split('T')[0];
+      const registrarAlerta = (nivel, titulo, descripcion) => db.runAsync(`
+        INSERT INTO alertas_financieras (tipo, nivel, titulo, descripcion, created_at)
+        SELECT 'sat', ?, ?, ?, NOW()
+        WHERE NOT EXISTS (
+          SELECT 1 FROM alertas_financieras
+          WHERE tipo = 'sat' AND titulo = ? AND created_at::date = CURRENT_DATE
+        )
+      `, [nivel, titulo, descripcion, titulo]);
 
       // Alertas
       for (const o of proximas) {
         const dias = Math.ceil((new Date(o.fecha_vencimiento) - new Date(hoy)) / (1000 * 60 * 60 * 24));
         
-        await db.runAsync(`
-          INSERT INTO alertas_financieras (tipo, nivel, titulo, descripcion, created_at)
-          VALUES (?, ?, ?, ?, NOW())
-        `, ['sat', dias <= 2 ? 'alta' : 'media',
-          `${o.obligacion} vence en ${dias} días`,
-          `Formulario ${o.formulario} - Fecha: ${o.fecha_vencimiento}. Preparar declaración y pago.`
-        ]);
+        await registrarAlerta(dias <= 2 ? 'alta' : 'media',
+          `${nombre(o)} vence en ${dias} días`,
+          `Vence el ${fechaCorta(o.fecha_vencimiento)}. Preparar declaración y pago.`
+        );
       }
 
       for (const o of vencidas) {
-        await db.runAsync(`
-          INSERT INTO alertas_financieras (tipo, nivel, titulo, descripcion, created_at)
-          VALUES (?, 'alta', ?, ?, NOW())
-        `, ['sat',
-          `URGENTE: ${o.obligacion} venció`,
-          `Formulario ${o.formulario} venció el ${o.fecha_vencimiento}. Regularizar inmediatamente.`
-        ]);
+        await registrarAlerta('alta',
+          `${nombre(o)} venció`,
+          `Venció el ${fechaCorta(o.fecha_vencimiento)}. Regularizar la declaración y el pago.`
+        );
       }
 
       await this.logActividad('obligaciones_fiscales',

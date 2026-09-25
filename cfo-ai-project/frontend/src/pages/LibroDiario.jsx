@@ -3,6 +3,7 @@ import { useQuery } from 'react-query'
 import { Link } from 'react-router-dom'
 import { endpoints } from '../services/cfoApi'
 import { demoLibroDiario } from '../data/demoData'
+import { FallbackNotice } from '../components/ui/states'
 import { 
   BookOpenIcon, 
   ArrowLeftIcon,
@@ -17,9 +18,9 @@ import {
 export default function LibroDiario() {
   const [mes, setMes] = useState('2026-03')
   const [busqueda, setBusqueda] = useState('')
-  
-  const { data: libroData, isLoading } = useQuery(
-    ['libro-diario', mes], 
+
+  const { data: libroData, isLoading, isError } = useQuery(
+    ['libro-diario', mes],
     () => endpoints.contabilidad.libroDiario({ mes, limit: 500 }),
     { keepPreviousData: true }
   )
@@ -35,14 +36,15 @@ function getAsientosEjemplo(mes) {
 
   const data = libroData?.data || {}
   const asientosAPI = data.asientos || []
-  const asientos = asientosAPI.length > 0 ? asientosAPI : getAsientosEjemplo(mes)
-  
+  const usaMuestra = asientosAPI.length === 0
+  const asientos = usaMuestra ? getAsientosEjemplo(mes) : asientosAPI
+
   // Calcular totales (de API o de ejemplo)
   const debeTotal = asientos.reduce((sum, a) => sum + (a.debe || 0), 0)
   const haberTotal = asientos.reduce((sum, a) => sum + (a.haber || 0), 0)
   const totalAsientos = [...new Set(asientos.map(a => a.asiento_id))].length
   const balanceado = Math.abs(debeTotal - haberTotal) < 0.01
-  
+
   const asientosFiltrados = busqueda 
     ? asientos.filter(a => 
         a.descripcion?.toLowerCase().includes(busqueda.toLowerCase()) ||
@@ -66,27 +68,25 @@ function getAsientosEjemplo(mes) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link 
-            to="/contabilidad" 
-            className="w-10 h-10 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] flex items-center justify-center transition-colors"
+          <Link
+            to="/contabilidad"
+            aria-label="Volver a Contabilidad"
+            className="flex h-9 w-9 items-center justify-center rounded-control border border-fog text-slate transition-colors hover:border-mist hover:text-ink"
           >
-            <ArrowLeftIcon className="w-5 h-5 text-[var(--text-muted)]" />
+            <ArrowLeftIcon className="h-4 w-4" />
           </Link>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#001639] flex items-center justify-center">
-              <BookOpenIcon className="w-5 h-5 text-white" />
-            </div>
             <div>
-              <h1 className="text-2xl font-semibold">Libro Diario</h1>
-              <p className="text-sm text-[var(--text-muted)]">{totalAsientos} asientos • {meses.find(m => m.value === mes)?.label}</p>
+              <h1 className="font-display text-[2.125rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">Libro Diario</h1>
+              <p className="measure mt-2 text-[0.9375rem] leading-relaxed text-slate">{totalAsientos} asientos • {meses.find(m => m.value === mes)?.label}</p>
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
           <div className="relative">
             <CalendarIcon className="w-5 h-5 text-[var(--text-muted)] absolute left-3 top-1/2 -translate-y-1/2" />
-            <select 
+            <select aria-label="Filtro" 
               value={mes} 
               onChange={(e) => setMes(e.target.value)}
               className="input pl-10 pr-8 py-2.5 appearance-none cursor-pointer"
@@ -103,11 +103,15 @@ function getAsientosEjemplo(mes) {
         </div>
       </div>
 
+      {usaMuestra ? (
+        <FallbackNotice fuente={isError ? 'El libro diario' : 'El libro diario del período'} />
+      ) : null}
+
       {/* Balance Status Card */}
-      <div className={`p-4 rounded-lg border flex items-center justify-between ${
+      <div className={`p-4 rounded-card border flex items-center justify-between ${
         balanceado 
-          ? 'bg-emerald-50 border-emerald-200' 
-          : 'bg-rose-50 border-rose-200'
+          ? 'bg-verified-50 border-verified-100' 
+          : 'bg-breach-50 border-breach-100'
       }`}>
         <div className="flex items-center gap-3">
           {balanceado ? (
@@ -116,15 +120,15 @@ function getAsientosEjemplo(mes) {
             <ExclamationTriangleIcon className="w-6 h-6 text-[var(--danger)]" />
           )}
           <div>
-            <p className={`font-semibold ${balanceado ? 'text-emerald-800' : 'text-rose-800'}`}>
+            <p className={`font-semibold ${balanceado ? 'text-verified' : 'text-breach'}`}>
               {balanceado ? 'Libro balanceado' : 'Diferencia detectada'}
             </p>
-            <p className={`text-sm ${balanceado ? 'text-emerald-600' : 'text-rose-600'}`}>
+            <p className={`text-sm ${balanceado ? 'text-verified' : 'text-breach'}`}>
               Debe: Q{debeTotal.toLocaleString()} | Haber: Q{haberTotal.toLocaleString()}
             </p>
           </div>
         </div>
-        
+
         {balanceado && (
           <span className="badge-success">✓ Balanceado</span>
         )}
@@ -162,7 +166,7 @@ function getAsientosEjemplo(mes) {
                 Array.from({ length: 8 }).map((_, i) => (
                   <tr key={i}>
                     <td colSpan={7} className="px-4 py-4">
-                      <div className="h-8 bg-[var(--bg-secondary)] rounded-lg animate-pulse" />
+                      <div className="h-8 bg-[var(--bg-secondary)] rounded-card animate-pulse" />
                     </td>
                   </tr>
                 ))
@@ -227,10 +231,10 @@ function getAsientosEjemplo(mes) {
                 <td colSpan={4} className="px-4 py-3 text-right font-semibold">
                   Totales del período:
                 </td>
-                <td className="px-4 py-3 text-right font-bold text-[var(--success)]">
+                <td className="px-4 py-3 text-right font-semibold text-[var(--success)]">
                   Q{debeTotal.toLocaleString()}
                 </td>
-                <td className="px-4 py-3 text-right font-bold text-[var(--danger)]">
+                <td className="px-4 py-3 text-right font-semibold text-[var(--danger)]">
                   Q{haberTotal.toLocaleString()}
                 </td>
                 <td></td>
@@ -246,17 +250,17 @@ function getAsientosEjemplo(mes) {
           <span className="kpi-label">Total Asientos</span>
           <p className="kpi-value">{totalAsientos}</p>
         </div>
-        
+
         <div className="kpi-card">
           <span className="kpi-label">Promedio por Asiento</span>
           <p className="kpi-value">
             Q{totalAsientos ? Math.round(debeTotal / totalAsientos).toLocaleString() : 0}
           </p>
         </div>
-        
+
         <div className="kpi-card">
           <span className="kpi-label">Diferencia</span>
-          <p className={`kpi-value ${balanceado ? 'text-[var(--success)]' : 'text-[var(--danger)]'}`}>
+          <p className="kpi-value">
             Q{Math.abs(debeTotal - haberTotal).toLocaleString()}
           </p>
         </div>

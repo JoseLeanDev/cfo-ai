@@ -94,11 +94,11 @@ export default function AnalisisVentas() {
   const productosFiltrados = filtroCategoria === 'todas' 
     ? productosData 
     : productosData.filter(p => p.categoria === filtroCategoria)
-  
+
   const tiendasFiltradas = filtroRegion === 'todas'
     ? tiendasData
     : tiendasData.filter(t => t.region === filtroRegion)
-    
+
   const clientesFiltrados = filtroTipoCliente === 'todos'
     ? clientesData
     : clientesData.filter(c => c.tipo === filtroTipoCliente)
@@ -135,7 +135,7 @@ export default function AnalisisVentas() {
           <div className="kpi-value">{formatGTQ(totalIngresosProductos)}</div>
           <span className="text-xs text-[var(--text-muted)]">Top 8 productos</span>
         </div>
-        
+
         <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Ventas por Tienda</span>
@@ -144,7 +144,7 @@ export default function AnalisisVentas() {
           <div className="kpi-value">{formatGTQ(totalVentasTiendas)}</div>
           <span className="text-xs text-[var(--text-muted)]">{tiendasData.length} sucursales</span>
         </div>
-        
+
         <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Ticket Promedio</span>
@@ -153,7 +153,7 @@ export default function AnalisisVentas() {
           <div className="kpi-value">{formatGTQ(ticketPromedioGlobal)}</div>
           <span className="text-xs text-[var(--success)]">↑ 8.3% vs mes ant.</span>
         </div>
-        
+
         <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Top Cliente</span>
@@ -167,7 +167,7 @@ export default function AnalisisVentas() {
       {/* Insights automáticos */}
       <div className="card">
         <div className="section-header">
-          <SparklesIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+          <SparklesIcon className="w-5 h-5 text-slate" />
           <h2 className="font-semibold">Insights de Ventas</h2>
         </div>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 p-5 pt-0">
@@ -176,10 +176,10 @@ export default function AnalisisVentas() {
             return (
               <div
                 key={idx}
-                className={`p-4 rounded-lg border-l-4 ${getInsightStyles(insight.tipo)}`}
+                className={`p-4 rounded-card border-l-4 ${getInsightStyles(insight.tipo)}`}
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-white/60 flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-card bg-white/60 flex items-center justify-center flex-shrink-0">
                     <Icon className="w-4 h-4 text-[var(--text-secondary)]" />
                   </div>
                   <div className="flex-1">
@@ -196,16 +196,16 @@ export default function AnalisisVentas() {
       {/* Tabs */}
       <div className="card">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-5 border-b border-[var(--border-default)]">
-          <div className="flex items-center gap-1 p-1 bg-[var(--bg-secondary)] rounded-lg">
+          <div className="flex items-center gap-1 p-1 bg-[var(--bg-secondary)] rounded-card">
             {tabs.map((tab) => {
               const Icon = tab.icon
               return (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                  className={`flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-card transition-all ${
                     activeTab === tab.id
-                      ? 'bg-white text-[var(--text-primary)] shadow-sm'
+                      ? 'bg-white text-[var(--text-primary)] '
                       : 'text-[var(--text-muted)] hover:text-[var(--text-secondary)]'
                   }`}
                 >
@@ -215,12 +215,12 @@ export default function AnalisisVentas() {
               )
             })}
           </div>
-          
+
           {/* Filtros */}
           <div className="flex items-center gap-2">
             <FunnelIcon className="w-4 h-4 text-[var(--text-muted)]" />
             {activeTab === 'productos' && (
-              <select 
+              <select aria-label="Todas las categorías" 
                 value={filtroCategoria}
                 onChange={(e) => setFiltroCategoria(e.target.value)}
                 className="input text-xs py-1.5 w-auto"
@@ -237,7 +237,7 @@ export default function AnalisisVentas() {
               </select>
             )}
             {activeTab === 'tiendas' && (
-              <select 
+              <select aria-label="Todas las regiones" 
                 value={filtroRegion}
                 onChange={(e) => setFiltroRegion(e.target.value)}
                 className="input text-xs py-1.5 w-auto"
@@ -250,7 +250,7 @@ export default function AnalisisVentas() {
               </select>
             )}
             {activeTab === 'clientes' && (
-              <select 
+              <select aria-label="Todos los tipos" 
                 value={filtroTipoCliente}
                 onChange={(e) => setFiltroTipoCliente(e.target.value)}
                 className="input text-xs py-1.5 w-auto"
@@ -286,10 +286,10 @@ export default function AnalisisVentas() {
                     <tr key={producto.id} className="group">
                       <td>
                         {idx < 3 ? (
-                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                            idx === 0 ? 'bg-yellow-100 text-yellow-700' :
-                            idx === 1 ? 'bg-gray-100 text-gray-600' :
-                            'bg-orange-100 text-orange-700'
+                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold ${
+                            idx === 0 ? 'bg-copper-50 text-copper' :
+                            idx === 1 ? 'bg-paper text-graphite' :
+                            'bg-copper-50 text-copper'
                           }`}>
                             {idx + 1}
                           </span>
@@ -302,14 +302,14 @@ export default function AnalisisVentas() {
                           <p className="font-medium text-sm">{producto.nombre}</p>
                           <div className="mt-1 h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden w-32">
                             <div 
-                              className="h-full bg-[#001639] rounded-full transition-all"
+                              className="h-full bg-ink rounded-full transition-all"
                               style={{ width: `${(producto.ingresos / productosOrdenados[0].ingresos) * 100}%` }}
                             />
                           </div>
                         </div>
                       </td>
                       <td>
-                        <span className="badge-neutral text-[10px]">{producto.categoria}</span>
+                        <span className="badge-neutral text-[0.75rem]">{producto.categoria}</span>
                       </td>
                       <td className="text-right font-mono text-sm">{producto.unidadesVendidas.toLocaleString()}</td>
                       <td className="text-right font-mono font-medium">{formatGTQ(producto.ingresos)}</td>
@@ -328,7 +328,7 @@ export default function AnalisisVentas() {
                         )}
                       </td>
                       <td className="text-center">
-                        <span className={`badge text-[10px] ${
+                        <span className={`badge text-[0.75rem] ${
                           producto.stock === 'ok' ? 'badge-success' :
                           producto.stock === 'bajo' ? 'badge-warning' :
                           'badge-danger'
@@ -341,7 +341,7 @@ export default function AnalisisVentas() {
                 </tbody>
               </table>
             </div>
-            
+
             {/* Resumen por categoría */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
               {['Ropa Hombre', 'Ropa Mujer', 'Calzado', 'Accesorios'].map(cat => {
@@ -351,9 +351,9 @@ export default function AnalisisVentas() {
                   ? Math.round(productosCat.reduce((sum, p) => sum + p.margen, 0) / productosCat.length)
                   : 0
                 return (
-                  <div key={cat} className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+                  <div key={cat} className="p-4 bg-[var(--bg-secondary)] rounded-card">
                     <p className="text-xs text-[var(--text-muted)] uppercase font-medium">{cat}</p>
-                    <p className="text-lg font-bold mt-1">{formatGTQ(totalCat)}</p>
+                    <p className="text-lg font-semibold mt-1">{formatGTQ(totalCat)}</p>
                     <p className="text-xs text-[var(--text-muted)]">Margen promedio: {margenPromedio}%</p>
                   </div>
                 )
@@ -390,14 +390,14 @@ export default function AnalisisVentas() {
                           <p className="font-medium text-sm">{tienda.nombre}</p>
                           <div className="mt-1 h-1.5 bg-[var(--bg-tertiary)] rounded-full overflow-hidden w-32">
                             <div 
-                              className="h-full bg-[#001639] rounded-full"
+                              className="h-full bg-ink rounded-full"
                               style={{ width: `${(tienda.ventas / tiendasOrdenadas[0].ventas) * 100}%` }}
                             />
                           </div>
                         </div>
                       </td>
                       <td>
-                        <span className="badge-neutral text-[10px]">{tienda.region}</span>
+                        <span className="badge-neutral text-[0.75rem]">{tienda.region}</span>
                       </td>
                       <td className="text-right font-mono font-medium">{formatGTQ(tienda.ventas)}</td>
                       <td className="text-right font-mono text-sm">{tienda.transacciones}</td>
@@ -421,26 +421,26 @@ export default function AnalisisVentas() {
                 </tbody>
               </table>
             </div>
-            
+
             {/* Comparativa de sucursales */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                 <p className="text-xs text-[var(--text-muted)] uppercase font-medium">Mejor Ticket Promedio</p>
-                <p className="text-lg font-bold mt-1">{formatGTQ(Math.max(...tiendasData.map(t => t.ticketPromedio)))}</p>
+                <p className="text-lg font-semibold mt-1">{formatGTQ(Math.max(...tiendasData.map(t => t.ticketPromedio)))}</p>
                 <p className="text-xs text-[var(--text-muted)]">
                   {tiendasData.find(t => t.ticketPromedio === Math.max(...tiendasData.map(t => t.ticketPromedio)))?.nombre}
                 </p>
               </div>
-              <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                 <p className="text-xs text-[var(--text-muted)] uppercase font-medium">Mayor Cumplimiento</p>
-                <p className="text-lg font-bold mt-1">{Math.max(...tiendasData.map(t => t.cumplimiento))}%</p>
+                <p className="text-lg font-semibold mt-1">{Math.max(...tiendasData.map(t => t.cumplimiento))}%</p>
                 <p className="text-xs text-[var(--text-muted)]">
                   {tiendasData.find(t => t.cumplimiento === Math.max(...tiendasData.map(t => t.cumplimiento)))?.nombre}
                 </p>
               </div>
-              <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+              <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
                 <p className="text-xs text-[var(--text-muted)] uppercase font-medium">Más Clientes Únicos</p>
-                <p className="text-lg font-bold mt-1">{Math.max(...tiendasData.map(t => t.clientesUnicos))}</p>
+                <p className="text-lg font-semibold mt-1">{Math.max(...tiendasData.map(t => t.clientesUnicos))}</p>
                 <p className="text-xs text-[var(--text-muted)]">
                   {tiendasData.find(t => t.clientesUnicos === Math.max(...tiendasData.map(t => t.clientesUnicos)))?.nombre}
                 </p>
@@ -453,7 +453,7 @@ export default function AnalisisVentas() {
         {activeTab === 'clientes' && (
           <div className="p-5 space-y-4">
             {/* Concentración de clientes - Pareto */}
-            <div className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+            <div className="p-4 bg-[var(--bg-secondary)] rounded-card">
               <h3 className="text-sm font-semibold mb-3">Concentración de Ingresos (Regla 80/20)</h3>
               <div className="space-y-2">
                 {clientesOrdenados.map((cliente, idx) => {
@@ -521,10 +521,10 @@ export default function AnalisisVentas() {
                     <tr key={cliente.id}>
                       <td>
                         {idx < 3 ? (
-                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold ${
-                            idx === 0 ? 'bg-yellow-100 text-yellow-700' :
-                            idx === 1 ? 'bg-gray-100 text-gray-600' :
-                            'bg-orange-100 text-orange-700'
+                          <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-semibold ${
+                            idx === 0 ? 'bg-copper-50 text-copper' :
+                            idx === 1 ? 'bg-paper text-graphite' :
+                            'bg-copper-50 text-copper'
                           }`}>
                             {idx + 1}
                           </span>
@@ -536,7 +536,7 @@ export default function AnalisisVentas() {
                         <p className="font-medium text-sm">{cliente.nombre}</p>
                       </td>
                       <td>
-                        <span className={`badge text-[10px] ${
+                        <span className={`badge text-[0.75rem] ${
                           cliente.tipo === 'Tienda' ? 'badge-info' :
                           cliente.tipo === 'Boutique' ? 'badge-success' :
                           'badge-neutral'
@@ -552,11 +552,11 @@ export default function AnalisisVentas() {
                       </td>
                       <td className="text-center">
                         {cliente.tendencia === 'up' ? (
-                          <span className="badge-success text-[10px]">↑ Creciendo</span>
+                          <span className="badge-success text-[0.75rem]">↑ Creciendo</span>
                         ) : cliente.tendencia === 'down' ? (
-                          <span className="badge-danger text-[10px]">↓ Baja</span>
+                          <span className="badge-danger text-[0.75rem]">↓ Baja</span>
                         ) : (
-                          <span className="badge-neutral text-[10px]">→ Estable</span>
+                          <span className="badge-neutral text-[0.75rem]">→ Estable</span>
                         )}
                       </td>
                     </tr>

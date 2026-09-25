@@ -1,3 +1,4 @@
+import { QoraMark } from '../components/brand/QoraLogo'
 import { useState, useMemo } from 'react'
 import {
   BanknotesIcon,
@@ -46,7 +47,7 @@ const CATEGORIAS_GASTO = [
     id: 'materias_primas',
     nombre: 'Materias Primas',
     icono: BeakerIcon,
-    color: '#3B82F6',
+    color: '#3D56C9',
     descripcion: 'Materias primas industriales, insumos de producción',
     proveedorPrincipal: 'Proveedor Principal A',
     terminos: '2/10 n/30',
@@ -56,7 +57,7 @@ const CATEGORIAS_GASTO = [
     id: 'nomina',
     nombre: 'Nómina y Salarios',
     icono: UsersIcon,
-    color: '#10B981',
+    color: '#1F6B45',
     descripcion: 'Salarios operarios, técnicos de extrusión, administrativos, cargas sociales',
     proveedorPrincipal: 'Nómina interna',
     terminos: 'quincenal',
@@ -66,7 +67,7 @@ const CATEGORIAS_GASTO = [
     id: 'servicios',
     nombre: 'Servicios Públicos',
     icono: BoltIcon,
-    color: '#F59E0B',
+    color: '#8A5A24',
     descripcion: 'Energía eléctrica (alta tensión), gas natural, agua industrial',
     proveedorPrincipal: 'EEGSA / TECO',
     terminos: 'n/15',
@@ -76,7 +77,7 @@ const CATEGORIAS_GASTO = [
     id: 'mantenimiento',
     nombre: 'Mantenimiento Equipos',
     icono: WrenchIcon,
-    color: '#EF4444',
+    color: '#9B3320',
     descripcion: 'Mantenimiento extrusoras, termoformadoras, impresoras flexográficas',
     proveedorPrincipal: 'Proveedor de Servicios Técnicos',
     terminos: 'contado',
@@ -86,7 +87,7 @@ const CATEGORIAS_GASTO = [
     id: 'alquiler',
     nombre: 'Alquiler Instalaciones',
     icono: BuildingOfficeIcon,
-    color: '#8B5CF6',
+    color: '#3D56C9',
     descripcion: 'Planta industrial Zona 3, bodega Zona 12, oficinas corporativas',
     proveedorPrincipal: 'Arrendador Industrial',
     terminos: 'n/5',
@@ -96,7 +97,7 @@ const CATEGORIAS_GASTO = [
     id: 'transporte',
     nombre: 'Transporte y Logística',
     icono: TruckIcon,
-    color: '#06B6D4',
+    color: '#3D56C9',
     descripcion: 'Entrega a clientes industriales, exportaciones, flete internacional',
     proveedorPrincipal: 'Transporte y Logística',
     terminos: 'n/15',
@@ -106,7 +107,7 @@ const CATEGORIAS_GASTO = [
     id: 'marketing',
     nombre: 'Marketing y Ventas',
     icono: MegaphoneIcon,
-    color: '#EC4899',
+    color: '#636970',
     descripcion: 'Ferias industriales, visitas comerciales, catálogos técnicos, web',
     proveedorPrincipal: 'Agencia de Marketing',
     terminos: 'n/15',
@@ -116,7 +117,7 @@ const CATEGORIAS_GASTO = [
     id: 'seguros',
     nombre: 'Seguros y Otros',
     icono: ShieldCheckIcon,
-    color: '#6366F1',
+    color: '#3D56C9',
     descripcion: 'Seguro de maquinaria, responsabilidad civil, certificaciones ISO/SGS',
     proveedorPrincipal: 'Compañía de Seguros',
     terminos: 'n/30',
@@ -160,14 +161,14 @@ function calcularAnalisisGastos() {
     const ultimoMes = historial[historial.length - 1]
     const primerMes = historial[0]
     const tendencia = ((ultimoMes - primerMes) / primerMes) * 100
-    
+
     // Proyección 3 meses
     const proyeccion = [
       Math.round(promedioMensual * (1 + tendencia * 0.003)),
       Math.round(promedioMensual * (1 + tendencia * 0.005)),
       Math.round(promedioMensual * (1 + tendencia * 0.007)),
     ]
-    
+
     return {
       ...cat,
       historial,
@@ -178,10 +179,10 @@ function calcularAnalisisGastos() {
       proyeccion,
     }
   })
-  
+
   const totalGastos6M = datos.reduce((s, d) => s + d.total6meses, 0)
   const promedioMensualTotal = totalGastos6M / 6
-  
+
   return { datos, totalGastos6M, promedioMensualTotal }
 }
 
@@ -190,7 +191,7 @@ function calcularAnalisisServicios() {
     const ingresoMensual = servicio.volumenMensual * servicio.precioBase
     const ingreso6M = ingresoMensual * 6
     const participacion = (ingresoMensual / SERVICIOS.reduce((s, srv) => s + srv.volumenMensual * srv.precioBase, 0)) * 100
-    
+
     return {
       ...servicio,
       ingresoMensual,
@@ -203,9 +204,9 @@ function calcularAnalisisServicios() {
 // ============================================
 // COMPONENTE BARRA DE PROGRESO
 // ============================================
-function BarraGastos({ historial, maxValor, color = '#001639' }) {
+function BarraGastos({ historial, maxValor, color = '#17181B' }) {
   const max = maxValor || Math.max(...historial) * 1.1
-  
+
   return (
     <div className="flex items-end gap-1 h-16">
       {historial.map((v, i) => (
@@ -256,17 +257,17 @@ export default function GastosOperativos() {
     .slice(0, 5)
 
   const getTendenciaStyles = (tendencia) => {
-    if (tendencia > 10) return 'bg-red-50 text-red-700 border-red-200'
-    if (tendencia > 5) return 'bg-orange-50 text-orange-700 border-orange-200'
-    if (tendencia > 0) return 'bg-yellow-50 text-yellow-700 border-yellow-200'
-    return 'bg-green-50 text-green-700 border-green-200'
+    if (tendencia > 10) return 'bg-breach-50 text-breach border-breach-100'
+    if (tendencia > 5) return 'bg-copper-50 text-copper border-copper-100'
+    if (tendencia > 0) return 'bg-copper-50 text-copper border-copper-100'
+    return 'bg-verified-50 text-verified border-verified-100'
   }
 
   const getTendenciaIcon = (tendencia) => {
-    if (tendencia > 5) return <ArrowTrendingUpIcon className="w-4 h-4 text-red-500" />
-    if (tendencia > 0) return <ArrowTrendingUpIcon className="w-4 h-4 text-orange-500" />
-    if (tendencia < -5) return <ArrowTrendingDownIcon className="w-4 h-4 text-green-500" />
-    return <MinusIcon className="w-4 h-4 text-gray-400" />
+    if (tendencia > 5) return <ArrowTrendingUpIcon className="w-4 h-4 text-breach" />
+    if (tendencia > 0) return <ArrowTrendingUpIcon className="w-4 h-4 text-copper" />
+    if (tendencia < -5) return <ArrowTrendingDownIcon className="w-4 h-4 text-verified" />
+    return <MinusIcon className="w-4 h-4 text-slate" />
   }
 
   return (
@@ -276,20 +277,17 @@ export default function GastosOperativos() {
       ============================================ */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-[#001639] flex items-center justify-center shadow-lg">
-            <BanknotesIcon className="w-6 h-6 text-white" />
-          </div>
           <div>
-            <h1 className="text-2xl font-semibold">Gastos Operativos</h1>
-            <p className="text-sm text-[var(--text-muted)]">
+            <h1 className="font-display text-[2.125rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">Gastos Operativos</h1>
+            <p className="measure mt-2 text-[0.9375rem] leading-relaxed text-slate">
               Análisis de costos · Proyección · Control de gastos de Retail Fashion GT
             </p>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-2">
           <span className="text-xs text-[var(--text-muted)]">Análisis actualizado:</span>
-          <span className="badge-success text-[10px] flex items-center gap-1">
+          <span className="badge-success text-[0.75rem] flex items-center gap-1">
             <CheckCircleIcon className="w-3 h-3" />
             {new Date().toLocaleDateString('es-GT', { day: 'numeric', month: 'short', year: 'numeric' })}
           </span>
@@ -323,7 +321,7 @@ export default function GastosOperativos() {
             <span className="kpi-label">Gasto Mayor</span>
             <ExclamationTriangleIcon className="w-4 h-4 text-[var(--danger)]" />
           </div>
-          <div className="kpi-value text-[var(--danger)]">{categoriaMayorGasto.nombre}</div>
+          <div className="kpi-value">{categoriaMayorGasto.nombre}</div>
           <span className="text-xs text-[var(--text-muted)]">
             {formatGTQ(categoriaMayorGasto.total6meses)} en 6M
           </span>
@@ -334,7 +332,7 @@ export default function GastosOperativos() {
             <span className="kpi-label">Proyección 3M</span>
             <SparklesIcon className="w-4 h-4 text-[var(--accent-orange)]" />
           </div>
-          <div className="kpi-value text-[var(--accent-orange)]">{formatGTQ(proyeccion3M)}</div>
+          <div className="kpi-value">{formatGTQ(proyeccion3M)}</div>
           <span className="text-xs text-[var(--text-muted)]">Próximo trimestre</span>
         </div>
       </div>
@@ -344,84 +342,63 @@ export default function GastosOperativos() {
           (Mismo diseño distintivo que PageInsights)
       ═══════════════════════════════════════════ */}
       {alertasGastos.length > 0 && (
-        <div className="relative overflow-hidden rounded-xl border border-violet-500/30 bg-slate-900">
-          {/* Fondo animado sutil */}
-          <div className="absolute inset-0 bg-gradient-to-br from-violet-900/20 via-slate-900 to-fuchsia-900/10" />
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-violet-500/50 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-fuchsia-500/30 to-transparent" />
-
-          <div className="relative">
-            {/* ═══ HEADER PROMINENTE ═══ */}
-            <div className="px-4 pt-3.5 pb-2 flex items-center justify-between">
-              <div className="flex items-center gap-2.5">
-                {/* Icono IA animado */}
-                <div className="relative">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-violet-500/20">
-                    <SparklesIcon className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-slate-900 animate-pulse" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-sm font-bold text-white tracking-tight">Insights de Gastos</h3>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-300 border border-violet-500/30 uppercase tracking-wider">
-                      IA
-                    </span>
-                  </div>
-                  <p className="text-[10px] text-slate-400">Análisis automatizado · {alertasGastos.length} detectado{alertasGastos.length !== 1 ? 's' : ''}</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 text-[10px] text-slate-500">
-                <BoltIcon className="w-3 h-3 text-amber-400" />
-                <span>abaco AI</span>
-              </div>
-            </div>
+        <section className="rounded-card border border-fog bg-white">
+          <div>
+            <header className="flex flex-wrap items-center gap-3 border-b border-fog px-6 py-4">
+              <QoraMark className="h-4 w-4 shrink-0 text-ink" />
+              <h2 className="font-display text-[1rem] font-semibold leading-tight text-ink">
+                Hallazgos de gasto
+              </h2>
+              <p className="eyebrow ml-auto text-[0.6875rem]">
+                {alertasGastos.length} {alertasGastos.length === 1 ? 'hallazgo' : 'hallazgos'}
+              </p>
+            </header>
 
             {/* ═══ GRID DE INSIGHTS - 2 COLUMNAS ═══ */}
             <div className="px-3 pb-3 grid grid-cols-1 lg:grid-cols-2 gap-2">
               {alertasGastos.map((gasto) => {
                 const Icono = gasto.icono
                 const incremento = gasto.ultimoMes - gasto.historial[0]
-                
+
                 return (
                   <div
                     key={gasto.id}
-                    className="group relative p-3 rounded-lg border border-rose-500/20 bg-rose-500/10 shadow-rose-500/10 hover:shadow-lg transition-all duration-200"
+                    className="group relative p-3 rounded-card border border-breach/20 bg-breach/10 shadow-rose-500/10 hover: transition-all duration-200"
                   >
                     <div className="flex items-start gap-2.5">
                       {/* Icono tipo */}
-                      <div className="flex-shrink-0 w-7 h-7 rounded-md bg-rose-500/10 border border-rose-500/20 flex items-center justify-center">
-                        <Icono className="w-3.5 h-3.5 text-rose-400" />
+                      <div className="flex-shrink-0 w-7 h-7 rounded-card bg-breach/10 border border-breach/20 flex items-center justify-center">
+                        <Icono className="w-3.5 h-3.5 text-breach" />
                       </div>
 
                       {/* Contenido */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 mb-0.5 flex-wrap">
-                          <span className="text-[9px] font-bold px-1.5 py-0.5 rounded border border-rose-500/30 bg-rose-500/20 text-rose-300 uppercase tracking-wider">
+                          <span className="text-[0.6875rem] font-semibold px-1.5 py-0.5 rounded border border-breach/30 bg-breach/20 text-breach uppercase tracking-wider">
                             Alerta
                           </span>
-                          <span className="text-[9px] font-mono text-rose-400">
+                          <span className="text-[0.6875rem] font-mono text-breach">
                             +{gasto.tendencia.toFixed(1)}%
                           </span>
                         </div>
 
-                        <h4 className="text-xs font-bold text-white leading-snug">
+                        <h4 className="text-[0.875rem] font-semibold leading-snug text-ink">
                           {gasto.nombre}
                         </h4>
-                        <p className="text-[11px] text-slate-400 mt-0.5 line-clamp-2">
+                        <p className="text-[0.8125rem] text-slate mt-0.5 line-clamp-2">
                           {gasto.descripcion}
                         </p>
 
                         {/* Impacto */}
                         <div className="mt-1.5 flex items-center gap-2">
-                          <span className="text-[10px] text-slate-500">Incremento:</span>
-                          <span className="text-[10px] font-bold text-rose-400">
+                          <span className="text-[0.75rem] text-slate">Incremento:</span>
+                          <span className="text-[0.75rem] font-semibold text-breach">
                             +{formatGTQ(incremento)}
                           </span>
                         </div>
 
                         {/* Acción */}
-                        <button className="mt-1.5 text-[10px] font-medium text-violet-300 hover:text-violet-200 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button className="mt-1.5 text-[0.75rem] font-medium text-cobalt hover:text-cobalt flex items-center gap-0.5 transition-colors">
                           Revisar desglose
                           <ArrowRightIcon className="w-3 h-3" />
                         </button>
@@ -432,7 +409,7 @@ export default function GastosOperativos() {
               })}
             </div>
           </div>
-        </div>
+        </section>
       )}
 
       {/* ============================================
@@ -444,7 +421,7 @@ export default function GastosOperativos() {
             onClick={() => setCategoriaSeleccionada('todas')}
             className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
               categoriaSeleccionada === 'todas'
-                ? 'bg-[#001639] text-white'
+                ? 'bg-ink text-white'
                 : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--border-strong)]'
             }`}
           >
@@ -456,7 +433,7 @@ export default function GastosOperativos() {
               onClick={() => setCategoriaSeleccionada(gasto.id)}
               className={`px-3 py-1.5 text-xs font-medium rounded-full transition-all ${
                 categoriaSeleccionada === gasto.id
-                  ? 'bg-[#001639] text-white'
+                  ? 'bg-ink text-white'
                   : 'bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:bg-[var(--border-strong)]'
               }`}
             >
@@ -464,7 +441,7 @@ export default function GastosOperativos() {
             </button>
           ))}
         </div>
-        
+
         <div className="flex items-center gap-2">
           <button
             onClick={() => setMostrarSoloAltos(!mostrarSoloAltos)}
@@ -492,21 +469,21 @@ export default function GastosOperativos() {
       ============================================ */}
       <div className="card">
         <div className="section-header">
-          <ChartBarIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+          <ChartBarIcon className="w-5 h-5 text-slate" />
           <h2 className="font-semibold">Análisis de Gastos por Categoría</h2>
           <span className="ml-auto text-xs text-[var(--text-muted)]">
             Histórico 6 meses
           </span>
         </div>
-        
+
         <div className={`p-5 pt-0 grid gap-4 ${vistaExpandida ? 'grid-cols-1' : 'grid-cols-1 lg:grid-cols-2 xl:grid-cols-3'}`}>
           {categoriasFiltradas.map((gasto) => {
             const Icono = gasto.icono
             return (
-              <div key={gasto.id} className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+              <div key={gasto.id} className="p-4 bg-[var(--bg-secondary)] rounded-card">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ backgroundColor: gasto.color + '20' }}>
+                    <div className="w-8 h-8 rounded-card flex items-center justify-center" style={{ backgroundColor: gasto.color + '20' }}>
                       <Icono className="w-4 h-4" style={{ color: gasto.color }} />
                     </div>
                     <div>
@@ -515,45 +492,45 @@ export default function GastosOperativos() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className={`badge text-[10px] ${getTendenciaStyles(gasto.tendencia)}`}>
+                    <span className={`badge text-[0.75rem] ${getTendenciaStyles(gasto.tendencia)}`}>
                       {gasto.tendencia > 0 ? '+' : ''}{gasto.tendencia.toFixed(1)}%
                     </span>
                   </div>
                 </div>
-                
+
                 {/* Gráfica mini */}
                 <BarraGastos
                   historial={gasto.historial}
                   color={gasto.color}
                 />
-                
+
                 {/* Labels */}
                 <div className="flex gap-1 mt-1 mb-3">
                   {MESES_HISTORIAL.map((m, i) => (
                     <div key={i} className="flex-1 text-center">
-                      <span className="text-[9px] text-[var(--text-muted)]">{m.split(' ')[0]}</span>
+                      <span className="text-[0.6875rem] text-[var(--text-muted)]">{m.split(' ')[0]}</span>
                     </div>
                   ))}
                 </div>
-                
+
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-2 text-center">
                   <div className="p-2 bg-white rounded">
-                    <p className="text-[10px] text-[var(--text-muted)] uppercase">Total 6M</p>
-                    <p className="text-sm font-bold font-mono">{formatGTQ(gasto.total6meses)}</p>
+                    <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Total 6M</p>
+                    <p className="text-sm font-semibold font-mono">{formatGTQ(gasto.total6meses)}</p>
                   </div>
                   <div className="p-2 bg-white rounded">
-                    <p className="text-[10px] text-[var(--text-muted)] uppercase">Prom. Mensual</p>
-                    <p className="text-sm font-bold font-mono">{formatGTQ(gasto.promedioMensual)}</p>
+                    <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Prom. Mensual</p>
+                    <p className="text-sm font-semibold font-mono">{formatGTQ(gasto.promedioMensual)}</p>
                   </div>
                   <div className="p-2 bg-white rounded">
-                    <p className="text-[10px] text-[var(--text-muted)] uppercase">Tendencia</p>
-                    <p className={`text-sm font-bold font-mono ${gasto.tendencia > 5 ? 'text-[var(--danger)]' : gasto.tendencia < -5 ? 'text-[var(--success)]' : 'text-[var(--text-primary)]'}`}>
+                    <p className="text-[0.75rem] text-[var(--text-muted)] uppercase">Tendencia</p>
+                    <p className={`text-sm font-semibold font-mono ${gasto.tendencia > 5 ? 'text-[var(--danger)]' : gasto.tendencia < -5 ? 'text-[var(--success)]' : 'text-[var(--text-primary)]'}`}>
                       {gasto.tendencia > 0 ? '+' : ''}{gasto.tendencia.toFixed(1)}%
                     </p>
                   </div>
                 </div>
-                
+
                 {/* % del total */}
                 <div className="mt-3 p-2 bg-white rounded">
                   <div className="flex items-center justify-between text-xs mb-1">
@@ -590,7 +567,7 @@ export default function GastosOperativos() {
             Último mes vs promedio
           </span>
         </div>
-        
+
         <div className="table-container mx-5 mb-5">
           <table className="table">
             <thead>
@@ -607,13 +584,13 @@ export default function GastosOperativos() {
             </thead>
             <tbody>
               {categoriasFiltradas.map((gasto) => (
-                <tr key={gasto.id} className={gasto.tendencia > 10 ? 'bg-red-50/50' : ''}>
+                <tr key={gasto.id} className={gasto.tendencia > 10 ? 'bg-breach-50/50' : ''}>
                   <td>
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full" style={{ backgroundColor: gasto.color }} />
                       <div>
                         <p className="font-medium text-sm">{gasto.nombre}</p>
-                        <p className="text-[10px] text-[var(--text-muted)]">{gasto.descripcion.slice(0, 40)}...</p>
+                        <p className="text-[0.75rem] text-[var(--text-muted)]">{gasto.descripcion.slice(0, 40)}...</p>
                       </div>
                     </div>
                   </td>
@@ -624,7 +601,7 @@ export default function GastosOperativos() {
                     {((gasto.total6meses / totalGastos6M) * 100).toFixed(1)}%
                   </td>
                   <td className="text-center">
-                    <span className={`badge text-[10px] ${getTendenciaStyles(gasto.tendencia)}`}>
+                    <span className={`badge text-[0.75rem] ${getTendenciaStyles(gasto.tendencia)}`}>
                       {gasto.tendencia > 0 ? '+' : ''}{gasto.tendencia.toFixed(1)}%
                     </span>
                   </td>
@@ -632,17 +609,17 @@ export default function GastosOperativos() {
                     <span className="text-xs text-[var(--text-secondary)]">{gasto.proveedorPrincipal}</span>
                   </td>
                   <td className="text-center">
-                    <span className="badge-neutral text-[10px] capitalize">{gasto.frecuencia}</span>
+                    <span className="badge-neutral text-[0.75rem] capitalize">{gasto.frecuencia}</span>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-        
+
         {/* Resumen consolidado */}
         <div className="px-5 pb-5">
-          <div className="p-4 bg-[var(--accent-orange-subtle)] rounded-lg border border-[var(--accent-orange)]/20">
+          <div className="p-4 bg-[var(--accent-orange-subtle)] rounded-card border border-[var(--accent-orange)]/20">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <div className="flex items-center gap-3">
                 <CalculatorIcon className="w-5 h-5 text-[var(--accent-orange)]" />
@@ -656,13 +633,13 @@ export default function GastosOperativos() {
               <div className="flex items-center gap-6">
                 <div className="text-right">
                   <p className="text-xs text-[var(--text-muted)]">Último Mes</p>
-                  <p className="text-lg font-bold font-mono text-[var(--accent-orange)]">
+                  <p className="text-lg font-semibold font-mono text-[var(--accent-orange)]">
                     {formatGTQ(totalGastosUltimoMes)}
                   </p>
                 </div>
                 <div className="text-right">
                   <p className="text-xs text-[var(--text-muted)]">Total 6 Meses</p>
-                  <p className="text-xl font-bold font-mono text-[var(--accent-orange)]">
+                  <p className="text-xl font-semibold font-mono text-[var(--accent-orange)]">
                     {formatGTQ(totalGastos6M)}
                   </p>
                 </div>
@@ -677,7 +654,7 @@ export default function GastosOperativos() {
       ============================================ */}
       <div className="card">
         <div className="section-header">
-          <InformationCircleIcon className="w-5 h-5 text-[var(--accent-blue)]" />
+          <InformationCircleIcon className="w-5 h-5 text-slate" />
           <h2 className="font-semibold">Productos Ofrecidos por Retail Fashion GT</h2>
           <span className="ml-auto text-xs text-[var(--text-muted)]">
             Ingresos por línea de servicio
@@ -685,10 +662,10 @@ export default function GastosOperativos() {
         </div>
         <div className="p-5 pt-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {datosServicios.map((servicio) => (
-            <div key={servicio.id} className="p-4 bg-[var(--bg-secondary)] rounded-lg">
+            <div key={servicio.id} className="p-4 bg-[var(--bg-secondary)] rounded-card">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">{servicio.nombre}</span>
-                <span className="badge text-[10px] bg-blue-50 text-blue-700 border-blue-200">
+                <span className="badge text-[0.75rem] bg-paper text-cobalt border-fog">
                   {servicio.clientes} clientes
                 </span>
               </div>
@@ -724,15 +701,15 @@ export default function GastosOperativos() {
       <div className="px-5 pb-5">
         <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--text-muted)]">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-red-100 border border-red-300" />
+            <div className="w-3 h-3 rounded bg-breach-50 border border-breach-100" />
             <span>Aumento {'>'} 10% (revisar)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-orange-100 border border-orange-300" />
+            <div className="w-3 h-3 rounded bg-copper-50 border border-copper-100" />
             <span>Aumento {'>'} 5% (monitorear)</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-3 rounded bg-green-100 border border-green-300" />
+            <div className="w-3 h-3 rounded bg-verified-50 border border-verified-100" />
             <span>Estable o a la baja</span>
           </div>
           <div className="flex items-center gap-1.5">

@@ -115,6 +115,22 @@ const createAgentesLogsTable = async () => {
   console.log('✅ Tabla agentes_logs verificada');
 };
 
+
+/**
+ * Capa semántica del agente SQL (schema analitica). Idempotente: se aplica en
+ * cada deploy para que las vistas viajen con el código que las consulta.
+ * Se ejecuta con el pool directo: db.runAsync convertiría cualquier signo de
+ * interrogación del archivo en un parámetro posicional.
+ */
+const aplicarCapaSemantica = async () => {
+  const fs = require('fs');
+  const path = require('path');
+  const archivo = path.join(__dirname, 'setup', 'capa_semantica.sql');
+  const sql = fs.readFileSync(archivo, 'utf8');
+  await db.pool.query(sql);
+  console.log('Capa semántica aplicada (schema analitica)');
+};
+
 const createTables = async () => {
   console.log('🏗️  Creando tablas...');
   
@@ -135,6 +151,7 @@ const createTables = async () => {
   // Solo crear tablas SQLite si NO estamos en PostgreSQL
   if (isPostgres) {
     console.log('✅ Migración SQLite omitida (PostgreSQL en uso)');
+    await aplicarCapaSemantica();
     return;
   }
 

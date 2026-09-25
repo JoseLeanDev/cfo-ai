@@ -2,7 +2,10 @@ import { createContext, useContext, useState, useEffect } from 'react'
 
 const AuthContext = createContext(null)
 
-const API_BASE = import.meta.env.VITE_API_URL || 'https://cfo-ai-backend-4n29.onrender.com/api'
+// Mismo origen siempre: en dev lo resuelve el proxy de Vite y en producción el
+// rewrite del sitio estático. Un absoluto por defecto rompería el login por
+// CORS sin que se note, porque el resto de la app sí usa `/api`.
+const API_BASE = import.meta.env.VITE_API_URL || '/api'
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)

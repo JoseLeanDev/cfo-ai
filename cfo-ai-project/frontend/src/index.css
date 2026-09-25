@@ -2,431 +2,850 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================
-   abaco - Cal.com Design System
-   Estética: Open Source, Accessible, Trustworthy
-   Clean scheduling, neutral palette, transparency
-   ============================================ */
+/* ============================================================================
+   QORA — Brand & Design System v1.0
+   "Intelligence, on the record."
+
+   Reglas que gobiernan este archivo:
+   · Color: 70 neutro · 22 tinta · 6 cobalto · 2 cobre. El cobalto es acción
+     primaria y salida de agente; el cobre es juicio humano (anotación,
+     override, revisión). Ningún otro acento entra al sistema.
+   · Tipografía: Archivo para display y cifras, IBM Plex Sans para texto,
+     IBM Plex Mono para datos, identificadores y eyebrows. Archivo nunca por
+     debajo de 20px; Plex Sans nunca por encima de 24px.
+   · Superficie: plano por defecto. Radio 0 en placas, 2px en controles,
+     4px en tarjetas, pill solo para estado. Sombra solo en superposiciones.
+   · Jerarquía: se construye con espacio, no con tamaño. Un solo display por
+     vista.
+   ========================================================================== */
 
 @layer base {
   :root {
-    /* Core - Clean & Accessible */
-    --bg-primary: #FFFFFF;
-    --bg-secondary: #F3F4F6;
-    --bg-tertiary: #E5E7EB;
-    --bg-elevated: #FFFFFF;
-    
-    /* Text - High Contrast Accessibility */
-    --text-primary: #111827;
-    --text-secondary: #4B5563;
-    --text-tertiary: #6B7280;
-    --text-muted: #9CA3AF;
-    
-    /* Brand - abaco Blue */
-    --brand-primary: #001639;
-    --brand-secondary: #002a5c;
-    
-    /* Accent - abaco Orange */
-    --accent-orange: #f95f34;
-    --accent-orange-light: #ff7a5c;
-    --accent-orange-subtle: #fff0eb;
-    
-    /* Accent - Functional Blue */
-    --accent-blue: #2563EB;
-    --accent-blue-light: #3B82F6;
-    --accent-blue-subtle: #EFF6FF;
-    
-    /* Semantic - Clear Status */
-    --success: #059669;
-    --success-bg: #ECFDF5;
-    --warning: #D97706;
-    --warning-bg: #FFFBEB;
-    --danger: #DC2626;
-    --danger-bg: #FEF2F2;
-    --info: #2563EB;
-    --info-bg: #EFF6FF;
-    
-    /* Borders - Subtle Definition */
-    --border-subtle: rgba(0, 0, 0, 0.06);
-    --border-default: #E5E7EB;
-    --border-strong: #D1D5DB;
-    
-    /* Typography - Clean Sans */
-    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
-    
-    /* Spacing - Generous & Clear */
-    --section-gap: 2rem;
-    --card-padding: 1.5rem;
-    
-    /* Radius - Soft & Friendly */
-    --radius-sm: 6px;
-    --radius: 8px;
-    --radius-md: 12px;
-    --radius-lg: 16px;
-    
-    /* Shadows - Subtle Depth */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
-    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+    /* --- Neutros ------------------------------------------------------ */
+    --ink: #17181b;
+    --graphite: #33373d;
+    --slate: #6c7278; /* marca: filetes, iconos, series */
+    --slate-text: #636970; /* texto: 4.61:1 sobre niebla */
+    --mist: #c7cbd0;
+    --fog: #e9eaec;
+    --paper: #f6f5f3;
+    --white: #ffffff;
+
+    /* --- Acentos ------------------------------------------------------ */
+    /* Cada acento tiene dos valores: el de marca, para rellenos, puntos de
+       estado, filetes y series de gráfica; y el de texto, oscurecido lo justo
+       para alcanzar 4.5:1 sobre blanco, papel y su propio lavado. El tono no
+       cambia; solo la luminosidad. */
+    --cobalt: #4f6be8;
+    --cobalt-text: #3d56c9;
+    --cobalt-strong: #3d56c9;
+    --cobalt-wash: #f1f3fe;
+    --cobalt-line: #d7ddfa;
+
+    --copper: #b87a34;
+    --copper-text: #8a5a24;
+    --copper-strong: #996328;
+    --copper-wash: #fbf5ed;
+    --copper-line: #edddc6;
+
+    /* --- Estado ------------------------------------------------------- */
+    --verified: #2f8f5f;
+    --verified-text: #1f6b45;
+    --verified-wash: #eff8f3;
+    --verified-line: #cfe7dc;
+
+    --review: #b87a34;
+    --review-text: #8a5a24;
+    --review-wash: #fbf5ed;
+    --review-line: #edddc6;
+
+    --breach: #c2452f;
+    --breach-text: #9b3320;
+    --breach-wash: #fcf0ee;
+    --breach-line: #f0d3cd;
+
+    --agent: #4f6be8;
+    --agent-wash: #f1f3fe;
+
+    /* --- Tipografía --------------------------------------------------- */
+    --font-display: 'Archivo', 'Helvetica Neue', Arial, sans-serif;
+    --font-sans: 'IBM Plex Sans', -apple-system, 'Segoe UI', sans-serif;
+    --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+
+    /* --- Ritmo -------------------------------------------------------- */
+    --section-rhythm: 88px;
+    --gutter: 24px;
+    --hairline: 1px solid var(--fog);
+
+    --radius-plate: 0;
+    --radius-control: 2px;
+    --radius-card: 4px;
+
+    --shadow-overlay: 0 12px 32px -8px rgba(23, 24, 27, 0.18),
+      0 2px 8px -2px rgba(23, 24, 27, 0.1);
+    --shadow-menu: 0 6px 20px -6px rgba(23, 24, 27, 0.16);
+
+    /* ------------------------------------------------------------------
+       Puente de compatibilidad.
+
+       Las páginas heredadas referencian estos nombres directamente en JSX
+       (--text-muted aparece 657 veces). Se mantienen como alias hacia la
+       paleta Qora para que toda la aplicación quede re-marcada desde aquí,
+       sin reescribir cada archivo. Código nuevo debe usar las utilidades de
+       Tailwind o los tokens de arriba.
+       ------------------------------------------------------------------ */
+    --bg-primary: var(--white);
+    --bg-secondary: var(--paper);
+    --bg-tertiary: var(--fog);
+    --bg-elevated: var(--white);
+
+    --text-primary: var(--ink);
+    --text-secondary: var(--graphite);
+    --text-tertiary: var(--slate-text);
+    --text-muted: var(--slate-text);
+
+    --brand-primary: var(--ink);
+    --brand-secondary: var(--graphite);
+
+    /* El naranja de la marca anterior queda mapeado a cobre: en Qora ese rol
+       es juicio humano, no acento decorativo. */
+    --accent-orange: var(--copper-text);
+    --accent-orange-light: var(--copper-text);
+    --accent-orange-subtle: var(--copper-wash);
+
+    --accent-primary: var(--cobalt-text);
+    --accent-blue: var(--cobalt-text);
+    --accent-blue-light: var(--cobalt-text);
+    --accent-blue-subtle: var(--cobalt-wash);
+
+    --success: var(--verified-text);
+    --success-bg: var(--verified-wash);
+    --warning: var(--review-text);
+    --warning-bg: var(--review-wash);
+    --danger: var(--breach-text);
+    --danger-bg: var(--breach-wash);
+    --info: var(--cobalt-text);
+    --info-bg: var(--cobalt-wash);
+
+    --border-subtle: var(--fog);
+    --border-default: var(--fog);
+    --border-color: var(--fog); /* referenciado 31× sin declarar en el original */
+    --border-strong: var(--mist);
+
+    --shadow-sm: none;
+    --shadow: none;
+    --shadow-md: none;
+
+    --radius-sm: var(--radius-control);
+    --radius: var(--radius-card);
+    --radius-md: var(--radius-card);
+    --radius-lg: var(--radius-card);
   }
-}
 
-/* ============================================
-   BASE STYLES
-   ============================================ */
-
-@layer base {
   * {
-    @apply border-[var(--border-default)];
+    border-color: var(--fog);
   }
-  
+
   html {
     font-family: var(--font-sans);
-    background-color: var(--bg-secondary);
-    color: var(--text-primary);
+    background-color: var(--paper);
+    color: var(--ink);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    font-variant-numeric: tabular-nums;
   }
-  
+
   body {
     @apply min-h-screen;
-    background-color: var(--bg-secondary);
+    font-size: 1rem;
+    line-height: 1.7;
+    font-weight: 400;
+    background-color: var(--paper);
   }
-  
-  h1, h2, h3, h4 {
+
+  /* Archivo para todo lo que es título. Nunca por debajo de 20px, así que h4
+     y h5 bajan a Plex Sans 500. */
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
     font-weight: 600;
-    color: var(--text-primary);
+    color: var(--ink);
     letter-spacing: -0.02em;
   }
-  
+
   h1 {
-    @apply text-2xl;
+    font-size: 2.125rem;
+    line-height: 1.15;
   }
-  
+
   h2 {
-    @apply text-xl;
+    font-size: 1.375rem;
+    line-height: 1.3;
   }
-  
+
   h3 {
-    @apply text-lg;
+    font-size: 1.25rem;
+    line-height: 1.3;
   }
-  
-  /* Focus styles for accessibility */
+
+  h4,
+  h5,
+  h6 {
+    font-family: var(--font-sans);
+    font-weight: 500;
+    font-size: 0.9375rem;
+    line-height: 1.5;
+    letter-spacing: 0;
+    color: var(--ink);
+  }
+
+  /* Foco visible y en cobalto: el foco es acción, y la acción es cobalto. */
   *:focus-visible {
-    @apply outline-none ring-2 ring-offset-2;
-    ring-color: var(--accent-blue);
+    outline: 2px solid var(--cobalt);
+    outline-offset: 2px;
+    border-radius: var(--radius-control);
   }
-  
-  /* Selection */
+
   ::selection {
-    background-color: var(--accent-blue);
-    color: white;
+    background-color: var(--cobalt);
+    color: var(--white);
+  }
+
+  /* Las cifras nunca bailan al actualizarse. */
+  table,
+  input,
+  .tabular {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum' 1;
+  }
+
+  hr {
+    border: 0;
+    border-top: var(--hairline);
   }
 }
 
-/* ============================================
-   COMPONENTS - Clean & Accessible
-   ============================================ */
+/* ============================================================================
+   COMPONENTES
+   ========================================================================== */
 
 @layer components {
-  
-  /* Cards - Clean with subtle shadow */
+  /* --- Eyebrow: mono, mayúsculas, tracking 0.12em ---------------------- */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.4;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--slate-text);
+  }
+
+  .eyebrow-ink {
+    @apply eyebrow;
+    color: var(--ink);
+  }
+
+  /* --- Superficies ------------------------------------------------------
+     La tarjeta es blanca sobre papel, con filete de 1px y sin sombra: en una
+     grilla, la elevación no aporta jerarquía, solo ruido.
+     -------------------------------------------------------------------- */
   .card {
-    @apply bg-white rounded-lg border;
-    border-color: var(--border-default);
-    box-shadow: var(--shadow-sm);
+    /* min-width 0: dentro de una rejilla, una tabla ancha estira la columna
+       y con ella la página. Así el desplazamiento queda dentro de la tabla. */
+    min-width: 0;
+    background-color: var(--white);
+    border: 1px solid var(--fog);
+    border-radius: var(--radius-card);
   }
-  
+
   .card-hover {
-    @apply transition-all duration-200;
+    transition: border-color 120ms ease;
   }
-  
+
   .card-hover:hover {
-    box-shadow: var(--shadow-md);
-    transform: translateY(-1px);
+    border-color: var(--mist);
   }
-  
-  /* Section Headers - Clean */
+
+  /* Placa: superficie a sangre, sin radio. Para encabezados de sección y
+     bloques de agente. */
+  .plate {
+    background-color: var(--white);
+    border: 1px solid var(--fog);
+    border-radius: var(--radius-plate);
+  }
+
+  .plate-ink {
+    background-color: var(--ink);
+    color: var(--white);
+    border: 1px solid var(--ink);
+    border-radius: var(--radius-plate);
+  }
+
+  .plate-ink h1,
+  .plate-ink h2,
+  .plate-ink h3 {
+    color: var(--white);
+  }
+
+  .plate-ink .eyebrow {
+    color: var(--mist);
+  }
+
+  /* Encabezado de sección: filete inferior, eyebrow + título. */
   .section-header {
-    @apply flex items-center gap-3 px-5 pt-5 pb-4 mb-4;
-    border-bottom: 1px solid var(--border-default);
+    @apply flex items-center gap-3;
+    padding: 20px 24px 16px;
+    margin-bottom: 16px;
+    border-bottom: var(--hairline);
   }
-  
-  /* KPI Cards - Minimal */
+
+  .section-header h2,
+  .section-header h3 {
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.3;
+  }
+
+  /* --- Cifra ------------------------------------------------------------
+     Toda cifra va en Archivo 600 o en mono tabular. Nunca en Plex Sans.
+     -------------------------------------------------------------------- */
   .kpi-card {
-    @apply p-5 bg-white rounded-lg border;
-    border-color: var(--border-default);
+    background-color: var(--white);
+    border: 1px solid var(--fog);
+    border-radius: var(--radius-card);
+    padding: 20px;
   }
-  
-  .kpi-value {
-    @apply text-2xl font-bold tabular-nums mt-1;
-    font-family: var(--font-mono);
-    color: var(--text-primary);
-  }
-  
+
   .kpi-label {
-    @apply text-xs uppercase tracking-wider;
-    color: var(--text-muted);
-  }
-  
-  .kpi-change {
-    @apply text-xs font-medium tabular-nums mt-1;
     font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    color: var(--slate-text);
   }
-  
+
+  .kpi-value {
+    font-family: var(--font-display);
+    font-size: 2rem;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    margin-top: 8px;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .kpi-change {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 400;
+    line-height: 1.4;
+    margin-top: 8px;
+    color: var(--slate-text);
+    font-variant-numeric: tabular-nums;
+  }
+
   .kpi-change.positive {
-    color: var(--success);
+    color: var(--verified-text);
   }
-  
+
   .kpi-change.negative {
-    color: var(--danger);
+    color: var(--breach-text);
   }
-  
-  /* Navigation - Clean sidebar */
+
+  /* --- Navegación -------------------------------------------------------
+     El estado activo se marca con una barra de tinta a la izquierda y peso,
+     no con un bloque de color saturado.
+     -------------------------------------------------------------------- */
   .nav-link {
-    @apply flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors;
-    color: var(--text-secondary);
+    @apply flex items-center gap-3;
+    padding: 8px 12px 8px 13px;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    border-left: 2px solid transparent;
+    border-radius: 0;
+    color: var(--graphite);
+    transition: background-color 120ms ease, color 120ms ease;
   }
-  
+
   .nav-link:hover {
-    background-color: var(--bg-tertiary);
-    color: var(--text-primary);
+    background-color: var(--paper);
+    color: var(--ink);
   }
-  
+
   .nav-link-active {
-    @apply flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium;
-    background-color: var(--brand-primary);
-    color: white;
+    @apply flex items-center gap-3;
+    padding: 8px 12px 8px 13px;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    font-weight: 500;
+    border-left: 2px solid var(--ink);
+    border-radius: 0;
+    background-color: var(--paper);
+    color: var(--ink);
   }
-  
-  /* Buttons - Clear actions */
+
+  /* --- Botones ----------------------------------------------------------
+     Tinta = acción por defecto. Cobalto = poner un agente a trabajar.
+     Contorno = acción secundaria. Radio 2px, nunca pill.
+     -------------------------------------------------------------------- */
   .btn {
-    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md transition-all;
+    @apply inline-flex items-center justify-center gap-2;
+    padding: 9px 16px;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    font-weight: 500;
+    line-height: 1.2;
+    border-radius: var(--radius-control);
+    border: 1px solid transparent;
+    transition: background-color 120ms ease, border-color 120ms ease,
+      color 120ms ease;
+    cursor: pointer;
   }
-  
+
+  .btn:disabled,
+  .btn[disabled] {
+    background-color: var(--white);
+    border-color: var(--fog);
+    color: var(--mist);
+    cursor: not-allowed;
+  }
+
   .btn-primary {
     @apply btn;
-    background-color: var(--brand-primary);
-    color: white;
+    background-color: var(--ink);
+    border-color: var(--ink);
+    color: var(--white);
   }
-  
-  .btn-primary:hover {
-    background-color: var(--brand-secondary);
+
+  .btn-primary:hover:not(:disabled) {
+    background-color: var(--graphite);
+    border-color: var(--graphite);
   }
-  
+
+  .btn-agent {
+    @apply btn;
+    background-color: var(--cobalt);
+    border-color: var(--cobalt);
+    color: var(--white);
+  }
+
+  .btn-agent:hover:not(:disabled) {
+    background-color: var(--cobalt-strong);
+    border-color: var(--cobalt-strong);
+  }
+
   .btn-secondary {
     @apply btn;
-    background-color: white;
-    color: var(--text-primary);
-    border: 1px solid var(--border-strong);
+    background-color: var(--white);
+    border-color: var(--mist);
+    color: var(--ink);
   }
-  
-  .btn-secondary:hover {
-    background-color: var(--bg-secondary);
+
+  .btn-secondary:hover:not(:disabled) {
+    border-color: var(--ink);
   }
-  
+
   .btn-ghost {
     @apply btn;
     background-color: transparent;
-    color: var(--text-secondary);
+    color: var(--graphite);
   }
-  
-  .btn-ghost:hover {
-    background-color: var(--bg-tertiary);
-    color: var(--text-primary);
+
+  .btn-ghost:hover:not(:disabled) {
+    background-color: var(--paper);
+    color: var(--ink);
   }
-  
-  /* Badges - Status indicators */
+
+  .btn-sm {
+    padding: 5px 10px;
+    font-size: 0.8125rem;
+  }
+
+  /* Enlace de texto: cobalto, subrayado a 1px, con flecha opcional. */
+  .link {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--cobalt-text);
+    border-bottom: 1px solid var(--cobalt-line);
+    padding-bottom: 2px;
+    transition: border-color 120ms ease;
+  }
+
+  .link:hover {
+    border-bottom-color: var(--cobalt-text);
+  }
+
+  /* --- Estado -----------------------------------------------------------
+     Pill solo para estado: es el único lugar del sistema donde se usa.
+     -------------------------------------------------------------------- */
   .badge {
-    @apply inline-flex items-center gap-1 px-2.5 py-1 text-xs font-medium rounded-full;
+    @apply inline-flex items-center gap-1;
+    padding: 3px 10px;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.5;
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    white-space: nowrap;
   }
-  
+
   .badge-success {
     @apply badge;
-    background-color: var(--success-bg);
-    color: var(--success);
+    background-color: var(--verified-wash);
+    border-color: var(--verified-line);
+    color: var(--verified-text);
   }
-  
+
   .badge-warning {
     @apply badge;
-    background-color: var(--warning-bg);
-    color: var(--warning);
+    background-color: var(--review-wash);
+    border-color: var(--review-line);
+    color: var(--review-text);
   }
-  
+
   .badge-danger {
     @apply badge;
-    background-color: var(--danger-bg);
-    color: var(--danger);
+    background-color: var(--breach-wash);
+    border-color: var(--breach-line);
+    color: var(--breach-text);
   }
-  
+
   .badge-info {
     @apply badge;
-    background-color: var(--info-bg);
-    color: var(--info);
+    background-color: var(--cobalt-wash);
+    border-color: var(--cobalt-line);
+    color: var(--cobalt-text);
   }
-  
+
   .badge-neutral {
     @apply badge;
-    background-color: var(--bg-tertiary);
-    color: var(--text-secondary);
+    background-color: var(--paper);
+    border-color: var(--fog);
+    color: var(--slate-text);
   }
-  
-  /* Tables - Clean data */
+
+  .status-dot {
+    @apply inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background-color: var(--slate);
+  }
+
+  .status-dot.online {
+    background-color: var(--verified);
+  }
+
+  .status-dot.warning {
+    background-color: var(--review);
+  }
+
+  .status-dot.error {
+    background-color: var(--breach);
+  }
+
+  .status-dot.agent {
+    background-color: var(--cobalt);
+  }
+
+  /* --- Tablas -----------------------------------------------------------
+     Encabezado en mono mayúsculas, filete de 1px entre filas, cifras
+     tabulares alineadas a la derecha. Sin cebra: el filete basta.
+     -------------------------------------------------------------------- */
   .table-container {
-    @apply overflow-x-auto bg-white rounded-lg border;
-    border-color: var(--border-default);
+    @apply overflow-x-auto;
+    min-width: 0;
+    max-width: 100%;
+    background-color: var(--white);
+    border: 1px solid var(--fog);
+    border-radius: var(--radius-card);
   }
-  
+
   .table {
-    @apply w-full text-sm;
+    @apply w-full;
+    font-size: 0.875rem;
+    border-collapse: collapse;
   }
-  
+
   .table th {
-    @apply px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider;
-    background-color: var(--bg-secondary);
-    color: var(--text-secondary);
+    @apply text-left;
+    padding: 10px 16px;
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    line-height: 1.4;
+    white-space: nowrap;
+    background-color: var(--white);
+    color: var(--slate-text);
+    border-bottom: 1px solid var(--fog);
   }
-  
+
   .table td {
-    @apply px-4 py-3;
-    border-bottom: 1px solid var(--border-default);
+    padding: 12px 16px;
+    line-height: 1.5;
+    color: var(--ink);
+    border-bottom: 1px solid var(--fog);
+    vertical-align: middle;
   }
-  
+
+  /* Cifras: mono tabular, alineadas a la derecha, sin partirse en dos
+     líneas. Resuelve el "Q / 150.86" del diseño anterior. */
+  .table td.num,
+  .table th.num,
+  .table [data-num] {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    text-align: right;
+    white-space: nowrap;
+  }
+
   .table tr:last-child td {
     border-bottom: none;
   }
-  
-  .table tr:hover td {
-    background-color: var(--bg-secondary);
+
+  .table tbody tr {
+    transition: background-color 120ms ease;
   }
-  
-  /* Inputs - Accessible */
-  .input {
-    @apply w-full px-3 py-2 text-sm bg-white border rounded-md transition-colors;
-    border-color: var(--border-strong);
-    color: var(--text-primary);
+
+  .table tbody tr:hover td {
+    background-color: var(--paper);
   }
-  
-  .input:hover {
-    border-color: var(--text-muted);
+
+  /* --- Formularios ------------------------------------------------------ */
+  .input,
+  .select {
+    @apply w-full;
+    padding: 9px 12px;
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    line-height: 1.4;
+    background-color: var(--white);
+    border: 1px solid var(--mist);
+    border-radius: var(--radius-control);
+    color: var(--ink);
+    transition: border-color 120ms ease;
   }
-  
-  .input:focus {
-    @apply outline-none;
-    border-color: var(--accent-blue);
-    box-shadow: 0 0 0 3px var(--accent-blue-subtle);
+
+  .input::placeholder {
+    color: var(--slate-text);
   }
-  
-  /* Status dots */
-  .status-dot {
-    @apply w-2 h-2 rounded-full;
+
+  .input:hover,
+  .select:hover {
+    border-color: var(--slate);
   }
-  
-  .status-dot.online {
-    background-color: var(--success);
+
+  .input:focus,
+  .select:focus {
+    outline: none;
+    border-color: var(--cobalt);
+    box-shadow: 0 0 0 3px var(--cobalt-wash);
   }
-  
-  .status-dot.warning {
-    background-color: var(--warning);
+
+  .field-label {
+    @apply block;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    line-height: 1.5;
+    margin-bottom: 6px;
+    color: var(--graphite);
   }
-  
-  .status-dot.error {
-    background-color: var(--danger);
-  }
-  
-  /* Agent cards */
+
+  /* --- Agente -----------------------------------------------------------
+     La salida de un agente siempre se distingue de la entrada humana: filete
+     cobalto a la izquierda para el agente, cobre para la anotación humana.
+     -------------------------------------------------------------------- */
   .agent-card {
-    @apply p-4 bg-white rounded-lg border transition-all;
-    border-color: var(--border-default);
+    background-color: var(--white);
+    border: 1px solid var(--fog);
+    border-left: 2px solid var(--cobalt);
+    border-radius: var(--radius-card);
+    padding: 16px;
+    transition: border-color 120ms ease;
   }
-  
-  .agent-card:hover {
-    border-color: var(--accent-blue);
-    box-shadow: var(--shadow-md);
+
+  .human-note {
+    border-left: 2px solid var(--copper);
+    padding-left: 12px;
+    color: var(--graphite);
+    font-size: 0.875rem;
+    line-height: 1.6;
   }
-  
-  /* Empty states */
+
+  /* --- Vacío y carga ----------------------------------------------------- */
   .empty-state {
-    @apply flex flex-col items-center justify-center py-12 text-center;
+    @apply flex flex-col items-center justify-center text-center;
+    padding: 48px 24px;
   }
-  
+
   .empty-state-icon {
-    @apply w-12 h-12 rounded-full flex items-center justify-center mb-4;
-    background-color: var(--bg-tertiary);
-    color: var(--text-muted);
+    @apply flex items-center justify-center;
+    width: 40px;
+    height: 40px;
+    margin-bottom: 16px;
+    border: 1px solid var(--fog);
+    border-radius: var(--radius-card);
+    background-color: var(--paper);
+    color: var(--mist);
+  }
+
+  /* Esqueleto de carga: barrido, nunca spinner. El spinner no dice cuánto
+     falta ni qué forma tendrá el resultado. */
+  .skeleton {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--fog);
+    border-radius: var(--radius-control);
+  }
+
+  .skeleton::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(255, 255, 255, 0.7),
+      transparent
+    );
+    animation: qora-sweep 1.4s ease-in-out infinite;
   }
 }
 
-/* ============================================
-   UTILITIES
-   ============================================ */
+/* ============================================================================
+   UTILIDADES
+   ========================================================================== */
 
 @layer utilities {
   .text-brand {
-    color: var(--brand-primary);
+    color: var(--ink);
   }
-  
+
   .bg-brand {
-    background-color: var(--brand-primary);
+    background-color: var(--ink);
   }
-  
+
   .font-mono {
     font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
   }
-  
-  /* Financial numbers */
+
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+
+  /* Cifras financieras */
   .amount {
-    @apply tabular-nums font-semibold;
     font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    font-weight: 500;
+    white-space: nowrap;
   }
-  
+
   .amount-positive {
-    color: var(--success);
+    color: var(--verified-text);
   }
-  
+
   .amount-negative {
-    color: var(--danger);
+    color: var(--breach-text);
   }
-  
-  /* Accessibility helpers */
+
+  /* Medida máxima de texto corrido: 72 caracteres, sin justificar. */
+  .measure {
+    max-width: 72ch;
+    text-align: left;
+  }
+
+  .rhythm {
+    margin-top: var(--section-rhythm);
+  }
+
+  .hairline-t {
+    border-top: var(--hairline);
+  }
+
+  .hairline-b {
+    border-bottom: var(--hairline);
+  }
+
   .sr-only {
     @apply absolute w-px h-px p-0 -m-px overflow-hidden whitespace-nowrap border-0;
     clip: rect(0, 0, 0, 0);
   }
 }
 
-/* ============================================
-   ANIMATIONS
-   ============================================ */
+/* ============================================================================
+   MOVIMIENTO
+   ========================================================================== */
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes qora-sweep {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn 160ms ease-out;
 }
 
-/* ============================================
-   SCROLLBAR - Minimal
-   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ============================================================================
+   SCROLLBAR
+   ========================================================================== */
 
 ::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: 10px;
+  height: 10px;
 }
 
 ::-webkit-scrollbar-track {
-  background: var(--bg-secondary);
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: var(--border-strong);
-  border-radius: 4px;
+  background: var(--mist);
+  border: 3px solid var(--paper);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--text-muted);
+  background: var(--slate);
 }

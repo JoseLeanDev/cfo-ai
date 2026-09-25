@@ -20,12 +20,12 @@ import {
 export default function CuentasBancarias() {
   const [filtroMoneda, setFiltroMoneda] = useState('todas')
   const [cuentaSeleccionada, setCuentaSeleccionada] = useState(null)
-  
+
   const { data: posicionData, isLoading } = useQuery('bancos-detalle', endpoints.tesoreria.posicion)
-  
+
   const data = posicionData?.data || {}
   const cuentas = data.cuentas || []
-  
+
   // Mock transacciones
   const transacciones = [
     { id: 1, fecha: '2026-04-05', descripcion: 'Depósito cliente Corporación ABC', tipo: 'entrada', monto: 125000, saldo: 1250000, referencia: 'DEP-4521' },
@@ -37,14 +37,14 @@ export default function CuentasBancarias() {
     { id: 7, fecha: '2026-03-30', descripcion: 'Pago servicios eléctricos', tipo: 'salida', monto: -89000, saldo: 1476250, referencia: 'SER-110' },
     { id: 8, fecha: '2026-03-29', descripcion: 'Depósito ventas efectivo', tipo: 'entrada', monto: 78000, saldo: 1565250, referencia: 'DEP-4520' },
   ]
-  
+
   const cuentasFiltradas = filtroMoneda === 'todas' 
     ? cuentas 
     : cuentas.filter(c => c.moneda === filtroMoneda)
 
   const cuentasGTQ = cuentas.filter(c => c.moneda === 'GTQ')
   const cuentasUSD = cuentas.filter(c => c.moneda === 'USD')
-  
+
   const totalGTQ = cuentasGTQ.reduce((sum, c) => sum + c.saldo, 0)
   const totalUSD = cuentasUSD.reduce((sum, c) => sum + c.saldo, 0)
 
@@ -61,23 +61,21 @@ export default function CuentasBancarias() {
         <div className="flex items-center gap-4">
           <Link 
             to="/tesoreria" 
-            className="w-10 h-10 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] flex items-center justify-center transition-colors"
+                        aria-label="Volver"
+className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-tertiary)] flex items-center justify-center transition-colors"
           >
             <ArrowLeftIcon className="w-5 h-5 text-[var(--text-muted)]" />
           </Link>
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#001639] flex items-center justify-center">
-              <BuildingLibraryIcon className="w-5 h-5 text-white" />
-            </div>
             <div>
-              <h1 className="text-2xl font-semibold">Cuentas Bancarias</h1>
-              <p className="text-sm text-[var(--text-muted)]">{cuentas.length} cuentas activas • Tipo de cambio: Q{data.tipo_cambio}</p>
+              <h1 className="font-display text-[2.125rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">Cuentas Bancarias</h1>
+              <p className="measure mt-2 text-[0.9375rem] leading-relaxed text-slate">{cuentas.length} cuentas activas • Tipo de cambio: Q{data.tipo_cambio}</p>
             </div>
           </div>
         </div>
-        
+
         <div className="flex items-center gap-3">
-          <select 
+          <select aria-label="Todas las monedas" 
             value={filtroMoneda} 
             onChange={(e) => setFiltroMoneda(e.target.value)}
             className="input"
@@ -107,7 +105,7 @@ export default function CuentasBancarias() {
         <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Quetzales (GTQ)</span>
-            <span className="w-8 h-8 rounded-lg bg-blue-100 text-blue-700 font-bold text-sm flex items-center justify-center">Q</span>
+            <span className="w-8 h-8 rounded-card bg-paper text-cobalt font-semibold text-sm flex items-center justify-center">Q</span>
           </div>
           <p className="kpi-value">Q{totalGTQ.toLocaleString()}</p>
           <p className="text-xs text-[var(--text-muted)] mt-1">{cuentasGTQ.length} cuentas</p>
@@ -116,7 +114,7 @@ export default function CuentasBancarias() {
         <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
             <span className="kpi-label">Dólares (USD)</span>
-            <span className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 font-bold text-sm flex items-center justify-center">$</span>
+            <span className="w-8 h-8 rounded-card bg-verified-50 text-verified font-semibold text-sm flex items-center justify-center">$</span>
           </div>
           <p className="kpi-value">${totalUSD.toLocaleString()}</p>
           <p className="text-xs text-[var(--text-muted)] mt-1">≈ Q{(totalUSD * (data.tipo_cambio || 7.75)).toLocaleString()}</p>
@@ -128,12 +126,12 @@ export default function CuentasBancarias() {
         <div className="p-5 border-b border-[var(--border-default)]">
           <h2 className="font-semibold">Cuentas Activas</h2>
         </div>
-        
+
         <div className="divide-y divide-[var(--border-default)]">
           {isLoading ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="p-5">
-                <div className="h-16 bg-[var(--bg-secondary)] rounded-lg animate-pulse" />
+                <div className="h-16 bg-[var(--bg-secondary)] rounded-card animate-pulse" />
               </div>
             ))
           ) : cuentasFiltradas.map((cuenta, idx) => {
@@ -143,35 +141,35 @@ export default function CuentasBancarias() {
               <div 
                 key={idx} 
                 className={`p-5 hover:bg-[var(--bg-secondary)] transition-all cursor-pointer ${
-                  cuentaSeleccionada === idx ? 'bg-blue-50 border-l-4 border-[#001639]' : 'border-l-4 border-transparent'
+                  cuentaSeleccionada === idx ? 'bg-paper border-l-4 border-ink' : 'border-l-4 border-transparent'
                 }`}
                 onClick={() => setCuentaSeleccionada(cuentaSeleccionada === idx ? null : idx)}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-4">
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                    <div className={`w-12 h-12 rounded-card flex items-center justify-center ${
                       cuenta.moneda === 'USD' 
-                        ? 'bg-emerald-100 text-emerald-700' 
-                        : 'bg-blue-100 text-blue-700'
+                        ? 'bg-verified-50 text-verified' 
+                        : 'bg-paper text-cobalt'
                     }`}>
-                      <span className="font-bold">{cuenta.moneda}</span>
+                      <span className="font-semibold">{cuenta.moneda}</span>
                     </div>
-                    
+
                     <div>
-                      <p className="font-bold text-lg">{cuenta.banco}</p>
+                      <p className="font-semibold text-lg">{cuenta.banco}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-sm text-[var(--text-muted)] capitalize">{cuenta.tipo}</span>
                         <span className="text-[var(--border-default)]">•</span>
-                        <span className={`inline-flex items-center gap-1.5 ${estado.badgeClass} text-[10px]`}>
+                        <span className={`inline-flex items-center gap-1.5 ${estado.badgeClass} text-[0.75rem]`}>
                           <EstadoIcon className="w-3 h-3" />
                           {estado.label}
                         </span>
                       </div>
                     </div>
                   </div>
-                  
+
                   <div className="text-right">
-                    <p className="text-xl font-bold tabular-nums">
+                    <p className="text-xl font-semibold tabular-nums">
                       {new Intl.NumberFormat('es-GT', {
                         style: 'currency',
                         currency: cuenta.moneda,
@@ -198,7 +196,7 @@ export default function CuentasBancarias() {
           </h2>
           <button className="text-sm text-[var(--accent-blue)] hover:underline">Ver todas →</button>
         </div>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-[var(--bg-secondary)] border-b border-[var(--border-default)]">

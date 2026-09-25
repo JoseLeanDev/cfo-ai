@@ -1,4 +1,4 @@
-// Constantes financieras centralizadas del frontend abaco
+// Constantes financieras centralizadas del frontend Qora
 // Extraídas de componentes para evitar valores hardcodeados
 
 // Moneda

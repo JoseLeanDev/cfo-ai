@@ -118,6 +118,7 @@ app.use('/api', (req, res, next) => {
 
 // ── Rutas protegidas ─────────────────────────────────────────────────────────
 app.use('/api/dashboard', require('./routes/dashboard'));
+app.use('/api/ventas', require('./routes/ventas'));
 app.use('/api/tesoreria', require('./routes/tesoreria'));
 app.use('/api/contabilidad', require('./routes/contabilidad'));
 app.use('/api/analisis', require('./routes/analisis'));

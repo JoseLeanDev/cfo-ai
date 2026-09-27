@@ -6,6 +6,13 @@ export const useResumen = () => {
   return useQuery('resumen', endpoints.resumen, { staleTime: 5 * 60 * 1000 })
 }
 
+export const useVentas = (anio) => {
+  return useQuery(['ventas', anio ?? 'ultimo'], () => endpoints.ventas(anio), {
+    staleTime: 5 * 60 * 1000,
+    keepPreviousData: true,
+  })
+}
+
 export const useDashboard = () => {
   return useQuery('dashboard', endpoints.dashboard, {
     refetchInterval: 5 * 60 * 1000, // Refetch cada 5 minutos

@@ -153,9 +153,11 @@ export function Stat({
         <p
           className={cn(
             'mt-2 font-mono text-[0.75rem] tabular-nums',
-            deltaTone === 'up' && 'text-verified',
-            deltaTone === 'down' && 'text-breach',
-            deltaTone === 'agent' && 'text-cobalt',
+            // Sobre tinta se usan las variantes claras: el verde y el rojo de
+            // texto quedan por debajo de 3:1 sobre fondo oscuro.
+            deltaTone === 'up' && (ink ? 'text-verified-300' : 'text-verified'),
+            deltaTone === 'down' && (ink ? 'text-breach-300' : 'text-breach'),
+            deltaTone === 'agent' && (ink ? 'text-cobalt-300' : 'text-cobalt'),
             deltaTone === 'neutral' && (ink ? 'text-mist' : 'text-slate')
           )}
         >

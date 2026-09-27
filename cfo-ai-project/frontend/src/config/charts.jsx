@@ -36,6 +36,21 @@ export const series = [
 
 export const seriesAt = (index) => series[index % series.length]
 
+/**
+ * Color por marca. Identidad, no rango: cada marca conserva su color aunque un
+ * filtro cambie el orden o quite las demás. Validado para daltonismo (ΔE ≥ 9.9
+ * entre cualquier par) sobre blanco. El cobalto claro queda bajo 3:1 contra el
+ * fondo, así que siempre va acompañado del nombre o de su cifra.
+ */
+export const marcas = {
+  'Casa & Hogar': '#3D56C9',
+  SportLife: '#149282',
+  TechZone: '#B87A34',
+  'Moda Urbana': '#8FA2F2',
+}
+
+export const colorMarca = (marca) => marcas[marca] ?? chart.slate
+
 /** Ejes: sin línea de eje, sin marcas, rejilla horizontal en filete de niebla. */
 export const axis = {
   stroke: chart.slate,

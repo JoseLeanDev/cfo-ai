@@ -13,6 +13,10 @@ export const useVentas = (anio) => {
   })
 }
 
+export const useInsightsIA = () => {
+  return useQuery('insights-ia', endpoints.analisis.insightsIA, { staleTime: 5 * 60 * 1000 })
+}
+
 export const useDashboard = () => {
   return useQuery('dashboard', endpoints.dashboard, {
     refetchInterval: 5 * 60 * 1000, // Refetch cada 5 minutos
@@ -77,18 +81,6 @@ export const useWorkingCapital = (options = {}) => {
   return useQuery(
     ['working-capital', empresaId, meses],
     () => endpoints.analisis.workingCapital({ empresa_id: empresaId, meses }),
-    {
-      refetchInterval: 5 * 60 * 1000,
-      staleTime: 2 * 60 * 1000,
-    }
-  )
-}
-
-export const useRatiosFinancieros = (options = {}) => {
-  const { empresaId = 1, fecha } = options
-  return useQuery(
-    ['ratios-financieros', empresaId, fecha],
-    () => endpoints.reportes.ratios({ empresa_id: empresaId, fecha_hasta: fecha }),
     {
       refetchInterval: 5 * 60 * 1000,
       staleTime: 2 * 60 * 1000,

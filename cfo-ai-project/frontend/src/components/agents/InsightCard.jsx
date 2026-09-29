@@ -1,21 +1,21 @@
 import { Eyebrow } from '../ui'
 
 /**
- * Hallazgo suelto.
+ * Hallazgo del analista.
  *
- * Se usa fuera de `PageInsights`, cuando un agente aporta una sola
- * observación dentro de otra pantalla. Mantiene la misma gramática: filete de
- * color a la izquierda según severidad, estado en mono mayúsculas, cifra en
- * Archivo 600 tabular.
+ * Filete de color a la izquierda según severidad, estado en mono mayúsculas,
+ * cifra en Archivo 600 tabular. La recomendación la escribe el agente, así que
+ * lleva el filete de cobalto que el sistema reserva para lo que produce un
+ * agente.
  *
- * Props: insight { id, type, title, description, impact, change, currency,
- * severity, isNew }, onView, onDismiss, compact.
+ * Props: insight { type, title, description, action, impact, change, currency,
+ * severity, category }, onDismiss.
  */
 
 const SEVERIDAD = {
-  critical: { label: 'Crítico', badge: 'badge-danger', rule: 'border-breach' },
-  warning: { label: 'Revisar', badge: 'badge-warning', rule: 'border-copper' },
-  info: { label: 'Observación', badge: 'badge-info', rule: 'border-cobalt' },
+  critical: { label: 'Crítico', badge: 'badge-danger', rule: 'border-l-breach-500' },
+  warning: { label: 'Revisar', badge: 'badge-warning', rule: 'border-l-copper-500' },
+  info: { label: 'Observación', badge: 'badge-info', rule: 'border-l-cobalt-500' },
 }
 
 const TIPO = {
@@ -25,18 +25,8 @@ const TIPO = {
   oportunidad: 'Oportunidad',
 }
 
-export default function InsightCard({ insight, onView, onDismiss, compact = true }) {
-  const {
-    type,
-    title,
-    description,
-    impact,
-    change,
-    currency = 'GTQ',
-    severity = 'info',
-    isNew = false,
-  } = insight
-
+export default function InsightCard({ insight, onDismiss }) {
+  const { type, title, description, action, impact, change, currency = 'GTQ', severity = 'info' } = insight
   const sev = SEVERIDAD[severity] || SEVERIDAD.info
 
   const moneda = (valor) =>
@@ -47,81 +37,67 @@ export default function InsightCard({ insight, onView, onDismiss, compact = true
       maximumFractionDigits: 0,
     }).format(Math.abs(valor))
 
-  const tieneImpacto = impact !== undefined && impact !== 0
-  const tieneVariacion = change !== undefined && change !== null
+  const tieneImpacto = impact != null && Number(impact) !== 0
+  const tieneVariacion = change != null && !Number.isNaN(Number(change))
 
   return (
-    <article
-      onClick={compact ? () => onView?.(insight) : undefined}
-      className={`rounded-card border border-fog border-l-2 bg-white ${sev.rule} ${
-        compact ? 'cursor-pointer transition-colors hover:border-r-mist' : ''
-      } p-4`}
-    >
+    <article className={`flex h-full flex-col rounded-card border border-l-2 border-fog bg-white p-5 ${sev.rule}`}>
       <div className="flex flex-wrap items-center gap-2">
         <span className={sev.badge}>{sev.label}</span>
         <Eyebrow className="text-[0.6875rem]">{TIPO[type] || 'Hallazgo'}</Eyebrow>
-        {isNew ? (
-          <Eyebrow className="ml-auto text-[0.6875rem] text-cobalt">Nuevo</Eyebrow>
-        ) : null}
       </div>
 
-      <h4 className="mt-2 font-display text-[0.9375rem] font-semibold leading-snug text-ink">
-        {title}
-      </h4>
+      <h3 className="mt-3 font-display text-[1rem] font-semibold leading-snug text-ink">{title}</h3>
 
       {description ? (
-        <p className="measure mt-1.5 text-[0.875rem] leading-relaxed text-graphite">
-          {description}
-        </p>
+        <p className="mt-2 text-[0.875rem] leading-relaxed text-graphite">{description}</p>
       ) : null}
 
-      {tieneImpacto || tieneVariacion ? (
-        <dl className="mt-3 flex flex-wrap items-baseline gap-x-6 gap-y-1">
-          {tieneImpacto ? (
-            <div className="flex items-baseline gap-2">
-              <dt className="eyebrow text-[0.6875rem]">Impacto</dt>
-              <dd
-                className={`font-display text-[1.125rem] font-semibold tabular-nums ${
-                  impact > 0 ? 'text-verified' : 'text-breach'
-                }`}
-              >
-                {impact > 0 ? '+' : '−'}
-                {moneda(impact)}
-              </dd>
-            </div>
-          ) : null}
-
-          {tieneVariacion ? (
-            <div className="flex items-baseline gap-2">
-              <dt className="eyebrow text-[0.6875rem]">Variación</dt>
-              <dd
-                className={`font-mono text-[0.8125rem] tabular-nums ${
-                  change > 0 ? 'text-verified' : change < 0 ? 'text-breach' : 'text-slate'
-                }`}
-              >
-                {change > 0 ? '+' : ''}
-                {change}%
-              </dd>
-            </div>
-          ) : null}
-        </dl>
-      ) : null}
-
-      {!compact ? (
-        <div className="mt-4 flex items-center gap-4 border-t border-fog pt-3">
-          <button onClick={() => onView?.(insight)} className="link">
-            Ver evidencia →
-          </button>
-          {onDismiss ? (
-            <button
-              onClick={() => onDismiss(insight)}
-              className="ml-auto text-[0.8125rem] text-slate transition-colors hover:text-ink"
-            >
-              Descartar
-            </button>
-          ) : null}
+      {action ? (
+        <div className="mt-4 border-l-2 border-cobalt-500 bg-paper px-3 py-2.5">
+          <Eyebrow className="text-[0.6875rem] text-cobalt">Recomendación</Eyebrow>
+          <p className="mt-1 text-[0.875rem] leading-relaxed text-ink">{action}</p>
         </div>
       ) : null}
+
+      <div className="mt-auto flex flex-wrap items-baseline gap-x-6 gap-y-2 pt-4">
+        {tieneImpacto ? (
+          <div className="flex items-baseline gap-2">
+            <span className="eyebrow text-[0.6875rem]">Impacto</span>
+            <span
+              className={`font-display text-[1.125rem] font-semibold tabular-nums ${
+                impact > 0 ? 'text-verified' : 'text-breach'
+              }`}
+            >
+              {impact > 0 ? '+' : '−'}
+              {moneda(impact)}
+            </span>
+          </div>
+        ) : null}
+
+        {tieneVariacion ? (
+          <div className="flex items-baseline gap-2">
+            <span className="eyebrow text-[0.6875rem]">Variación</span>
+            <span
+              className={`font-mono text-[0.8125rem] tabular-nums ${
+                change > 0 ? 'text-verified' : change < 0 ? 'text-breach' : 'text-slate'
+              }`}
+            >
+              {change > 0 ? '+' : change < 0 ? '−' : ''}
+              {Math.abs(Number(change)).toFixed(1)}%
+            </span>
+          </div>
+        ) : null}
+
+        {onDismiss ? (
+          <button
+            onClick={() => onDismiss(insight)}
+            className="ml-auto text-[0.8125rem] text-slate transition-colors hover:text-ink"
+          >
+            Descartar
+          </button>
+        ) : null}
+      </div>
     </article>
   )
 }

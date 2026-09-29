@@ -85,6 +85,21 @@ function iniciarAgenda(core) {
     )
   );
 
+  // Insights de IA: el analista recorre sus playbooks cada dos días a las 6:00.
+  // Cada corrida cuesta llamadas al modelo, por eso no es diaria.
+  trabajos.push(
+    cron.schedule(
+      '0 6 */2 * *',
+      () =>
+        correr('analista.playbooks', async () => {
+          const { correrPlaybooks } = require('../services/analistaDiario');
+          const db = require('../../database/connection');
+          await correrPlaybooks({ pool: db.pool });
+        }),
+      { timezone: ZONA }
+    )
+  );
+
   console.log(`[agenda] ${trabajos.length} tareas programadas (${ZONA})`);
   return trabajos;
 }

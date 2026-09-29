@@ -57,6 +57,7 @@ export const endpoints = {
     insights: (context = 'all') => cfoApi.get('/analisis/insights', { params: { context } }),
     insightsHistorico: (params) => cfoApi.get('/analisis/insights/historico', { params }),
     dismissInsight: (id) => cfoApi.patch(`/analisis/insights/${id}/dismiss`, {}),
+    insightsIA: () => cfoApi.get('/analisis/insights-ia'),
     workingCapital: (params = {}) => cfoApi.get('/analisis/working-capital', { params })
   },
   margenProductos: {

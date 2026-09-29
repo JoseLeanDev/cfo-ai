@@ -131,6 +131,16 @@ const aplicarCapaSemantica = async () => {
   console.log('Capa semántica aplicada (schema analitica)');
 };
 
+// Playbooks del analista de Insights de IA. Idempotente: no pisa prompts
+// editados en la base.
+const aplicarPlaybooks = async () => {
+  const fs = require('fs');
+  const path = require('path');
+  const archivo = path.join(__dirname, 'setup', 'playbooks_analisis.sql');
+  await db.pool.query(fs.readFileSync(archivo, 'utf8'));
+  console.log('Playbooks del analista aplicados');
+};
+
 const createTables = async () => {
   console.log('🏗️  Creando tablas...');
   
@@ -152,6 +162,7 @@ const createTables = async () => {
   if (isPostgres) {
     console.log('✅ Migración SQLite omitida (PostgreSQL en uso)');
     await aplicarCapaSemantica();
+    await aplicarPlaybooks();
     return;
   }
 

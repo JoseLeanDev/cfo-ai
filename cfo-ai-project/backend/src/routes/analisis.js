@@ -226,6 +226,58 @@ router.get('/insights/historico', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/analisis/insights-ia
+ *
+ * Los hallazgos vigentes del analista por playbooks (agent_source =
+ * 'playbook:<slug>'), con el catálogo de áreas para agruparlos. Los hallazgos
+ * calculados de /insights (PageInsights) no entran aquí.
+ */
+router.get('/insights-ia', async (req, res) => {
+  try {
+    const db = req.app.get('db');
+    const [areas, filas, corrida] = await Promise.all([
+      db.allAsync(`SELECT slug, nombre, descripcion FROM analisis_playbooks WHERE activo = TRUE ORDER BY orden, id`),
+      db.allAsync(`
+        SELECT insight_id AS id, type, severity, title, description, impact, currency,
+               category, action, change_percent AS change, created_at, agent_source
+        FROM insights_historico
+        WHERE empresa_id = 1 AND status = 'active' AND agent_source LIKE 'playbook:%'
+        ORDER BY CASE severity WHEN 'critical' THEN 0 WHEN 'warning' THEN 1 ELSE 2 END,
+                 abs(coalesce(impact, 0)) DESC`),
+      // La última corrida cuenta aunque sus hallazgos ya se hayan descartado.
+      db.allAsync(`
+        SELECT max(created_at) AS ultima FROM insights_historico
+        WHERE empresa_id = 1 AND agent_source LIKE 'playbook:%'`),
+    ]);
+
+    res.json({
+      status: 'success',
+      data: {
+        areas,
+        ultima_corrida: corrida[0]?.ultima || null,
+        insights: filas.map((f) => ({
+          id: f.id,
+          area: f.agent_source.split(':')[1],
+          type: f.type,
+          severity: f.severity,
+          title: f.title,
+          description: f.description,
+          impact: f.impact,
+          currency: f.currency,
+          category: f.category,
+          action: f.action,
+          change: f.change,
+          createdAt: f.created_at,
+        })),
+      },
+    });
+  } catch (error) {
+    console.error('[GET /insights-ia] Error:', error.message);
+    res.status(500).json({ status: 'error', message: 'No se pudieron leer los insights' });
+  }
+});
+
 // PATCH /api/analisis/insights/:id/dismiss - Marcar insight como visto
 router.patch('/insights/:id/dismiss', async (req, res) => {
   try {

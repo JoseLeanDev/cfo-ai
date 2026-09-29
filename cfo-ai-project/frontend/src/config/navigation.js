@@ -18,6 +18,7 @@ import {
   CreditCardIcon,
   BuildingLibraryIcon,
   PresentationChartLineIcon,
+  SparklesIcon,
   ClockIcon,
   ChatBubbleBottomCenterTextIcon,
 } from '@heroicons/react/24/outline'
@@ -85,7 +86,7 @@ export const navigation = [
     group: 'Inteligencia',
     items: [
       { name: 'Asistente', href: '/asistente', icon: ChatBubbleBottomCenterTextIcon, agent: true },
-      { name: 'Análisis', href: '/analisis', icon: ChartBarIcon },
+      { name: 'Insights de IA', href: '/insights', icon: SparklesIcon },
       { name: 'Reportes', href: '/reportes', icon: DocumentChartBarIcon },
       { name: 'Agentes', href: '/agentes', icon: CpuChipIcon },
     ],

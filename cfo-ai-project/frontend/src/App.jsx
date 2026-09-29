@@ -22,7 +22,7 @@ import ConciliacionBancaria from './pages/ConciliacionBancaria'
 import CierreDashboard from './pages/CierreDashboard'
 import CierreWizard from './pages/CierreWizard'
 import SAT from './pages/SAT'
-import Analisis from './pages/Analisis'
+import InsightsIA from './pages/InsightsIA'
 import Reportes from './pages/Reportes'
 import LogActividades from './pages/LogActividades'
 import Asistente from './pages/Asistente'
@@ -81,7 +81,8 @@ function AppRoutes() {
                 <Route path="/sat" element={<SAT />} />
 
                 {/* Inteligencia */}
-                <Route path="/analisis" element={<Analisis />} />
+                <Route path="/insights" element={<InsightsIA />} />
+                <Route path="/analisis" element={<Navigate to="/insights" replace />} />
                 <Route path="/reportes" element={<Reportes />} />
                 <Route path="/asistente" element={<Asistente />} />
                 <Route path="/agentes" element={<LogActividades />} />

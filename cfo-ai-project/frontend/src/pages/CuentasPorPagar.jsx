@@ -3,16 +3,10 @@ import { useQuery } from 'react-query'
 import { Link } from 'react-router-dom'
 import { endpoints } from '../services/cfoApi'
 import { 
-  ArrowTrendingDownIcon, 
   ArrowLeftIcon,
   ArrowDownTrayIcon,
   MagnifyingGlassIcon,
-  ClockIcon,
   BuildingOfficeIcon,
-  CalendarIcon,
-  CheckIcon,
-  CreditCardIcon,
-  TagIcon,
   TruckIcon
 } from '@heroicons/react/24/outline'
 
@@ -20,41 +14,33 @@ export default function CuentasPorPagar() {
   const [busqueda, setBusqueda] = useState('')
   const [filtroUrgencia, setFiltroUrgencia] = useState('todos')
 
-  const { data: cxpData, isLoading } = useQuery('cxp-detalle', () => endpoints.tesoreria.cxp({ proximos_dias: 90 }))
+  const { data: cxpData, isLoading } = useQuery('cxp-detalle', endpoints.tesoreria.cxp)
 
   const data = cxpData?.data || {}
   const proximosPagos = data.proximos_pagos || []
 
-  // Mock data extendido
-  const todasLasCxP = [
-    { proveedor: 'Importaciones del Pacífico', nit: '1234567-8', monto: 345000, dias_restantes: 3, descuento_pronto_pago: true, factura: 'FAC-PROV-452', vencimiento: '2026-04-10', tipo: 'Importación', condicion: '2% a 7 días' },
-    { proveedor: 'Servicios Eléctricos S.A.', nit: '8765432-1', monto: 89000, dias_restantes: 5, descuento_pronto_pago: false, factura: 'FAC-PROV-453', vencimiento: '2026-04-12', tipo: 'Servicios', condicion: 'Neto 30' },
-    { proveedor: 'Papelera Nacional', nit: '5678901-2', monto: 45000, dias_restantes: 8, descuento_pronto_pago: true, factura: 'FAC-PROV-450', vencimiento: '2026-04-15', tipo: 'Insumos', condicion: '3% a 10 días' },
-    { proveedor: 'Tecnología Avanzada S.A.', nit: '1098765-4', monto: 275000, dias_restantes: 12, descuento_pronto_pago: false, factura: 'FAC-PROV-448', vencimiento: '2026-04-20', tipo: 'Equipos', condicion: 'Neto 30' },
-    { proveedor: 'Transporte Rápido', nit: '3456789-0', monto: 28000, dias_restantes: 15, descuento_pronto_pago: false, factura: 'FAC-PROV-455', vencimiento: '2026-04-23', tipo: 'Logística', condicion: 'Neto 15' },
-    { proveedor: 'Químicos Industriales', nit: '6543210-9', monto: 156000, dias_restantes: 18, descuento_pronto_pago: true, factura: 'FAC-PROV-445', vencimiento: '2026-04-25', tipo: 'Materia Prima', condicion: '5% a 15 días' },
-    { proveedor: 'Seguridad Corporativa', nit: '7890123-4', monto: 45000, dias_restantes: 22, descuento_pronto_pago: false, factura: 'FAC-PROV-460', vencimiento: '2026-04-30', tipo: 'Servicios', condicion: 'Neto 30' },
-    { proveedor: 'Marketing Digital Pro', nit: '4567890-1', monto: 72000, dias_restantes: 25, descuento_pronto_pago: false, factura: 'FAC-PROV-462', vencimiento: '2026-05-02', tipo: 'Marketing', condicion: 'Neto 30' },
-    { proveedor: 'Mantenimiento Industrial', nit: '2345678-9', monto: 125000, dias_restantes: 28, descuento_pronto_pago: false, factura: 'FAC-PROV-440', vencimiento: '2026-05-05', tipo: 'Servicios', condicion: 'Neto 30' },
-    { proveedor: 'Consultoría Estratégica', nit: '8901234-5', monto: 180000, dias_restantes: 35, descuento_pronto_pago: false, factura: 'FAC-PROV-435', vencimiento: '2026-05-15', tipo: 'Consultoría', condicion: 'Neto 45' },
-  ]
+  // Facturas pendientes de la base, con días medidos contra la fecha de corte.
+  const todasLasCxP = (data.facturas || []).map((f) => ({
+    ...f,
+    plazo: Math.round((new Date(f.vencimiento) - new Date(f.emision)) / 864e5),
+  }))
 
   const cxpFiltradas = todasLasCxP.filter(cxp => {
     const matchBusqueda = busqueda === '' || 
       cxp.proveedor.toLowerCase().includes(busqueda.toLowerCase()) ||
-      cxp.factura.toLowerCase().includes(busqueda.toLowerCase()) ||
-      cxp.nit.includes(busqueda)
+      cxp.factura.toLowerCase().includes(busqueda.toLowerCase())
 
     let matchUrgencia = true
-    if (filtroUrgencia === 'critico') matchUrgencia = cxp.dias_restantes <= 5
+    if (filtroUrgencia === 'vencida') matchUrgencia = cxp.dias_restantes < 0
+    else if (filtroUrgencia === 'critico') matchUrgencia = cxp.dias_restantes >= 0 && cxp.dias_restantes <= 5
     else if (filtroUrgencia === 'urgente') matchUrgencia = cxp.dias_restantes > 5 && cxp.dias_restantes <= 10
-    else if (filtroUrgencia === 'descuento') matchUrgencia = cxp.descuento_pronto_pago
     else if (filtroUrgencia === 'proximo') matchUrgencia = cxp.dias_restantes > 10 && cxp.dias_restantes <= 20
 
     return matchBusqueda && matchUrgencia
   })
 
   const getUrgenciaConfig = (dias) => {
+    if (dias < 0) return { color: 'bg-breach', label: 'Vencida', badgeClass: 'badge-danger' }
     if (dias <= 5) return { color: 'bg-breach', label: 'Crítico', badgeClass: 'badge-danger' }
     if (dias <= 10) return { color: 'bg-copper', label: 'Urgente', badgeClass: 'badge-warning' }
     if (dias <= 20) return { color: 'bg-cobalt', label: 'Próximo', badgeClass: 'badge-info' }
@@ -62,12 +48,8 @@ export default function CuentasPorPagar() {
   }
 
   const totalFiltrado = cxpFiltradas.reduce((sum, c) => sum + c.monto, 0)
-  const totalDescuentos = cxpFiltradas
-    .filter(c => c.descuento_pronto_pago)
-    .reduce((sum, c) => sum + (c.monto * 0.03), 0)
-
   const pagosCriticos = todasLasCxP.filter(c => c.dias_restantes <= 5).length
-  const pagosConDescuento = todasLasCxP.filter(c => c.descuento_pronto_pago).length
+  const proximos30 = todasLasCxP.filter(c => c.dias_restantes >= 0 && c.dias_restantes <= 30)
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -84,7 +66,7 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
           <div className="flex items-center gap-3">
             <div>
               <h1 className="font-display text-[2.125rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">Cuentas por Pagar</h1>
-              <p className="measure mt-2 text-[0.9375rem] leading-relaxed text-slate">{todasLasCxP.length} facturas pendientes • Promedio {data.promedio_dias_pago} días</p>
+              <p className="measure mt-2 text-[0.9375rem] leading-relaxed text-slate">{todasLasCxP.length} facturas pendientes · vencen en {data.promedio_dias_pago} días en promedio</p>
             </div>
           </div>
         </div>
@@ -114,15 +96,15 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
         </div>
 
         <div className="kpi-card card-hover">
-          <span className="kpi-label">Pagos Críticos (&lt;5 días)</span>
+          <span className="kpi-label">Pagos críticos (5 días o menos)</span>
           <p className="kpi-value">{pagosCriticos}</p>
           <p className="text-xs text-[var(--danger)] mt-1">Atención inmediata</p>
         </div>
 
         <div className="kpi-card card-hover">
-          <span className="kpi-label">Descuentos Disponibles</span>
-          <p className="kpi-value">{pagosConDescuento}</p>
-          <p className="text-xs text-[var(--success)] mt-1">Ahorro potencial: Q{Math.round(totalDescuentos).toLocaleString()}</p>
+          <span className="kpi-label">Vencen en 30 días</span>
+          <p className="kpi-value">Q{proximos30.reduce((s, c) => s + c.monto, 0).toLocaleString()}</p>
+          <p className="text-xs text-[var(--text-muted)] mt-1">{proximos30.length} facturas</p>
         </div>
 
         <div className="kpi-card card-hover">
@@ -138,7 +120,7 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
           <MagnifyingGlassIcon className="w-5 h-5 text-[var(--text-muted)] absolute left-4 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Buscar proveedor, factura, NIT..."
+            placeholder="Buscar proveedor o factura"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             className="input w-full pl-12"
@@ -150,10 +132,10 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
           className="input min-w-[180px]"
         >
           <option value="todos">Todos los pagos</option>
-          <option value="critico"> Críticos (&lt;5 días)</option>
-          <option value="urgente"> Urgentes (5-10 días)</option>
-          <option value="descuento"> Con descuento PP</option>
-          <option value="proximo"> Próximos (10-20 días)</option>
+          <option value="vencida">Vencidas</option>
+          <option value="critico">Críticos (0 a 5 días)</option>
+          <option value="urgente">Urgentes (6 a 10 días)</option>
+          <option value="proximo">Próximos (11 a 20 días)</option>
         </select>
       </div>
 
@@ -179,13 +161,12 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
                 <th className="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase">Urgencia</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase">Días</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Vencimiento</th>
-                <th className="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase">Descuento</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Nota</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-default)]">
               {cxpFiltradas.map((cxp) => {
                 const urgencia = getUrgenciaConfig(cxp.dias_restantes)
-                const ahorro = cxp.descuento_pronto_pago ? cxp.monto * 0.03 : 0
                 return (
                   <tr key={cxp.factura} className="hover:bg-[var(--bg-secondary)] transition-colors">
                     <td className="px-4 py-4">
@@ -195,12 +176,12 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
                         </div>
                         <div>
                           <p className="font-medium text-[var(--text-primary)]">{cxp.proveedor}</p>
-                          <p className="text-xs text-[var(--text-muted)]">NIT: {cxp.nit} • {cxp.tipo}</p>
+                          <p className="text-xs text-[var(--text-muted)]">Crédito a {cxp.plazo} días</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <span className="text-sm font-medium">{cxp.factura}</span>
+                      <span className="whitespace-nowrap font-mono text-[0.8125rem]">{cxp.factura}</span>
                     </td>
                     <td className="px-4 py-4 text-right">
                       <span className="font-semibold tabular-nums">Q{cxp.monto.toLocaleString()}</span>
@@ -212,26 +193,18 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
                       </span>
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <span className={`text-sm font-semibold ${
+                      <span className={`whitespace-nowrap text-sm font-semibold ${
                         cxp.dias_restantes <= 5 ? 'text-[var(--danger)]' : 
                         cxp.dias_restantes <= 10 ? 'text-[var(--warning)]' : 'text-[var(--text-secondary)]'
                       }`}>
-                        {cxp.dias_restantes} días
+                        {cxp.dias_restantes < 0 ? `${-cxp.dias_restantes} días de atraso` : `${cxp.dias_restantes} días`}
                       </span>
                     </td>
                     <td className="px-4 py-4">
                       <span className="text-sm text-[var(--text-secondary)]">{cxp.vencimiento}</span>
-                      <p className="text-xs text-[var(--text-muted)]">{cxp.condicion}</p>
                     </td>
-                    <td className="px-4 py-4 text-center">
-                      {cxp.descuento_pronto_pago ? (
-                        <div className="badge-success text-[0.75rem]">
-                          <TagIcon className="w-3 h-3 inline mr-1" />
-                          Ahorro: Q{ahorro.toLocaleString()}
-                        </div>
-                      ) : (
-                        <span className="text-[var(--text-muted)] text-xs">—</span>
-                      )}
+                    <td className="px-4 py-4 max-w-[260px]">
+                      <p className="text-xs text-[var(--text-muted)]">{cxp.nota || '—'}</p>
                     </td>
                   </tr>
                 )

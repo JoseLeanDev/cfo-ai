@@ -25,25 +25,19 @@ export default function CuentasPorCobrar() {
   const distribucion = data.distribucion_aging || {}
   const topDeudores = data.top_deudores || []
 
-  // Mock data extendido para la vista completa
-  const todasLasCxC = [
-    { cliente: 'Tienda Moda Express Zona 10', nit: '1234567-8', monto: 245000, dias: 15, estado: 'al_corriente', factura: 'FAC-001-256', vencimiento: '2026-04-15', contacto: 'Juan Pérez', telefono: '5555-1234' },
-    { cliente: 'Outlet Centroamérica', nit: '8765432-1', monto: 180000, dias: 5, estado: 'al_corriente', factura: 'FAC-001-257', vencimiento: '2026-04-10', contacto: 'María García', telefono: '5555-5678' },
-    { cliente: 'Fashion Plus Miraflores', nit: '5678901-2', monto: 320000, dias: 45, estado: '_30_dias', factura: 'FAC-001-245', vencimiento: '2026-03-15', contacto: 'Pedro López', telefono: '5555-9012' },
-    { cliente: 'Boutique El Paseo Cayalá', nit: '1098765-4', monto: 156000, dias: 32, estado: '_30_dias', factura: 'FAC-001-248', vencimiento: '2026-03-20', contacto: 'Ana Morales', telefono: '5555-3456' },
-    { cliente: 'Tienda Urbana Roosevelt', nit: '3456789-0', monto: 89000, dias: 72, estado: '_60_dias', factura: 'FAC-001-230', vencimiento: '2026-02-25', contacto: 'Luis Hernández', telefono: '5555-7890' },
-    { cliente: 'Style Center Xela', nit: '6543210-9', monto: 445000, dias: 85, estado: '_60_dias', factura: 'FAC-001-220', vencimiento: '2026-02-10', contacto: 'Carlos Ruiz', telefono: '5555-2345' },
-    { cliente: 'Moda Joven Quetzaltenango', nit: '7890123-4', monto: 520000, dias: 95, estado: '_90_dias', factura: 'FAC-001-200', vencimiento: '2026-01-25', contacto: 'Sofia Martínez', telefono: '5555-6789' },
-    { cliente: 'Fashion Mall Escuintla', nit: '4567890-1', monto: 275000, dias: 110, estado: '_90_dias', factura: 'FAC-001-190', vencimiento: '2026-01-10', contacto: 'Roberto Castillo', telefono: '5555-0123' },
-    { cliente: 'Boutique Premium Antigua', nit: '2345678-9', monto: 67000, dias: 8, estado: 'al_corriente', factura: 'FAC-001-260', vencimiento: '2026-04-12', contacto: 'Diana Flores', telefono: '5555-4567' },
-    { cliente: 'Kids World Guatemala', nit: '8901234-5', monto: 198000, dias: 22, estado: 'al_corriente', factura: 'FAC-001-255', vencimiento: '2026-04-05', contacto: 'Miguel Torres', telefono: '5555-8901' },
-  ]
+  // Facturas pendientes de la base, con días medidos contra la fecha de corte.
+  const tramo = (d) => (d <= 0 ? 'al_corriente' : d <= 30 ? '_30_dias' : d <= 60 ? '_60_dias' : '_90_dias')
+  const todasLasCxC = (data.facturas || []).map((f) => ({
+    ...f,
+    estado: tramo(f.dias_vencida),
+    plazo: Math.round((new Date(f.vencimiento) - new Date(f.emision)) / 864e5),
+  }))
+  const vencidas = todasLasCxC.filter((c) => c.dias_vencida > 0).length
 
   const cxcFiltradas = todasLasCxC.filter(cxc => {
     const matchBusqueda = busqueda === '' || 
       cxc.cliente.toLowerCase().includes(busqueda.toLowerCase()) ||
-      cxc.factura.toLowerCase().includes(busqueda.toLowerCase()) ||
-      cxc.nit.includes(busqueda)
+      cxc.factura.toLowerCase().includes(busqueda.toLowerCase())
     const matchEstado = filtroEstado === 'todos' || cxc.estado === filtroEstado
     return matchBusqueda && matchEstado
   })
@@ -75,7 +69,7 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
           <div className="flex items-center gap-3">
             <div>
               <h1 className="font-display text-[2.125rem] font-semibold leading-[1.15] tracking-[-0.02em] text-ink">Cuentas por Cobrar</h1>
-              <p className="measure mt-2 text-[0.9375rem] leading-relaxed text-slate">{todasLasCxC.length} facturas pendientes • Promedio {data.promedio_dias_cobro} días</p>
+              <p className="measure mt-2 text-[0.9375rem] leading-relaxed text-slate">{todasLasCxC.length} facturas pendientes · {vencidas} vencidas</p>
             </div>
           </div>
         </div>
@@ -107,9 +101,9 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
         </div>
 
         <div className="kpi-card card-hover">
-          <span className="kpi-label">+60 días (Riesgo)</span>
-          <p className="kpi-value">Q{((distribucion._60_dias?.monto || 0) + (distribucion._90_dias?.monto || 0)).toLocaleString()}</p>
-          <p className="text-xs text-[var(--danger)] mt-1">Atención requerida</p>
+          <span className="kpi-label">Más de 60 días</span>
+          <p className="kpi-value">Q{(distribucion._90_dias?.monto || 0).toLocaleString()}</p>
+          <p className="text-xs text-[var(--danger)] mt-1">{distribucion._90_dias?.porcentaje || 0}% del total</p>
         </div>
       </div>
 
@@ -154,7 +148,7 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
           <MagnifyingGlassIcon className="w-5 h-5 text-[var(--text-muted)] absolute left-4 top-1/2 -translate-y-1/2" />
           <input
             type="text"
-            placeholder="Buscar cliente, factura, NIT..."
+            placeholder="Buscar cliente o factura"
             value={busqueda}
             onChange={(e) => setBusqueda(e.target.value)}
             className="input w-full pl-12"
@@ -195,7 +189,7 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
                 <th className="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase">Estado</th>
                 <th className="px-4 py-3 text-center text-xs font-semibold text-[var(--text-muted)] uppercase">Días</th>
                 <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Vencimiento</th>
-                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Contacto</th>
+                <th className="px-4 py-3 text-left text-xs font-semibold text-[var(--text-muted)] uppercase">Nota</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-default)]">
@@ -211,12 +205,12 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
                         </div>
                         <div>
                           <p className="font-medium text-[var(--text-primary)]">{cxc.cliente}</p>
-                          <p className="text-xs text-[var(--text-muted)]">NIT: {cxc.nit}</p>
+                          <p className="text-xs text-[var(--text-muted)]">Crédito a {cxc.plazo} días</p>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-4">
-                      <span className="text-sm font-medium">{cxc.factura}</span>
+                      <span className="whitespace-nowrap font-mono text-[0.8125rem]">{cxc.factura}</span>
                     </td>
                     <td className="px-4 py-4 text-right">
                       <span className="font-semibold tabular-nums">Q{cxc.monto.toLocaleString()}</span>
@@ -228,21 +222,18 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
                       </span>
                     </td>
                     <td className="px-4 py-4 text-center">
-                      <span className={`text-sm font-semibold ${
-                        cxc.dias > 60 ? 'text-[var(--danger)]' : 
-                        cxc.dias > 30 ? 'text-[var(--warning)]' : 'text-[var(--text-secondary)]'
+                      <span className={`whitespace-nowrap text-sm font-semibold ${
+                        cxc.dias_vencida > 60 ? 'text-[var(--danger)]' :
+                        cxc.dias_vencida > 0 ? 'text-[var(--warning)]' : 'text-[var(--text-secondary)]'
                       }`}>
-                        {cxc.dias} días
+                        {cxc.dias_vencida > 0 ? `${cxc.dias_vencida} días de atraso` : `En ${cxc.dias_para_vencer} días`}
                       </span>
                     </td>
                     <td className="px-4 py-4">
                       <span className="text-sm text-[var(--text-secondary)]">{cxc.vencimiento}</span>
                     </td>
-                    <td className="px-4 py-4">
-                      <p className="text-sm text-[var(--text-primary)]">{cxc.contacto}</p>
-                      <a href={`tel:${cxc.telefono}`} className="text-xs text-[var(--accent-blue)] hover:underline flex items-center gap-1">
-                        {cxc.telefono}
-                      </a>
+                    <td className="px-4 py-4 max-w-[260px]">
+                      <p className="text-xs text-[var(--text-muted)]">{cxc.nota || '—'}</p>
                     </td>
                   </tr>
                 )

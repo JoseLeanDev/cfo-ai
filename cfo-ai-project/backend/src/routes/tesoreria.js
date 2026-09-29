@@ -107,6 +107,14 @@ router.get('/cxc', async (req, res) => {
       WHERE empresa_id = ? AND estado ${isPostgres ? "<> 'cobrada'" : "!= 'cobrada'"}
     `, [empresaId]);
 
+    // Detalle por factura, con días medidos contra la fecha de corte.
+    const facturas = await db.allAsync(`
+      SELECT c.cliente, c.factura, c.saldo, c.fecha_emision, c.fecha_vencimiento, c.dias_vencida, c.nota,
+             c.fecha_vencimiento - m.fecha_corte AS dias_para_vencer
+      FROM analitica.v_cxc c CROSS JOIN analitica.v_meta m
+      ORDER BY c.dias_vencida DESC, c.fecha_vencimiento
+    `);
+
     const total = distribucion.total || 1;
 
     res.json({
@@ -136,6 +144,16 @@ router.get('/cxc', async (req, res) => {
         top_deudores: topDeudores.map(d => ({
           ...d,
           monto: parseFloat(d.monto) || 0
+        })),
+        facturas: facturas.map(f => ({
+          cliente: f.cliente,
+          factura: f.factura,
+          monto: Number(f.saldo),
+          emision: new Date(f.fecha_emision).toISOString().slice(0, 10),
+          vencimiento: new Date(f.fecha_vencimiento).toISOString().slice(0, 10),
+          dias_vencida: Number(f.dias_vencida),
+          dias_para_vencer: Number(f.dias_para_vencer),
+          nota: f.nota
         }))
       },
       ui_components: {
@@ -176,11 +194,26 @@ router.get('/cxp', async (req, res) => {
       WHERE empresa_id = ? AND estado = 'pendiente'
     `, [empresaId]);
 
+    const facturas = await db.allAsync(`
+      SELECT proveedor, factura, saldo, fecha_emision, fecha_vencimiento, dias_para_vencer, nota
+      FROM analitica.v_cxp
+      ORDER BY fecha_vencimiento
+    `);
+
     res.json({
       status: 'success',
       timestamp: new Date().toISOString(),
       data: {
         total_cxp: parseFloat(total.total) || 0,
+        facturas: facturas.map(f => ({
+          proveedor: f.proveedor,
+          factura: f.factura,
+          monto: Number(f.saldo),
+          emision: new Date(f.fecha_emision).toISOString().slice(0, 10),
+          vencimiento: new Date(f.fecha_vencimiento).toISOString().slice(0, 10),
+          dias_restantes: Number(f.dias_para_vencer),
+          nota: f.nota
+        })),
         promedio_dias_pago: Math.round(parseFloat(total.promedio_dias) || 0),
         proximos_pagos: cxp.map(p => ({
           ...p,

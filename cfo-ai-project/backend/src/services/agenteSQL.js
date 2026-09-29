@@ -14,10 +14,9 @@
  * Es el proveedor que ya usa el resto de la plataforma y la única llave de
  * modelo configurada en el servicio.
  */
-const axios = require('axios');
+const openrouter = require('./openrouter');
 const db = require('./dbAgente');
 
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODELO = process.env.OPENROUTER_MODEL_AGENTE || 'anthropic/claude-opus-5';
 const MAX_VUELTAS = parseInt(process.env.AGENTE_MAX_VUELTAS || '8', 10);
 const MAX_FILAS_AL_MODELO = 60;
@@ -174,9 +173,9 @@ let cacheSystem = null;
 // ---------------------------------------------------------------------------
 // OpenRouter
 // ---------------------------------------------------------------------------
-async function llamarModelo(messages, apiKey) {
-  const { data } = await axios.post(
-    OPENROUTER_URL,
+// Con respaldo gratuito si la cuenta se queda sin saldo (ver openrouter.js).
+async function llamarModelo(messages) {
+  return openrouter.completar(
     {
       model: MODELO,
       messages,
@@ -186,17 +185,8 @@ async function llamarModelo(messages, apiKey) {
       // Pide a OpenRouter el costo real de la llamada en la respuesta.
       usage: { include: true },
     },
-    {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.APP_URL || 'https://cfo-ai-backend-4n29.onrender.com',
-        'X-Title': 'Qora Agente SQL',
-      },
-      timeout: 90000,
-    }
+    { titulo: 'Qora Agente SQL', timeout: 90000 }
   );
-  return data;
 }
 
 /**
@@ -231,7 +221,9 @@ async function correr(pregunta, opts = {}) {
   const uso = { entrada: 0, salida: 0, cacheadas: 0, costo: 0, costoReal: true };
 
   for (let vuelta = 1; vuelta <= MAX_VUELTAS; vuelta++) {
-    const data = await llamarModelo(messages, apiKey);
+    const data = await llamarModelo(messages);
+    // Qué modelo contestó: con el respaldo gratuito no es MODELO.
+    if (data.model) uso.modelo = data.model;
 
     if (data.usage) {
       uso.entrada += data.usage.prompt_tokens || 0;
@@ -375,7 +367,7 @@ function terminar(args, consultas, pasos, uso, t0) {
     consultas: consultas.map((c) => ({ id: c.id, sql: c.sql, proposito: c.proposito, num_filas: c.num_filas })),
     pasos,
     meta: {
-      modelo: MODELO,
+      modelo: uso.modelo || MODELO,
       vueltas: pasos.filter((p) => p.vuelta).length,
       tokens_entrada: uso.entrada,
       tokens_cacheados: uso.cacheadas,

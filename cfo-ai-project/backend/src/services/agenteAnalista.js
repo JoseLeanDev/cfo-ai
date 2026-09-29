@@ -10,10 +10,9 @@
  * arriesga. De él se reusa lo sensible (dbAgente: rol de solo lectura,
  * sqlGuard y catálogo), no el bucle.
  */
-const axios = require('axios');
+const openrouter = require('./openrouter');
 const db = require('./dbAgente');
 
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const MODELO = process.env.OPENROUTER_MODEL_AGENTE || 'anthropic/claude-sonnet-5';
 const MAX_VUELTAS = parseInt(process.env.ANALISTA_MAX_VUELTAS || '14', 10);
 const MAX_FILAS_AL_MODELO = 60;
@@ -156,28 +155,20 @@ async function construirSystemPrompt() {
   return `${REGLAS_COMUNES}\n\n## Catálogo de datos\n\n${catalogo}`;
 }
 
-async function llamarModelo(messages, apiKey) {
-  const { data } = await axios.post(
-    OPENROUTER_URL,
+// Con respaldo gratuito si la cuenta se queda sin saldo (ver openrouter.js).
+async function llamarModelo(messages) {
+  return openrouter.completar(
     {
       model: MODELO,
       messages,
       tools: TOOLS,
       tool_choice: 'auto',
       max_tokens: MAX_TOKENS,
+      // Pide a OpenRouter el costo real de la llamada en la respuesta.
       usage: { include: true },
     },
-    {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': process.env.APP_URL || 'https://cfo-ai-backend-4n29.onrender.com',
-        'X-Title': 'Qora Analista',
-      },
-      timeout: 120000,
-    }
+    { titulo: 'Qora Analista', timeout: 120000 }
   );
-  return data;
 }
 
 /**
@@ -212,7 +203,9 @@ async function analizar(playbook) {
   const uso = { entrada: 0, salida: 0, cacheadas: 0, costo: 0, costoReal: true };
 
   for (let vuelta = 1; vuelta <= MAX_VUELTAS; vuelta++) {
-    const data = await llamarModelo(messages, apiKey);
+    const data = await llamarModelo(messages);
+    // Qué modelo contestó: con el respaldo gratuito no es MODELO.
+    if (data.model) uso.modelo = data.model;
 
     if (data.usage) {
       uso.entrada += data.usage.prompt_tokens || 0;
@@ -310,7 +303,7 @@ function terminar(insights, consultas, uso, t0, incidencia) {
     insights,
     consultas,
     meta: {
-      modelo: MODELO,
+      modelo: uso.modelo || MODELO,
       incidencia: incidencia || null,
       num_consultas: consultas.length,
       tokens_entrada: uso.entrada,

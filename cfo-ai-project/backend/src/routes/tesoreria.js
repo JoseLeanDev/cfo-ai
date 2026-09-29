@@ -5,6 +5,11 @@ const config = require('../config/financiera');
 
 const isPostgres = process.env.DATABASE_URL && process.env.DATABASE_URL.includes('postgresql');
 
+// Los vencimientos se miden contra la fecha de corte de los datos (la foto de
+// tesorería), igual que en la capa semántica. Contra CURRENT_DATE todo el
+// calendario aparecería vencido.
+const HOY = isPostgres ? '(SELECT fecha_corte FROM analitica.v_meta)' : 'CURRENT_DATE';
+
 // GET /api/tesoreria/posicion
 router.get('/posicion', async (req, res) => {
   try {
@@ -34,13 +39,15 @@ router.get('/posicion', async (req, res) => {
     const totalGTQ = parseFloat(totales.total_gtq) || 0;
     const totalUSD = parseFloat(totales.total_usd) || 0;
     const totalConsolidado = totalGTQ + totalUSD * tipoCambio;
-    const diasOperacion = Math.floor(totalGTQ / config.liquidez.dias_operacion_default);
+    // Días de caja: los mismos de v_posicion que ven el Resumen y el chat.
+    const corte = isPostgres ? await db.getAsync('SELECT fecha_corte, dias_de_caja FROM analitica.v_posicion') : null;
+    const diasOperacion = corte ? Number(corte.dias_de_caja) : Math.floor(totalGTQ / config.liquidez.dias_operacion_default);
 
     res.json({
       status: 'success',
       timestamp: new Date().toISOString(),
       data: {
-        fecha_corte: new Date().toISOString().split('T')[0],
+        fecha_corte: new Date(corte?.fecha_corte || Date.now()).toISOString().split('T')[0],
         total_disponible_gtq: totalGTQ,
         total_disponible_usd: totalUSD,
         tipo_cambio: tipoCambio,
@@ -154,17 +161,17 @@ router.get('/cxp', async (req, res) => {
         proveedor_nombre as proveedor,
         monto_total as monto,
         fecha_vencimiento,
-        ${isPostgres ? '(fecha_vencimiento - CURRENT_DATE)::integer' : "CAST((fecha_vencimiento::date - CURRENT_DATE) AS INTEGER)"} as dias_restantes
+        ${isPostgres ? `(fecha_vencimiento - ${HOY})::integer` : "CAST((fecha_vencimiento::date - CURRENT_DATE) AS INTEGER)"} as dias_restantes
       FROM cuentas_pagar 
       WHERE empresa_id = ? 
         AND estado = 'pendiente'
-        AND fecha_vencimiento <= CURRENT_DATE + INTERVAL '${dias} days'
+        AND fecha_vencimiento <= ${HOY} + INTERVAL '${dias} days'
       ORDER BY fecha_vencimiento
     `, [empresaId]);
 
     const total = await db.getAsync(`
       SELECT SUM(monto_total) as total, 
-             AVG(${isPostgres ? '(fecha_vencimiento - CURRENT_DATE)::integer' : "CAST((fecha_vencimiento::date - CURRENT_DATE) AS INTEGER)"}) as promedio_dias
+             AVG(${isPostgres ? `(fecha_vencimiento - ${HOY})::integer` : "CAST((fecha_vencimiento::date - CURRENT_DATE) AS INTEGER)"}) as promedio_dias
       FROM cuentas_pagar 
       WHERE empresa_id = ? AND estado = 'pendiente'
     `, [empresaId]);
@@ -193,57 +200,69 @@ router.get('/cxp', async (req, res) => {
 });
 
 // GET /api/tesoreria/proyeccion
+//
+// Insumos de la proyección de caja, todos leídos de la base a la fecha de
+// corte: saldos de bancos, cartera y pagos por factura, calendario SAT
+// pendiente, préstamos vigentes y los ritmos de los últimos seis meses de
+// flujo. La página arma con esto la proyección semana a semana, los
+// escenarios y las palancas (frontend/src/lib/proyeccionCaja.js), así que
+// cada cifra que muestra se puede rastrear hasta una fila de aquí.
 router.get('/proyeccion', async (req, res) => {
   try {
-    const semanas = parseInt(req.query.semanas) || config.proyecciones.semanas_proyeccion;
-    const proyeccion = [];
-    
-    // Datos históricos para proyección
-    const promedioEntrada = config.proyecciones.promedio_entrada_default;
-    const promedioSalida = config.proyecciones.promedio_salida_default;
-    let saldoAcumulado = config.proyecciones.saldo_inicial_default;
+    const n = (v) => (v == null ? null : Number(v));
+    const dia = (f) => (f ? new Date(f).toISOString().slice(0, 10) : null);
 
-    for (let i = 1; i <= semanas; i++) {
-      const fecha = new Date();
-      fecha.setDate(fecha.getDate() + (i * 7));
-      
-      const variacion = (Math.random() - 0.5) * 0.3; // ±15% variación
-      const entradas = Math.round(promedioEntrada * (1 + variacion));
-      const salidas = Math.round(promedioSalida * (1 + variacion * 0.5));
-      const neto = entradas - salidas;
-      saldoAcumulado += neto;
+    const meta = await db.getAsync('SELECT fecha_corte, flujo_desde FROM analitica.v_meta');
+    const bancos = await db.allAsync(
+      'SELECT banco, tipo, moneda, numero_cuenta, saldo, saldo_quetzales FROM analitica.v_bancos ORDER BY saldo_quetzales DESC');
+    const cxc = await db.allAsync(
+      'SELECT cliente, factura, fecha_vencimiento, saldo, dias_vencida, nota FROM analitica.v_cxc ORDER BY fecha_vencimiento');
+    const cxp = await db.allAsync(
+      'SELECT proveedor, factura, fecha_vencimiento, saldo, nota FROM analitica.v_cxp ORDER BY fecha_vencimiento');
+    const sat = await db.allAsync(
+      `SELECT obligacion, periodo, fecha_vencimiento, monto_estimado, monto_es_estimado
+         FROM analitica.v_obligaciones_sat
+        WHERE estado <> 'presentada' ORDER BY fecha_vencimiento`);
+    const prestamos = await db.allAsync(
+      'SELECT banco, numero, destino, cuota, dia_pago, fecha_ultimo_pago, saldo, tasa_anual FROM analitica.v_prestamos');
 
-      proyeccion.push({
-        semana: i,
-        fecha_inicio: fecha.toISOString().split('T')[0],
-        entradas,
-        salidas,
-        neto,
-        saldo_acumulado: saldoAcumulado,
-        certeza: i <= 4 ? 'alta' : i <= 8 ? 'media' : 'baja',
-        alerta: saldoAcumulado < config.proyecciones.umbral_saldo_minimo ? 'Saldo crítico proyectado' : null
-      });
-    }
-
-    const saldoMinimo = Math.min(...proyeccion.map(p => p.saldo_acumulado));
-    const saldoMaximo = Math.max(...proyeccion.map(p => p.saldo_acumulado));
-    const semanaCritica = proyeccion.find(p => p.saldo_acumulado === saldoMinimo)?.semana;
+    // Ritmos: promedio mensual por categoría del concepto ("Categoría - fecha").
+    const categorias = await db.allAsync(
+      `SELECT split_part(concepto, ' - ', 1) AS categoria, tipo,
+              count(*) AS movimientos, sum(monto) AS total
+         FROM analitica.v_flujo GROUP BY 1, 2`);
+    const meses = await db.getAsync(`SELECT count(DISTINCT periodo) AS meses FROM analitica.v_flujo`);
+    const nMeses = Number(meses?.meses) || 1;
+    const porMes = (...cats) =>
+      Math.round(categorias.filter((c) => cats.includes(c.categoria)).reduce((s, c) => s + Number(c.total), 0) / nMeses);
+    const promedioPago = (cat) => {
+      const c = categorias.find((x) => x.categoria === cat);
+      return c ? Math.round(Number(c.total) / Number(c.movimientos)) : 0;
+    };
 
     res.json({
       status: 'success',
-      timestamp: new Date().toISOString(),
       data: {
-        proyeccion,
-        resumen: {
-          saldo_minimo_proyectado: saldoMinimo,
-          saldo_maximo_proyectado: saldoMaximo,
-          semana_critica: semanaCritica,
-          riesgo_quiebra_tecnica: saldoMinimo < config.proyecciones.umbral_riesgo_quiebra
-        }
+        fecha_corte: dia(meta.fecha_corte),
+        flujo_desde: dia(meta.flujo_desde),
+        tipo_cambio_usd: 7.75,
+        bancos: bancos.map((b) => ({ ...b, saldo: n(b.saldo), saldo_quetzales: n(b.saldo_quetzales) })),
+        cxc: cxc.map((c) => ({ cliente: c.cliente, factura: c.factura, vence: dia(c.fecha_vencimiento), saldo: n(c.saldo), dias_vencida: n(c.dias_vencida), nota: c.nota })),
+        cxp: cxp.map((p) => ({ proveedor: p.proveedor, factura: p.factura, vence: dia(p.fecha_vencimiento), saldo: n(p.saldo), nota: p.nota })),
+        sat: sat.map((o) => ({ obligacion: o.obligacion, periodo: o.periodo, vence: dia(o.fecha_vencimiento), monto: n(o.monto_estimado), estimado: !!o.monto_es_estimado })),
+        prestamos: prestamos.map((p) => ({ banco: p.banco, numero: p.numero, destino: p.destino, cuota: n(p.cuota), dia_pago: n(p.dia_pago), ultimo_pago: dia(p.fecha_ultimo_pago), saldo: n(p.saldo), tasa_anual: n(p.tasa_anual) })),
+        ritmos: {
+          meses: nMeses,
+          ventas_tiendas: porMes('Ventas minoristas'),
+          ventas_mayoreo_contado: porMes('Ventas mayoristas'),
+          cobros_cartera: porMes('Cobros CxC'),
+          pagos_proveedores: porMes('Pagos CxP'),
+          gastos_varios: porMes('Gastos varios'),
+          otros_ingresos: porMes('Intereses bancarios', 'Otros ingresos'),
+          quincena: promedioPago('Nómina'),
+          igss: promedioPago('IGSS'),
+        },
       },
-      ui_components: {
-        chart_type: 'cashflow_waterfall'
-      }
     });
   } catch (error) {
     res.status(500).json({ status: 'error', message: error.message });

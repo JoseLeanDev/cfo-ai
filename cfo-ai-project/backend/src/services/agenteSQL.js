@@ -144,7 +144,7 @@ Respondes consultando la base de datos con SQL. No inventas cifras: todo número
 - **Margen %**: para cualquier grupo es sum(margen_bruto) / nullif(sum(ventas), 0) * 100. Nunca promedies porcentajes.
 - **Efectivo**: suma saldo_quetzales de v_bancos, que ya convierte los dólares.
 - **Cartera y pagos**: v_cxc y v_cxp solo traen documentos con saldo pendiente. Suma la columna saldo, no monto_total.
-- **Resumen de la posición**: v_posicion ya trae efectivo, cartera, pagos, capital de trabajo y runway calculados. Úsala antes de recalcular.
+- **Resumen de la posición**: v_posicion ya trae efectivo, cartera, pagos, capital de trabajo, días de caja, flujo neto mensual y runway (NULL si el negocio no consume caja). Úsala antes de recalcular.
 - Todo está en quetzales (GTQ).
 - Solo puedes leer el schema analitica.
 - Si los datos no alcanzan para responder, dilo. Es mejor que inventar.

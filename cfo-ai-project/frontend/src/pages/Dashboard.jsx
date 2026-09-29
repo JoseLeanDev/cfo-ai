@@ -124,10 +124,14 @@ export default function Dashboard() {
             deltaTone={variacionMes == null ? 'neutral' : variacionMes >= 0 ? 'up' : 'down'}
           />
           <Stat
-            label="Runway"
-            value={`${p.runway_dias} días`}
-            delta={`Gasto de ${q(p.gasto_diario)} diarios`}
-            deltaTone={p.runway_dias < 60 ? 'down' : 'neutral'}
+            label="Días de caja"
+            value={`${p.dias_de_caja} días`}
+            delta={
+              p.flujo_neto_mensual >= 0
+                ? `Genera ${q(p.flujo_neto_mensual)} netos al mes`
+                : `Consume ${q(-p.flujo_neto_mensual)} netos al mes`
+            }
+            deltaTone={p.flujo_neto_mensual >= 0 ? 'up' : 'down'}
           />
           <Stat
             label="Cartera por cobrar"

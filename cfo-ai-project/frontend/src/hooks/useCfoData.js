@@ -35,10 +35,9 @@ export const useTesoreriaCxP = () => {
   return useQuery('tesoreria-cxp', endpoints.tesoreria.cxp)
 }
 
-export const useTesoreriaProyeccion = (semanas = 13) => {
-  return useQuery(['tesoreria-proyeccion', semanas], () => 
-    endpoints.tesoreria.proyeccion(semanas)
-  )
+// Insumos de la proyección de caja; el horizonte lo arma lib/proyeccionCaja.
+export const useTesoreriaProyeccion = () => {
+  return useQuery('tesoreria-proyeccion', endpoints.tesoreria.proyeccion, { staleTime: 5 * 60 * 1000 })
 }
 
 export const useAlertas = () => {

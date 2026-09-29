@@ -23,6 +23,19 @@ BEGIN;
 
 CREATE SCHEMA IF NOT EXISTS analitica;
 
+-- Tablas y columnas que estas vistas leen. Las crea también
+-- scripts/calibrar-demo-tesoreria.js; aquí van por si el deploy corre antes.
+CREATE TABLE IF NOT EXISTS public.prestamos (
+  id SERIAL PRIMARY KEY, empresa_id INTEGER NOT NULL DEFAULT 1, banco VARCHAR(100) NOT NULL,
+  numero VARCHAR(50), destino TEXT, moneda VARCHAR(3) NOT NULL DEFAULT 'GTQ',
+  monto_original NUMERIC(14,2) NOT NULL, tasa_anual NUMERIC(6,4) NOT NULL, plazo_meses INTEGER NOT NULL,
+  cuota NUMERIC(14,2) NOT NULL, dia_pago INTEGER NOT NULL, fecha_primer_pago DATE NOT NULL,
+  saldo NUMERIC(14,2) NOT NULL, activo BOOLEAN NOT NULL DEFAULT TRUE, created_at TIMESTAMP DEFAULT NOW()
+);
+ALTER TABLE public.cuentas_cobrar ADD COLUMN IF NOT EXISTS nota TEXT;
+ALTER TABLE public.cuentas_pagar ADD COLUMN IF NOT EXISTS nota TEXT;
+ALTER TABLE public.obligaciones_sat ADD COLUMN IF NOT EXISTS monto_es_estimado BOOLEAN NOT NULL DEFAULT FALSE;
+
 DROP VIEW IF EXISTS
   analitica.v_meta,
   analitica.v_calidad_datos,
@@ -36,6 +49,7 @@ DROP VIEW IF EXISTS
   analitica.v_flujo,
   analitica.v_flujo_mensual,
   analitica.v_obligaciones_sat,
+  analitica.v_prestamos,
   analitica.v_posicion
 CASCADE;
 
@@ -223,6 +237,7 @@ SELECT
   c.monto_total,
   c.monto_pendiente                                          AS saldo,
   c.estado,
+  c.nota,
   greatest(m.fecha_corte - c.fecha_vencimiento, 0)           AS dias_vencida,
   CASE
     WHEN m.fecha_corte <= c.fecha_vencimiento      THEN 'al corriente'
@@ -246,6 +261,7 @@ SELECT
   p.fecha_vencimiento,
   p.monto_total,
   p.monto_pendiente                                          AS saldo,
+  p.nota,
   p.fecha_vencimiento - m.fecha_corte                        AS dias_para_vencer,
   CASE
     WHEN p.fecha_vencimiento <  m.fecha_corte      THEN 'vencida'
@@ -266,13 +282,34 @@ SELECT
   o.periodo,
   o.fecha_vencimiento,
   o.monto_estimado,
+  o.monto_es_estimado,
   o.estado,
   o.fecha_vencimiento - m.fecha_corte                        AS dias_para_vencer
 FROM public.obligaciones_sat o
 CROSS JOIN analitica.v_meta m;
 
 COMMENT ON VIEW analitica.v_obligaciones_sat IS
-'Calendario de obligaciones fiscales ante la SAT (IVA mensual, cuotas de ISR, IETU, declaración anual). dias_para_vencer se mide contra la fecha de corte; negativo si ya venció. estado es pendiente o atrasada.';
+'Calendario de obligaciones ante la SAT: IVA mensual (vence al cierre del mes siguiente), pago trimestral de ISR (10 días hábiles después del trimestre), ISO trimestral (en el mes siguiente al trimestre) y declaración anual de ISR (31 de marzo). Si la fecha cae en día inhábil pasa al siguiente hábil. estado es presentada o pendiente. monto_es_estimado es true cuando monto_estimado es un estimado (promedio de las últimas declaraciones) y false cuando ya está calculado o presentado. dias_para_vencer se mide contra la fecha de corte.';
+
+CREATE VIEW analitica.v_prestamos AS
+SELECT
+  p.banco,
+  p.numero,
+  p.destino,
+  p.moneda,
+  p.monto_original,
+  p.tasa_anual,
+  p.plazo_meses,
+  p.cuota,
+  p.dia_pago,
+  p.fecha_primer_pago,
+  (p.fecha_primer_pago + make_interval(months => p.plazo_meses - 1))::date  AS fecha_ultimo_pago,
+  p.saldo
+FROM public.prestamos p
+WHERE p.activo;
+
+COMMENT ON VIEW analitica.v_prestamos IS
+'Préstamos bancarios vigentes a la fecha de corte. cuota es fija y se paga el dia_pago de cada mes (si es inhábil, el siguiente día hábil) hasta fecha_ultimo_pago. saldo es el capital pendiente. tasa_anual va en fracción (0.095 es 9.5%). La cuota aparece en v_flujo con el concepto Cuota préstamo.';
 
 -- ---------------------------------------------------------------------------
 -- Posición: el resumen de una fila del que salen los hallazgos
@@ -293,7 +330,9 @@ WITH
   ),
   gasto AS (
     SELECT coalesce(sum(monto) FILTER (WHERE tipo = 'salida'), 0)
-           / nullif(max(fecha) - min(fecha) + 1, 0)                 AS diario
+           / nullif(max(fecha) - min(fecha) + 1, 0)                 AS diario,
+           coalesce(sum(CASE WHEN tipo = 'salida' THEN -monto ELSE monto END), 0)
+           / nullif(max(fecha) - min(fecha) + 1, 0) * 30           AS neto_mensual
     FROM public.transacciones
   )
 SELECT
@@ -308,11 +347,14 @@ SELECT
   p.proximos_30                                      AS cxp_proximos_30,
   e.q + x.total - p.total                            AS capital_de_trabajo,
   round(g.diario, 0)                                 AS gasto_diario,
-  floor(e.q / nullif(g.diario, 0))::int              AS runway_dias
+  floor(e.q / nullif(g.diario, 0))::int              AS dias_de_caja,
+  round(g.neto_mensual, 0)                           AS flujo_neto_mensual,
+  CASE WHEN g.neto_mensual < 0
+       THEN floor(e.q / (-g.neto_mensual) * 30)::int END AS runway_dias
 FROM analitica.v_meta m, efectivo e, cxc x, cxp p, gasto g;
 
 COMMENT ON VIEW analitica.v_posicion IS
-'Una fila con la posición financiera a la fecha de corte: efectivo total en quetzales, cartera total y vencida (y su porcentaje), cartera vencida a más de 45 días, cuentas por pagar total y de los próximos 30 días, capital de trabajo (efectivo + cartera - pagos), gasto diario promedio de los últimos seis meses y runway_dias (cuántos días alcanza el efectivo al gasto diario promedio, sin contar cobros futuros). Es la fuente de los hallazgos del panel de agentes.';
+'Una fila con la posición financiera a la fecha de corte: efectivo total en quetzales, cartera total y vencida (y su porcentaje), cartera vencida a más de 45 días, cuentas por pagar total y de los próximos 30 días, capital de trabajo (efectivo + cartera - pagos), gasto diario promedio de los últimos seis meses, dias_de_caja (cuántos días de salidas cubre el efectivo sin contar ningún cobro), flujo_neto_mensual (entradas menos salidas promedio al mes) y runway_dias (cuántos días dura el efectivo al ritmo de quema neta; es NULL cuando el flujo neto es positivo, porque el negocio no está consumiendo caja). Para la proyección semana a semana está la pantalla de Proyección de caja. Es la fuente de los hallazgos del panel de agentes.';
 
 -- ---------------------------------------------------------------------------
 -- Permisos del rol del agente (si ya fue creado)

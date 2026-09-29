@@ -1,11 +1,9 @@
+import { useMemo } from 'react'
 import { Link } from 'react-router-dom'
+import { prepararContexto, calcular, fq, pct, suma } from '../lib/proyeccionCaja'
 import { useTesoreriaPosicion, useTesoreriaCxC, useTesoreriaCxP, useTesoreriaProyeccion, useWorkingCapital } from '../hooks/useCfoData'
 import PageInsights from '../components/agents/PageInsights'
 import {
-  BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend
-} from 'recharts'
-import {
-  BanknotesIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
   ClockIcon,
@@ -26,13 +24,17 @@ export default function Tesoreria() {
   const { data: posicion, isLoading: loadingPos } = useTesoreriaPosicion()
   const { data: cxc, isLoading: loadingCxC } = useTesoreriaCxC()
   const { data: cxp, isLoading: loadingCxP } = useTesoreriaCxP()
-  const { data: proyeccion, isLoading: loadingProy } = useTesoreriaProyeccion(13)
+  const { data: proyeccion, isLoading: loadingProy } = useTesoreriaProyeccion()
   const { data: workingCapital, isLoading: loadingWC } = useWorkingCapital({ meses: 6 })
 
   const posicionData = posicion?.data || {}
   const cxcData = cxc?.data || {}
   const cxpData = cxp?.data || {}
-  const proyeccionData = proyeccion?.data || {}
+  const proy = useMemo(() => {
+    if (!proyeccion?.data) return null
+    const ctx = prepararContexto(proyeccion.data)
+    return { ctx, ...calcular(ctx, 'base', {}, 13) }
+  }, [proyeccion])
   const wcData = workingCapital?.data || {}
   const metricas = wcData.metricas_principales || {}
 
@@ -89,7 +91,7 @@ export default function Tesoreria() {
 
         <div className="kpi-card card-hover">
           <div className="flex items-center justify-between mb-2">
-            <span className="kpi-label">Días Operación</span>
+            <span className="kpi-label">Días de caja</span>
             <ClockIcon className="w-4 h-4 text-[var(--text-muted)]" />
           </div>
           <div className="kpi-value">
@@ -388,7 +390,9 @@ export default function Tesoreria() {
                   </div>
                   <div>
                     <p className="font-medium text-[var(--text-primary)]">{pago.proveedor}</p>
-                    <p className="text-sm text-[var(--text-muted)]">Vence en {pago.dias_restantes} días</p>
+                    <p className="text-sm text-[var(--text-muted)]">
+                      {pago.dias_restantes < 0 ? `Venció hace ${-pago.dias_restantes} días` : pago.dias_restantes === 0 ? 'Vence hoy' : `Vence en ${pago.dias_restantes} días`}
+                    </p>
                   </div>
                 </div>
 
@@ -410,337 +414,36 @@ export default function Tesoreria() {
           </Link>
         </div>
 
-        {/* ========== PROYECCIÓN CASH FLOW EXPANDIDA ========== */}
+        {/* Proyección de caja: el mismo modelo de la página de Proyecciones */}
         <div className="lg:col-span-2 card">
           <div className="section-header">
             <ArrowTrendingUpIcon className="w-5 h-5 text-slate" />
             <div className="flex-1">
-              <h2 className="font-semibold">Proyección de Cash Flow</h2>
-              <p className="text-xs text-[var(--text-muted)]">13 semanas · Ingresos, egresos y saldo acumulado</p>
+              <h2 className="font-semibold">Proyección de caja</h2>
+              <p className="text-xs text-[var(--text-muted)]">13 semanas · escenario base</p>
             </div>
-            {proyeccionData.resumen?.riesgo_quiebra_tecnica && (
-              <span className="badge-danger text-xs"> Riesgo de liquidez</span>
-            )}
+            <Link to="/tesoreria/proyecciones" className="text-sm text-[var(--accent-blue)] hover:underline flex items-center gap-1">
+              Ver proyección <ArrowRightIcon className="w-3 h-3" />
+            </Link>
           </div>
-
-          {loadingProy ? (
-            <div className="h-64 flex items-center justify-center">
+          {loadingProy || !proy ? (
+            <div className="h-32 flex items-center justify-center">
               <div className="w-8 h-8 border-2 border-ink border-t-transparent rounded-full animate-spin" />
             </div>
-          ) : proyeccionData.proyeccion?.length > 0 ? (
-            <div className="p-5 pt-0 space-y-6">
-              {/* KPIs de Cash Flow */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="p-3 bg-[var(--bg-secondary)] rounded-card text-center">
-                  <p className="text-[0.75rem] text-[var(--text-muted)] uppercase tracking-wider">Ingresos Esperados</p>
-                  <p className="text-lg font-semibold font-mono text-[var(--success)]">
-                    Q{proyeccionData.proyeccion.reduce((s, sem) => s + (sem.ingresos || 0), 0).toLocaleString()}
-                  </p>
-                  <p className="text-[0.75rem] text-[var(--text-muted)]">13 semanas</p>
-                </div>
-                <div className="p-3 bg-[var(--bg-secondary)] rounded-card text-center">
-                  <p className="text-[0.75rem] text-[var(--text-muted)] uppercase tracking-wider">Egresos Esperados</p>
-                  <p className="text-lg font-semibold font-mono text-[var(--danger)]">
-                    Q{proyeccionData.proyeccion.reduce((s, sem) => s + (sem.egresos || 0), 0).toLocaleString()}
-                  </p>
-                  <p className="text-[0.75rem] text-[var(--text-muted)]">13 semanas</p>
-                </div>
-                <div className="p-3 bg-[var(--bg-secondary)] rounded-card text-center">
-                  <p className="text-[0.75rem] text-[var(--text-muted)] uppercase tracking-wider">Saldo Neto</p>
-                  <p className={`text-lg font-semibold font-mono ${
-                    proyeccionData.proyeccion.reduce((s, sem) => s + (sem.ingresos || 0) - (sem.egresos || 0), 0) >= 0
-                      ? 'text-[var(--success)]' : 'text-[var(--danger)]'
-                  }`}>
-                    Q{proyeccionData.proyeccion.reduce((s, sem) => s + (sem.ingresos || 0) - (sem.egresos || 0), 0).toLocaleString()}
-                  </p>
-                  <p className="text-[0.75rem] text-[var(--text-muted)]">Ingresos - Egresos</p>
-                </div>
-                <div className="p-3 bg-[var(--bg-secondary)] rounded-card text-center">
-                  <p className="text-[0.75rem] text-[var(--text-muted)] uppercase tracking-wider">Brecha Mínima</p>
-                  <p className={`text-lg font-semibold font-mono ${
-                    (proyeccionData.resumen?.saldo_minimo_proyectado || 0) < 500000 ? 'text-[var(--danger)]' : 'text-[var(--success)]'
-                  }`}>
-                    Q{(proyeccionData.resumen?.saldo_minimo_proyectado || 0).toLocaleString()}
-                  </p>
-                  <p className="text-[0.75rem] text-[var(--text-muted)]">Semana {proyeccionData.resumen?.semana_critica || '—'}</p>
-                </div>
-              </div>
-
-              {/* Gráfica de barras stacked: Ingresos vs Egresos */}
-              <div className="h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    data={proyeccionData.proyeccion.slice(0, 13).map((sem, idx) => ({
-                      semana: `S${idx + 1}`,
-                      ingresos: sem.ingresos || 0,
-                      egresos: sem.egresos || 0,
-                      saldo: sem.saldo_acumulado || 0,
-                    }))}
-                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#E9EAEC" />
-                    <XAxis dataKey="semana" tick={{ fontSize: 11, fill: '#636970' }} />
-                    <YAxis tick={{ fontSize: 11, fill: '#636970' }} tickFormatter={(v) => `Q${(v/1000).toFixed(0)}K`} />
-                    <Tooltip
-                      content={({ active, payload, label }) => {
-                        if (!active || !payload?.length) return null
-                        const sem = proyeccionData.proyeccion[parseInt(label.replace('S', '')) - 1]
-                        return (
-                          <div className="bg-white p-3 rounded-card border border-[var(--border-default)] min-w-[200px]">
-                            <p className="text-xs font-medium text-[var(--text-muted)] mb-2">{label}</p>
-                            {payload.map((p, i) => (
-                              <p key={i} className="text-sm font-semibold" style={{ color: p.color }}>
-                                {p.name}: {formatGTQ(p.value)}
-                              </p>
-                            ))}
-                            <p className="text-xs font-medium text-[var(--text-primary)] mt-2 pt-2 border-t border-[var(--border-default)]">
-                              Saldo acumulado: {formatGTQ(sem?.saldo_acumulado || 0)}
-                            </p>
-                            {sem?.alerta && (
-                              <p className="text-xs text-[var(--danger)] mt-1"> {sem.alerta}</p>
-                            )}
-                          </div>
-                        )
-                      }}
-                    />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="ingresos" name="Ingresos" fill="#1F6B45" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="egresos" name="Egresos" fill="#9B3320" radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-
-              {/* Tabla de semanas */}
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th className="text-left">Semana</th>
-                      <th className="text-right">Ingresos</th>
-                      <th className="text-right">Egresos</th>
-                      <th className="text-right">Saldo Neto</th>
-                      <th className="text-right">Saldo Acum.</th>
-                      <th className="text-center">Certeza</th>
-                      <th className="text-left">Alerta</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {proyeccionData.proyeccion.slice(0, 13).map((sem, idx) => {
-                      const neto = (sem.ingresos || 0) - (sem.egresos || 0)
-                      return (
-                        <tr key={idx} className={sem.alerta ? 'bg-breach-50/50' : ''}>
-                          <td>
-                            <span className="font-mono text-sm font-medium">S{idx + 1}</span>
-                            <p className="text-[0.75rem] text-[var(--text-muted)]">{sem.fecha_estimada || `Sem ${idx + 1}`}</p>
-                          </td>
-                          <td className="text-right font-mono text-sm text-[var(--success)]">{formatGTQ(sem.ingresos || 0)}</td>
-                          <td className="text-right font-mono text-sm text-[var(--danger)]">{formatGTQ(sem.egresos || 0)}</td>
-                          <td className="text-right font-mono text-sm font-medium">
-                            <span className={neto >= 0 ? 'text-[var(--success)]' : 'text-[var(--danger)]'}>
-                              {neto >= 0 ? '+' : ''}{formatGTQ(neto)}
-                            </span>
-                          </td>
-                          <td className="text-right font-mono text-sm font-semibold">
-                            {formatGTQ(sem.saldo_acumulado || 0)}
-                          </td>
-                          <td className="text-center">
-                            <span className={`text-[0.75rem] px-2 py-0.5 rounded-full font-medium ${
-                              sem.certeza === 'alta' ? 'bg-verified-50 text-verified' :
-                              sem.certeza === 'media' ? 'bg-copper-50 text-copper' :
-                              'bg-breach-50 text-breach'
-                            }`}>
-                              {sem.certeza === 'alta' ? 'Alta' : sem.certeza === 'media' ? 'Media' : 'Baja'}
-                            </span>
-                          </td>
-                          <td>
-                            {sem.alerta ? (
-                              <span className="text-[0.75rem] text-[var(--danger)] flex items-center gap-1">
-                                <ExclamationTriangleIcon className="w-3 h-3" />
-                                {sem.alerta}
-                              </span>
-                            ) : (
-                              <span className="text-[0.75rem] text-[var(--text-muted)]">—</span>
-                            )}
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              {/* Movimientos por categoría */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium flex items-center gap-2">
-                    <ArrowTrendingUpIcon className="w-4 h-4 text-[var(--success)]" />
-                    Ingresos por Origen
-                  </h3>
-                  {proyeccionData.categorias_ingresos?.length > 0 ? (
-                    proyeccionData.categorias_ingresos.map((cat, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-card">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-card bg-verified-50 text-verified flex items-center justify-center text-xs font-semibold">
-                            {cat.porcentaje}%
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">{cat.nombre}</p>
-                            <p className="text-[0.75rem] text-[var(--text-muted)]">{cat.cantidad} transacciones</p>
-                          </div>
-                        </div>
-                        <span className="font-mono font-semibold text-sm text-[var(--success)]">{formatGTQ(cat.monto)}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-card">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-card bg-verified-50 text-verified flex items-center justify-center text-xs font-semibold">72%</div>
-                          <div>
-                            <p className="text-sm font-medium">Cobros a Clientes</p>
-                            <p className="text-[0.75rem] text-[var(--text-muted)]">CxC por vencer</p>
-                          </div>
-                        </div>
-                        <span className="font-mono font-semibold text-sm text-[var(--success)]">Q8,450,000</span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-card">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-card bg-verified-50 text-verified flex items-center justify-center text-xs font-semibold">18%</div>
-                          <div>
-                            <p className="text-sm font-medium">Ventas Contado</p>
-                            <p className="text-[0.75rem] text-[var(--text-muted)]">Ventas de contado</p>
-                          </div>
-                        </div>
-                        <span className="font-mono font-semibold text-sm text-[var(--success)]">Q2,110,000</span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-card">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-card bg-verified-50 text-verified flex items-center justify-center text-xs font-semibold">10%</div>
-                          <div>
-                            <p className="text-sm font-medium">Otros Ingresos</p>
-                            <p className="text-[0.75rem] text-[var(--text-muted)]">Recuperaciones, intereses</p>
-                          </div>
-                        </div>
-                        <span className="font-mono font-semibold text-sm text-[var(--success)]">Q1,170,000</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="space-y-3">
-                  <h3 className="text-sm font-medium flex items-center gap-2">
-                    <ArrowTrendingDownIcon className="w-4 h-4 text-[var(--danger)]" />
-                    Egresos por Destino
-                  </h3>
-                  {proyeccionData.categorias_egresos?.length > 0 ? (
-                    proyeccionData.categorias_egresos.map((cat, i) => (
-                      <div key={i} className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-card">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-card bg-breach-50 text-breach flex items-center justify-center text-xs font-semibold">
-                            {cat.porcentaje}%
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium">{cat.nombre}</p>
-                            <p className="text-[0.75rem] text-[var(--text-muted)]">{cat.cantidad} transacciones</p>
-                          </div>
-                        </div>
-                        <span className="font-mono font-semibold text-sm text-[var(--danger)]">{formatGTQ(cat.monto)}</span>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-card">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-card bg-breach-50 text-breach flex items-center justify-center text-xs font-semibold">45%</div>
-                          <div>
-                            <p className="text-sm font-medium">Pagos a Proveedores</p>
-                            <p className="text-[0.75rem] text-[var(--text-muted)]">CxP por vencer</p>
-                          </div>
-                        </div>
-                        <span className="font-mono font-semibold text-sm text-[var(--danger)]">Q5,620,000</span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-card">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-card bg-breach-50 text-breach flex items-center justify-center text-xs font-semibold">28%</div>
-                          <div>
-                            <p className="text-sm font-medium">Nómina y Cargas Sociales</p>
-                            <p className="text-[0.75rem] text-[var(--text-muted)]">Quincenal + bonificaciones</p>
-                          </div>
-                        </div>
-                        <span className="font-mono font-semibold text-sm text-[var(--danger)]">Q3,490,000</span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-card">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-card bg-breach-50 text-breach flex items-center justify-center text-xs font-semibold">15%</div>
-                          <div>
-                            <p className="text-sm font-medium">Impuestos</p>
-                            <p className="text-[0.75rem] text-[var(--text-muted)]">IVA, ISR, pagos trimestrales</p>
-                          </div>
-                        </div>
-                        <span className="font-mono font-semibold text-sm text-[var(--danger)]">Q1,870,000</span>
-                      </div>
-                      <div className="flex items-center justify-between p-3 bg-[var(--bg-secondary)] rounded-card">
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-card bg-breach-50 text-breach flex items-center justify-center text-xs font-semibold">12%</div>
-                          <div>
-                            <p className="text-sm font-medium">Gastos Operativos</p>
-                            <p className="text-[0.75rem] text-[var(--text-muted)]">Servicios, alquiler, mantenimiento</p>
-                          </div>
-                        </div>
-                        <span className="font-mono font-semibold text-sm text-[var(--danger)]">Q1,500,000</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Alertas de liquidez */}
-              {proyeccionData.alertas?.length > 0 && (
-                <div className="space-y-2">
-                  <h3 className="text-sm font-medium flex items-center gap-2">
-                    <ExclamationTriangleIcon className="w-4 h-4 text-[var(--danger)]" />
-                    Alertas de Liquidez
-                  </h3>
-                  {proyeccionData.alertas.map((alerta, idx) => (
-                    <div key={idx} className={`p-3 rounded-card flex items-start gap-2 ${
-                      alerta.severidad === 'critica' ? 'bg-breach-50 border border-breach-100' : 'bg-copper-50 border border-copper-100'
-                    }`}>
-                      <ExclamationTriangleIcon className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
-                        alerta.severidad === 'critica' ? 'text-breach' : 'text-copper'
-                      }`} />
-                      <div>
-                        <p className={`text-sm font-medium ${
-                          alerta.severidad === 'critica' ? 'text-breach' : 'text-copper'
-                        }`}>
-                          {alerta.mensaje}
-                        </p>
-                        <p className="text-xs text-[var(--text-muted)] mt-1">{alerta.accion_urgente}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              {/* Resumen de certeza */}
-              <div className="flex items-center justify-between text-sm pt-4 border-t border-[var(--border-default)]">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-[#1F6B45]" />
-                    <span className="text-[var(--text-muted)] text-xs">Ingresos</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-[#9B3320]" />
-                    <span className="text-[var(--text-muted)] text-xs">Egresos</span>
-                  </div>
-                </div>
-                <span className="text-[var(--text-muted)] text-xs">
-                  Saldo final proyectado: Q{proyeccionData.proyeccion[proyeccionData.proyeccion.length - 1]?.saldo_acumulado.toLocaleString()}
-                </span>
-              </div>
-            </div>
           ) : (
-            <div className="h-64 flex items-center justify-center text-[var(--text-muted)]">
-              No hay datos de proyección disponibles
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-5 pt-0">
+              {[
+                ['Entra en 13 semanas', fq(suma(proy.S.inn.slice(0, 13))), 'text-[var(--success)]'],
+                ['Sale en 13 semanas', fq(suma(proy.S.out.slice(0, 13))), 'text-[var(--danger)]'],
+                ['Saldo mínimo', fq(proy.M.min), '', `Semana ${proy.M.wmin + 1} · ${proy.ctx.cal.rango(proy.M.wmin)}`],
+                ['Saldo en 13 semanas', fq(proy.M.fin), '', `${pct(proy.M.docPct)} con documento`],
+              ].map(([l, v, c, n]) => (
+                <div key={l} className="p-3 bg-[var(--bg-secondary)] rounded-card">
+                  <p className="text-[0.75rem] text-[var(--text-muted)] uppercase tracking-wider">{l}</p>
+                  <p className={`text-lg font-semibold font-mono ${c}`}>{v}</p>
+                  {n ? <p className="text-[0.75rem] text-[var(--text-muted)]">{n}</p> : null}
+                </div>
+              ))}
             </div>
           )}
         </div>

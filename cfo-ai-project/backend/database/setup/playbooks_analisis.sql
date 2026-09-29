@@ -35,13 +35,13 @@ CREATE TABLE IF NOT EXISTS analisis_playbooks (
 INSERT INTO analisis_playbooks (slug, nombre, descripcion, orden, prompt) VALUES
 (
   'caja', 'Caja y pagos', 'Efectivo, pagos a proveedores y obligaciones con la SAT', 1,
-$prompt$Analiza la liquidez a la fecha de corte. Usa v_posicion (una fila con efectivo, runway y totales), v_bancos, v_cxp, v_flujo_mensual y v_obligaciones_sat. Cubre estos ángulos y quédate con los de mayor impacto:
+$prompt$Analiza la liquidez a la fecha de corte. Usa v_posicion (una fila con efectivo, días de caja, flujo neto y totales), v_bancos, v_cxp, v_flujo_mensual y v_obligaciones_sat. Cubre estos ángulos y quédate con los de mayor impacto:
 
 - Efectivo disponible contra lo que hay que pagar a proveedores en los próximos 30 días (v_cxp con dias_para_vencer entre 0 y 30). Si los pagos superan el efectivo, es crítico: di cuánto falta.
 - Los proveedores con los pagos más grandes que vencen primero: nómbralos con monto y fecha.
 - Facturas de proveedor ya vencidas (dias_para_vencer < 0): cuánto suman y con quién.
-- Runway en días y gasto diario (v_posicion). Compáralo con el ritmo de salidas de los últimos meses (v_flujo_mensual).
-- Obligaciones con la SAT pendientes o atrasadas que vencen pronto, con monto estimado.
+- Días de caja, flujo neto mensual y runway (v_posicion; runway es NULL si el flujo neto es positivo, y entonces no hay quema que reportar). Compáralo con el ritmo de los últimos meses (v_flujo_mensual).
+- Obligaciones con la SAT pendientes (estado distinto de presentada) que vencen pronto, con su monto.
 - Concentración del efectivo: en qué bancos y monedas está (v_bancos).$prompt$
 ),
 (

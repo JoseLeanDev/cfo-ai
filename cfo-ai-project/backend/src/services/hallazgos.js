@@ -3,7 +3,7 @@
  *
  * Se calculan de las vistas de la capa semántica (schema analitica), las mismas
  * que consulta el agente SQL del chat. Así el panel y el chat nunca se
- * contradicen: si el panel dice 240 días de runway, el chat también.
+ * contradicen: si el panel dice que hay 48 días de caja, el chat también.
  *
  * Reemplaza a una lista de hallazgos escritos a mano que se servían con la
  * etiqueta "real-time" ("Runway: 42 días" cuando eran 240) y que incluía textos
@@ -58,14 +58,28 @@ async function generarHallazgos(db) {
     }
 
     if (p.runway_dias != null) {
+      // Solo hay runway si el negocio consume caja: efectivo entre quema neta.
       const d = p.runway_dias;
       h.push({
         id: id('runway'),
         type: 'alerta',
         severity: d < 60 ? 'critical' : d < 120 ? 'warning' : 'info',
-        title: `El efectivo alcanza para ${d} días al gasto actual`,
-        description: `${q(p.efectivo)} en bancos contra un gasto promedio de ${q(p.gasto_diario)} diarios en los últimos seis meses. No cuenta los cobros por entrar ni los pagos ya comprometidos.`,
-        impact: 0,
+        title: `Al ritmo actual, el efectivo alcanza para ${d} días`,
+        description: `En los últimos seis meses salió en promedio ${q(-p.flujo_neto_mensual)} más de lo que entró cada mes. Con ${q(p.efectivo)} en bancos, ese ritmo se sostiene ${d} días.`,
+        impact: Number(p.flujo_neto_mensual),
+        category: 'tesoreria',
+        contexts: ['dashboard', 'tesoreria', 'analisis'],
+        actionLabel: 'Ver proyección',
+        href: '/tesoreria/proyecciones',
+      });
+    } else if (p.flujo_neto_mensual != null) {
+      h.push({
+        id: id('flujo_neto'),
+        type: 'ingreso',
+        severity: 'info',
+        title: `El negocio genera ${q(p.flujo_neto_mensual)} de efectivo neto al mes`,
+        description: `Promedio de los últimos seis meses, después de proveedores, planilla, impuestos y la cuota del préstamo. El efectivo en bancos cubre ${p.dias_de_caja} días de salidas aunque no entrara ningún cobro.`,
+        impact: Number(p.flujo_neto_mensual),
         category: 'tesoreria',
         contexts: ['dashboard', 'tesoreria', 'analisis'],
         actionLabel: 'Ver proyección',
@@ -228,7 +242,8 @@ async function generarHallazgos(db) {
            count(*) FILTER (WHERE dias_para_vencer BETWEEN 0 AND 15)            AS proximas,
            coalesce(sum(monto_estimado) FILTER (WHERE dias_para_vencer BETWEEN 0 AND 15), 0) AS monto_proximas,
            (array_agg(obligacion ORDER BY fecha_vencimiento) FILTER (WHERE dias_para_vencer BETWEEN 0 AND 15))[1] AS siguiente
-    FROM analitica.v_obligaciones_sat`);
+    FROM analitica.v_obligaciones_sat
+    WHERE estado <> 'presentada'`);
   if (sat && sat.vencidas > 0) {
     h.push({
       id: id('sat_vencidas'),

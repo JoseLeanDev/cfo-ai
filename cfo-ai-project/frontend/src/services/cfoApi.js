@@ -38,7 +38,7 @@ export const endpoints = {
   resumen: () => cfoApi.get('/dashboard/resumen'),
   ventas: (anio) => cfoApi.get('/ventas/resumen', { params: anio ? { anio } : {} }),
   tesoreria: {
-    proyeccion: (semanas = 13) => cfoApi.get('/tesoreria/proyeccion', { params: { semanas } }),
+    proyeccion: () => cfoApi.get('/tesoreria/proyeccion'),
     posicion: () => cfoApi.get('/tesoreria/posicion'),
     cxc: () => cfoApi.get('/tesoreria/cxc'),
     cxp: () => cfoApi.get('/tesoreria/cxp')

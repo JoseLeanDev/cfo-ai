@@ -45,7 +45,6 @@ export const endpoints = {
   },
   contabilidad: {
     libroDiario: (params) => cfoApi.get('/contabilidad/libro_diario', { params }),
-    conciliacion: (banco) => cfoApi.get('/contabilidad/conciliacion', { params: { banco } }),
     iniciarCierre: (mes) => cfoApi.post('/contabilidad/cierre/iniciar', { mes }),
     estadoCierre: (cierreId) => cfoApi.get('/contabilidad/cierre/estado', { params: { cierre_id: cierreId } })
   },

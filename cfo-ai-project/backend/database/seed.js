@@ -103,7 +103,6 @@ const seedData = async () => {
   // ============================================
   console.log('\n💳 Creando cuentas bancarias...');
   const hoy = new Date('2026-03-31');
-  const fechaConciliacion = formatDate(addDays(hoy, -3));
   
   for (const cuenta of CUENTAS_BANCARIAS) {
     // PostgreSQL usa 'numero_cuenta', SQLite usa 'numero_cuenta' también ahora
@@ -459,7 +458,6 @@ const seedData = async () => {
     { agente: 'Caja', tipo: 'caja', categoria: 'proyeccion_cashflow', descripcion: 'Proyección 13 semanas: runway 4.2 meses, burn rate Q45,800/semana', status: 'exito', duracion: 145 },
     { agente: 'Análisis', tipo: 'analisis', categoria: 'kpis_diarios', descripcion: 'KPIs diarios: Margen bruto 34.2%, Rotación inventario 12 días, DSO 28 días', status: 'exito' },
     { agente: 'Cobranza', tipo: 'cobranza', categoria: 'aging_cartera', descripcion: 'Aging CxC: 68% current, 15% 31-60 días, 12% 61-90 días, 5% >90 días', status: 'advertencia', impacto: 125000 },
-    { agente: 'Contabilidad', tipo: 'contabilidad', categoria: 'conciliacion_bancaria', descripcion: 'Conciliación bancaria completada: 3 cuentas, 1 discrepancia Q1,250', status: 'advertencia', impacto: 1250 },
     { agente: 'CFO AI Core', tipo: 'orchestrator', categoria: 'briefing_diario', descripcion: 'Briefing diario generado: 4 insights, 2 alertas, 1 acción recomendada', status: 'exito', duracion: 890 },
     { agente: 'Caja', tipo: 'caja', categoria: 'posicion_caja', descripcion: 'Posición caja actual: Q2.4M disponible, Q890K comprometido, Q1.51M libre', status: 'exito' },
     { agente: 'Análisis', tipo: 'analisis', categoria: 'analisis_semanal', descripcion: 'Análisis semanal: Cliente "Industrias del Sur" redujo compras 40% este mes', status: 'warning', impacto: -85000 },

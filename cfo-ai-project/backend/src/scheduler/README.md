@@ -70,13 +70,6 @@ POST /api/scheduler/trigger
 | `cierre-mes-anterior` | Día 1, 09:00 | Insights del mes cerrado |
 | `proyeccion-trimestral` | Meses 1,4,7,10 | Proyección financiera |
 
-### Conciliador Bancario
-| Tarea | Frecuencia | Descripción |
-|-------|------------|-------------|
-| `alerta-conciliacion-pendiente` | 08:00 diario | Recordar conciliaciones pendientes |
-| `iniciar-conciliaciones` | Día 1 | Crear registros para mes que cierra |
-| `presion-conciliacion` | Día 3 | Alertar si siguen pendientes |
-
 ### Maintenance
 | Tarea | Frecuencia | Descripción |
 |-------|------------|-------------|

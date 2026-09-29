@@ -18,7 +18,6 @@ import CuentasBancarias from './pages/CuentasBancarias'
 import ProyeccionesFinancieras from './pages/ProyeccionesFinancieras'
 import Contabilidad from './pages/Contabilidad'
 import LibroDiario from './pages/LibroDiario'
-import ConciliacionBancaria from './pages/ConciliacionBancaria'
 import CierreDashboard from './pages/CierreDashboard'
 import CierreWizard from './pages/CierreWizard'
 import SAT from './pages/SAT'
@@ -75,7 +74,6 @@ function AppRoutes() {
                 {/* Registro */}
                 <Route path="/contabilidad" element={<Contabilidad />} />
                 <Route path="/contabilidad/libro-diario" element={<LibroDiario />} />
-                <Route path="/contabilidad/conciliacion" element={<ConciliacionBancaria />} />
                 <Route path="/contabilidad/cierre" element={<CierreDashboard />} />
                 <Route path="/contabilidad/cierre/nuevo" element={<CierreWizard />} />
                 <Route path="/sat" element={<SAT />} />
@@ -94,7 +92,6 @@ function AppRoutes() {
                     para no romper enlaces guardados. */}
                 <Route path="/log-actividades" element={<Navigate to="/agentes" replace />} />
                 <Route path="/margen-productos" element={<Navigate to="/margenes" replace />} />
-                <Route path="/conciliacion" element={<Navigate to="/contabilidad/conciliacion" replace />} />
                 <Route path="/libro-diario" element={<Navigate to="/contabilidad/libro-diario" replace />} />
                 <Route path="/cierre" element={<Navigate to="/contabilidad/cierre" replace />} />
 

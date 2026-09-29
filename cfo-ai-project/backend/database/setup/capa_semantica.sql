@@ -177,14 +177,12 @@ SELECT
   b.moneda,
   b.numero_cuenta,
   b.saldo,
-  CASE WHEN b.moneda = 'USD' THEN b.saldo * 7.75 ELSE b.saldo END  AS saldo_quetzales,
-  b.saldo_contable,
-  b.diferencia
+  CASE WHEN b.moneda = 'USD' THEN b.saldo * 7.75 ELSE b.saldo END  AS saldo_quetzales
 FROM public.cuentas_bancarias b
 WHERE coalesce(b.activa, true);
 
 COMMENT ON VIEW analitica.v_bancos IS
-'Cuentas bancarias activas a la fecha de corte. saldo está en la moneda de la cuenta; saldo_quetzales ya lo convierte (dólares a 7.75). Para el efectivo total usa sum(saldo_quetzales). diferencia es saldo bancario menos saldo contable (lo pendiente de conciliar).';
+'Cuentas bancarias activas a la fecha de corte. saldo está en la moneda de la cuenta; saldo_quetzales ya lo convierte (dólares a 7.75). Para el efectivo total usa sum(saldo_quetzales).';
 
 CREATE VIEW analitica.v_flujo AS
 SELECT

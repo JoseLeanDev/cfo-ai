@@ -1,15 +1,12 @@
 import { Link } from 'react-router-dom'
 import PageInsights from '../components/agents/PageInsights'
-import { demoBancosConciliacion } from '../data/demoData'
 import { 
   BookOpenIcon, 
   ArrowPathIcon,
   CheckCircleIcon,
   CalculatorIcon,
   DocumentCheckIcon,
-  ArrowRightIcon,
-  BuildingLibraryIcon,
-  ExclamationTriangleIcon
+  ArrowRightIcon
 } from '@heroicons/react/24/outline'
 
 export default function Contabilidad() {
@@ -26,7 +23,7 @@ export default function Contabilidad() {
       {/* AI Insights */}
       <PageInsights context="contabilidad" maxInsights={3} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Libro Diario */}
         <div className="card">
           <div className="section-header">
@@ -103,44 +100,6 @@ export default function Contabilidad() {
           </Link>
         </div>
 
-        {/* Conciliaciones */}
-        <div className="card">
-          <div className="section-header">
-            <BuildingLibraryIcon className="w-5 h-5 text-[var(--text-muted)]" />
-            <h2 className="font-semibold">Conciliaciones</h2>
-            <span className="badge-warning text-xs">2 pendientes</span>
-          </div>
-
-          <div className="space-y-3 p-5 pt-0">
-            {demoBancosConciliacion.map((cuenta, idx) => (
-              <Link 
-                key={idx}
-                to={`/contabilidad/conciliacion/${idx + 1}/2026/3`}
-                className="flex items-center justify-between p-4 bg-[var(--bg-secondary)] rounded-card hover:bg-[var(--bg-tertiary)] transition-colors"
-              >
-                <div className="flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-card flex items-center justify-center ${
-                    cuenta.diferencia === 0 ? 'bg-verified-50 text-verified' : 'bg-breach-50 text-breach'
-                  }`}>
-                    {cuenta.diferencia === 0 ? <CheckCircleIcon className="w-5 h-5" /> : <ExclamationTriangleIcon className="w-5 h-5" />}
-                  </div>
-                  <div>
-                    <p className="font-medium text-[var(--text-primary)]">{cuenta.banco}</p>
-                    <p className="text-sm text-[var(--text-muted)]">{cuenta.cuenta}</p>
-                  </div>
-                </div>
-
-                {cuenta.diferencia > 0 ? (
-                  <span className="text-sm font-medium text-[var(--danger)]">
-                    Dif: Q{cuenta.diferencia.toLocaleString()}
-                  </span>
-                ) : (
-                  <span className="badge-success text-[0.75rem]">Conciliado</span>
-                )}
-              </Link>
-            ))}
-          </div>
-        </div>
       </div>
     </div>
   )

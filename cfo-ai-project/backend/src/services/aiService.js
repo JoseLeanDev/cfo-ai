@@ -123,46 +123,6 @@ Responde en formato JSON:
   }
 
   /**
-   * Analizar conciliaciones bancarias con LLM
-   */
-  async analizarConciliacionIA(movimientosBanco, transaccionesLibro) {
-    const prompt = `
-Eres un experto en conciliaciones bancarias. Analiza estos datos y detecta discrepancias.
-
-## MOVIMIENTOS BANCARIOS:
-${JSON.stringify(movimientosBanco.slice(0, 30), null, 2)}
-
-## TRANSACCIONES EN LIBROS:
-${JSON.stringify(transaccionesLibro.slice(0, 30), null, 2)}
-
-## TU TAREA:
-1. Identifica transacciones no conciliadas
-2. Detecta diferencias de montos
-3. Encuentra transacciones en el banco no registradas en libros
-4. Sugiere ajustes necesarios
-
-Responde en formato JSON:
-{
-  "diferencias": [
-    {
-      "tipo": "no_en_libros|no_en_banco|monto_diferente",
-      "descripcion": "descripción",
-      "monto_banco": 0,
-      "monto_libro": 0,
-      "diferencia": 0,
-      "fecha": "YYYY-MM-DD",
-      "accion_sugerida": "acción"
-    }
-  ],
-  "resumen": "resumen de la conciliación",
-  "saldo_conciliado": false,
-  "ajustes_necesarios": [{"descripcion": "", "monto": 0}]
-}`;
-
-    return this.analizarDatos({ movimientosBanco, transaccionesLibro }, prompt, 'conciliacion');
-  }
-
-  /**
    * Generar respuesta conversacional del agente
    * @param {string} mensaje - Mensaje del usuario
    * @param {Object} contexto - Contexto financiero

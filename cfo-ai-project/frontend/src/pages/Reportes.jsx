@@ -17,7 +17,6 @@ import {
   ScaleIcon,
   BookOpenIcon,
   BuildingLibraryIcon,
-  CheckCircleIcon,
   PresentationChartBarIcon as LucBarChartIcon,
   ChartPieIcon as LucPieChartIcon
 } from '@heroicons/react/24/outline'
@@ -113,16 +112,6 @@ const reportTemplates = [
     filters: ['fecha_desde', 'fecha_hasta'],
     hasResumen: false,
     chartType: 'pie'
-  },
-  {
-    id: 'conciliaciones',
-    name: 'Conciliaciones Bancarias',
-    description: 'Estado de conciliaciones por período y banco.',
-    icon: CheckCircleIcon,
-    color: 'bg-white text-ink border-fog',
-    iconBg: 'bg-paper',
-    filters: ['fecha_desde', 'fecha_hasta', 'banco', 'estado'],
-    hasResumen: false
   },
   {
     id: 'ratios-financieros',
@@ -589,8 +578,6 @@ export default function Reportes() {
                       <option value="activa">Activo</option>
                       <option value="pendiente">Pendiente</option>
                       <option value="completado">Completado</option>
-                      <option value="conciliado">Conciliado</option>
-                      <option value="diferencias">Diferencias</option>
                       <option value="anulado">Anulado</option>
                     </select>
                   </div>

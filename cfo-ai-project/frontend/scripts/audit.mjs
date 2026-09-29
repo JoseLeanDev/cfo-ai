@@ -23,7 +23,7 @@ const ROUTES = [
   '/compras/historial-ventas', '/gastos-operativos', '/tesoreria',
   '/tesoreria/cuentas-por-cobrar', '/tesoreria/cuentas-por-pagar',
   '/tesoreria/cuentas-bancarias', '/tesoreria/proyecciones',
-  '/contabilidad', '/contabilidad/libro-diario', '/contabilidad/conciliacion',
+  '/contabilidad', '/contabilidad/libro-diario',
   '/contabilidad/cierre', '/sat', '/analisis', '/reportes', '/asistente', '/agentes',
   '/usuarios',
 ]

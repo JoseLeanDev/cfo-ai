@@ -513,7 +513,7 @@ router.post('/chat', async (req, res) => {
       return res.json({
         success: true,
         response: {
-          content: `📚 **Puedo ayudarte con cualquier tema financiero:**\n\n• 💰 **Runway** — Días de efectivo disponible\n• 📈 **KPIs** — Indicadores financieros clave\n• 🔄 **CCC** — Cash Conversion Cycle\n• 👥 **CxC** — Cuentas por cobrar y deudores\n• 💳 **CxP** — Pagos a proveedores\n• 🏦 **Conciliación** — Estado bancario\n• 📅 **SAT** — Obligaciones fiscales\n• 📊 **Rentabilidad** — Margen, utilidad, análisis\n• 🔍 **Auditoría** — Detección de anomalías\n\nSolo pregúntame lo que necesites. Tengo acceso en tiempo real a tu base de datos.`,
+          content: `📚 **Puedo ayudarte con cualquier tema financiero:**\n\n• 💰 **Runway** — Días de efectivo disponible\n• 📈 **KPIs** — Indicadores financieros clave\n• 🔄 **CCC** — Cash Conversion Cycle\n• 👥 **CxC** — Cuentas por cobrar y deudores\n• 💳 **CxP** — Pagos a proveedores\n• 📅 **SAT** — Obligaciones fiscales\n• 📊 **Rentabilidad** — Margen, utilidad, análisis\n• 🔍 **Auditoría** — Detección de anomalías\n\nSolo pregúntame lo que necesites. Tengo acceso en tiempo real a tu base de datos.`,
           agent: 'abaco Core',
           type: 'help'
         }

@@ -339,20 +339,9 @@ router.get('/movimientos-bancarios', async (req, res) => {
     const params = { fecha_desde: req.query.fecha_desde, fecha_hasta: req.query.fecha_hasta, cuenta_bancaria_id: req.query.cuenta_bancaria_id, tipo: req.query.tipo };
     const { where, values } = buildDateRange(params);
     const pag = buildPagination(req.query, values.length + 1);
-    
-    // Verificar si la columna estado_conciliacion existe
-    let hasEstadoConciliacion = false;
-    try {
-      await db.getAsync(`SELECT estado_conciliacion FROM movimientos_bancarios LIMIT 1`);
-      hasEstadoConciliacion = true;
-    } catch(e) {
-      hasEstadoConciliacion = false;
-    }
-    
-    const estadoCol = hasEstadoConciliacion ? ', mb.estado_conciliacion' : '';
-    
+
     const data = await db.allAsync(`
-      SELECT mb.id, mb.fecha, cb.banco, cb.numero_cuenta, mb.descripcion, mb.monto, mb.tipo, mb.referencia${estadoCol}, mb.created_at
+      SELECT mb.id, mb.fecha, cb.banco, cb.numero_cuenta, mb.descripcion, mb.monto, mb.tipo, mb.referencia, mb.created_at
       FROM movimientos_bancarios mb
       LEFT JOIN cuentas_bancarias cb ON mb.cuenta_bancaria_id = cb.id
       ${where}
@@ -362,7 +351,7 @@ router.get('/movimientos-bancarios', async (req, res) => {
     
     const total = await db.getAsync(`SELECT COUNT(*) as count FROM movimientos_bancarios mb ${where}`, values);
     
-    res.json({ success: true, reporte: 'movimientos-bancarios', columnas: ['id','fecha','banco','numero_cuenta','descripcion','monto','tipo','referencia',...(hasEstadoConciliacion ? ['estado_conciliacion'] : [])], data, total: parseInt(total?.count || 0) });
+    res.json({ success: true, reporte: 'movimientos-bancarios', columnas: ['id','fecha','banco','numero_cuenta','descripcion','monto','tipo','referencia'], data, total: parseInt(total?.count || 0) });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }
@@ -486,32 +475,6 @@ router.get('/ventas-cuenta', async (req, res) => {
   }
 });
 
-// --- 9. CONCILIACIONES BANCARIAS ---
-router.get('/conciliaciones', async (req, res) => {
-  try {
-    const { fecha_desde, fecha_hasta, banco, estado, empresa_id = 1 } = req.query;
-    let where = 'WHERE empresa_id = $1';
-    let values = [empresa_id];
-    let idx = 2;
-    
-    if (fecha_desde) { where += ` AND fecha_conciliacion >= $${idx++}`; values.push(fecha_desde); }
-    if (fecha_hasta) { where += ` AND fecha_conciliacion <= $${idx++}`; values.push(fecha_hasta); }
-    if (banco) { where += ` AND banco ILIKE $${idx++}`; values.push(`%${banco}%`); }
-    if (estado) { where += ` AND estado = $${idx++}`; values.push(estado); }
-    
-    const data = await db.allAsync(`
-      SELECT id, banco, cuenta_numero, moneda, saldo_contable, saldo_bancario, diferencia, fecha_conciliacion, estado, observaciones
-      FROM conciliaciones_bancarias
-      ${where}
-      ORDER BY fecha_conciliacion DESC
-    `, values);
-    
-    res.json({ success: true, reporte: 'conciliaciones', columnas: ['id','banco','cuenta_numero','moneda','saldo_contable','saldo_bancario','diferencia','fecha_conciliacion','estado','observaciones'], data });
-  } catch (e) {
-    res.status(500).json({ success: false, error: e.message });
-  }
-});
-
 // --- 10. RATIOS FINANCIEROS POR PERÍODO ---
 router.get('/ratios-financieros', async (req, res) => {
   try {
@@ -606,13 +569,13 @@ router.get('/ratios-financieros', async (req, res) => {
 router.get('/cuentas-bancarias', async (req, res) => {
   try {
     const data = await db.allAsync(`
-      SELECT id, banco, tipo, numero_cuenta, saldo, moneda, ultima_conciliacion, activa
+      SELECT id, banco, tipo, numero_cuenta, saldo, moneda, activa
       FROM cuentas_bancarias
       WHERE empresa_id = $1
       ORDER BY banco, numero_cuenta
     `, [req.query.empresa_id || 1]);
     
-    res.json({ success: true, reporte: 'cuentas-bancarias', columnas: ['id','banco','tipo','numero_cuenta','saldo','moneda','ultima_conciliacion','activa'], data });
+    res.json({ success: true, reporte: 'cuentas-bancarias', columnas: ['id','banco','tipo','numero_cuenta','saldo','moneda','activa'], data });
   } catch (e) {
     res.status(500).json({ success: false, error: e.message });
   }

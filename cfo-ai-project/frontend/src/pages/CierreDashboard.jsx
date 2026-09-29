@@ -160,14 +160,10 @@ export default function CierreDashboard() {
             </button>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
               <p className="text-xs text-[var(--text-muted)]">Asientos del mes</p>
               <p className="text-2xl font-semibold">247</p>
-            </div>
-            <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
-              <p className="text-xs text-[var(--text-muted)]">Sin conciliar</p>
-              <p className="text-2xl font-semibold text-[var(--warning)]">3</p>
             </div>
             <div className="p-3 bg-[var(--bg-secondary)] rounded-card">
               <p className="text-xs text-[var(--text-muted)]">Días restantes</p>

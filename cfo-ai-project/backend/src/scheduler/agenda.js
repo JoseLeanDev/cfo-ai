@@ -32,7 +32,6 @@ const TAREAS = [
   ['30 */4 * * *', 'cobranza', 'actualizarAging', 'Antigüedad de cartera'],
   ['15 6 * * *', 'cobranza', 'calcularMetricasCobranza', 'Métricas de cobranza'],
   ['30 5 * * *', 'contabilidad', 'importarTransacciones', 'Importación de transacciones'],
-  ['0 18 * * 5', 'contabilidad', 'preConciliacionBancaria', 'Preconciliación bancaria'],
 ];
 
 const enCurso = new Set();

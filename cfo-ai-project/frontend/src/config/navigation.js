@@ -8,7 +8,6 @@ import {
   BanknotesIcon,
   DocumentTextIcon,
   BookOpenIcon,
-  ArrowsRightLeftIcon,
   CheckBadgeIcon,
   ChartBarIcon,
   DocumentChartBarIcon,
@@ -75,7 +74,6 @@ export const navigation = [
         icon: BookOpenIcon,
         children: [
           { name: 'Libro diario', href: '/contabilidad/libro-diario', icon: DocumentTextIcon },
-          { name: 'Conciliación bancaria', href: '/contabilidad/conciliacion', icon: ArrowsRightLeftIcon },
           { name: 'Cierre mensual', href: '/contabilidad/cierre', icon: CheckBadgeIcon },
         ],
       },

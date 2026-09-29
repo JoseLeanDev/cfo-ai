@@ -16,8 +16,7 @@ router.get('/posicion', async (req, res) => {
         banco,
         tipo,
         saldo,
-        moneda,
-        ${isPostgres ? 'NULL' : "(CURRENT_DATE - ultima_conciliacion::date)"} as dias_sin_conciliar
+        moneda
       FROM cuentas_bancarias 
       WHERE empresa_id = ? AND activa = TRUE
       ORDER BY saldo DESC
@@ -49,8 +48,7 @@ router.get('/posicion', async (req, res) => {
         dias_operacion: diasOperacion,
         cuentas: cuentas.map(c => ({
           ...c,
-          saldo: parseFloat(c.saldo) || 0,
-          dias_sin_conciliar: Math.floor(c.dias_sin_conciliar || 0)
+          saldo: parseFloat(c.saldo) || 0
         }))
       },
       ui_components: {

@@ -8,9 +8,6 @@ import {
   ArrowDownTrayIcon,
   ArrowTrendingUpIcon,
   ArrowTrendingDownIcon,
-  ExclamationTriangleIcon,
-  CheckCircleIcon,
-  ClockIcon,
   CreditCardIcon,
   DocumentTextIcon,
   BanknotesIcon,
@@ -47,12 +44,6 @@ export default function CuentasBancarias() {
 
   const totalGTQ = cuentasGTQ.reduce((sum, c) => sum + c.saldo, 0)
   const totalUSD = cuentasUSD.reduce((sum, c) => sum + c.saldo, 0)
-
-  const getEstadoConciliacion = (dias) => {
-    if (dias <= 2) return { label: 'Conciliado', badgeClass: 'badge-success', icon: CheckCircleIcon }
-    if (dias <= 5) return { label: 'Pendiente', badgeClass: 'badge-warning', icon: ClockIcon }
-    return { label: 'Sin conciliar', badgeClass: 'badge-danger', icon: ExclamationTriangleIcon }
-  }
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -135,8 +126,6 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
               </div>
             ))
           ) : cuentasFiltradas.map((cuenta, idx) => {
-            const estado = getEstadoConciliacion(cuenta.dias_sin_conciliar)
-            const EstadoIcon = estado.icon
             return (
               <div 
                 key={idx} 
@@ -157,14 +146,7 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
 
                     <div>
                       <p className="font-semibold text-lg">{cuenta.banco}</p>
-                      <div className="flex items-center gap-2 mt-1">
-                        <span className="text-sm text-[var(--text-muted)] capitalize">{cuenta.tipo}</span>
-                        <span className="text-[var(--border-default)]">•</span>
-                        <span className={`inline-flex items-center gap-1.5 ${estado.badgeClass} text-[0.75rem]`}>
-                          <EstadoIcon className="w-3 h-3" />
-                          {estado.label}
-                        </span>
-                      </div>
+                      <p className="mt-1 text-sm text-[var(--text-muted)] capitalize">{cuenta.tipo}</p>
                     </div>
                   </div>
 
@@ -175,9 +157,6 @@ className="w-10 h-10 rounded-card bg-[var(--bg-secondary)] hover:bg-[var(--bg-te
                         currency: cuenta.moneda,
                         minimumFractionDigits: 0
                       }).format(cuenta.saldo)}
-                    </p>
-                    <p className="text-sm text-[var(--text-muted)] mt-1">
-                      Última conciliación: {new Date(cuenta.ultima_conciliacion).toLocaleDateString('es-GT')}
                     </p>
                   </div>
                 </div>

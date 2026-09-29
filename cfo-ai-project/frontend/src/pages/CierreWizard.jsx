@@ -29,14 +29,7 @@ const CierreWizard = () => {
     { id: 4, codigo: 'ACT-004', nombre: 'Equipos de Computo', valorInicial: 25000, valorDepreciado: 15000, depreciacionMes: 417, vidaUtil: 3, anosRestantes: 1 },
   ]);
 
-  // Estado para el paso 4: Conciliación Bancaria
-  const [cuentasBancarias, setCuentasBancarias] = useState([
-    { id: 1, banco: 'Banco de Crédito', cuenta: '194-1234567-0-55', saldoLibro: 125000.50, saldoBanco: 124500.00, diferencia: 500.50, estado: 'conciliado' },
-    { id: 2, banco: 'BBVA Continental', cuenta: '0011-0123-4567890123', saldoLibro: 87500.00, saldoBanco: 88000.00, diferencia: -500.00, estado: 'pendiente' },
-    { id: 3, banco: 'Scotiabank', cuenta: '009-1234567', saldoLibro: 45000.00, saldoBanco: 45000.00, diferencia: 0, estado: 'conciliado' },
-  ]);
-
-  // Estado para el paso 5: Conciliación CxC/CxP
+  // Estado para el paso 4: Conciliación CxC/CxP
   const [conciliacion, setConciliacion] = useState({
     cxc: {
       saldoLibro: 450000,
@@ -58,7 +51,7 @@ const CierreWizard = () => {
     }
   });
 
-  // Estado para el paso 6: Estados Financieros
+  // Estado para el paso 5: Estados Financieros
   const [estadosPreview, setEstadosPreview] = useState({
     balance: {
       activoTotal: 2450000,
@@ -80,7 +73,7 @@ const CierreWizard = () => {
     }
   });
 
-  // Estado para el paso 7: Resumen
+  // Estado para el paso 6: Resumen
   const [cerrando, setCerrando] = useState(false);
   const [cerrado, setCerrado] = useState(false);
 
@@ -88,14 +81,13 @@ const CierreWizard = () => {
     { id: 1, nombre: 'Validación Preliminar', icono: '✓' },
     { id: 2, nombre: 'Asientos de Ajuste', icono: '' },
     { id: 3, nombre: 'Depreciaciones', icono: '' },
-    { id: 4, nombre: 'Conciliación Bancaria', icono: '' },
-    { id: 5, nombre: 'Conciliación CxC/CxP', icono: '' },
-    { id: 6, nombre: 'Generación de Estados', icono: '' },
-    { id: 7, nombre: 'Cierre y Aprobación', icono: '' },
+    { id: 4, nombre: 'Conciliación CxC/CxP', icono: '' },
+    { id: 5, nombre: 'Generación de Estados', icono: '' },
+    { id: 6, nombre: 'Cierre y Aprobación', icono: '' },
   ];
 
   const handleNext = () => {
-    if (currentStep < 7) {
+    if (currentStep < steps.length) {
       if (!completedSteps.includes(currentStep)) {
         setCompletedSteps([...completedSteps, currentStep]);
       }
@@ -118,7 +110,7 @@ const CierreWizard = () => {
     setTimeout(() => {
       setCerrando(false);
       setCerrado(true);
-      setCompletedSteps([...completedSteps, 7]);
+      setCompletedSteps([...completedSteps, steps.length]);
     }, 2000);
   };
 
@@ -364,84 +356,6 @@ const CierreWizard = () => {
     </div>
   );
 
-  const renderConciliacionBancaria = () => (
-    <div className="space-y-6">
-      <div className="bg-white rounded-card p-6">
-        <h3 className="text-xl font-semibold text-ink mb-4 flex items-center">
-          <span className="text-2xl mr-2"></span>
-          Conciliación Bancaria
-        </h3>
-        <p className="text-graphite mb-6">Verifique la conciliación de las cuentas bancarias.</p>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          {cuentasBancarias.map((cuenta) => (
-            <div
-              key={cuenta.id}
-              className={`p-4 rounded-card border-2 ${
-                cuenta.estado === 'conciliado'
-                  ? 'border-verified-100 bg-verified-50'
-                  : 'border-copper-100 bg-copper-50'
-              }`}
-            >
-              <div className="flex items-center justify-between mb-2">
-                <span className="font-semibold text-ink">{cuenta.banco}</span>
-                <span
-                  className={`px-2 py-1 rounded-full text-xs font-medium ${
-                    cuenta.estado === 'conciliado'
-                      ? 'bg-verified text-verified'
-                      : 'bg-copper text-copper'
-                  }`}
-                >
-                  {cuenta.estado === 'conciliado' ? '✓ Conciliado' : '⏳ Pendiente'}
-                </span>
-              </div>
-              <p className="text-sm text-graphite mb-3">{cuenta.cuenta}</p>
-              <div className="space-y-1 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-graphite">Saldo Libros:</span>
-                  <span className="font-mono">{cuenta.saldoLibro.toLocaleString('es-PE', { style: 'currency', currency: 'PEN' })}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-graphite">Saldo Banco:</span>
-                  <span className="font-mono">{cuenta.saldoBanco.toLocaleString('es-PE', { style: 'currency', currency: 'PEN' })}</span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-fog">
-                  <span className="text-graphite font-medium">Diferencia:</span>
-                  <span
-                    className={`font-mono font-semibold ${
-                      cuenta.diferencia === 0 ? 'text-verified' : 'text-breach'
-                    }`}
-                  >
-                    {cuenta.diferencia.toLocaleString('es-PE', { style: 'currency', currency: 'PEN' })}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="p-4 bg-paper rounded-card">
-          <h4 className="font-semibold text-cobalt mb-2">Estado General</h4>
-          <div className="flex items-center justify-between">
-            <div className="flex space-x-6">
-              <div>
-                <span className="text-2xl font-semibold text-verified">2</span>
-                <p className="text-sm text-graphite">Cuentas Conciliadas</p>
-              </div>
-              <div>
-                <span className="text-2xl font-semibold text-copper">1</span>
-                <p className="text-sm text-graphite">Cuentas Pendientes</p>
-              </div>
-            </div>
-            <button className="px-4 py-2 bg-cobalt text-white rounded-card hover:bg-cobalt transition-colors">
-              Ver Detalle de Diferencias
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   const renderConciliacionCxCCxP = () => (
     <div className="space-y-6">
       <div className="bg-white rounded-card p-6">
@@ -641,7 +555,7 @@ const CierreWizard = () => {
             {/* Resumen del Cierre */}
             <div className="mb-6 p-4 bg-paper rounded-card">
               <h4 className="text-lg font-semibold text-ink mb-4"> Resumen del Periodo</h4>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="bg-white p-3 rounded-card text-center">
                   <p className="text-2xl font-semibold text-cobalt">5</p>
                   <p className="text-xs text-graphite">Validaciones OK</p>
@@ -653,10 +567,6 @@ const CierreWizard = () => {
                 <div className="bg-white p-3 rounded-card text-center">
                   <p className="text-2xl font-semibold text-copper">4</p>
                   <p className="text-xs text-graphite">Activos Depreciados</p>
-                </div>
-                <div className="bg-white p-3 rounded-card text-center">
-                  <p className="text-2xl font-semibold text-cobalt">3</p>
-                  <p className="text-xs text-graphite">Cuentas Conciliadas</p>
                 </div>
               </div>
             </div>
@@ -675,10 +585,6 @@ const CierreWizard = () => {
               <label className="flex items-center space-x-3 p-3 bg-verified-50 rounded-card cursor-pointer">
                 <input type="checkbox" checked readOnly className="w-5 h-5 text-verified rounded" />
                 <span className="text-graphite">Depreciaciones calculadas y registradas</span>
-              </label>
-              <label className="flex items-center space-x-3 p-3 bg-verified-50 rounded-card cursor-pointer">
-                <input type="checkbox" checked readOnly className="w-5 h-5 text-verified rounded" />
-                <span className="text-graphite">Conciliaciones bancarias completadas</span>
               </label>
               <label className="flex items-center space-x-3 p-3 bg-verified-50 rounded-card cursor-pointer">
                 <input type="checkbox" checked readOnly className="w-5 h-5 text-verified rounded" />
@@ -745,12 +651,10 @@ const CierreWizard = () => {
       case 3:
         return renderDepreciaciones();
       case 4:
-        return renderConciliacionBancaria();
-      case 5:
         return renderConciliacionCxCCxP();
-      case 6:
+      case 5:
         return renderGeneracionEstados();
-      case 7:
+      case 6:
         return renderCierreAprobacion();
       default:
         return null;
@@ -773,11 +677,11 @@ const CierreWizard = () => {
                 <div className="w-32 h-3 bg-fog rounded-full overflow-hidden">
                   <div
                     className="h-full bg-cobalt transition-all duration-500"
-                    style={{ width: `${(completedSteps.length / 7) * 100}%` }}
+                    style={{ width: `${(completedSteps.length / steps.length) * 100}%` }}
                   />
                 </div>
                 <span className="text-sm font-semibold text-graphite">
-                  {Math.round((completedSteps.length / 7) * 100)}%
+                  {Math.round((completedSteps.length / steps.length) * 100)}%
                 </span>
               </div>
             </div>
@@ -810,7 +714,7 @@ const CierreWizard = () => {
             <button className="px-6 py-3 bg-fog text-graphite rounded-card font-semibold hover:bg-fog transition-colors">
                Guardar Progreso
             </button>
-            {currentStep < 7 && (
+            {currentStep < steps.length && (
               <button
                 onClick={handleNext}
                 className="px-6 py-3 bg-cobalt text-white rounded-card font-semibold hover:bg-cobalt transition-colors"

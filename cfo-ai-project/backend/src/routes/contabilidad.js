@@ -52,62 +52,6 @@ router.get('/libro_diario', async (req, res) => {
   }
 });
 
-// GET /api/contabilidad/conciliacion
-router.get('/conciliacion', async (req, res) => {
-  try {
-    const empresaId = req.query.empresa_id || 1;
-    const bancoFilter = req.query.banco;
-
-    let query = `
-      SELECT 
-        banco,
-        saldo as saldo_contable,
-        ultima_conciliacion,
-        CURRENT_DATE - ultima_conciliacion::date as dias_sin_conciliar
-      FROM cuentas_bancarias 
-      WHERE empresa_id = ? AND activa = 1
-    `;
-    
-    const params = [empresaId];
-    
-    if (bancoFilter && bancoFilter !== 'todos') {
-      query += ` AND lower(banco) LIKE ?`;
-      params.push(`%${bancoFilter.toLowerCase()}%`);
-    }
-
-    const bancos = await db.allAsync(query, params);
-
-    const resultado = bancos.map(b => {
-      const saldoBancario = b.saldo_contable - (Math.random() * 5000);
-      const diferencia = b.saldo_contable - saldoBancario;
-      
-      return {
-        banco: b.banco,
-        saldo_contable: b.saldo_contable,
-        saldo_bancario: Math.round(saldoBancario),
-        diferencia: Math.round(diferencia),
-        estado: Math.abs(diferencia) < 1000 ? 'conciliado' : 'diferencia',
-        transacciones_pendientes: Math.floor(Math.random() * 5),
-        match_rate: 98.5 + (Math.random() * 1.5)
-      };
-    });
-
-    res.json({
-      status: 'success',
-      timestamp: new Date().toISOString(),
-      data: {
-        fecha_conciliacion: new Date().toISOString().split('T')[0],
-        bancos: resultado
-      },
-      ui_components: {
-        table: 'reconciliation_table'
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ status: 'error', message: error.message });
-  }
-});
-
 // POST /api/contabilidad/cierre/iniciar
 router.post('/cierre/iniciar', async (req, res) => {
   try {

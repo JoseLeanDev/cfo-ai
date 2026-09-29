@@ -11,7 +11,6 @@ import {
   ClockIcon,
   BuildingLibraryIcon,
   ExclamationTriangleIcon,
-  CheckCircleIcon,
   ArrowRightIcon,
   ArrowPathIcon,
   LightBulbIcon
@@ -291,19 +290,6 @@ export default function Tesoreria() {
                         minimumFractionDigits: 0
                       }).format(cuenta.saldo)}
                     </p>
-                    <div className="flex items-center justify-end gap-2 mt-1">
-                      {cuenta.dias_sin_conciliar > 2 ? (
-                        <span className="badge-warning text-[0.75rem]">
-                          <ExclamationTriangleIcon className="w-3 h-3" />
-                          Sin conciliar
-                        </span>
-                      ) : (
-                        <span className="badge-success text-[0.75rem]">
-                          <CheckCircleIcon className="w-3 h-3" />
-                          Conciliado
-                        </span>
-                      )}
-                    </div>
                   </div>
                 </div>
               ))

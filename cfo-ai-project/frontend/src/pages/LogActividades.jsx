@@ -50,7 +50,7 @@ const agenteConfig = {
     bg: 'bg-white',
     border: 'border-fog',
     icon: BookOpenIcon,
-    desc: 'Cierre mensual, fiscal, conciliación'
+    desc: 'Cierre mensual y fiscal'
   },
   'orchestrator': { 
     nombre: 'Qora Core', 
@@ -114,13 +114,6 @@ const categoriaConfig = {
   },
   importacion_transacciones: { 
     label: 'Importar', 
-    color: 'text-ink',
-    bg: 'bg-white',
-    border: 'border-fog',
-    icon: BookOpenIcon 
-  },
-  conciliacion_bancaria: { 
-    label: 'Conciliación', 
     color: 'text-ink',
     bg: 'bg-white',
     border: 'border-fog',
@@ -336,7 +329,6 @@ export default function LogActividades() {
               <option value="analisis_semanal"> Análisis Semanal</option>
               <option value="aging_cartera"> Aging Cartera</option>
               <option value="metricas_cobranza"> Métricas Cobranza</option>
-              <option value="conciliacion_bancaria"> Conciliación</option>
               <option value="cierre_mensual"> Cierre Mensual</option>
               <option value="calculos_fiscales"> Cálculos Fiscales</option>
               <option value="briefing_diario"> Briefing Diario</option>

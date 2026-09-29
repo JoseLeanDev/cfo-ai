@@ -104,7 +104,7 @@ router.post('/iniciar', async (req, res) => {
       INSERT INTO cierres_mensuales (
         empresa_id, anio, mes, estado, fecha_inicio, usuario_inicio, 
         progreso, checklist_completado, total_tareas, tareas_completadas
-      ) VALUES (?, ?, ?, 'en_progreso', NOW(), ?, 0, 0, 10, 0)
+      ) VALUES (?, ?, ?, 'en_progreso', NOW(), ?, 0, 0, 9, 0)
     `, [empresa_id, anio, mes, usuario_id]);
 
     const cierreId = result.lastID;
@@ -112,15 +112,14 @@ router.post('/iniciar', async (req, res) => {
     // Crear checklist por defecto
     const checklistItems = [
       { orden: 1, tarea: 'Verificar asientos del período', automatico: true },
-      { orden: 2, tarea: 'Conciliación bancaria', automatico: false },
-      { orden: 3, tarea: 'Revisión de cuentas por cobrar', automatico: true },
-      { orden: 4, tarea: 'Revisión de cuentas por pagar', automatico: true },
-      { orden: 5, tarea: 'Cálculo de depreciaciones', automatico: true },
-      { orden: 6, tarea: 'Asientos de ajuste', automatico: false },
-      { orden: 7, tarea: 'Conciliación de inventarios', automatico: false },
-      { orden: 8, tarea: 'Revisión de provisiones', automatico: true },
-      { orden: 9, tarea: 'Generación de estados financieros', automatico: true },
-      { orden: 10, tarea: 'Aprobación final', automatico: false, requiere_aprobacion: true }
+      { orden: 2, tarea: 'Revisión de cuentas por cobrar', automatico: true },
+      { orden: 3, tarea: 'Revisión de cuentas por pagar', automatico: true },
+      { orden: 4, tarea: 'Cálculo de depreciaciones', automatico: true },
+      { orden: 5, tarea: 'Asientos de ajuste', automatico: false },
+      { orden: 6, tarea: 'Conciliación de inventarios', automatico: false },
+      { orden: 7, tarea: 'Revisión de provisiones', automatico: true },
+      { orden: 8, tarea: 'Generación de estados financieros', automatico: true },
+      { orden: 9, tarea: 'Aprobación final', automatico: false, requiere_aprobacion: true }
     ];
 
     for (const item of checklistItems) {
@@ -436,282 +435,6 @@ router.post('/:anio/:mes/cerrar', async (req, res) => {
 });
 
 // ============================================
-// ENDPOINTS DE CONCILIACIÓN BANCARIA
-// ============================================
-
-// GET /api/conciliacion/pendientes - Conciliaciones pendientes
-router.get('/conciliacion/pendientes', async (req, res) => {
-  try {
-    const { empresa_id = config.default_empresa_id, dias_atraso = 7 } = req.query;
-
-    const pendientes = await db.allAsync(`
-      SELECT 
-        cb.id as cuenta_id,
-        cb.banco,
-        cb.cuenta_numero,
-        cb.moneda,
-        cb.saldo as saldo_contable,
-        cb.ultima_conciliacion,
-        (CURRENT_DATE - cb.ultima_conciliacion::date) as dias_sin_conciliar,
-        c.id as conciliacion_id,
-        c.estado as estado_conciliacion,
-        c.fecha_inicio as fecha_inicio_conciliacion,
-        c.diferencia,
-        c.transacciones_pendientes
-      FROM cuentas_bancarias cb
-      LEFT JOIN conciliaciones_bancarias c ON cb.id = c.cuenta_id 
-        AND c.estado IN ('pendiente', 'en_progreso')
-      WHERE cb.empresa_id = ? 
-        AND cb.activa = 1
-        AND (cb.ultima_conciliacion IS NULL 
-          OR (CURRENT_DATE - cb.ultima_conciliacion::date) >= ?)
-      ORDER BY dias_sin_conciliar DESC
-    `, [empresa_id, dias_atraso]);
-
-    const resumen = {
-      total_pendientes: pendientes.length,
-      criticas: pendientes.filter(p => p.dias_sin_conciliar > 30).length,
-      alta: pendientes.filter(p => p.dias_sin_conciliar > 14 && p.dias_sin_conciliar <= 30).length,
-      media: pendientes.filter(p => p.dias_sin_conciliar > 7 && p.dias_sin_conciliar <= 14).length,
-      baja: pendientes.filter(p => p.dias_sin_conciliar <= 7).length
-    };
-
-    res.json({
-      status: 'success',
-      timestamp: new Date().toISOString(),
-      data: {
-        resumen,
-        pendientes: pendientes.map(p => ({
-          ...p,
-          dias_sin_conciliar: Math.floor(p.dias_sin_conciliar || 0),
-          prioridad: p.dias_sin_conciliar > 30 ? 'critica' : 
-                     p.dias_sin_conciliar > 14 ? 'alta' : 
-                     p.dias_sin_conciliar > 7 ? 'media' : 'baja',
-          en_progreso: !!p.conciliacion_id
-        }))
-      },
-      ui_components: {
-        table: 'conciliacion_pendientes_table',
-        cards: 'priority_summary_cards'
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ status: 'error', message: error.message });
-  }
-});
-
-// POST /api/conciliacion/iniciar - Iniciar conciliación
-router.post('/conciliacion/iniciar', async (req, res) => {
-  try {
-    const { 
-      cuenta_id, 
-      fecha_inicio, 
-      fecha_fin, 
-      saldo_bancario, 
-      usuario_id = config.default_usuario_id,
-      empresa_id = config.default_empresa_id 
-    } = req.body;
-
-    if (!cuenta_id || !fecha_inicio || !fecha_fin) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Se requiere cuenta_id, fecha_inicio y fecha_fin'
-      });
-    }
-
-    // Verificar cuenta
-    const cuenta = await db.getAsync(`
-      SELECT id, banco, cuenta_numero, moneda, saldo 
-      FROM cuentas_bancarias 
-      WHERE id = ? AND empresa_id = ?
-    `, [cuenta_id, empresa_id]);
-
-    if (!cuenta) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Cuenta bancaria no encontrada'
-      });
-    }
-
-    // Verificar si ya existe conciliación en progreso
-    const existente = await db.getAsync(`
-      SELECT id FROM conciliaciones_bancarias 
-      WHERE cuenta_id = ? AND estado = 'en_progreso'
-    `, [cuenta_id]);
-
-    if (existente) {
-      return res.status(400).json({
-        status: 'error',
-        message: 'Ya existe una conciliación en progreso para esta cuenta',
-        data: { conciliacion_id: existente.id }
-      });
-    }
-
-    // Obtener transacciones del período
-    const transaccionesContables = await db.allAsync(`
-      SELECT 
-        id, fecha, descripcion, referencia, monto, tipo
-      FROM transacciones_bancarias 
-      WHERE cuenta_id = ? 
-        AND fecha BETWEEN ? AND ?
-        AND conciliada = 0
-      ORDER BY fecha
-    `, [cuenta_id, fecha_inicio, fecha_fin]);
-
-    const saldoContable = cuenta.saldo;
-    const saldoBancarioInput = saldo_bancario || saldoContable;
-    const diferenciaInicial = saldoContable - saldoBancarioInput;
-
-    // Crear conciliación
-    const result = await db.runAsync(`
-      INSERT INTO conciliaciones_bancarias (
-        cuenta_id, empresa_id, fecha_inicio, fecha_fin,
-        saldo_contable, saldo_bancario, diferencia,
-        estado, usuario_inicio, transacciones_pendientes,
-        transacciones_encontradas, created_at
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 'en_progreso', ?, ?, 0, NOW())
-    `, [
-      cuenta_id, empresa_id, fecha_inicio, fecha_fin,
-      saldoContable, saldoBancarioInput, diferenciaInicial,
-      usuario_id, transaccionesContables.length
-    ]);
-
-    const conciliacionId = result.lastID;
-
-    // Intentar match automático
-    const matches = await intentarMatchAutomatico(conciliacionId, cuenta_id, fecha_inicio, fecha_fin);
-
-    res.json({
-      status: 'success',
-      timestamp: new Date().toISOString(),
-      data: {
-        conciliacion_id: conciliacionId,
-        cuenta: {
-          id: cuenta.id,
-          banco: cuenta.banco,
-          cuenta_numero: cuenta.cuenta_numero,
-          moneda: cuenta.moneda
-        },
-        periodo: { fecha_inicio, fecha_fin },
-        saldos: {
-          contable: saldoContable,
-          bancario: saldoBancarioInput,
-          diferencia: diferenciaInicial
-        },
-        transacciones_pendientes: transaccionesContables.length,
-        matches_automaticos: matches,
-        estado: 'en_progreso'
-      },
-      ui_components: {
-        wizard: 'conciliacion_wizard',
-        table: 'transacciones_match'
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ status: 'error', message: error.message });
-  }
-});
-
-// POST /api/conciliacion/:id/completar - Completar conciliación
-router.post('/conciliacion/:id/completar', async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { usuario_id = config.default_usuario_id, observaciones = '' } = req.body;
-
-    const conciliacion = await db.getAsync(`
-      SELECT 
-        c.*, cb.banco, cb.cuenta_numero
-      FROM conciliaciones_bancarias c
-      JOIN cuentas_bancarias cb ON c.cuenta_id = cb.id
-      WHERE c.id = ?
-    `, [id]);
-
-    if (!conciliacion) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'Conciliación no encontrada'
-      });
-    }
-
-    if (conciliacion.estado === 'completada') {
-      return res.status(400).json({
-        status: 'error',
-        message: 'La conciliación ya está completada'
-      });
-    }
-
-    // Verificar diferencias pendientes
-    const diferenciasPendientes = await db.getAsync(`
-      SELECT COUNT(*) as count FROM conciliacion_diferencias
-      WHERE conciliacion_id = ? AND estado = 'pendiente'
-    `, [id]);
-
-    if (diferenciasPendientes.count > 0) {
-      return res.status(400).json({
-        status: 'error',
-        message: `Existen ${diferenciasPendientes.count} diferencias pendientes por resolver`,
-        data: { diferencias_pendientes: diferenciasPendientes.count }
-      });
-    }
-
-    // Completar conciliación
-    await db.runAsync(`
-      UPDATE conciliaciones_bancarias 
-      SET estado = 'completada',
-          fecha_completado = NOW(),
-          usuario_completado = ?,
-          observaciones = ?,
-          updated_at = NOW()
-      WHERE id = ?
-    `, [usuario_id, observaciones, id]);
-
-    // Actualizar fecha de última conciliación en la cuenta
-    await db.runAsync(`
-      UPDATE cuentas_bancarias 
-      SET ultima_conciliacion = ?,
-          updated_at = NOW()
-      WHERE id = ?
-    `, [conciliacion.fecha_fin, conciliacion.cuenta_id]);
-
-    // Marcar transacciones como conciliadas
-    await db.runAsync(`
-      UPDATE transacciones_bancarias 
-      SET conciliada = 1,
-          fecha_conciliacion = NOW(),
-          conciliacion_id = ?
-      WHERE cuenta_id = ? 
-        AND fecha BETWEEN ? AND ?
-        AND conciliada = 0
-    `, [id, conciliacion.cuenta_id, conciliacion.fecha_inicio, conciliacion.fecha_fin]);
-
-    res.json({
-      status: 'success',
-      timestamp: new Date().toISOString(),
-      data: {
-        conciliacion_id: parseInt(id),
-        cuenta: {
-          banco: conciliacion.banco,
-          cuenta_numero: conciliacion.cuenta_numero
-        },
-        estado: 'completada',
-        fecha_completado: new Date().toISOString(),
-        periodo: {
-          fecha_inicio: conciliacion.fecha_inicio,
-          fecha_fin: conciliacion.fecha_fin
-        },
-        resultado: {
-          saldo_contable: conciliacion.saldo_contable,
-          saldo_bancario: conciliacion.saldo_bancario,
-          diferencia_final: conciliacion.diferencia
-        }
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ status: 'error', message: error.message });
-  }
-});
-
-// ============================================
 // ENDPOINTS DE ALERTAS
 // ============================================
 
@@ -892,41 +615,6 @@ async function generarAsientoCierre(anio, mes, empresaId) {
     return result.lastID;
   } catch (error) {
     return null;
-  }
-}
-
-async function intentarMatchAutomatico(conciliacionId, cuentaId, fechaInicio, fechaFin) {
-  // Simulación de matching automático
-  // En producción, esto compararía transacciones con el estado de cuenta
-  try {
-    const transacciones = await db.allAsync(`
-      SELECT id, referencia, monto 
-      FROM transacciones_bancarias 
-      WHERE cuenta_id = ? AND fecha BETWEEN ? AND ? AND conciliada = 0
-      LIMIT 10
-    `, [cuentaId, fechaInicio, fechaFin]);
-
-    let matches = 0;
-    for (const trans of transacciones) {
-      // Simular match exitoso para algunas transacciones
-      if (Math.random() > 0.3) {
-        await db.runAsync(`
-          INSERT INTO conciliacion_matches (conciliacion_id, transaccion_id, estado, fecha_match)
-          VALUES (?, ?, 'automatico', NOW())
-        `, [conciliacionId, trans.id]);
-        matches++;
-      }
-    }
-
-    await db.runAsync(`
-      UPDATE conciliaciones_bancarias 
-      SET transacciones_encontradas = ?
-      WHERE id = ?
-    `, [matches, conciliacionId]);
-
-    return matches;
-  } catch (error) {
-    return 0;
   }
 }
 

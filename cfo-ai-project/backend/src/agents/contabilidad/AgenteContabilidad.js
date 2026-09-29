@@ -4,7 +4,6 @@ const config = require('../../config/financiera');
  * Responsabilidades:
  * - Importar y validar transacciones
  * - Generar asientos contables
- * - Conciliación bancaria
  * - Cierre mensual
  * - Obligaciones fiscales (SAT)
  */
@@ -17,7 +16,6 @@ class AgenteContabilidad extends BaseAgent {
     super('Contabilidad', 'contable', [
       'importarTransacciones',
       'generarAsientos',
-      'conciliarBancos',
       'prepararCierreMensual',
       'verificarObligacionesFiscales',
       'validarBalance'
@@ -33,8 +31,6 @@ class AgenteContabilidad extends BaseAgent {
         return await this.importarTransacciones(empresaId);
       case 'generarAsientos':
         return await this.generarAsientos(empresaId);
-      case 'conciliarBancos':
-        return await this.conciliarBancos(empresaId);
       case 'prepararCierreMensual':
         return await this.prepararCierreMensual(empresaId);
       case 'verificarObligacionesFiscales':
@@ -164,89 +160,6 @@ class AgenteContabilidad extends BaseAgent {
 
     } catch (error) {
       await this.logActividad('asientos_generados',
-        `Error: ${error.message}`,
-        { error: error.message },
-        null,
-        Date.now() - startTime,
-        'error'
-      );
-      return this.formatResponse(`Error: ${error.message}`, 'error');
-    }
-  }
-
-  /**
-   * Conciliar movimientos bancarios
-   */
-  async conciliarBancos(empresaId) {
-    const startTime = Date.now();
-    
-    try {
-      // Obtener movimientos no conciliados
-      const movimientos = await db.allAsync(`
-        SELECT m.*, cb.nombre as cuenta_nombre
-        FROM movimientos_bancarios m
-        JOIN cuentas_bancarias cb ON cb.id = m.cuenta_bancaria_id
-        WHERE cb.empresa_id = ? AND m.estado = 'no_conciliado'
-        ORDER BY m.fecha DESC
-        LIMIT 100
-      `, [empresaId]);
-
-      const conciliados = [];
-      const noConciliados = [];
-
-      for (const mov of movimientos) {
-        // Buscar transacción similar
-        const match = await db.getAsync(`
-          SELECT t.*
-          FROM transacciones t
-          WHERE t.empresa_id = ? 
-          AND t.monto = ?
-          AND ABS((t.fecha::date - ?::date)) <= 2
-          LIMIT 1
-        `, [empresaId, Math.abs(mov.monto), mov.fecha]);
-
-        if (match) {
-          // Conciliar
-          await db.runAsync(`
-            UPDATE movimientos_bancarios 
-            SET estado = 'conciliado', transaccion_id = ?
-            WHERE id = ?
-          `, [match.id, mov.id]);
-
-          conciliados.push({ movimientoId: mov.id, transaccionId: match.id });
-        } else {
-          noConciliados.push(mov);
-        }
-      }
-
-      // Crear alertas para no conciliados significativos
-      const totalNoConciliado = noConciliados.reduce((sum, m) => sum + Math.abs(m.monto), 0);
-      
-      if (totalNoConciliado > 10000) {
-        await db.runAsync(`
-          INSERT INTO alertas_financieras (tipo, nivel, titulo, descripcion, created_at)
-          VALUES (?, ?, ?, ?, NOW())
-        `, ['conciliacion', 'media',
-          `${noConciliados.length} movimientos no conciliados`,
-          `Total no conciliado: Q${totalNoConciliado.toLocaleString()}. Revisar diferencias bancarias.`
-        ]);
-      }
-
-      await this.logActividad('conciliacion_bancaria',
-        `${conciliados.length} conciliados, ${noConciliados.length} pendientes`,
-        { conciliados: conciliados.length, noConciliados: noConciliados.length, totalNoConciliado },
-        totalNoConciliado,
-        Date.now() - startTime
-      );
-
-      return this.formatResponse(
-        `${conciliados.length} conciliados, ${noConciliados.length} pendientes`,
-        'analysis',
-        { conciliados, noConciliados, totalNoConciliado }
-      );
-
-    } catch (error) {
-      await this.logActividad('conciliacion_bancaria',
         `Error: ${error.message}`,
         { error: error.message },
         null,

@@ -41,7 +41,6 @@ const ROUTES = [
   ['proyecciones', '/tesoreria/proyecciones'],
   ['contabilidad', '/contabilidad'],
   ['libro-diario', '/contabilidad/libro-diario'],
-  ['conciliacion', '/contabilidad/conciliacion'],
   ['cierre', '/contabilidad/cierre'],
   ['sat', '/sat'],
   ['analisis', '/analisis'],
